@@ -1,0 +1,7 @@
+.dakinis-keys.json
+__pycache__/
+*.pyc
+node_modules/
+data/*.db*
+.env
+dist/

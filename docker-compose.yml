@@ -1,0 +1,15 @@
+# PostgreSQL opcional para la siguiente fase (el MVP usa SQLite en ./data/dakinis.db).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dakinis
+      POSTGRES_PASSWORD: dakinis
+      POSTGRES_DB: dakinis
+    ports:
+      - "5432:5432"
+    volumes:
+      - dakinis_pgdata:/var/lib/postgresql/data
+
+volumes:
+  dakinis_pgdata:

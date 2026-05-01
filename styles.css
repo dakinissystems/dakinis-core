@@ -1,0 +1,345 @@
+:root {
+  --bg: #07111d;
+  --bg-soft: #0f1f33;
+  --card: #122840;
+  --text: #f0f4f9;
+  --muted: #b8c6d9;
+  --brand: #2dd4bf;
+  --brand-dark: #14b8a6;
+  --line: #23415f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", Arial, sans-serif;
+  background: linear-gradient(160deg, var(--bg), #091a2c 40%, #0a2237);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.container {
+  width: min(1100px, 92vw);
+  margin: 0 auto;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(8, 16, 26, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  z-index: 10;
+}
+
+.topbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.hero {
+  padding: 4rem 0 2.5rem;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.1;
+  margin: 0.4rem 0 1rem;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0 0 1rem;
+}
+
+h3 {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+}
+
+.kicker {
+  color: var(--brand);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.lead {
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.hero-actions {
+  margin-top: 1.35rem;
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 1px solid transparent;
+  display: inline-block;
+  background: var(--brand);
+  color: #04262a;
+  text-decoration: none;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.btn:hover {
+  background: var(--brand-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.btn-outline:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.hero-card,
+.card,
+.price-card,
+.message-box,
+.cta-card {
+  background: rgba(16, 35, 56, 0.75);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+}
+
+.hero-logo {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 0.8rem;
+}
+
+section {
+  padding: 2.2rem 0;
+}
+
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.pill-grid span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.module-grid,
+.price-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.system-switcher {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.system-btn {
+  background: rgba(16, 35, 56, 0.75);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.system-btn.active,
+.system-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.config-box {
+  margin: 0.5rem 0 1rem;
+  background: rgba(16, 35, 56, 0.75);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem;
+  color: var(--muted);
+  overflow: auto;
+  font-size: 0.85rem;
+}
+
+.system-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0;
+}
+
+.kpi-label {
+  color: var(--muted);
+  margin: 0;
+}
+
+.kpi-value {
+  margin: 0.35rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.mockup-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.mockup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.mockup-field input,
+.mockup-field select {
+  background: rgba(7, 17, 29, 0.85);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+}
+
+.mockup-form .btn {
+  align-self: end;
+}
+
+.mockup-table-wrap {
+  overflow: auto;
+}
+
+.mockup-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mockup-table th,
+.mockup-table td {
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  padding: 0.55rem;
+}
+
+.mockup-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.card p,
+.price-card p {
+  color: var(--muted);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.quote {
+  font-size: 1.05rem;
+  color: #d6eaff;
+  font-weight: 600;
+}
+
+.price {
+  margin: 0.25rem 0;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.price span {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.featured {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.setup {
+  color: var(--muted);
+  margin-top: 0.8rem;
+}
+
+.message-box p {
+  margin: 0.35rem 0;
+}
+
+.cta-card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cta-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+@media (max-width: 900px) {
+  .hero-grid,
+  .module-grid,
+  .price-grid,
+  .two-col,
+  .cta-card,
+  .system-kpis,
+  .mockup-form {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-card {
+    align-items: flex-start;
+  }
+}
