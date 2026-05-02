@@ -390,19 +390,41 @@ section {
   color: var(--brand);
 }
 
+.mockup-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .mockup-nav-btn {
+  display: block;
+  width: 100%;
   padding: 0.5rem 0.65rem;
   border-radius: 8px;
-  margin-bottom: 0.35rem;
-  cursor: default;
+  margin-bottom: 0;
+  cursor: pointer;
   color: var(--muted);
   font-size: 0.9rem;
+  font: inherit;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.mockup-nav-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.mockup-nav-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .mockup-nav-btn.active {
   background: rgba(45, 212, 191, 0.12);
   color: var(--text);
-  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-color: rgba(45, 212, 191, 0.35);
 }
 
 .mockup-main {
