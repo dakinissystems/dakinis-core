@@ -20,14 +20,18 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 export default function SystemPage({ activeSystemKey, navigate }) {
   const { session } = useDakinisSession();
 
+  const hideVerticalSwitcher =
+    Boolean(session?.token) && session?.user?.role !== "platform_admin";
+
   const sistemaSwitcherEntries = useMemo(() => {
+    if (hideVerticalSwitcher) return [];
     const all = Object.entries(dakinisSystemRegistry);
     if (!session?.token) return all;
     if (session.user?.role === "platform_admin") return all;
     const tenantType = session.business?.type;
     if (tenantType) return all.filter(([key]) => key === tenantType);
     return all;
-  }, [session]);
+  }, [session, hideVerticalSwitcher]);
   const selectedSystem = dakinisSystemRegistry[activeSystemKey] || dakinisSystemRegistry.clinica;
   const systemPageContent =
     DAKINIS_SYSTEM_PAGE_CONTENT[activeSystemKey] || DAKINIS_SYSTEM_PAGE_CONTENT.clinica;
@@ -36,14 +40,18 @@ export default function SystemPage({ activeSystemKey, navigate }) {
   const entityName = DAKINIS_ENTITY_BY_VERTICAL[activeSystemKey];
 
   const apiSession = useMemo(() => {
-    if (session?.token && session.business?.slug === tenantSlugForVertical) {
+    if (
+      session?.token &&
+      session.business?.slug &&
+      session.business?.type === activeSystemKey
+    ) {
       return session;
     }
     return {
       token: undefined,
       business: { slug: tenantSlugForVertical, id: undefined }
     };
-  }, [session, tenantSlugForVertical]);
+  }, [session, tenantSlugForVertical, activeSystemKey]);
 
   const [remoteConfig, setRemoteConfig] = useState(null);
   const [configStatus, setConfigStatus] = useState("idle");
@@ -184,20 +192,28 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           ))}
         </section>
         <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-          Volver a sistemas
+          {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
         </button>
-        <div className="system-switcher">
-          {sistemaSwitcherEntries.map(([systemKey, systemInfo]) => (
-            <button
-              key={systemKey}
-              type="button"
-              className={`system-btn${activeSystemKey === systemKey ? " active" : ""}`}
-              onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
-            >
-              {systemInfo.label}
-            </button>
-          ))}
-        </div>
+        {!hideVerticalSwitcher ? (
+          <div className="system-switcher">
+            {sistemaSwitcherEntries.map(([systemKey, systemInfo]) => (
+              <button
+                key={systemKey}
+                type="button"
+                className={`system-btn${activeSystemKey === systemKey ? " active" : ""}`}
+                onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
+              >
+                {systemInfo.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="lead" style={{ marginTop: "0.75rem" }}>
+            Sesión activa: no puedes cambiar de vertical; solo el panel de tu negocio (
+            <strong>{selectedSystem.label}</strong>
+            ).
+          </p>
+        )}
         <p className="lead">
           Vertical: {selectedSystem.label} | Slot {modules.config.agenda.slotMinutes} min | Cliente perdido:{" "}
           {modules.config.crm.lostClientDays} dias | Config API:{" "}

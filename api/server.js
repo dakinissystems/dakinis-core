@@ -13,6 +13,8 @@ import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisJsonError } from "./src/api/responses.js";
 import { dakinisRequirePlatformAdmin } from "./src/api/platform-auth.js";
 import {
+  dakinisHandlePlatformBusinessCreate,
+  dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
   dakinisHandlePlatformUsers
 } from "./src/api/platform-routes.js";
@@ -42,6 +44,21 @@ async function dakinisDispatch(req, rawBody, url) {
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinesses();
   }
+
+  if (path === "/api/platform/businesses" && req.method === "POST") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessCreate(rawBody);
+  }
+
+  const platformBusinessPatch = /^\/api\/platform\/businesses\/([^/]+)$/;
+  const platformBizPatchMatch = platformBusinessPatch.exec(path);
+  if (platformBizPatchMatch && req.method === "PATCH") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessUpdate(platformBizPatchMatch[1], rawBody);
+  }
+
 
   if (path === "/api/platform/users" && req.method === "GET") {
     const authErr = dakinisRequirePlatformAdmin(req);
