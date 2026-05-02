@@ -1,4 +1,5 @@
 import http from "node:http";
+import { dakinisAssertProductionJwtSecret } from "./src/api/jwt-config.js";
 import { dakinisAuthenticateTenant } from "./src/api/auth-tenant.js";
 import { dakinisResolveBusinessFromHeader } from "./src/api/business-context.js";
 import { DAKINIS_BUSINESS_ID_HEADER } from "./src/api/contracts.js";
@@ -10,7 +11,13 @@ import {
 } from "./src/api/router.js";
 import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisJsonError } from "./src/api/responses.js";
+import { dakinisRequirePlatformAdmin } from "./src/api/platform-auth.js";
+import {
+  dakinisHandlePlatformBusinesses,
+  dakinisHandlePlatformUsers
+} from "./src/api/platform-routes.js";
 
+dakinisAssertProductionJwtSecret();
 dakinisInitDb();
 
 const PORT = Number(process.env.PORT || 8787);
@@ -29,6 +36,18 @@ function dakinisSetCorsHeaders(res) {
 
 async function dakinisDispatch(req, rawBody, url) {
   const path = url.pathname;
+
+  if (path === "/api/platform/businesses" && req.method === "GET") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinesses();
+  }
+
+  if (path === "/api/platform/users" && req.method === "GET") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformUsers();
+  }
 
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);

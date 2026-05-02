@@ -1,5 +1,6 @@
 export function dakinisCreateDashboardModule(config) {
-  function dakinisBuildDashboardMetrics({ appointments, cancellations, revenue, leads }) {
+  /** KPIs del día en formato legible (ingresos, citas, conversión de leads). */
+  function dakinisSummarizeDashboardKpis({ appointments, cancellations, revenue, leads }) {
     const conversionRate = leads.total > 0 ? (leads.closed / leads.total) * 100 : 0;
     return {
       appointmentsToday: appointments,
@@ -12,6 +13,6 @@ export function dakinisCreateDashboardModule(config) {
   }
 
   return {
-    dakinisBuildDashboardMetrics
+    dakinisSummarizeDashboardKpis
   };
 }

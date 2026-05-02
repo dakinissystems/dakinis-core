@@ -1,6 +1,24 @@
+import { useMemo } from "react";
+import { useDakinisSession } from "../context/SessionContext.jsx";
+
 const logoGrande = "/Logo%20Grande.jpeg";
 
+function dakinisIsPlatformAdminSession(session) {
+  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
+}
+
 export default function HomePage({ navigate, dakinisSystemRegistry }) {
+  const { session } = useDakinisSession();
+
+  const sistemaButtons = useMemo(() => {
+    const all = Object.entries(dakinisSystemRegistry);
+    if (!session?.token) return all;
+    if (dakinisIsPlatformAdminSession(session)) return [];
+    const tenantType = session.business?.type;
+    if (tenantType) return all.filter(([key]) => key === tenantType);
+    return all;
+  }, [session, dakinisSystemRegistry]);
+
   return (
     <>
       <section className="hero">
@@ -49,18 +67,32 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
             desarrollo:&nbsp;
             <code>dakinis-dev-key</code>
           </p>
-          <div className="system-switcher">
-            {Object.entries(dakinisSystemRegistry).map(([systemKey, systemInfo]) => (
-              <button
-                key={systemKey}
-                type="button"
-                className="system-btn"
-                onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
-              >
-                {systemInfo.label}
+          {dakinisIsPlatformAdminSession(session) ? (
+            <div className="system-switcher">
+              <button type="button" className="system-btn active" onClick={() => navigate("/admin")}>
+                Administración plataforma (negocios y usuarios)
               </button>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="system-switcher">
+              {sistemaButtons.map(([systemKey, systemInfo]) => (
+                <button
+                  key={systemKey}
+                  type="button"
+                  className="system-btn"
+                  onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
+                >
+                  {systemInfo.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {session?.token && session.business?.type && !dakinisIsPlatformAdminSession(session) ? (
+            <p className="lead" style={{ marginTop: "0.75rem" }}>
+              Sesión: solo ves tu tipo de negocio (<strong>{dakinisSystemRegistry[session.business.type]?.label}</strong>
+              ).
+            </p>
+          ) : null}
         </div>
       </section>
 

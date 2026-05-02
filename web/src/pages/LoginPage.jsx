@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { dakinisPublicJsonFetch } from "../services/api.js";
+import { dakinisPublicJsonFetch, DakinisApiError } from "../services/api.js";
 
 export default function LoginPage({ navigate }) {
   const { setSession } = useDakinisSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,20 +16,49 @@ export default function LoginPage({ navigate }) {
     setLoading(true);
     setError("");
     try {
+      if (needsTotp && !totpCode.trim()) {
+        setError("Introduce el codigo de 6 digitos de tu aplicacion autenticadora.");
+        setLoading(false);
+        return;
+      }
+      const body = { email: email.trim(), password };
+      if (needsTotp && totpCode.trim()) {
+        body.totpCode = totpCode.trim().replace(/\s+/g, "");
+      }
       const json = await dakinisPublicJsonFetch("/api/auth/login", {
         method: "POST",
-        body: { email: email.trim(), password }
+        body
       });
 
-      const { token, user, business } = json.data;
+      const payload = json?.data;
+      if (!payload || typeof payload !== "object") {
+        throw new Error("Login: respuesta sin datos. Comprueba la URL de la API (VITE_API_BASE_URL) y que el seed exista en la base de datos.");
+      }
+
+      const { token, user, business } = payload;
+      if (!token || !business?.type) {
+        throw new Error("Login incompleto: falta token o tipo de negocio en la respuesta.");
+      }
       setSession({
         token,
         user,
         business
       });
-      navigate(`/sistema/${business.type}`);
+      const isPlatformAdmin = user?.role === "platform_admin" || business.type === "platform";
+      if (isPlatformAdmin) {
+        navigate("/admin");
+      } else {
+        navigate(`/sistema/${business.type}`);
+      }
+      setNeedsTotp(false);
+      setTotpCode("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de login");
+      if (err instanceof DakinisApiError && err.code === "TOTP_REQUIRED") {
+        setNeedsTotp(true);
+        setError(err.message);
+      } else {
+        setError(err instanceof Error ? err.message : "Error de login");
+      }
     } finally {
       setLoading(false);
     }
@@ -58,6 +89,10 @@ export default function LoginPage({ navigate }) {
             <code className="config-box">admin@inmobiliaria-demo.local</code>
             <span className="demo-tenant-label">Inmobiliaria</span>
           </li>
+          <li>
+            <code className="config-box">admin@dakinis-platform.local</code>
+            <span className="demo-tenant-label">Administrador plataforma (multi-tenant)</span>
+          </li>
         </ul>
         <form className="mockup-form card" onSubmit={handleSubmit} style={{ gridTemplateColumns: "1fr" }}>
           <label className="mockup-field">
@@ -65,7 +100,11 @@ export default function LoginPage({ navigate }) {
             <input
               type="email"
               value={email}
-              onChange={(ev) => setEmail(ev.target.value)}
+              onChange={(ev) => {
+                setEmail(ev.target.value);
+                setNeedsTotp(false);
+                setTotpCode("");
+              }}
               autoComplete="username"
               required
             />
@@ -80,6 +119,21 @@ export default function LoginPage({ navigate }) {
               required
             />
           </label>
+          {needsTotp ? (
+            <label className="mockup-field">
+              <span>Codigo TOTP (administrador plataforma)</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={12}
+                value={totpCode}
+                onChange={(ev) => setTotpCode(ev.target.value)}
+                placeholder="6 digitos"
+              />
+            </label>
+          ) : null}
           {error ? (
             <p className="lead" style={{ color: "#f97316", gridColumn: "1 / -1" }}>
               {error}

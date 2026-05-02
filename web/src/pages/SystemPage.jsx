@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisCreatePlatformModules } from "@dakinis/shared";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import {
@@ -10,7 +11,6 @@ import {
   DAKINIS_SYSTEM_MOCKUPS,
   dakinisBuildDefaultFormValues
 } from "../data/systemPages.js";
-import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisBuildModuleFunctionMap } from "../utils/moduleMap.js";
 
@@ -19,6 +19,15 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 export default function SystemPage({ activeSystemKey, navigate }) {
   const { session } = useDakinisSession();
+
+  const sistemaSwitcherEntries = useMemo(() => {
+    const all = Object.entries(dakinisSystemRegistry);
+    if (!session?.token) return all;
+    if (session.user?.role === "platform_admin") return all;
+    const tenantType = session.business?.type;
+    if (tenantType) return all.filter(([key]) => key === tenantType);
+    return all;
+  }, [session]);
   const selectedSystem = dakinisSystemRegistry[activeSystemKey] || dakinisSystemRegistry.clinica;
   const systemPageContent =
     DAKINIS_SYSTEM_PAGE_CONTENT[activeSystemKey] || DAKINIS_SYSTEM_PAGE_CONTENT.clinica;
@@ -178,7 +187,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           Volver a sistemas
         </button>
         <div className="system-switcher">
-          {Object.entries(dakinisSystemRegistry).map(([systemKey, systemInfo]) => (
+          {sistemaSwitcherEntries.map(([systemKey, systemInfo]) => (
             <button
               key={systemKey}
               type="button"

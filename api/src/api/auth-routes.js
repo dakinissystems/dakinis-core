@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { authenticator } from "otplib";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisSignUserToken } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
@@ -29,6 +30,22 @@ export function dakinisHandleAuthLogin(rawBody) {
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return dakinisJsonError(401, "INVALID_CREDENTIALS", "Credenciales invalidas");
+  }
+
+  if (user.role === "platform_admin" && Number(user.totp_enabled) === 1) {
+    const totpToken =
+      typeof body.totpCode === "string" ? body.totpCode.trim().replace(/\s+/g, "") : "";
+    if (!totpToken) {
+      return dakinisJsonError(401, "TOTP_REQUIRED", "Introduce el codigo de autenticacion (TOTP)", {});
+    }
+    const secret = typeof user.totp_secret === "string" ? user.totp_secret.trim() : "";
+    if (!secret) {
+      return dakinisJsonError(500, "TOTP_MISCONFIGURED", "TOTP activado pero sin secreto en base de datos");
+    }
+    const ok = authenticator.verify({ token: totpToken, secret });
+    if (!ok) {
+      return dakinisJsonError(401, "INVALID_TOTP", "Codigo TOTP invalido");
+    }
   }
 
   const business = db.prepare("SELECT * FROM business WHERE id = ?").get(user.business_id);

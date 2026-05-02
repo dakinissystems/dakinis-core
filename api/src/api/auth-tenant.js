@@ -2,7 +2,9 @@ import jwt from "jsonwebtoken";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError } from "./responses.js";
 
-const DAKINIS_JWT_SECRET = process.env.JWT_SECRET || "dakinis_dev_insecure_change_me";
+import { DAKINIS_JWT_INSECURE_PLACEHOLDER } from "./jwt-config.js";
+
+const DAKINIS_JWT_SECRET = process.env.JWT_SECRET || DAKINIS_JWT_INSECURE_PLACEHOLDER;
 const DAKINIS_MASTER_API_KEY = String(process.env.DAKINIS_MASTER_API_KEY ?? "dakinis-dev-key").trim();
 const DAKINIS_WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DAKINIS_KEY_ROLE_FULL = "full-access";

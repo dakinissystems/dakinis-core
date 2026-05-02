@@ -1,15 +1,17 @@
 import { dakinisToDate } from "../utils.js";
 
 export function dakinisCreateAgendaModule(config) {
-  function dakinisCalculateServiceEnd(startDate, serviceMinutes) {
+  /** Fin del servicio a partir de la hora de inicio y duración en minutos. */
+  function dakinisGetAppointmentEnd(startDate, serviceMinutes) {
     const start = dakinisToDate(startDate, "startDate");
     return new Date(start.getTime() + serviceMinutes * 60000);
   }
 
-  function dakinisCanScheduleSlot(existingBookings, candidateStart, serviceMinutes) {
+  /** Indica si el hueco cabe sin solaparse con reservas existentes (salvo overbooking). */
+  function dakinisIsSlotAvailable(existingBookings, candidateStart, serviceMinutes) {
     if (config.agenda.allowOverbooking) return true;
     const start = dakinisToDate(candidateStart, "candidateStart");
-    const candidateEnd = dakinisCalculateServiceEnd(start, serviceMinutes);
+    const candidateEnd = dakinisGetAppointmentEnd(start, serviceMinutes);
     return existingBookings.every((booking) => {
       const bookingStart = dakinisToDate(booking.startAt, "booking.startAt");
       const bookingEnd = dakinisToDate(booking.endAt, "booking.endAt");
@@ -17,7 +19,8 @@ export function dakinisCreateAgendaModule(config) {
     });
   }
 
-  function dakinisBuildDayCalendarSlots(dayStart, dayEnd) {
+  /** Genera los tramos del día según `slotMinutes` de la agenda. */
+  function dakinisGenerateDaySlots(dayStart, dayEnd) {
     const start = dakinisToDate(dayStart, "dayStart");
     const end = dakinisToDate(dayEnd, "dayEnd");
     const slots = [];
@@ -31,8 +34,8 @@ export function dakinisCreateAgendaModule(config) {
   }
 
   return {
-    dakinisCalculateServiceEnd,
-    dakinisCanScheduleSlot,
-    dakinisBuildDayCalendarSlots
+    dakinisGetAppointmentEnd,
+    dakinisIsSlotAvailable,
+    dakinisGenerateDaySlots
   };
 }

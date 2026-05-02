@@ -9,6 +9,13 @@ function dakinisHashPassword(plain) {
 export function dakinisSeed(db) {
   const businesses = [
     {
+      id: "biz_platform_0001",
+      slug: "dakinis-platform",
+      name: "Dakinis (plataforma)",
+      type: "platform",
+      plan: "platform"
+    },
+    {
       id: "biz_00000000_0001",
       slug: "clinica-demo",
       name: "Clínica Demo (tenant)",
@@ -48,23 +55,45 @@ export function dakinisSeed(db) {
   }
 
   const passwordHash = dakinisHashPassword(DAKINIS_DEMO_PASSWORD);
+  const platformTotpSecret = process.env.DAKINIS_PLATFORM_TOTP_SECRET?.trim() || null;
   const users = [
-    { id: "usr_0001", business_id: businesses[0].id, email: "admin@clinica-demo.local", role: "admin" },
-    { id: "usr_0002", business_id: businesses[1].id, email: "admin@peluqueria-demo.local", role: "admin" },
-    { id: "usr_0003", business_id: businesses[2].id, email: "admin@inmobiliaria-demo.local", role: "admin" },
-    { id: "usr_0004", business_id: businesses[3].id, email: "admin@restaurante-demo.local", role: "admin" }
+    {
+      id: "usr_platform_1",
+      business_id: businesses[0].id,
+      email: "admin@dakinis-platform.local",
+      role: "platform_admin",
+      totp_secret: platformTotpSecret,
+      totp_enabled: platformTotpSecret ? 1 : 0
+    },
+    { id: "usr_0001", business_id: businesses[1].id, email: "admin@clinica-demo.local", role: "admin" },
+    { id: "usr_0002", business_id: businesses[2].id, email: "admin@peluqueria-demo.local", role: "admin" },
+    { id: "usr_0003", business_id: businesses[3].id, email: "admin@inmobiliaria-demo.local", role: "admin" },
+    { id: "usr_0004", business_id: businesses[4].id, email: "admin@restaurante-demo.local", role: "admin" }
   ];
 
   const insertUser = db.prepare(`
-    INSERT OR IGNORE INTO users (id, business_id, email, password_hash, role)
-    VALUES (@id, @business_id, @email, @password_hash, @role)
+    INSERT OR IGNORE INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
+    VALUES (@id, @business_id, @email, @password_hash, @role, @totp_secret, @totp_enabled)
   `);
 
   for (const u of users) {
-    insertUser.run({ ...u, password_hash: passwordHash });
+    insertUser.run({
+      ...u,
+      password_hash: passwordHash,
+      totp_secret: u.totp_secret ?? null,
+      totp_enabled: Number(u.totp_enabled ?? 0)
+    });
   }
 
-  const apiKeys = [{ key_value: "dakinis-read-key", business_id: businesses[1].id, role: "read-only" }];
+  if (platformTotpSecret) {
+    db.prepare(
+      `UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = 'usr_platform_1'`
+    ).run(platformTotpSecret);
+  } else {
+    db.prepare(`UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = 'usr_platform_1'`).run();
+  }
+
+  const apiKeys = [{ key_value: "dakinis-read-key", business_id: businesses[2].id, role: "read-only" }];
 
   const insertKey = db.prepare(`
     INSERT OR IGNORE INTO tenant_api_keys (key_value, business_id, role)
@@ -78,7 +107,7 @@ export function dakinisSeed(db) {
   const seedRecords = [
     {
       id: "seed-c-1",
-      business_id: businesses[0].id,
+      business_id: businesses[1].id,
       entity: "paciente",
       payload: JSON.stringify({
         id: "seed-c-1",
@@ -90,7 +119,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-c-2",
-      business_id: businesses[0].id,
+      business_id: businesses[1].id,
       entity: "paciente",
       payload: JSON.stringify({
         id: "seed-c-2",
@@ -102,7 +131,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-p-1",
-      business_id: businesses[1].id,
+      business_id: businesses[2].id,
       entity: "reserva",
       payload: JSON.stringify({
         id: "seed-p-1",
@@ -114,7 +143,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-p-2",
-      business_id: businesses[1].id,
+      business_id: businesses[2].id,
       entity: "reserva",
       payload: JSON.stringify({
         id: "seed-p-2",
@@ -126,7 +155,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-i-1",
-      business_id: businesses[2].id,
+      business_id: businesses[3].id,
       entity: "lead",
       payload: JSON.stringify({
         id: "seed-i-1",
@@ -138,7 +167,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-i-2",
-      business_id: businesses[2].id,
+      business_id: businesses[3].id,
       entity: "lead",
       payload: JSON.stringify({
         id: "seed-i-2",
@@ -150,7 +179,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-r-1",
-      business_id: businesses[3].id,
+      business_id: businesses[4].id,
       entity: "comanda",
       payload: JSON.stringify({
         id: "seed-r-1",
@@ -163,7 +192,7 @@ export function dakinisSeed(db) {
     },
     {
       id: "seed-r-2",
-      business_id: businesses[3].id,
+      business_id: businesses[4].id,
       entity: "comanda",
       payload: JSON.stringify({
         id: "seed-r-2",

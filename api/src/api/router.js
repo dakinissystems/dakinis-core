@@ -81,8 +81,16 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
   if (!DAKINIS_ALLOWED_ADAPTERS.includes(adapterKey) || adapterKey === "custom") {
     return dakinisJsonError(400, "INVALID_BUSINESS_TYPE", "Tipo de negocio no soportado", {
       type: business.type,
-      allowed: DAKINIS_ALLOWED_ADAPTERS.filter((a) => a !== "custom")
+      allowed: DAKINIS_ALLOWED_ADAPTERS.filter((a) => a !== "custom" && a !== "platform")
     });
+  }
+
+  if (adapterKey === "platform") {
+    return dakinisJsonError(
+      403,
+      "PLATFORM_ACCOUNT",
+      "La cuenta de plataforma no usa la API de verticales. Usa GET /api/platform/businesses y /api/platform/users con JWT de administrador."
+    );
   }
 
   const modules = dakinisBuildModulesForBusiness(business);
@@ -156,12 +164,12 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/agenda/slots") {
-    const slots = modules.agenda.dakinisBuildDayCalendarSlots(payload.dayStart, payload.dayEnd);
+    const slots = modules.agenda.dakinisGenerateDaySlots(payload.dayStart, payload.dayEnd);
     return dakinisJsonSuccess({ slots }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/agenda/can-schedule") {
-    const canSchedule = modules.agenda.dakinisCanScheduleSlot(
+    const canSchedule = modules.agenda.dakinisIsSlotAvailable(
       payload.existingBookings || [],
       payload.candidateStart,
       payload.serviceMinutes
@@ -170,59 +178,59 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/booking/validate") {
-    const result = modules.booking.dakinisValidateBookingRequest(payload);
+    const result = modules.booking.dakinisCheckBookingFields(payload);
     return dakinisJsonSuccess(result, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/booking/link") {
-    const link = modules.booking.dakinisBuildPublicBookingLink(
+    const link = modules.booking.dakinisGetBookingPageUrl(
       payload.businessSlug || business.slug || "demo"
     );
     return dakinisJsonSuccess({ link }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/crm/segment") {
-    const segment = modules.crm.dakinisGetClientSegment(payload.client || {});
+    const segment = modules.crm.dakinisGetCustomerSegment(payload.client || {});
     return dakinisJsonSuccess({ segment }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/crm/timeline") {
-    const timeline = modules.crm.dakinisBuildClientTimeline(payload.client || {});
+    const timeline = modules.crm.dakinisGetCustomerSnapshot(payload.client || {});
     return dakinisJsonSuccess({ timeline }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/confirmation") {
-    const message = modules.whatsapp.dakinisBuildConfirmationMessage(payload);
+    const message = modules.whatsapp.dakinisFormatBookingConfirmedMessage(payload);
     return dakinisJsonSuccess({ message }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/reminder") {
-    const message = modules.whatsapp.dakinisBuildReminderMessage(payload);
+    const message = modules.whatsapp.dakinisFormatAppointmentReminderMessage(payload);
     return dakinisJsonSuccess({ message }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/reactivation") {
-    const message = modules.whatsapp.dakinisBuildReactivationMessage(payload);
+    const message = modules.whatsapp.dakinisFormatWinBackMessage(payload);
     return dakinisJsonSuccess({ message }, adapterKey, metaBase);
   }
 
   if (req.method === "GET" && url.pathname === "/api/whatsapp/rules") {
-    const rules = modules.whatsapp.dakinisGetEnabledAutomationRules();
+    const rules = modules.whatsapp.dakinisListAutomationRules();
     return dakinisJsonSuccess({ rules }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/leads/move-stage") {
-    const lead = modules.leads.dakinisMoveLeadToStage(payload.lead || {}, payload.nextStage);
+    const lead = modules.leads.dakinisUpdateLeadStage(payload.lead || {}, payload.nextStage);
     return dakinisJsonSuccess({ lead }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/leads/pipeline-summary") {
-    const summary = modules.leads.dakinisBuildPipelineSummary(payload.leads || []);
+    const summary = modules.leads.dakinisSummarizePipelineByStage(payload.leads || []);
     return dakinisJsonSuccess({ summary }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/dashboard/metrics") {
-    const metrics = modules.dashboard.dakinisBuildDashboardMetrics(payload);
+    const metrics = modules.dashboard.dakinisSummarizeDashboardKpis(payload);
     return dakinisJsonSuccess({ metrics }, adapterKey, metaBase);
   }
 

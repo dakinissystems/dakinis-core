@@ -116,6 +116,10 @@ Prioridad:
 - `POST /api/leads/move-stage`
 - `POST /api/leads/pipeline-summary`
 - `POST /api/dashboard/metrics`
+- `GET /api/platform/businesses` (solo JWT rol `platform_admin`)
+- `GET /api/platform/users` (solo JWT rol `platform_admin`)
+
+Los **paths** anteriores se mantienen. En el motor (`shared/core/modules/`) las funciones exportadas usan nombres más explícitos, p. ej. `dakinisGenerateDaySlots`, `dakinisIsSlotAvailable`, `dakinisGetBookingPageUrl`, `dakinisGetCustomerSnapshot`, `dakinisFormatWinBackMessage`, `dakinisSummarizePipelineByStage`, `dakinisSummarizeDashboardKpis` (sustituyen a las versiones anteriores `dakinisBuild*…` / `dakinisGetClient*` donde correspondía).
 
 ## Ejemplos rapidos
 

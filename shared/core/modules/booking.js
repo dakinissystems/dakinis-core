@@ -1,9 +1,11 @@
 export function dakinisCreateBookingModule(config) {
-  function dakinisBuildPublicBookingLink(businessSlug) {
+  /** URL pública de la página de reserva del negocio. */
+  function dakinisGetBookingPageUrl(businessSlug) {
     return `https://book.dakinis.app/${encodeURIComponent(businessSlug)}`;
   }
 
-  function dakinisValidateBookingRequest(payload) {
+  /** Comprueba que el formulario de reserva traiga los campos obligatorios. */
+  function dakinisCheckBookingFields(payload) {
     const requiredFields = ["serviceId", "date", "time", "customerName", "phone"];
     const missingFields = requiredFields.filter((field) => !payload[field]);
     if (config.booking.collectWhatsApp && !payload.whatsApp) missingFields.push("whatsApp");
@@ -11,7 +13,7 @@ export function dakinisCreateBookingModule(config) {
   }
 
   return {
-    dakinisBuildPublicBookingLink,
-    dakinisValidateBookingRequest
+    dakinisGetBookingPageUrl,
+    dakinisCheckBookingFields
   };
 }

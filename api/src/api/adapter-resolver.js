@@ -10,6 +10,7 @@ const adapterMap = {
   peluqueria: dakinisBarbershopPremiumAdapter,
   restaurante: dakinisRestauranteAdapter,
   inmobiliaria: dakinisRealEstateAdapter,
+  platform: {},
   custom: {}
 };
 

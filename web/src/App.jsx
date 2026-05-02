@@ -5,6 +5,7 @@ import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registr
 import { DAKINIS_SYSTEM_ROUTE_PREFIX } from "@dakinis/shared/catalog/routes.js";
 import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import PlatformAdminPage from "./pages/PlatformAdminPage.jsx";
 import SystemPage from "./pages/SystemPage.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -15,6 +16,10 @@ function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
   const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
   return dakinisSystemRegistry[verticalKey] ? verticalKey : null;
+}
+
+function dakinisIsPlatformAdminSession(session) {
+  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
 }
 
 export default function App() {
@@ -36,12 +41,47 @@ export default function App() {
       document.title = "Iniciar sesión · Dakinis One";
       return;
     }
+    if (currentPath === "/admin") {
+      document.title = "Administración plataforma · Dakinis One";
+      return;
+    }
     if (systemKeyFromPath && dakinisSystemRegistry[systemKeyFromPath]) {
       document.title = `${dakinisSystemRegistry[systemKeyFromPath].label} · Dakinis One`;
       return;
     }
     document.title = DAKINIS_DEFAULT_DOCUMENT_TITLE;
   }, [currentPath, systemKeyFromPath]);
+
+  /** Bloquea cambiar de vertical con la sesión de un tenant; envía admins de plataforma al panel /admin. */
+  useEffect(() => {
+    if (!session?.token) return;
+
+    if (dakinisIsPlatformAdminSession(session)) {
+      if (currentPath.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) {
+        window.history.replaceState({}, "", "/admin");
+        setCurrentPath("/admin");
+      }
+      return;
+    }
+
+    const tenantType = session.business?.type;
+    if (!tenantType || !currentPath.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return;
+
+    const key = decodeURIComponent(currentPath.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
+    if (key && key !== tenantType) {
+      const target = `${DAKINIS_SYSTEM_ROUTE_PREFIX}${encodeURIComponent(tenantType)}`;
+      window.history.replaceState({}, "", target);
+      setCurrentPath(target);
+    }
+  }, [session, currentPath]);
+
+  useEffect(() => {
+    if (currentPath !== "/admin" || !session?.token) return;
+    if (!dakinisIsPlatformAdminSession(session)) {
+      window.history.replaceState({}, "", "/");
+      setCurrentPath("/");
+    }
+  }, [currentPath, session]);
 
   function navigate(pathname) {
     window.history.pushState({}, "", pathname);
@@ -51,6 +91,8 @@ export default function App() {
   const route =
     currentPath === "/login" ? (
       <LoginPage navigate={navigate} />
+    ) : currentPath === "/admin" ? (
+      <PlatformAdminPage navigate={navigate} />
     ) : systemKeyFromPath ? (
       <SystemPage activeSystemKey={systemKeyFromPath} navigate={navigate} />
     ) : (

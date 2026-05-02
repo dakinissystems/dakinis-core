@@ -13,9 +13,22 @@ export default function AppTopBar({ navigate, session, logout }) {
           <img src={logoSimple} alt="Logo Dakinis" className="brand-icon" />
           <span>Dakinis One</span>
         </button>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
           {session?.user?.email ? (
             <>
+              {session.user.role === "platform_admin" || session.business?.type === "platform" ? (
+                <button type="button" className="btn btn-outline" onClick={() => navigate("/admin")}>
+                  Panel plataforma
+                </button>
+              ) : session.business?.slug ? (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
+                >
+                  Mi negocio
+                </button>
+              ) : null}
               <span
                 className="lead"
                 style={{

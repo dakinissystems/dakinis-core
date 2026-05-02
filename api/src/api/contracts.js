@@ -20,7 +20,14 @@ export const DAKINIS_API_CONTRACT = {
   }
 };
 
-export const DAKINIS_ALLOWED_ADAPTERS = ["clinica", "peluqueria", "restaurante", "inmobiliaria", "custom"];
+export const DAKINIS_ALLOWED_ADAPTERS = [
+  "clinica",
+  "peluqueria",
+  "restaurante",
+  "inmobiliaria",
+  "platform",
+  "custom"
+];
 export const DAKINIS_BUSINESS_TYPE_HEADER = "x-business-type";
 export const DAKINIS_BUSINESS_ID_HEADER = "x-business-id";
 
@@ -28,5 +35,6 @@ export const DAKINIS_ENTITY_BY_BUSINESS_TYPE = {
   clinica: "paciente",
   peluqueria: "reserva",
   restaurante: "comanda",
-  inmobiliaria: "lead"
+  inmobiliaria: "lead",
+  platform: "_platform"
 };
