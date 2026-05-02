@@ -39,9 +39,26 @@ export default function LoginPage({ navigate }) {
         <p className="kicker">Acceso SaaS multi-tenant</p>
         <h2>Iniciar sesion</h2>
         <p className="lead">
-          Credenciales demo: <code className="config-box">admin@clinica-demo.local</code> /{" "}
-          <code className="config-box">demo123</code> (y otros tenants seeded).
+          Contraseña demo para todos los tenants: <code className="config-box">demo123</code>
         </p>
+        <ul className="demo-tenant-list">
+          <li>
+            <code className="config-box">admin@clinica-demo.local</code>
+            <span className="demo-tenant-label">Clínica estética</span>
+          </li>
+          <li>
+            <code className="config-box">admin@peluqueria-demo.local</code>
+            <span className="demo-tenant-label">Peluquería premium</span>
+          </li>
+          <li>
+            <code className="config-box">admin@restaurante-demo.local</code>
+            <span className="demo-tenant-label">Restaurante premium</span>
+          </li>
+          <li>
+            <code className="config-box">admin@inmobiliaria-demo.local</code>
+            <span className="demo-tenant-label">Inmobiliaria</span>
+          </li>
+        </ul>
         <form className="mockup-form card" onSubmit={handleSubmit} style={{ gridTemplateColumns: "1fr" }}>
           <label className="mockup-field">
             <span>Email</span>

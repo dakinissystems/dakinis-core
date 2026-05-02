@@ -45,7 +45,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
         <div className="container">
           <h2>Tenants demo por tipo de negocio</h2>
           <p className="lead">
-            Slugs seed: clinica-demo, peluqueria-demo, restaurante-demo, inmobiliaria-demo. API key
+            Slugs seed: clinica-demo, peluqueria-demo, inmobiliaria-demo, restaurante-demo. API key
             desarrollo:&nbsp;
             <code>dakinis-dev-key</code>
           </p>

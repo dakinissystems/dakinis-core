@@ -9,6 +9,8 @@ import SystemPage from "./pages/SystemPage.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
+const DAKINIS_DEFAULT_DOCUMENT_TITLE = "Dakinis One | Scheduler + CRM + WhatsApp";
+
 function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
   const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
@@ -27,12 +29,25 @@ export default function App() {
     return () => window.removeEventListener("popstate", sync);
   }, []);
 
+  const systemKeyFromPath = dakinisGetVerticalFromPath(currentPath);
+
+  useEffect(() => {
+    if (currentPath === "/login") {
+      document.title = "Iniciar sesión · Dakinis One";
+      return;
+    }
+    if (systemKeyFromPath && dakinisSystemRegistry[systemKeyFromPath]) {
+      document.title = `${dakinisSystemRegistry[systemKeyFromPath].label} · Dakinis One`;
+      return;
+    }
+    document.title = DAKINIS_DEFAULT_DOCUMENT_TITLE;
+  }, [currentPath, systemKeyFromPath]);
+
   function navigate(pathname) {
     window.history.pushState({}, "", pathname);
     setCurrentPath(pathname);
   }
 
-  const systemKeyFromPath = dakinisGetVerticalFromPath(currentPath);
   const route =
     currentPath === "/login" ? (
       <LoginPage navigate={navigate} />

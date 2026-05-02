@@ -11,14 +11,14 @@ export function dakinisSeed(db) {
     {
       id: "biz_00000000_0001",
       slug: "clinica-demo",
-      name: "Clinica Demo (tenant)",
+      name: "Clínica Demo (tenant)",
       type: "clinica",
       plan: "starter"
     },
     {
       id: "biz_00000000_0002",
       slug: "peluqueria-demo",
-      name: "Peluqueria Demo (tenant)",
+      name: "Peluquería Demo (tenant)",
       type: "peluqueria",
       plan: "starter"
     },
@@ -32,7 +32,7 @@ export function dakinisSeed(db) {
     {
       id: "biz_00000000_0004",
       slug: "restaurante-demo",
-      name: "Restaurante Demo (tenant)",
+      name: "Restaurante Premium Demo (tenant)",
       type: "restaurante",
       plan: "starter"
     }

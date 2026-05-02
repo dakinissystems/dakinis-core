@@ -33,23 +33,6 @@ export const dakinisSystemModulesCatalog = {
       }
     ]
   },
-  restaurante: {
-    label: "Restaurante",
-    modules: [
-      {
-        title: "Reservas y sala",
-        features: ["Mesas por turno", "Duracion por servicio", "Lista de espera inteligente"]
-      },
-      {
-        title: "CRM comensales",
-        features: ["Historial de visitas", "Alergias y preferencias", "Clientes VIP y cumpleaños"]
-      },
-      {
-        title: "WhatsApp y recordatorios",
-        features: ["Confirmacion de reserva", "Recordatorio 24h", "Encuesta post-visita"]
-      }
-    ]
-  },
   inmobiliaria: {
     label: "Inmobiliaria",
     modules: [
@@ -64,6 +47,23 @@ export const dakinisSystemModulesCatalog = {
       {
         title: "Dashboard comercial",
         features: ["Conversión por agente", "Pipeline en tiempo real", "Ingresos estimados"]
+      }
+    ]
+  },
+  restaurante: {
+    label: "Restaurante premium",
+    modules: [
+      {
+        title: "Reservas y sala",
+        features: ["Mesas por turno", "Duración por servicio", "Lista de espera inteligente"]
+      },
+      {
+        title: "CRM comensales",
+        features: ["Historial de visitas", "Alergias y preferencias", "Clientes VIP y cumpleaños"]
+      },
+      {
+        title: "WhatsApp y recordatorios",
+        features: ["Confirmación de reserva", "Recordatorio 24h", "Encuesta post-visita"]
       }
     ]
   }

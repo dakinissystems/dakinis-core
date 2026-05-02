@@ -1,4 +1,4 @@
-/** Configuracion por defecto para restaurante: turnos, mesas y fidelizacion. */
+/** Configuración por defecto para vertical Restaurante premium: turnos, mesas y fidelización. */
 export const dakinisRestauranteAdapter = {
   agenda: {
     slotMinutes: 15,

@@ -1,6 +1,6 @@
 export const DAKINIS_SYSTEM_PAGE_CONTENT = {
   clinica: {
-    pageTitle: "Sistema para Clinica Estetica",
+    pageTitle: "Sistema para Clínica estética",
     pageDescription:
       "Centraliza agenda medica, seguimiento de pacientes y automatizacion de confirmaciones para reducir ausencias.",
     highlights: [
@@ -78,7 +78,7 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
     ]
   },
   restaurante: {
-    pageTitle: "Sistema para Restaurante",
+    pageTitle: "Sistema para Restaurante premium",
     pageDescription:
       "Coordina reservas por mesa y turno, gestiona comensales recurrentes y automatiza confirmaciones por WhatsApp.",
     highlights: [
@@ -86,7 +86,7 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "CRM con preferencias y alergias",
       "Menos no-show en horas punta"
     ],
-    ctaLabel: "Solicitar demo para restaurante",
+    ctaLabel: "Solicitar demo para restaurante premium",
     kpis: [
       { label: "Coberturas hoy", value: "52" },
       { label: "Ocupacion sala", value: "84%" },
