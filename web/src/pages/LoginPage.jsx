@@ -89,10 +89,6 @@ export default function LoginPage({ navigate }) {
             <code className="config-box">admin@inmobiliaria-demo.local</code>
             <span className="demo-tenant-label">Inmobiliaria</span>
           </li>
-          <li>
-            <code className="config-box">admin@dakinis-platform.local</code>
-            <span className="demo-tenant-label">Administrador plataforma (multi-tenant)</span>
-          </li>
         </ul>
         <form className="mockup-form card" onSubmit={handleSubmit} style={{ gridTemplateColumns: "1fr" }}>
           <label className="mockup-field">

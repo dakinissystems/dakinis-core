@@ -1,14 +1,39 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import {
+  dakinisFormatBusinessTypeLabel,
+  dakinisNormalizeBusinessTypeKey
+} from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisBearerJsonFetch } from "../services/api.js";
+
+const DAKINIS_TYPE_OTHER = "__other__";
 
 export default function PlatformAdminPage({ navigate }) {
   const { session } = useDakinisSession();
-  const verticalOptions = useMemo(() => Object.keys(dakinisGetSystemRegistry()), []);
-  const platformTypes = useMemo(
-    () => [...verticalOptions, "platform"],
-    [verticalOptions]
+
+  const typeSelectOptions = useMemo(() => {
+    const reg = dakinisGetSystemRegistry();
+    return Object.keys(reg).map((k) => ({
+      value: k,
+      label: dakinisFormatBusinessTypeLabel(k)
+    }));
+  }, []);
+
+  const verticalKeys = useMemo(() => typeSelectOptions.map((o) => o.value), [typeSelectOptions]);
+
+  const typeSelectOptionsCreate = useMemo(
+    () => [...typeSelectOptions, { value: DAKINIS_TYPE_OTHER, label: "Otro" }],
+    [typeSelectOptions]
+  );
+
+  const typeSelectOptionsEdit = useMemo(
+    () => [
+      ...typeSelectOptions,
+      { value: "platform", label: dakinisFormatBusinessTypeLabel("platform") },
+      { value: DAKINIS_TYPE_OTHER, label: "Otro" }
+    ],
+    [typeSelectOptions]
   );
 
   const [businesses, setBusinesses] = useState([]);
@@ -20,17 +45,26 @@ export default function PlatformAdminPage({ navigate }) {
   const [createForm, setCreateForm] = useState(() => ({
     name: "",
     slug: "",
-    type: verticalOptions[0] || "clinica",
-    plan: "starter"
+    typeSelect: verticalKeys[0] || "clinica",
+    typeCustom: "",
+    plan: "starter",
+    ownerEmail: "",
+    ownerPassword: ""
   }));
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({
     name: "",
     slug: "",
-    type: "",
     plan: ""
   });
+  const [editTypeSelect, setEditTypeSelect] = useState("clinica");
+  const [editTypeCustom, setEditTypeCustom] = useState("");
+
+  const tenantUsersOnly = useMemo(
+    () => users.filter((u) => u.role !== "platform_admin"),
+    [users]
+  );
 
   const load = useCallback(async (signal) => {
     if (!session?.token || session.user?.role !== "platform_admin") return;
@@ -66,30 +100,55 @@ export default function PlatformAdminPage({ navigate }) {
     setEditForm({
       name: b.name,
       slug: b.slug,
-      type: b.type,
       plan: b.plan
     });
+    const preset = new Set([...verticalKeys, "platform"]);
+    if (preset.has(b.type)) {
+      setEditTypeSelect(b.type);
+      setEditTypeCustom("");
+    } else {
+      setEditTypeSelect(DAKINIS_TYPE_OTHER);
+      setEditTypeCustom(b.type);
+    }
   }
 
   async function submitCreate(e) {
     e.preventDefault();
     if (!session?.token) return;
+    const type =
+      createForm.typeSelect === DAKINIS_TYPE_OTHER
+        ? dakinisNormalizeBusinessTypeKey(createForm.typeCustom)
+        : createForm.typeSelect;
+    if (createForm.typeSelect === DAKINIS_TYPE_OTHER && !type) {
+      setError("Indica un identificador para el tipo nuevo (solo letras, números y guiones; ej. gimnasio-centro).");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
+      const ownerEmail = createForm.ownerEmail.trim().toLowerCase();
+      const ownerPassword = createForm.ownerPassword;
+      const body = {
+        name: createForm.name.trim(),
+        slug: createForm.slug.trim().toLowerCase(),
+        type,
+        plan: createForm.plan.trim() || "starter"
+      };
+      if (ownerEmail || ownerPassword) {
+        body.ownerEmail = ownerEmail;
+        body.ownerPassword = ownerPassword;
+      }
       await dakinisBearerJsonFetch("/api/platform/businesses", session.token, {
         method: "POST",
-        body: {
-          name: createForm.name.trim(),
-          slug: createForm.slug.trim().toLowerCase(),
-          type: createForm.type,
-          plan: createForm.plan.trim() || "starter"
-        }
+        body
       });
       setCreateForm((prev) => ({
         ...prev,
         name: "",
-        slug: ""
+        slug: "",
+        typeCustom: "",
+        ownerEmail: "",
+        ownerPassword: ""
       }));
       await load();
     } catch (err) {
@@ -102,6 +161,14 @@ export default function PlatformAdminPage({ navigate }) {
   async function submitEdit(e) {
     e.preventDefault();
     if (!session?.token || !editingId) return;
+    const type =
+      editTypeSelect === DAKINIS_TYPE_OTHER
+        ? dakinisNormalizeBusinessTypeKey(editTypeCustom)
+        : editTypeSelect;
+    if (editTypeSelect === DAKINIS_TYPE_OTHER && !type) {
+      setError("Indica un identificador para el tipo personalizado.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -110,7 +177,7 @@ export default function PlatformAdminPage({ navigate }) {
         body: {
           name: editForm.name.trim(),
           slug: editForm.slug.trim().toLowerCase(),
-          type: editForm.type,
+          type,
           plan: editForm.plan.trim()
         }
       });
@@ -142,10 +209,10 @@ export default function PlatformAdminPage({ navigate }) {
         <p className="kicker">Plataforma</p>
         <h2>Administración multi-tenant</h2>
         <p className="lead">
-          Entra con <code className="config-box">admin@dakinis-platform.local</code> y la contraseña del seed (por
-          defecto <code className="config-box">demo123</code>). Si el servidor define{" "}
-          <code>DAKINIS_PLATFORM_TOTP_SECRET</code>, añade el código TOTP en el login. Abre{" "}
-          <code className="config-box">/admin</code> o el botón <strong>Panel plataforma</strong> en la barra superior.
+          Acceso con cuenta de administrador de plataforma y contraseña configurada en el servidor (seed demo habitual:{" "}
+          <code className="config-box">demo123</code>). Si el servidor define <code>DAKINIS_PLATFORM_TOTP_SECRET</code>,
+          usa también el código TOTP en el login. Esta vista está en <code className="config-box">/admin</code> o desde{" "}
+          <strong>Panel plataforma</strong> en la barra.
         </p>
         <button type="button" className="btn btn-outline" style={{ marginBottom: "1rem" }} onClick={() => navigate("/")}>
           Volver al inicio
@@ -179,12 +246,18 @@ export default function PlatformAdminPage({ navigate }) {
           <label className="mockup-field">
             <span>Tipo</span>
             <select
-              value={createForm.type}
-              onChange={(ev) => setCreateForm((p) => ({ ...p, type: ev.target.value }))}
+              value={createForm.typeSelect}
+              onChange={(ev) =>
+                setCreateForm((p) => ({
+                  ...p,
+                  typeSelect: ev.target.value,
+                  typeCustom: ev.target.value === DAKINIS_TYPE_OTHER ? p.typeCustom : ""
+                }))
+              }
             >
-              {verticalOptions.map((k) => (
-                <option key={k} value={k}>
-                  {k}
+              {typeSelectOptionsCreate.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
@@ -195,6 +268,41 @@ export default function PlatformAdminPage({ navigate }) {
               value={createForm.plan}
               onChange={(ev) => setCreateForm((p) => ({ ...p, plan: ev.target.value }))}
               placeholder="starter"
+            />
+          </label>
+          {createForm.typeSelect === DAKINIS_TYPE_OTHER ? (
+            <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
+              <span>Nuevo tipo (identificador)</span>
+              <input
+                value={createForm.typeCustom}
+                onChange={(ev) => setCreateForm((p) => ({ ...p, typeCustom: ev.target.value }))}
+                placeholder="ej. gimnasio-centro"
+                autoComplete="off"
+              />
+            </label>
+          ) : null}
+          <p className="lead" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            Opcional: crear ya el <strong>primer administrador</strong> del negocio (luego podrá añadir miembros desde el
+            panel del sistema).
+          </p>
+          <label className="mockup-field">
+            <span>Email administrador</span>
+            <input
+              type="email"
+              value={createForm.ownerEmail}
+              onChange={(ev) => setCreateForm((p) => ({ ...p, ownerEmail: ev.target.value }))}
+              autoComplete="off"
+              placeholder="vacío si ya gestionas usuarios después"
+            />
+          </label>
+          <label className="mockup-field">
+            <span>Contraseña inicial</span>
+            <input
+              type="password"
+              value={createForm.ownerPassword}
+              onChange={(ev) => setCreateForm((p) => ({ ...p, ownerPassword: ev.target.value }))}
+              autoComplete="new-password"
+              placeholder="mín. 8 caracteres si indicas email"
             />
           </label>
           <button type="submit" className="btn" disabled={saving} style={{ gridColumn: "1 / -1" }}>
@@ -227,24 +335,52 @@ export default function PlatformAdminPage({ navigate }) {
                 <label className="mockup-field">
                   <span>Tipo</span>
                   <select
-                    value={editForm.type}
-                    onChange={(ev) => setEditForm((p) => ({ ...p, type: ev.target.value }))}
+                    value={editTypeSelect}
+                    onChange={(ev) => {
+                      const v = ev.target.value;
+                      setEditTypeSelect(v);
+                      if (v !== DAKINIS_TYPE_OTHER) {
+                        setEditTypeCustom("");
+                      }
+                    }}
                   >
-                    {platformTypes.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
+                    {typeSelectOptionsEdit.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
                       </option>
                     ))}
                   </select>
                 </label>
-                <label className="mockup-field">
-                  <span>Plan</span>
-                  <input
-                    value={editForm.plan}
-                    onChange={(ev) => setEditForm((p) => ({ ...p, plan: ev.target.value }))}
-                    required
-                  />
-                </label>
+                {editTypeSelect === DAKINIS_TYPE_OTHER ? (
+                  <label className="mockup-field">
+                    <span>Tipo personalizado</span>
+                    <input
+                      value={editTypeCustom}
+                      onChange={(ev) => setEditTypeCustom(ev.target.value)}
+                      placeholder="identificador en minusculas"
+                      autoComplete="off"
+                    />
+                  </label>
+                ) : (
+                  <label className="mockup-field">
+                    <span>Plan</span>
+                    <input
+                      value={editForm.plan}
+                      onChange={(ev) => setEditForm((p) => ({ ...p, plan: ev.target.value }))}
+                      required
+                    />
+                  </label>
+                )}
+                {editTypeSelect === DAKINIS_TYPE_OTHER ? (
+                  <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
+                    <span>Plan</span>
+                    <input
+                      value={editForm.plan}
+                      onChange={(ev) => setEditForm((p) => ({ ...p, plan: ev.target.value }))}
+                      required
+                    />
+                  </label>
+                ) : null}
               </div>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 <button type="submit" className="btn" disabled={saving}>
@@ -278,7 +414,7 @@ export default function PlatformAdminPage({ navigate }) {
                   <td>
                     <code>{b.slug}</code>
                   </td>
-                  <td>{b.type}</td>
+                  <td>{dakinisFormatBusinessTypeLabel(b.type)}</td>
                   <td>{b.plan}</td>
                   <td>
                     <button type="button" className="btn btn-outline" onClick={() => startEdit(b)} disabled={!!editingId}>
@@ -303,14 +439,14 @@ export default function PlatformAdminPage({ navigate }) {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {tenantUsersOnly.map((u) => (
                 <tr key={u.id}>
                   <td>{u.email}</td>
                   <td>{u.role}</td>
                   <td>
                     {u.business_name} <code>({u.business_slug})</code>
                   </td>
-                  <td>{u.business_type}</td>
+                  <td>{dakinisFormatBusinessTypeLabel(u.business_type)}</td>
                 </tr>
               ))}
             </tbody>

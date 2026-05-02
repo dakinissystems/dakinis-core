@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { dakinisFormatBusinessTypeLabel } from "@dakinis/shared/catalog/business-type-display.js";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 
 const logoGrande = "/Logo%20Grande.jpeg";
@@ -89,7 +90,11 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
           )}
           {session?.token && session.business?.type && !dakinisIsPlatformAdminSession(session) ? (
             <p className="lead" style={{ marginTop: "0.75rem" }}>
-              Sesión: solo ves tu tipo de negocio (<strong>{dakinisSystemRegistry[session.business.type]?.label}</strong>
+              Sesión: solo ves tu tipo de negocio (
+              <strong>
+                {dakinisSystemRegistry[session.business.type]?.label ??
+                  dakinisFormatBusinessTypeLabel(session.business.type)}
+              </strong>
               ).
             </p>
           ) : null}

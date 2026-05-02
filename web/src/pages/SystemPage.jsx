@@ -12,6 +12,7 @@ import {
   dakinisBuildDefaultFormValues
 } from "../data/systemPages.js";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import TenantTeamSection from "../components/TenantTeamSection.jsx";
 import { dakinisBuildModuleFunctionMap } from "../utils/moduleMap.js";
 
 const logoSimple = "/Logo%20Simple.jpeg";
@@ -327,6 +328,13 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </div>
           )}
         </article>
+
+        <TenantTeamSection
+          session={session}
+          apiSession={apiSession}
+          tenantSlugForVertical={tenantSlugForVertical}
+          activeSystemKey={activeSystemKey}
+        />
 
         <h3>Integracion tecnica</h3>
         <p className="lead">

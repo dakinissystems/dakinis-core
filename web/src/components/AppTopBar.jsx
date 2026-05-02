@@ -38,7 +38,9 @@ export default function AppTopBar({ navigate, session, logout }) {
                   textOverflow: "ellipsis"
                 }}
               >
-                {session.user.email}
+                {session.user.role === "platform_admin" || session.business?.type === "platform"
+                  ? "Administrador plataforma"
+                  : session.user.email}
               </span>
               <button type="button" className="btn btn-outline" onClick={logout}>
                 Salir

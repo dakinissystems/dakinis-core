@@ -7,6 +7,7 @@
     ".": "./index.js",
     "./catalog/system-registry.js": "./catalog/system-registry.js",
     "./catalog/business-mapping.js": "./catalog/business-mapping.js",
+    "./catalog/business-type-display.js": "./catalog/business-type-display.js",
     "./catalog/routes.js": "./catalog/routes.js",
     "./catalog/system-modules.js": "./catalog/system-modules.js"
   }

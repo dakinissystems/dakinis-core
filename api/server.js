@@ -18,6 +18,11 @@ import {
   dakinisHandlePlatformBusinesses,
   dakinisHandlePlatformUsers
 } from "./src/api/platform-routes.js";
+import {
+  dakinisHandleTenantUsersGet,
+  dakinisHandleTenantUsersPatch,
+  dakinisHandleTenantUsersPost
+} from "./src/api/tenant-users.js";
 
 dakinisAssertProductionJwtSecret();
 dakinisInitDb();
@@ -102,6 +107,19 @@ async function dakinisDispatch(req, rawBody, url) {
 
   if (path === "/api/me" && req.method === "GET") {
     return dakinisHandleMeRequest(req);
+  }
+
+  if (path === "/api/tenant/users" && req.method === "GET") {
+    return dakinisHandleTenantUsersGet(req);
+  }
+
+  if (path === "/api/tenant/users" && req.method === "POST") {
+    return dakinisHandleTenantUsersPost(req, rawBody);
+  }
+
+  const tenantUserPatch = /^\/api\/tenant\/users\/([^/]+)$/.exec(path);
+  if (tenantUserPatch && req.method === "PATCH") {
+    return dakinisHandleTenantUsersPatch(req, tenantUserPatch[1], rawBody);
   }
 
   return dakinisHandleApiRequest(req, rawBody, url);

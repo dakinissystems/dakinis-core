@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
+import bcrypt from "bcryptjs";
+import {
+  dakinisIsValidBusinessTypeKey,
+  dakinisNormalizeBusinessTypeKey
+} from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-
-const DAKINIS_CREATE_BUSINESS_TYPES = new Set(["clinica", "peluqueria", "restaurante", "inmobiliaria"]);
-const DAKINIS_UPDATE_BUSINESS_TYPES = new Set([...DAKINIS_CREATE_BUSINESS_TYPES, "platform"]);
 
 function dakinisParseJson(rawBody) {
   try {
@@ -20,7 +22,7 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
   }
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const slug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
-  const type = typeof body.type === "string" ? body.type.trim() : "";
+  const type = dakinisNormalizeBusinessTypeKey(typeof body.type === "string" ? body.type : "");
   const plan =
     typeof body.plan === "string" && body.plan.trim() ? body.plan.trim() : "starter";
 
@@ -30,10 +32,8 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "slug: solo minusculas, numeros y guiones");
   }
-  if (!DAKINIS_CREATE_BUSINESS_TYPES.has(type)) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "type no valido para alta", {
-      allowed: [...DAKINIS_CREATE_BUSINESS_TYPES]
-    });
+  if (!dakinisIsValidBusinessTypeKey(type, { allowPlatform: false })) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa clinica, peluqueria, restaurante, inmobiliaria o una clave personalizada (minusculas, numeros, guiones, 2-48 caracteres). No uses platform al crear.");
   }
 
   const db = dakinisGetDb();
@@ -42,14 +42,54 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
     return dakinisJsonError(409, "SLUG_TAKEN", "Ya existe un negocio con ese slug");
   }
 
+  const ownerEmail =
+    typeof body.ownerEmail === "string" ? body.ownerEmail.trim().toLowerCase() : "";
+  const ownerPassword = typeof body.ownerPassword === "string" ? body.ownerPassword : "";
+
+  if (ownerEmail || ownerPassword) {
+    if (!ownerEmail || !ownerPassword) {
+      return dakinisJsonError(
+        400,
+        "VALIDATION_ERROR",
+        "Para crear el primer administrador incluye ownerEmail y ownerPassword"
+      );
+    }
+    if (ownerPassword.length < 8) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", "ownerPassword: minimo 8 caracteres");
+    }
+    const emailTaken = db.prepare("SELECT id FROM users WHERE lower(email) = lower(?)").get(ownerEmail);
+    if (emailTaken) {
+      return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ownerEmail");
+    }
+  }
+
   const id = `biz_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  db.prepare(
-    `INSERT INTO business (id, slug, name, type, plan, config_json)
-     VALUES (?, ?, ?, ?, ?, NULL)`
-  ).run(id, slug, name, type, plan);
+  const uid =
+    ownerEmail && ownerPassword ? `usr_${randomUUID().replace(/-/g, "").slice(0, 16)}` : null;
+  const passwordHash =
+    ownerEmail && ownerPassword ? bcrypt.hashSync(ownerPassword, 10) : null;
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      `INSERT INTO business (id, slug, name, type, plan, config_json)
+       VALUES (?, ?, ?, ?, ?, NULL)`
+    ).run(id, slug, name, type, plan);
+    if (uid && passwordHash) {
+      db.prepare(
+        `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
+         VALUES (?, ?, ?, ?, 'admin', NULL, 0)`
+      ).run(uid, id, ownerEmail, passwordHash);
+    }
+  });
+  tx();
+
+  let initialUser = null;
+  if (uid) {
+    initialUser = db.prepare(`SELECT id, email, role, created_at FROM users WHERE id = ?`).get(uid);
+  }
 
   const row = db.prepare("SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?").get(id);
-  return dakinisJsonSuccess({ business: row }, "platform", {});
+  return dakinisJsonSuccess({ business: row, initialUser }, "platform", {});
 }
 
 export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
@@ -70,7 +110,9 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
 
   const name = typeof body.name === "string" ? body.name.trim() : undefined;
   let slug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : undefined;
-  const type = typeof body.type === "string" ? body.type.trim() : undefined;
+  const typeRaw = typeof body.type === "string" ? body.type : "";
+  const type =
+    typeRaw === "" ? undefined : dakinisNormalizeBusinessTypeKey(typeRaw);
   const plan = typeof body.plan === "string" ? body.plan.trim() : undefined;
 
   if (slug !== undefined) {
@@ -84,10 +126,8 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
       }
     }
   }
-  if (type !== undefined && !DAKINIS_UPDATE_BUSINESS_TYPES.has(type)) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "type no valido", {
-      allowed: [...DAKINIS_UPDATE_BUSINESS_TYPES]
-    });
+  if (type !== undefined && !dakinisIsValidBusinessTypeKey(type, { allowPlatform: true })) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "type no valido (presets, platform o clave personalizada 2-48 caracteres)");
   }
   if (name !== undefined && !name) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "name no puede estar vacio");
