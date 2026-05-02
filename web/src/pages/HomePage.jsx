@@ -20,6 +20,15 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
     return all;
   }, [session, dakinisSystemRegistry]);
 
+  const vistaButtons = useMemo(() => {
+    const all = Object.entries(dakinisSystemRegistry);
+    if (!session?.token) return all;
+    if (dakinisIsPlatformAdminSession(session)) return all;
+    const tenantType = session.business?.type;
+    if (tenantType) return all.filter(([key]) => key === tenantType);
+    return all;
+  }, [session, dakinisSystemRegistry]);
+
   return (
     <>
       <section className="hero">
@@ -88,6 +97,24 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
               ))}
             </div>
           )}
+          {vistaButtons.length > 0 ? (
+            <>
+              <h3 style={{ marginTop: "1.75rem" }}>Vista previa del panel (mockup)</h3>
+              <p className="lead">Maquetación estática de cómo podría verse el programa por tipo de negocio.</p>
+              <div className="system-switcher">
+                {vistaButtons.map(([systemKey, systemInfo]) => (
+                  <button
+                    key={`vista-${systemKey}`}
+                    type="button"
+                    className="system-btn"
+                    onClick={() => navigate(`/vista/${encodeURIComponent(systemKey)}`)}
+                  >
+                    Vista · {systemInfo.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
           {session?.token && session.business?.type && !dakinisIsPlatformAdminSession(session) ? (
             <p className="lead" style={{ marginTop: "0.75rem" }}>
               Sesión: solo ves tu tipo de negocio (

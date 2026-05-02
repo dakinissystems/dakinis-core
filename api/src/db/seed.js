@@ -213,6 +213,156 @@ export function dakinisSeed(db) {
   for (const r of seedRecords) {
     insertRecord.run(r);
   }
+
+  const insertSupplyDelivery = db.prepare(`
+    INSERT OR IGNORE INTO tenant_supply_deliveries (id, business_id, supplier, arrival_window, contents, status)
+    VALUES (@id, @business_id, @supplier, @arrival_window, @contents, @status)
+  `);
+  const insertSupplyAlert = db.prepare(`
+    INSERT OR IGNORE INTO tenant_supply_alerts (id, business_id, title, product_ref, condition_text, severity)
+    VALUES (@id, @business_id, @title, @product_ref, @condition_text, @severity)
+  `);
+
+  const supplyDeliveriesSeed = [
+    {
+      id: "seed-sd-c1",
+      business_id: businesses[1].id,
+      supplier: "DermaMedical Dist.",
+      arrival_window: "Mie 7 may · 09:00–11:00",
+      contents: "Toxina 100 U x6, HA 1 ml x12",
+      status: "Confirmado"
+    },
+    {
+      id: "seed-sd-c2",
+      business_id: businesses[1].id,
+      supplier: "Laboratorio SkinPro",
+      arrival_window: "Vie 9 may · tarde (almacén)",
+      contents: "Kits post-peeling temporada",
+      status: "En ruta"
+    },
+    {
+      id: "seed-sd-p1",
+      business_id: businesses[2].id,
+      supplier: "ColorLux Professional",
+      arrival_window: "Mar 6 may · mañana reparto zona norte",
+      contents: "Tintes rubio/platinado + oxidantes",
+      status: "Confirmado"
+    },
+    {
+      id: "seed-sd-p2",
+      business_id: businesses[2].id,
+      supplier: "HairCare Mayorista",
+      arrival_window: "Jue 8 may · ventana 14:00–16:00",
+      contents: "Keratina y mascarillas pedido quincenal",
+      status: "Programado"
+    },
+    {
+      id: "seed-sd-i1",
+      business_id: businesses[3].id,
+      supplier: "Foto360 Interiors",
+      arrival_window: "Jue 8 may · visita piso Avda. Sur",
+      contents: "Sesion HDR + dron (tras llave comercial)",
+      status: "Confirmado"
+    },
+    {
+      id: "seed-sd-i2",
+      business_id: businesses[3].id,
+      supplier: "Portal Urbano Elite",
+      arrival_window: "Online · renovación automática",
+      contents: "Destacados zona norte — ciclo mensual",
+      status: "Activo"
+    },
+    {
+      id: "seed-sd-r1",
+      business_id: businesses[4].id,
+      supplier: "Mare Terra Alimentaria",
+      arrival_window: "Cada ma · 07:30 (muelle cocina)",
+      contents: "Pescado y marisco pedido fin de semana",
+      status: "Recurrente"
+    },
+    {
+      id: "seed-sd-r2",
+      business_id: businesses[4].id,
+      supplier: "Bodegas y suministro local",
+      arrival_window: "Mie 7 may · 11:00",
+      contents: "Vinos blanco/tinto carta + vermut barril",
+      status: "Confirmado"
+    }
+  ];
+
+  const supplyAlertsSeed = [
+    {
+      id: "seed-sa-c1",
+      business_id: businesses[1].id,
+      title: "Stock mínimo toxina",
+      product_ref: "DM-TOX-100",
+      condition_text: "Avisar si quedan menos de 6 unidades",
+      severity: "warning"
+    },
+    {
+      id: "seed-sa-c2",
+      business_id: businesses[1].id,
+      title: "Caducidad próxima HA",
+      product_ref: "DM-HYA-01",
+      condition_text: "Revisar lotes que caducan en los próximos 60 días",
+      severity: "info"
+    },
+    {
+      id: "seed-sa-p1",
+      business_id: businesses[2].id,
+      title: "Oxidante 20 vol.",
+      product_ref: "CL-OX20-1L",
+      condition_text: "Alerta si queda menos de 1 bote visible en sala técnica",
+      severity: "warning"
+    },
+    {
+      id: "seed-sa-p2",
+      business_id: businesses[2].id,
+      title: "Tinte rubio frío",
+      product_ref: "CL-60BF",
+      condition_text: "Reposición semanal si ventas > 8 unidades",
+      severity: "info"
+    },
+    {
+      id: "seed-sa-i1",
+      business_id: businesses[3].id,
+      title: "Destacados por expirar",
+      product_ref: "PUE-ZN-30",
+      condition_text: "Avisar 5 días antes del fin del destacado",
+      severity: "warning"
+    },
+    {
+      id: "seed-sa-i2",
+      business_id: businesses[3].id,
+      title: "Paquete foto estándar",
+      product_ref: "F360-P120",
+      condition_text: "Seguimiento si el informe de valoración no llega en 48 h",
+      severity: "info"
+    },
+    {
+      id: "seed-sa-r1",
+      business_id: businesses[4].id,
+      title: "Congelados mejillón",
+      product_ref: "MT-MEJ-2",
+      condition_text: "Pedido urgente si stock congelador < 4 bolsas",
+      severity: "warning"
+    },
+    {
+      id: "seed-sa-r2",
+      business_id: businesses[4].id,
+      title: "Lubina fin de semana",
+      product_ref: "MT-LUBINA",
+      condition_text: "Coordinar con carta si hay evento >40 cubiertos",
+      severity: "info"
+    }
+  ];
+
+  for (const d of supplyDeliveriesSeed) {
+    insertSupplyDelivery.run(d);
+  }
+  for (const a of supplyAlertsSeed) {
+    insertSupplyAlert.run(a);
+  }
 }
 
 export { DAKINIS_DEMO_PASSWORD };

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { dakinisCreatePlatformModules } from "@dakinis/shared";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import {
   DAKINIS_BUSINESS_SLUG_BY_VERTICAL,
@@ -12,8 +11,8 @@ import {
   dakinisBuildDefaultFormValues
 } from "../data/systemPages.js";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
-import { dakinisBuildModuleFunctionMap } from "../utils/moduleMap.js";
 
 const logoSimple = "/Logo%20Simple.jpeg";
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -54,9 +53,6 @@ export default function SystemPage({ activeSystemKey, navigate }) {
     };
   }, [session, tenantSlugForVertical, activeSystemKey]);
 
-  const [remoteConfig, setRemoteConfig] = useState(null);
-  const [configStatus, setConfigStatus] = useState("idle");
-  const [configError, setConfigError] = useState("");
   const [records, setRecords] = useState(() => [...activeMockup.initialRecords]);
   const [recordsError, setRecordsError] = useState("");
   const [recordsSynced, setRecordsSynced] = useState(false);
@@ -68,32 +64,6 @@ export default function SystemPage({ activeSystemKey, navigate }) {
     setRecordsError("");
     setRecordsSynced(false);
   }, [activeSystemKey, activeMockup]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function dakinisLoadRemoteConfig() {
-      setConfigStatus("loading");
-      setConfigError("");
-      try {
-        const json = await dakinisTenantJsonFetch("/api/config", apiSession, {
-          signal: controller.signal,
-          businessId: tenantSlugForVertical,
-          businessTypeHeader: activeSystemKey
-        });
-        setRemoteConfig(json?.data?.config || null);
-        setConfigStatus("success");
-      } catch (error) {
-        if (error.name === "AbortError") return;
-        setRemoteConfig(null);
-        setConfigStatus("error");
-        setConfigError(error instanceof Error ? error.message : "Error de configuracion");
-      }
-    }
-
-    dakinisLoadRemoteConfig();
-    return () => controller.abort();
-  }, [activeSystemKey, tenantSlugForVertical, apiSession]);
 
   const reloadRecordsFromApi = useCallback(
     async (signal) => {
@@ -127,18 +97,6 @@ export default function SystemPage({ activeSystemKey, navigate }) {
     reloadRecordsFromApi(controller.signal);
     return () => controller.abort();
   }, [reloadRecordsFromApi]);
-
-  const modules = useMemo(
-    () =>
-      dakinisCreatePlatformModules({
-        ...selectedSystem.config,
-        ...(remoteConfig ? { ...remoteConfig } : {}),
-        dashboard: { currency: "EUR", ...(remoteConfig?.dashboard || {}) }
-      }),
-    [selectedSystem, remoteConfig]
-  );
-
-  const moduleFunctionMap = useMemo(() => dakinisBuildModuleFunctionMap(modules), [modules]);
 
   function dakinisHandleMockFieldChange(fieldKey, value) {
     setMockFormValues((prev) => ({
@@ -192,9 +150,18 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </article>
           ))}
         </section>
-        <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-          {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
-        </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+          <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
+            {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => navigate(`/vista/${encodeURIComponent(activeSystemKey)}`)}
+          >
+            Vista previa del panel (mockup)
+          </button>
+        </div>
         {!hideVerticalSwitcher ? (
           <div className="system-switcher">
             {sistemaSwitcherEntries.map(([systemKey, systemInfo]) => (
@@ -216,14 +183,8 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           </p>
         )}
         <p className="lead">
-          Vertical: {selectedSystem.label} | Slot {modules.config.agenda.slotMinutes} min | Cliente perdido:{" "}
-          {modules.config.crm.lostClientDays} dias | Config API:{" "}
-          {configStatus === "loading"
-            ? "cargando..."
-            : configStatus === "success"
-              ? "tenant + tipo"
-              : "fallback local"}
-          {configStatus === "error" ? ` (${configError})` : ""}
+          Esta vista muestra cómo trabaja Dakinis adaptado a <strong>{selectedSystem.label}</strong>: agendas, datos de
+          clientes y avisos, sin exponer aspectos internos para visitantes que exploran la demo.
         </p>
 
         <h3>Operacion diaria del negocio</h3>
@@ -259,15 +220,83 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           </article>
         </div>
 
+        {systemPageContent.suppliersProducts ? (
+          <>
+            <h3>{systemPageContent.suppliersProducts.sectionTitle}</h3>
+            <p className="lead">{systemPageContent.suppliersProducts.sectionLead}</p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "1rem",
+                marginBottom: "1.25rem"
+              }}
+            >
+              <article className="card" style={{ overflow: "auto" }}>
+                <h4>Proveedores o aliados</h4>
+                <table className="mockup-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Contacto</th>
+                      <th>Ámbito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {systemPageContent.suppliersProducts.supplierRows.map((row, i) => (
+                      <tr key={`sup-${activeSystemKey}-${i}`}>
+                        <td>{row.name}</td>
+                        <td>{row.contact}</td>
+                        <td>{row.niche}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </article>
+              <article className="card" style={{ overflow: "auto" }}>
+                <h4>Productos o servicios por proveedor</h4>
+                <table className="mockup-table">
+                  <thead>
+                    <tr>
+                      <th>Proveedor</th>
+                      <th>Ítem</th>
+                      <th>Ref.</th>
+                      <th>Notas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {systemPageContent.suppliersProducts.productRows.map((row, i) => (
+                      <tr key={`prod-${activeSystemKey}-${i}`}>
+                        <td>{row.supplier}</td>
+                        <td>{row.product}</td>
+                        <td>{row.reference}</td>
+                        <td>{row.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </article>
+            </div>
+
+            <SupplyDeliveriesAndAlerts
+              apiSession={apiSession}
+              tenantSlugForVertical={tenantSlugForVertical}
+              activeSystemKey={activeSystemKey}
+              supplierNames={systemPageContent.suppliersProducts.supplierRows.map((r) => r.name)}
+              productRefs={systemPageContent.suppliersProducts.productRows.map((r) => r.reference)}
+              fallbackDeliveries={systemPageContent.suppliersProducts.incomingDeliveries ?? []}
+              fallbackAlerts={systemPageContent.suppliersProducts.merchandiseAlerts ?? []}
+            />
+          </>
+        ) : null}
+
         <h3>Carga de datos (persistencia por tenant)</h3>
         {recordsError ? (
           <p className="lead" style={{ color: "#fdba74" }}>
             API registros: {recordsError}. Mostrando local o datos mixtos.
           </p>
         ) : recordsSynced ? (
-          <p className="lead">
-            Registros leidos desde SQLite para este tenant y entidad <code>{entityName}</code>.
-          </p>
+          <p className="lead">Últimos datos guardados en tu espacio demo y listos para usar en pantalla.</p>
         ) : null}
 
         <form className="mockup-form card" onSubmit={dakinisHandleMockSubmit}>
@@ -336,13 +365,11 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           activeSystemKey={activeSystemKey}
         />
 
-        <h3>Integracion tecnica</h3>
+        <h3>Tu sistema incluye</h3>
         <p className="lead">
-          Headers efectivos para esta vista: <code>x-business-id={tenantSlugForVertical}</code>
-          {" + JWT o maestra "}
-          <code>dakinis-dev-key</code>
+          Piezas funcionales disponibles para tu tipo de negocio; el detalle técnico y la parametrización quedan bajo tu
+          control en la implementación.
         </p>
-        <pre className="config-box">{JSON.stringify(modules.config, null, 2)}</pre>
         <div className="module-grid">
           {selectedSystem.modules.map((moduleInfo) => (
             <article className="card" key={`biz-${moduleInfo.title}`}>
@@ -350,16 +377,6 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               <ul>
                 {moduleInfo.features.map((feature) => (
                   <li key={`${moduleInfo.title}-${feature}`}>{feature}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-          {Object.entries(moduleFunctionMap).map(([moduleName, functionNames]) => (
-            <article className="card" key={`tech-${moduleName}`}>
-              <h3>{moduleName}</h3>
-              <ul>
-                {functionNames.map((functionName) => (
-                  <li key={`${moduleName}-${functionName}`}>{functionName}</li>
                 ))}
               </ul>
             </article>

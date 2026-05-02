@@ -44,3 +44,29 @@ CREATE TABLE IF NOT EXISTS tenant_records (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenant_records_business_entity ON tenant_records(business_id, entity);
+
+CREATE TABLE IF NOT EXISTS tenant_supply_deliveries (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  supplier TEXT NOT NULL,
+  arrival_window TEXT NOT NULL,
+  contents TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'Programado',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_supply_deliveries_business ON tenant_supply_deliveries(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_supply_alerts (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  product_ref TEXT NOT NULL DEFAULT '',
+  condition_text TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_supply_alerts_business ON tenant_supply_alerts(business_id);

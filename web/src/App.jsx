@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import AppTopBar from "./components/AppTopBar.jsx";
 import { useDakinisSession } from "./context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import { DAKINIS_SYSTEM_ROUTE_PREFIX } from "@dakinis/shared/catalog/routes.js";
+import { DAKINIS_SYSTEM_ROUTE_PREFIX, DAKINIS_VISTA_ROUTE_PREFIX } from "@dakinis/shared/catalog/routes.js";
 import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import PlatformAdminPage from "./pages/PlatformAdminPage.jsx";
+import VistaMockupPage from "./pages/VistaMockupPage.jsx";
 import SystemPage from "./pages/SystemPage.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -15,6 +16,12 @@ const DAKINIS_DEFAULT_DOCUMENT_TITLE = "Dakinis One | Scheduler + CRM + WhatsApp
 function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
   const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
+  return dakinisSystemRegistry[verticalKey] ? verticalKey : null;
+}
+
+function dakinisGetVerticalFromVistaPath(pathname) {
+  if (!pathname.startsWith(DAKINIS_VISTA_ROUTE_PREFIX)) return null;
+  const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_VISTA_ROUTE_PREFIX.length));
   return dakinisSystemRegistry[verticalKey] ? verticalKey : null;
 }
 
@@ -35,6 +42,7 @@ export default function App() {
   }, []);
 
   const systemKeyFromPath = dakinisGetVerticalFromPath(currentPath);
+  const vistaKeyFromPath = dakinisGetVerticalFromVistaPath(currentPath);
 
   useEffect(() => {
     if (currentPath === "/login") {
@@ -45,12 +53,16 @@ export default function App() {
       document.title = "Administración plataforma · Dakinis One";
       return;
     }
+    if (vistaKeyFromPath && dakinisSystemRegistry[vistaKeyFromPath]) {
+      document.title = `Vista previa · ${dakinisSystemRegistry[vistaKeyFromPath].label} · Dakinis One`;
+      return;
+    }
     if (systemKeyFromPath && dakinisSystemRegistry[systemKeyFromPath]) {
       document.title = `${dakinisSystemRegistry[systemKeyFromPath].label} · Dakinis One`;
       return;
     }
     document.title = DAKINIS_DEFAULT_DOCUMENT_TITLE;
-  }, [currentPath, systemKeyFromPath]);
+  }, [currentPath, systemKeyFromPath, vistaKeyFromPath]);
 
   /** Bloquea cambiar de vertical con la sesión de un tenant; envía admins de plataforma al panel /admin. */
   useEffect(() => {
@@ -65,13 +77,25 @@ export default function App() {
     }
 
     const tenantType = session.business?.type;
-    if (!tenantType || !currentPath.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return;
+    if (!tenantType) return;
 
-    const key = decodeURIComponent(currentPath.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
-    if (key && key !== tenantType) {
-      const target = `${DAKINIS_SYSTEM_ROUTE_PREFIX}${encodeURIComponent(tenantType)}`;
-      window.history.replaceState({}, "", target);
-      setCurrentPath(target);
+    if (currentPath.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) {
+      const key = decodeURIComponent(currentPath.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
+      if (key && key !== tenantType) {
+        const target = `${DAKINIS_SYSTEM_ROUTE_PREFIX}${encodeURIComponent(tenantType)}`;
+        window.history.replaceState({}, "", target);
+        setCurrentPath(target);
+      }
+      return;
+    }
+
+    if (currentPath.startsWith(DAKINIS_VISTA_ROUTE_PREFIX)) {
+      const key = decodeURIComponent(currentPath.slice(DAKINIS_VISTA_ROUTE_PREFIX.length));
+      if (key && key !== tenantType) {
+        const target = `${DAKINIS_VISTA_ROUTE_PREFIX}${encodeURIComponent(tenantType)}`;
+        window.history.replaceState({}, "", target);
+        setCurrentPath(target);
+      }
     }
   }, [session, currentPath]);
 
@@ -93,6 +117,8 @@ export default function App() {
       <LoginPage navigate={navigate} />
     ) : currentPath === "/admin" ? (
       <PlatformAdminPage navigate={navigate} />
+    ) : vistaKeyFromPath ? (
+      <VistaMockupPage verticalKey={vistaKeyFromPath} navigate={navigate} />
     ) : systemKeyFromPath ? (
       <SystemPage activeSystemKey={systemKeyFromPath} navigate={navigate} />
     ) : (

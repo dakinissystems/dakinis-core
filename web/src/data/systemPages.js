@@ -34,7 +34,72 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "Mensaje post-tratamiento con recomendaciones",
       "Reactivacion de pacientes inactivos 45 dias"
     ],
-    quickActions: ["Abrir agenda de hoy", "Enviar campaña de reactivacion", "Ver pacientes sin confirmar"]
+    quickActions: ["Abrir agenda de hoy", "Enviar campaña de reactivacion", "Ver pacientes sin confirmar"],
+    suppliersProducts: {
+      sectionTitle: "Proveedores y productos por proveedor",
+      sectionLead:
+        "Cada tratamiento puede enlazarse a consumibles catalogados por su proveedor habitual. Ejemplo orientativo.",
+      supplierRows: [
+        {
+          name: "DermaMedical Dist.",
+          contact: "Pedidos demo",
+          niche: "Rellenos, toxina, peeling"
+        },
+        {
+          name: "Laboratorio SkinPro",
+          contact: "Laura — comercial regional",
+          niche: "Cosmética clínica, post-tratamiento"
+        }
+      ],
+      productRows: [
+        {
+          supplier: "DermaMedical Dist.",
+          product: "Ácido hialurónico 1 ml",
+          reference: "DM-HYA-01",
+          note: "Bajo consumo"
+        },
+        {
+          supplier: "DermaMedical Dist.",
+          product: "Toxina botulínica 100 U",
+          reference: "DM-TOX-100",
+          note: "En rango óptimo"
+        },
+        {
+          supplier: "Laboratorio SkinPro",
+          product: "Kit limpieza pos-peeling",
+          reference: "SP-POST-K2",
+          note: "Reposición próxima semana"
+        }
+      ],
+      incomingDeliveries: [
+        {
+          supplier: "DermaMedical Dist.",
+          arrivalWindow: "Mié 7 may · 09:00–11:00",
+          contents: "Toxina 100 U x6, HA 1 ml x12",
+          status: "Confirmado"
+        },
+        {
+          supplier: "Laboratorio SkinPro",
+          arrivalWindow: "Vie 9 may · tarde (almacén)",
+          contents: "Kits post-peeling temporada",
+          status: "En ruta"
+        }
+      ],
+      merchandiseAlerts: [
+        {
+          title: "Stock mínimo toxina",
+          productRef: "DM-TOX-100",
+          condition: "Avisar si quedan menos de 6 unidades",
+          severity: "warning"
+        },
+        {
+          title: "Caducidad próxima HA",
+          productRef: "DM-HYA-01",
+          condition: "Revisar lotes que caducan en los próximos 60 días",
+          severity: "info"
+        }
+      ]
+    }
   },
   peluqueria: {
     pageTitle: "Sistema para Peluqueria Premium",
@@ -75,7 +140,64 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "Ver huecos de estilistas",
       "Publicar promo de baja ocupacion",
       "Enviar WhatsApp a clientes VIP"
-    ]
+    ],
+    suppliersProducts: {
+      sectionTitle: "Proveedores y productos por proveedor",
+      sectionLead:
+        "Tintes, decoloraciones y tratamientos quedan vinculados al mayorista o marca que los suministra al salón.",
+      supplierRows: [
+        { name: "ColorLux Professional", contact: "Pedidos online L-V", niche: "Coloración premium" },
+        { name: "HairCare Mayorista", contact: "Comercial norte", niche: "Tratamiento, queratina" }
+      ],
+      productRows: [
+        {
+          supplier: "ColorLux Professional",
+          product: "Tinte oxidation 60 ml — rubio frío",
+          reference: "CL-60BF",
+          note: "2 unidades en salón"
+        },
+        {
+          supplier: "ColorLux Professional",
+          product: "Oxidante 20 vol.",
+          reference: "CL-OX20-1L",
+          note: "Stock OK"
+        },
+        {
+          supplier: "HairCare Mayorista",
+          product: "Tratamiento keratina 500 ml",
+          reference: "HC-K500",
+          note: "Pedido mensual"
+        }
+      ],
+      incomingDeliveries: [
+        {
+          supplier: "ColorLux Professional",
+          arrivalWindow: "Mar 6 may · mañana reparto zona norte",
+          contents: "Tintes rubio/platinado + oxidantes",
+          status: "Confirmado"
+        },
+        {
+          supplier: "HairCare Mayorista",
+          arrivalWindow: "Jue 8 may · ventana 14:00–16:00",
+          contents: "Keratina y mascarillas pedido quincenal",
+          status: "Programado"
+        }
+      ],
+      merchandiseAlerts: [
+        {
+          title: "Oxidante 20 vol.",
+          productRef: "CL-OX20-1L",
+          condition: "Alerta si queda menos de 1 bote visible en sala técnica",
+          severity: "warning"
+        },
+        {
+          title: "Tinte rubio frío",
+          productRef: "CL-60BF",
+          condition: "Reposición semanal si ventas > 8 unidades",
+          severity: "info"
+        }
+      ]
+    }
   },
   restaurante: {
     pageTitle: "Sistema para Restaurante premium",
@@ -112,7 +234,64 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "Etiquetado de alergias en la reserva",
       "Mensaje post-visita con valoracion y promocion"
     ],
-    quickActions: ["Abrir mapa de mesas", "Liberar hueco por cancelacion", "Enviar oferta a lista de espera"]
+    quickActions: ["Abrir mapa de mesas", "Liberar hueco por cancelacion", "Enviar oferta a lista de espera"],
+    suppliersProducts: {
+      sectionTitle: "Proveedores y productos por proveedor",
+      sectionLead:
+        "Gestiona qué ingredientes y bebidas llegan de cada proveedor para mantener fichas de coste coherentes.",
+      supplierRows: [
+        { name: "Mare Terra Alimentaria", contact: "Reparto mañanas", niche: "Pescado fresco" },
+        { name: "Bodegas y suministro local", contact: "Comercial plaza", niche: "Vinos y vermut" }
+      ],
+      productRows: [
+        {
+          supplier: "Mare Terra Alimentaria",
+          product: "Lubina salvaje peso variable",
+          reference: "MT-LUBINA",
+          note: "Especial viernes/sábado"
+        },
+        {
+          supplier: "Mare Terra Alimentaria",
+          product: "Mejillón steamed bag 2 kg",
+          reference: "MT-MEJ-2",
+          note: "Inventario congelados"
+        },
+        {
+          supplier: "Bodegas y suministro local",
+          product: "Vino blanco DO Rueda caja x6",
+          reference: "BS-RUEDA-X6",
+          note: "Ración carta temporada"
+        }
+      ],
+      incomingDeliveries: [
+        {
+          supplier: "Mare Terra Alimentaria",
+          arrivalWindow: "Cada ma · 07:30 (muelle cocina)",
+          contents: "Pescado y marisco pedido fin de semana",
+          status: "Recurrente"
+        },
+        {
+          supplier: "Bodegas y suministro local",
+          arrivalWindow: "Mié 7 may · 11:00",
+          contents: "Vinos blanco/tinto carta + vermut barril",
+          status: "Confirmado"
+        }
+      ],
+      merchandiseAlerts: [
+        {
+          title: "Congelados mejillón",
+          productRef: "MT-MEJ-2",
+          condition: "Pedido urgente si stock congelador < 4 bolsas",
+          severity: "warning"
+        },
+        {
+          title: "Lubina fin de semana",
+          productRef: "MT-LUBINA",
+          condition: "Coordinar con carta si hay evento >40 cubiertos",
+          severity: "info"
+        }
+      ]
+    }
   },
   inmobiliaria: {
     pageTitle: "Sistema para Inmobiliaria",
@@ -149,7 +328,69 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "Seguimiento post-visita con encuesta de interes",
       "Reactivacion de leads frios por zona y presupuesto"
     ],
-    quickActions: ["Crear visita guiada", "Ver pipeline por agente", "Lanzar seguimiento a leads frios"]
+    quickActions: ["Crear visita guiada", "Ver pipeline por agente", "Lanzar seguimiento a leads frios"],
+    suppliersProducts: {
+      sectionTitle: "Aliados externos y servicios por proveedor",
+      sectionLead:
+        "Las operaciones inmobiliarias coordinan fotografía, homologaciones y portales externos; aquí ves el catálogo asociado a cada socio.",
+      supplierRows: [
+        { name: "Foto360 Interiors", contact: "Sesiones martes-jueves", niche: "Fotografía HDR y tour" },
+        { name: "Portal Urbano Elite", contact: "Gestor de cuenta", niche: "Destacados y leads premium" },
+        {
+          name: "Notaria asociada López & Ruiz",
+          contact: "Cita firma electrónica",
+          niche: "Precontrato y cierre"
+        }
+      ],
+      productRows: [
+        {
+          supplier: "Foto360 Interiors",
+          product: "Paquete piso hasta 120 m²",
+          reference: "F360-P120",
+          note: "Incluye 25 fotos + plano"
+        },
+        {
+          supplier: "Portal Urbano Elite",
+          product: "Destacado 30 días zona norte",
+          reference: "PUE-ZN-30",
+          note: "Renovación automática"
+        },
+        {
+          supplier: "Notaria asociada López & Ruiz",
+          product: "Preparación firma escritura estándar",
+          reference: "NLR-E1",
+          note: "Solicitud tras reserva firmada"
+        }
+      ],
+      incomingDeliveries: [
+        {
+          supplier: "Foto360 Interiors",
+          arrivalWindow: "Jue 8 may · visita piso Avda. Sur",
+          contents: "Sesión HDR + dron (tras llave comercial)",
+          status: "Confirmado"
+        },
+        {
+          supplier: "Portal Urbano Elite",
+          arrivalWindow: "Online · renovación automática",
+          contents: "Destacados zona norte — ciclo mensual",
+          status: "Activo"
+        }
+      ],
+      merchandiseAlerts: [
+        {
+          title: "Destacados por expirar",
+          productRef: "PUE-ZN-30",
+          condition: "Avisar 5 días antes del fin del destacado",
+          severity: "warning"
+        },
+        {
+          title: "Paquete foto estándar",
+          productRef: "F360-P120",
+          condition: "Seguimiento si el informe de valoración no llega en 48 h",
+          severity: "info"
+        }
+      ]
+    }
   }
 };
 

@@ -13,6 +13,14 @@ export const dakinisSystemModulesCatalog = {
       {
         title: "WhatsApp asistido",
         features: ["Confirmación automática", "Recordatorio 24h y 2h", "Seguimiento post-tratamiento"]
+      },
+      {
+        title: "Proveedores y productos",
+        features: [
+          "Directorio de laboratorios y distribuidores",
+          "Catálogo enlazado a cada proveedor",
+          "Recepciones programadas y alertas de stock o caducidad"
+        ]
       }
     ]
   },
@@ -30,6 +38,14 @@ export const dakinisSystemModulesCatalog = {
       {
         title: "Fidelización",
         features: ["Clientes frecuentes", "Promociones automáticas", "Campañas de retorno"]
+      },
+      {
+        title: "Proveedores y productos",
+        features: [
+          "Tintes, tratamientos y marcas por proveedor",
+          "Ventanas de reparto y pedidos recurrentes",
+          "Alertas cuando falta stock en sala técnica"
+        ]
       }
     ]
   },
@@ -47,6 +63,14 @@ export const dakinisSystemModulesCatalog = {
       {
         title: "Dashboard comercial",
         features: ["Conversión por agente", "Pipeline en tiempo real", "Ingresos estimados"]
+      },
+      {
+        title: "Proveedores y servicios externos",
+        features: [
+          "Fotógrafos, homologadores y portaleros",
+          "Hitos de entrega y renovaciones con cada aliado",
+          "Alertas de plazos y caducidad de destacados"
+        ]
       }
     ]
   },
@@ -64,6 +88,14 @@ export const dakinisSystemModulesCatalog = {
       {
         title: "WhatsApp y recordatorios",
         features: ["Confirmación de reserva", "Recordatorio 24h", "Encuesta post-visita"]
+      },
+      {
+        title: "Proveedores y productos",
+        features: [
+          "Ingredientes y bebidas por proveedor habitual",
+          "Calendario de entregas en cocina y almacén",
+          "Alertas de mínimos en congelados o frescos"
+        ]
       }
     ]
   }

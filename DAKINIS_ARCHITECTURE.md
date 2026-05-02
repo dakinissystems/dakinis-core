@@ -11,13 +11,14 @@ Instalación de dependencias (una vez, en la raíz): `npm install`.
 | Comando | Acción |
 |---------|--------|
 | `npm run dev` | Vite en `web/` — workspace `@dakinis/web`; proxy `/api` → API local. |
+| `npm run dev:full` | **Una terminal**: `concurrently` arranca API + Vite (mismo proxy que arriba). |
 | `npm run preview` | Sirve `web/dist` con Vite preview (útil tras `npm run build`). |
 | `npm run start:api` | Node — workspace `@dakinis/api`; ejecuta `api/server.js`. |
 | `npm run build` | Build de producción del SPA → **`web/dist/`**. |
 | `npm run lint` / `npm run lint:fix` | ESLint: `eslint.config.js`, `shared/`, `web/src`, `web/vite.config.js`, `api/` (incluye `server.js`). |
 | `npm run format` / `npm run format:check` | Prettier sobre `shared/`, `web/`, `api/` y `eslint.config.js` (ver `.prettierignore`). |
 
-Desarrollo local: **dos terminales** — `npm run start:api` y `npm run dev` — para que el proxy de Vite reenvíe `/api` al puerto de la API (`8787` por defecto, configurable con `PORT` y `VITE_DEV_API_PROXY` en `web/`).
+Desarrollo local: **`npm run dev:full`** o **dos terminales** — `npm run start:api` y `npm run dev` — para que el proxy de Vite reenvíe `/api` al puerto de la API (`8787` por defecto, configurable con `PORT` y `VITE_DEV_API_PROXY` en `web/`). Si la API no está en marcha, el navegador puede devolver **502** en llamadas a `/api`.
 
 ## Frontend y backend (mapa)
 
@@ -68,20 +69,32 @@ Vite + React. Salida de build: `web/dist/` (ignorada en Git; ver `.gitignore`).
 | `web/index.html`, `web/styles.css` | Shell del SPA y estilos globales. |
 | `web/public/` | Estáticos en la raíz del sitio (`/…`), p. ej. logos. |
 | `web/vite.config.js` | Proxy hacia la API en dev/preview; objetivo por defecto `http://127.0.0.1:8787`, sobrescribible con `VITE_DEV_API_PROXY` (ver `.env.example`). |
-| `web/src/` | `App.jsx`, `pages/`, `components/`, `context/`, `services/api.js`, `data/systemPages.js`, `config/`, `utils/`. |
+| `web/src/` | `App.jsx`, `pages/` (incl. `VistaMockupPage.jsx`), `mockups/` (maquetas estáticas por vertical), `components/`, `context/`, `services/api.js`, `data/systemPages.js`, `config/`. |
 
 `VITE_API_BASE_URL`: **vacío** en local (rutas relativas `/api` + proxy). En producción, URL pública de la API **sin barra final**.
 
+#### Rutas del SPA (`web/src/App.jsx`)
+
+Resolución en este orden: `/login` → `/admin` → **`/vista/:vertical`** → **`/sistema/:vertical`** → inicio (`/`).
+
+| Prefijo | Constante (`shared/catalog/routes.js`) | Uso |
+|---------|----------------------------------------|-----|
+| `/vista/` | `DAKINIS_VISTA_ROUTE_PREFIX` | **Mockups de panel** (solo presentación): componentes en `web/src/mockups/*`; no persisten datos ni sustituyen la demo funcional. |
+| `/sistema/` | `DAKINIS_SYSTEM_ROUTE_PREFIX` | **Página de sistema** por vertical: formularios demo, listados tenant, supply, equipo, etc. |
+
+Con **sesión JWT de tenant**, el cliente solo puede permanecer en la vertical de `business.type` (tanto en `/sistema/…` como en `/vista/…`). Los **platform_admin** no usan rutas de vertical de tenant; gestionan negocios vía `/admin` y API `/api/platform/*`.
+
 ### Paquete compartido (`shared/`)
 
-**`@dakinis/shared`**: fábrica de módulos (`core/`), **adapters** por vertical (clínica, peluquería, restaurante, inmobiliaria), **catalog** (módulos de producto, registry, `business-mapping`, `routes`). Lo consumen el bundle del cliente y, en el servidor, `api/src/api/router.js` y `adapter-resolver.js` (import ESM `from "@dakinis/shared"`).
+**`@dakinis/shared`**: fábrica de módulos (`core/`), **adapters** por vertical (clínica, peluquería, restaurante, inmobiliaria), **catalog** (módulos de producto, registry, `business-mapping`, `routes`, `business-type-display`). Lo consumen el bundle del cliente y, en el servidor, `api/src/api/router.js` y `adapter-resolver.js` (import ESM `from "@dakinis/shared"`).
 
 | Ruta | Rol |
 |------|-----|
 | `shared/index.js` | Exports: `dakinisCreatePlatformModules`, adapters, etc. |
+| `shared/catalog/routes.js` | Prefijos de rutas cliente: `/sistema/`, `/vista/`, vertical por defecto. |
 | `shared/package.json` | Mapa `exports` para subrutas del `catalog/` usadas desde `web/`. |
 
-Solo capa presentación: `web/src/config/public-defaults.js`, `web/src/utils/moduleMap.js`.
+Solo capa presentación: p. ej. `web/src/config/public-defaults.js`; el catálogo de módulos se consume desde `@dakinis/shared` (sin duplicar mapas locales de verticales).
 
 ### Raíz del repositorio
 
@@ -118,7 +131,7 @@ const modules = dakinisCreatePlatformModules({
 | Pieza | Función |
 |-------|---------|
 | `api/server.js` | Inicializa DB (`dakinisInitDb`), rate limit, resolución de tenant, autenticación. |
-| `api/src/api/router.js` | Monta módulos según `business.type` y `config_json`; `/api/config`, módulos, `GET/POST /api/tenant/mock-records`, etc. |
+| `api/src/api/router.js` | Monta módulos según `business.type` y `config_json`; `/api/config`, módulos, `GET/POST /api/tenant/mock-records`, tenant users, supply (`tenant-supply`), etc.; rutas plataforma en `platform-routes.js`. |
 | `api/src/api/auth-routes.js` | `POST /api/auth/login`, `GET /api/me` (vía `server.js`). |
 | `api/src/db/schema.sql` | `business`, `users`, `tenant_api_keys`, `tenant_records`. |
 
