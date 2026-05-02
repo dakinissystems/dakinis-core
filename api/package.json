@@ -1,0 +1,15 @@
+{
+  "name": "@dakinis/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@dakinis/shared": "*",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

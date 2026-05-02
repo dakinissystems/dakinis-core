@@ -3,21 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "workspaces": ["shared", "web", "api"],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start:api": "node server.js"
-  },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.9.0",
-    "jsonwebtoken": "^9.0.3",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "dev": "npm run dev -w @dakinis/web",
+    "build": "npm run build -w @dakinis/web",
+    "preview": "npm run preview -w @dakinis/web",
+    "start:api": "npm run start -w @dakinis/api",
+    "lint": "eslint eslint.config.js shared web/src web/vite.config.js api",
+    "lint:fix": "eslint eslint.config.js shared web/src web/vite.config.js api --fix",
+    "format": "prettier --write eslint.config.js shared web api",
+    "format:check": "prettier --check eslint.config.js shared web api"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.10"
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
+    "prettier": "^3.8.3"
   }
 }

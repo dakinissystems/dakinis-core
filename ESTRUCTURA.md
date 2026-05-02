@@ -1,5 +1,7 @@
 # Dakinis One — Producto, arquitectura y camino hacia SaaS
 
+**Estructura técnica desglosada (frontend vs backend vs capa compartida):** `DAKINIS_ARCHITECTURE.md`.
+
 Este documento une **negocio + producto** con **arquitectura técnica**: qué se construye de verdad, qué existe hoy en el repo y qué falta para un **SaaS multi-tenant vendible**.
 
 ---
