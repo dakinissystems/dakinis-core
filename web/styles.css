@@ -54,6 +54,41 @@ body {
   flex-wrap: wrap;
 }
 
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(16, 35, 56, 0.5);
+}
+
+.lang-switch-btn {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.55rem;
+  min-width: 2.25rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.lang-switch-btn:hover {
+  color: var(--text);
+}
+
+.lang-switch-btn.is-active {
+  background: rgba(45, 212, 191, 0.18);
+  color: var(--brand);
+}
+
+.lang-switch-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
 .brand {
   display: flex;
   align-items: center;

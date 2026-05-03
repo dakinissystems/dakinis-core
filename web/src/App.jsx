@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AppTopBar from "./components/AppTopBar.jsx";
 import AppFooter from "./components/AppFooter.jsx";
+import { useLocale } from "./context/LocaleContext.jsx";
 import { useDakinisSession } from "./context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { DAKINIS_SYSTEM_ROUTE_PREFIX, DAKINIS_VISTA_ROUTE_PREFIX } from "@dakinis/shared/catalog/routes.js";
@@ -17,8 +18,6 @@ import {
 } from "./pages/StaticInfoPages.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
-
-const DAKINIS_DEFAULT_DOCUMENT_TITLE = "Dakinis One | Scheduler + CRM + WhatsApp";
 
 function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
@@ -39,6 +38,7 @@ function dakinisIsPlatformAdminSession(session) {
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const { session, logout } = useDakinisSession();
+  const { t, locale } = useLocale();
 
   useEffect(() => {
     function sync() {
@@ -53,39 +53,43 @@ export default function App() {
 
   useEffect(() => {
     if (currentPath === "/login") {
-      document.title = "Iniciar sesión · Dakinis One";
+      document.title = t("doc.login");
       return;
     }
     if (currentPath === "/faq") {
-      document.title = "FAQ · Dakinis One";
+      document.title = t("doc.faq");
       return;
     }
     if (currentPath === "/privacy") {
-      document.title = "Privacy · Dakinis One";
+      document.title = t("doc.privacy");
       return;
     }
     if (currentPath === "/terms") {
-      document.title = "Terms · Dakinis One";
+      document.title = t("doc.terms");
       return;
     }
     if (currentPath === "/legal") {
-      document.title = "Legal notice · Dakinis One";
+      document.title = t("doc.legal");
       return;
     }
     if (currentPath === "/admin") {
-      document.title = "Administración plataforma · Dakinis One";
+      document.title = t("doc.admin");
       return;
     }
     if (vistaKeyFromPath && dakinisSystemRegistry[vistaKeyFromPath]) {
-      document.title = `Vista previa · ${dakinisSystemRegistry[vistaKeyFromPath].label} · Dakinis One`;
+      document.title = t("doc.vista", {
+        label: dakinisSystemRegistry[vistaKeyFromPath].label
+      });
       return;
     }
     if (systemKeyFromPath && dakinisSystemRegistry[systemKeyFromPath]) {
-      document.title = `${dakinisSystemRegistry[systemKeyFromPath].label} · Dakinis One`;
+      document.title = t("doc.sistema", {
+        label: dakinisSystemRegistry[systemKeyFromPath].label
+      });
       return;
     }
-    document.title = DAKINIS_DEFAULT_DOCUMENT_TITLE;
-  }, [currentPath, systemKeyFromPath, vistaKeyFromPath]);
+    document.title = t("doc.default");
+  }, [currentPath, systemKeyFromPath, vistaKeyFromPath, locale, t]);
 
   /** Bloquea cambiar de vertical con la sesión de un tenant; envía admins de plataforma al panel /admin. */
   useEffect(() => {

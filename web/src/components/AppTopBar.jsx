@@ -1,9 +1,13 @@
 import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
+import LanguageSwitcher from "./LanguageSwitcher.jsx";
 
 const logoSimple = "/Logo%20Simple.jpeg";
 
 export default function AppTopBar({ navigate, session, logout }) {
+  const { t } = useLocale();
+
   return (
     <header className="topbar">
       <div className="container topbar-content">
@@ -12,6 +16,7 @@ export default function AppTopBar({ navigate, session, logout }) {
           <span>Dakinis One</span>
         </a>
         <div className="topbar-actions">
+          <LanguageSwitcher />
           <a
             href="/#precios"
             className="btn btn-outline"
@@ -20,13 +25,13 @@ export default function AppTopBar({ navigate, session, logout }) {
               dakinisGoHomeAnchor(navigate, "precios");
             }}
           >
-            Paquetes
+            {t("nav.packages")}
           </a>
           {session?.user?.email ? (
             <>
               {session.user.role === "platform_admin" || session.business?.type === "platform" ? (
                 <button type="button" className="btn btn-outline" onClick={() => navigate("/admin")}>
-                  Panel plataforma
+                  {t("nav.platformPanel")}
                 </button>
               ) : session.business?.slug ? (
                 <button
@@ -34,7 +39,7 @@ export default function AppTopBar({ navigate, session, logout }) {
                   className="btn btn-outline"
                   onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
                 >
-                  Mi negocio
+                  {t("nav.myBusiness")}
                 </button>
               ) : null}
               <span
@@ -47,11 +52,11 @@ export default function AppTopBar({ navigate, session, logout }) {
                 }}
               >
                 {session.user.role === "platform_admin" || session.business?.type === "platform"
-                  ? "Administrador plataforma"
+                  ? t("nav.platformAdmin")
                   : session.user.email}
               </span>
               <button type="button" className="btn btn-outline" onClick={logout}>
-                Salir
+                {t("nav.logout")}
               </button>
             </>
           ) : (
@@ -64,7 +69,7 @@ export default function AppTopBar({ navigate, session, logout }) {
                   navigate("/login");
                 }}
               >
-                Login
+                {t("nav.login")}
               </a>
               <a
                 href="/#contact"
@@ -74,7 +79,7 @@ export default function AppTopBar({ navigate, session, logout }) {
                   dakinisGoHomeAnchor(navigate, "contact");
                 }}
               >
-                Solicitar presupuesto
+                {t("nav.quote")}
               </a>
             </>
           )}

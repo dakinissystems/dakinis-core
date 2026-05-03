@@ -1,4 +1,5 @@
 import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 
 const logoSimple = "/Logo%20Simple.jpeg";
@@ -27,6 +28,7 @@ function FooterRouteLink({ href, navigate, children }) {
 }
 
 export default function AppFooter({ navigate }) {
+  const { t } = useLocale();
   const year = new Date().getFullYear();
 
   return (
@@ -37,25 +39,23 @@ export default function AppFooter({ navigate }) {
           <span>Dakinis One</span>
         </a>
 
-        <p className="site-footer-copyright">
-          © {year} Dakinis Systems (trading name of Christian Villar). All rights reserved.
-        </p>
+        <p className="site-footer-copyright">{t("footer.copyright", { year })}</p>
 
-        <nav className="site-footer-links" aria-label="Pie de página">
+        <nav className="site-footer-links" aria-label={t("footer.navAria")}>
           <FooterRouteLink href="/faq" navigate={navigate}>
-            FAQ
+            {t("footer.faq")}
           </FooterRouteLink>
           <Sep />
           <FooterRouteLink href="/privacy" navigate={navigate}>
-            Privacy
+            {t("footer.privacy")}
           </FooterRouteLink>
           <Sep />
           <FooterRouteLink href="/terms" navigate={navigate}>
-            Terms
+            {t("footer.terms")}
           </FooterRouteLink>
           <Sep />
           <FooterRouteLink href="/legal" navigate={navigate}>
-            Legal notice
+            {t("footer.legalNotice")}
           </FooterRouteLink>
           <Sep />
           <a
@@ -66,7 +66,7 @@ export default function AppFooter({ navigate }) {
               dakinisGoHomeAnchor(navigate, "precios");
             }}
           >
-            Paquetes
+            {t("footer.packages")}
           </a>
           <Sep />
           <a
@@ -77,7 +77,7 @@ export default function AppFooter({ navigate }) {
               dakinisGoHomeAnchor(navigate, "contact");
             }}
           >
-            Contacto
+            {t("footer.contact")}
           </a>
           <Sep />
           <a
@@ -88,7 +88,7 @@ export default function AppFooter({ navigate }) {
               navigate("/login");
             }}
           >
-            Acceso
+            {t("footer.access")}
           </a>
         </nav>
       </div>

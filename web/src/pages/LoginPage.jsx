@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisPublicJsonFetch, DakinisApiError } from "../services/api.js";
 
 export default function LoginPage({ navigate }) {
+  const { t } = useLocale();
   const { setSession } = useDakinisSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +19,7 @@ export default function LoginPage({ navigate }) {
     setError("");
     try {
       if (needsTotp && !totpCode.trim()) {
-        setError("Introduce el codigo de 6 digitos de tu aplicacion autenticadora.");
+        setError(t("login.errors.totpRequired"));
         setLoading(false);
         return;
       }
@@ -32,12 +34,12 @@ export default function LoginPage({ navigate }) {
 
       const payload = json?.data;
       if (!payload || typeof payload !== "object") {
-        throw new Error("Login: respuesta sin datos. Comprueba la URL de la API (VITE_API_BASE_URL) y que el seed exista en la base de datos.");
+        throw new Error(t("login.errors.noData"));
       }
 
       const { token, user, business } = payload;
       if (!token || !business?.type) {
-        throw new Error("Login incompleto: falta token o tipo de negocio en la respuesta.");
+        throw new Error(t("login.errors.incomplete"));
       }
       setSession({
         token,
@@ -57,7 +59,7 @@ export default function LoginPage({ navigate }) {
         setNeedsTotp(true);
         setError(err.message);
       } else {
-        setError(err instanceof Error ? err.message : "Error de login");
+        setError(err instanceof Error ? err.message : t("login.errors.generic"));
       }
     } finally {
       setLoading(false);
@@ -67,32 +69,32 @@ export default function LoginPage({ navigate }) {
   return (
     <section className="modules">
       <div className="container" style={{ maxWidth: 480 }}>
-        <p className="kicker">Acceso SaaS multi-tenant</p>
-        <h2>Iniciar sesion</h2>
+        <p className="kicker">{t("login.kicker")}</p>
+        <h2>{t("login.title")}</h2>
         <p className="lead">
-          Contraseña demo para todos los tenants: <code className="config-box">demo123</code>
+          {t("login.demoPassword")} <code className="config-box">demo123</code>
         </p>
         <ul className="demo-tenant-list">
           <li>
             <code className="config-box">admin@clinica-demo.local</code>
-            <span className="demo-tenant-label">Clínica estética</span>
+            <span className="demo-tenant-label">{t("login.tenants.clinic")}</span>
           </li>
           <li>
             <code className="config-box">admin@peluqueria-demo.local</code>
-            <span className="demo-tenant-label">Peluquería premium</span>
+            <span className="demo-tenant-label">{t("login.tenants.barber")}</span>
           </li>
           <li>
             <code className="config-box">admin@restaurante-demo.local</code>
-            <span className="demo-tenant-label">Restaurante premium</span>
+            <span className="demo-tenant-label">{t("login.tenants.restaurant")}</span>
           </li>
           <li>
             <code className="config-box">admin@inmobiliaria-demo.local</code>
-            <span className="demo-tenant-label">Inmobiliaria</span>
+            <span className="demo-tenant-label">{t("login.tenants.estate")}</span>
           </li>
         </ul>
         <form className="mockup-form card" onSubmit={handleSubmit} style={{ gridTemplateColumns: "1fr" }}>
           <label className="mockup-field">
-            <span>Email</span>
+            <span>{t("login.email")}</span>
             <input
               type="email"
               value={email}
@@ -106,7 +108,7 @@ export default function LoginPage({ navigate }) {
             />
           </label>
           <label className="mockup-field">
-            <span>Password</span>
+            <span>{t("login.password")}</span>
             <input
               type="password"
               value={password}
@@ -117,7 +119,7 @@ export default function LoginPage({ navigate }) {
           </label>
           {needsTotp ? (
             <label className="mockup-field">
-              <span>Codigo TOTP (administrador plataforma)</span>
+              <span>{t("login.totpLabel")}</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -126,7 +128,7 @@ export default function LoginPage({ navigate }) {
                 maxLength={12}
                 value={totpCode}
                 onChange={(ev) => setTotpCode(ev.target.value)}
-                placeholder="6 digitos"
+                placeholder={t("login.totpPlaceholder")}
               />
             </label>
           ) : null}
@@ -136,10 +138,10 @@ export default function LoginPage({ navigate }) {
             </p>
           ) : null}
           <button type="submit" className="btn" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? t("login.submitting") : t("login.submit")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-            Volver
+            {t("login.back")}
           </button>
         </form>
       </div>

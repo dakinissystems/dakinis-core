@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import { dakinisFormatBusinessTypeLabel } from "@dakinis/shared/catalog/business-type-display.js";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import {
   dakinisPackMvp,
   dakinisPackPro,
   dakinisPackAdvanced,
-  dakinisMaintenanceTiers,
-  dakinisMaintenancePitch,
-  dakinisPricingIntro
+  dakinisMaintenanceTiers
 } from "../data/pricingCatalog.js";
 
 const logoGrande = "/Logo%20Grande.jpeg";
 
-const DAKINIS_PACKS = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
+const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
+const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
 
 /** Sustituye por tu email y número WhatsApp (formato internacional sin + en wa.me). */
 const DAKINIS_CONTACT_EMAIL = "hola@tudominio.com";
@@ -24,6 +24,7 @@ function dakinisIsPlatformAdminSession(session) {
 
 export default function HomePage({ navigate, dakinisSystemRegistry }) {
   const { session } = useDakinisSession();
+  const { t } = useLocale();
 
   const sistemaButtons = useMemo(() => {
     const all = Object.entries(dakinisSystemRegistry);
@@ -37,59 +38,98 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
   const vistaButtons = useMemo(() => {
     const all = Object.entries(dakinisSystemRegistry);
     if (!session?.token) return all;
-    if (dakinisIsPlatformAdminSession(session)) return all;
+    if (dakinisIsPlatformAdminSession(session)) return [];
     const tenantType = session.business?.type;
     if (tenantType) return all.filter(([key]) => key === tenantType);
     return all;
   }, [session, dakinisSystemRegistry]);
+
+  const localizedPacks = useMemo(
+    () =>
+      DAKINIS_PACK_KEYS.map((key, i) => {
+        const base = DAKINIS_PACK_BASE[i];
+        const includes = t(`pricing.pack.${key}.includes`);
+        return {
+          ...base,
+          badge: t(`pricing.pack.${key}.badge`),
+          name: t(`pricing.pack.${key}.name`),
+          audience: t(`pricing.pack.${key}.audience`),
+          delivery: t(`pricing.pack.${key}.delivery`),
+          pitch: t(`pricing.pack.${key}.pitch`),
+          includes: Array.isArray(includes) ? includes : base.includes
+        };
+      }),
+    [t]
+  );
+
+  const pricingIntro = useMemo(
+    () => ({
+      title: t("pricing.intro.title"),
+      subtitle: t("pricing.intro.subtitle"),
+      portfolioNote: t("pricing.intro.portfolioNote"),
+      valuePoints: t("pricing.intro.valuePoints")
+    }),
+    [t]
+  );
+
+  const maintenanceTiers = useMemo(
+    () =>
+      dakinisMaintenanceTiers.map((tier) => ({
+        ...tier,
+        name: t(`pricing.maintenance.${tier.key}.name`),
+        description: t(`pricing.maintenance.${tier.key}.description`)
+      })),
+    [t]
+  );
+
+  const valuePoints = Array.isArray(pricingIntro.valuePoints)
+    ? pricingIntro.valuePoints
+    : [];
 
   return (
     <>
       <section className="hero">
         <div className="container hero-grid">
           <div>
-            <p className="kicker">FASE 2 - SaaS multi-tenant (SQLite MVP)</p>
+            <p className="kicker">{t("home.hero.kicker")}</p>
             <h1>
-              Menos cancelaciones.
+              {t("home.hero.h1Line1")}
               <br />
-              Más clientes.
+              {t("home.hero.h1Line2")}
               <br />
-              Más control.
+              {t("home.hero.h1Line3")}
             </h1>
-            <p className="lead hero-benefit">
-              Te ahorra tiempo, organiza tu negocio y evita errores en citas, pedidos y seguimiento — sin líos de
-              spreadsheets.
-            </p>
-            <p className="lead">
-              Demo técnica: cada negocio con su entorno aislado y login; lista para crecer contigo.
-            </p>
+            <p className="lead hero-benefit">{t("home.hero.benefit")}</p>
+            <p className="lead">{t("home.hero.demoLead")}</p>
             <div className="hero-actions">
               <a href="#contact" className="btn">
-                Solicitar presupuesto
+                {t("home.hero.ctaQuote")}
               </a>
               <a href="#contact" className="btn btn-outline">
-                Hablar sobre tu proyecto
+                {t("home.hero.ctaTalk")}
               </a>
             </div>
             <p className="hero-actions-secondary">
               <button type="button" className="link-btn" onClick={() => navigate("/login")}>
-                Login admin
+                {t("home.hero.loginAdmin")}
               </button>
               <span className="hero-actions-dot">·</span>
               <a href="#modulos" className="link-btn">
-                Ver sistemas demo
+                {t("home.hero.viewDemos")}
               </a>
             </p>
-            <p className="lead">Stack: React + Node + SQLite (listo para PostgreSQL).</p>
+            <p className="lead">{t("home.hero.stack")}</p>
           </div>
           <div className="hero-card">
             <img src={logoGrande} alt="Dakinis Scheduler + CRM + WhatsApp" className="hero-logo" />
             <ul>
               <li>
-                Datos por <code>x-business-id</code> en API
+                {t("home.hero.cardLi1Prefix")}
+                <code>x-business-id</code>
+                {t("home.hero.cardLi1Suffix")}
               </li>
-              <li>Mockups sincronizados con base de datos</li>
-              <li>JWT + API key maestra solo desarrollo</li>
+              <li>{t("home.hero.cardLi2")}</li>
+              <li>{t("home.hero.cardLi3")}</li>
             </ul>
           </div>
         </div>
@@ -97,16 +137,15 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
 
       <section id="modulos" className="modules">
         <div className="container">
-          <h2>Tenants demo por tipo de negocio</h2>
+          <h2>{t("home.modules.title")}</h2>
           <p className="lead">
-            Slugs seed: clinica-demo, peluqueria-demo, inmobiliaria-demo, restaurante-demo. API key
-            desarrollo:&nbsp;
+            {t("home.modules.lead")}&nbsp;
             <code>dakinis-dev-key</code>
           </p>
           {dakinisIsPlatformAdminSession(session) ? (
             <div className="system-switcher">
               <button type="button" className="system-btn active" onClick={() => navigate("/admin")}>
-                Administración plataforma (negocios y usuarios)
+                {t("home.modules.adminCta")}
               </button>
             </div>
           ) : (
@@ -125,8 +164,8 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
           )}
           {vistaButtons.length > 0 ? (
             <>
-              <h3 style={{ marginTop: "1.75rem" }}>Vista previa del panel (mockup)</h3>
-              <p className="lead">Maquetación estática de cómo podría verse el programa por tipo de negocio.</p>
+              <h3 style={{ marginTop: "1.75rem" }}>{t("home.modules.mockTitle")}</h3>
+              <p className="lead">{t("home.modules.mockLead")}</p>
               <div className="system-switcher">
                 {vistaButtons.map(([systemKey, systemInfo]) => (
                   <button
@@ -135,7 +174,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
                     className="system-btn"
                     onClick={() => navigate(`/vista/${encodeURIComponent(systemKey)}`)}
                   >
-                    Vista · {systemInfo.label}
+                    {t("home.modules.vistaPrefix")} {systemInfo.label}
                   </button>
                 ))}
               </div>
@@ -143,12 +182,12 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
           ) : null}
           {session?.token && session.business?.type && !dakinisIsPlatformAdminSession(session) ? (
             <p className="lead" style={{ marginTop: "0.75rem" }}>
-              Sesión: solo ves tu tipo de negocio (
+              {t("home.modules.sessionNote")}
               <strong>
                 {dakinisSystemRegistry[session.business.type]?.label ??
                   dakinisFormatBusinessTypeLabel(session.business.type)}
               </strong>
-              ).
+              {t("home.modules.sessionNoteEnd")}
             </p>
           ) : null}
         </div>
@@ -156,27 +195,29 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
 
       <section id="precios" className="modules pricing-section pricing-contact-unified">
         <div className="container">
-          <p className="kicker">Precios y siguiente paso</p>
-          <h2>{dakinisPricingIntro.title}</h2>
-          <p className="lead">{dakinisPricingIntro.subtitle}</p>
-          <p className="lead portfolio-lead">{dakinisPricingIntro.portfolioNote}</p>
+          <p className="kicker">{t("home.pricing.kicker")}</p>
+          <h2>{pricingIntro.title}</h2>
+          <p className="lead">{pricingIntro.subtitle}</p>
+          <p className="lead portfolio-lead">{pricingIntro.portfolioNote}</p>
           <ul className="pricing-value-points">
-            {dakinisPricingIntro.valuePoints.map((line) => (
+            {valuePoints.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
 
           <div className="pack-grid">
-            {DAKINIS_PACKS.map((pack) => (
+            {localizedPacks.map((pack) => (
               <article
                 key={pack.key}
                 className={`card pack-card${pack.featured ? " featured" : ""}`}
               >
-                <p className="pack-badge">{pack.badge} — {pack.name}</p>
+                <p className="pack-badge">
+                  {pack.badge} — {pack.name}
+                </p>
                 <p className="pack-audience">{pack.audience}</p>
                 <p className="price pack-price">{pack.priceRange}</p>
                 <p className="pack-delivery">
-                  <strong>Entrega:</strong> {pack.delivery}
+                  <strong>{t("pricing.deliveryLabel")}</strong> {pack.delivery}
                 </p>
                 <p className="pack-pitch">&ldquo;{pack.pitch}&rdquo;</p>
                 <ul className="pack-includes">
@@ -189,11 +230,11 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
           </div>
 
           <h3 className="maint-heading" id="mantenimiento">
-            Mantenimiento mensual
+            {t("home.pricing.maintenanceHeading")}
           </h3>
-          <p className="lead maint-sub">{dakinisMaintenancePitch}</p>
+          <p className="lead maint-sub">{t("pricing.maintenancePitch")}</p>
           <div className="maint-grid">
-            {dakinisMaintenanceTiers.map((tier) => (
+            {maintenanceTiers.map((tier) => (
               <div key={tier.key} className="card price-card">
                 <h3>{tier.name}</h3>
                 <p className="price">{tier.price}</p>
@@ -203,16 +244,14 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
           </div>
 
           <div id="contact" className="contact-unified">
-            <h2>Hablemos</h2>
-            <p className="lead contact-lead">
-              Cuéntanos tu idea y te diremos cómo desarrollarla, cuánto costaría y cuánto tiempo llevaría.
-            </p>
+            <h2>{t("home.pricing.contactTitle")}</h2>
+            <p className="lead contact-lead">{t("home.pricing.contactLead")}</p>
             <div className="contact-actions">
               <a href={`mailto:${DAKINIS_CONTACT_EMAIL}`} className="btn">
-                Escribir por email
+                {t("home.pricing.emailCta")}
               </a>
               <a href={DAKINIS_CONTACT_WA} className="btn btn-outline" target="_blank" rel="noreferrer">
-                WhatsApp
+                {t("home.pricing.whatsappCta")}
               </a>
             </div>
           </div>
@@ -222,14 +261,14 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
       <section id="demo" className="cta">
         <div className="container cta-card">
           <div>
-            <h2>Dakinis One — demo técnica</h2>
-            <p>Explora tenants demo, mockups y login JWT. Listo para Postgres y Stripe en siguiente fase.</p>
+            <h2>{t("home.demo.title")}</h2>
+            <p>{t("home.demo.lead")}</p>
           </div>
           <button type="button" className="btn" onClick={() => navigate("/login")}>
-            Entrar como admin
+            {t("home.demo.enterAdmin")}
           </button>
           <a href="#modulos" className="btn btn-outline">
-            Ver sistemas
+            {t("home.demo.viewSystems")}
           </a>
         </div>
       </section>

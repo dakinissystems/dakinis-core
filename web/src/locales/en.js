@@ -1,0 +1,199 @@
+/** English UI strings. */
+export default {
+  nav: {
+    packages: "Plans",
+    login: "Log in",
+    quote: "Request a quote",
+    platformPanel: "Platform admin",
+    myBusiness: "My business",
+    platformAdmin: "Platform administrator",
+    logout: "Log out",
+    language: "Language"
+  },
+  footer: {
+    navAria: "Footer links",
+    copyright:
+      "© {year} Dakinis Systems (trading name of Christian Villar). All rights reserved.",
+    faq: "FAQ",
+    privacy: "Privacy",
+    terms: "Terms",
+    legalNotice: "Legal notice",
+    packages: "Plans",
+    contact: "Contact",
+    access: "Sign in"
+  },
+  home: {
+    hero: {
+      kicker: "PHASE 2 — Multi-tenant SaaS (SQLite MVP)",
+      h1Line1: "Fewer cancellations.",
+      h1Line2: "More clients.",
+      h1Line3: "More control.",
+      benefit:
+        "Saves you time, keeps your business organised, and reduces mistakes with bookings, orders and follow-ups — no spreadsheet chaos.",
+      demoLead:
+        "Technical demo: each business has its own isolated environment and login; ready to grow with you.",
+      ctaQuote: "Request a quote",
+      ctaTalk: "Talk about your project",
+      loginAdmin: "Admin login",
+      viewDemos: "View system demos",
+      stack: "Stack: React + Node + SQLite (PostgreSQL-ready).",
+      cardLi1Prefix: "Data scoped by ",
+      cardLi1Suffix: " in the API",
+      cardLi2: "Mockups wired to the database",
+      cardLi3: "JWT + master API key for development only"
+    },
+    modules: {
+      title: "Demo tenants by business type",
+      lead:
+        "Seed slugs: clinica-demo, peluqueria-demo, inmobiliaria-demo, restaurante-demo. Dev API key:",
+      adminCta: "Platform administration (businesses and users)",
+      mockTitle: "Panel preview (mockup)",
+      mockLead: "Static layout preview of how the product could look by vertical.",
+      vistaPrefix: "Preview ·",
+      sessionNote: "Session: you only see your business type (",
+      sessionNoteEnd: ")."
+    },
+    pricing: {
+      kicker: "Pricing and next step",
+      maintenanceHeading: "Monthly maintenance",
+      contactTitle: "Let’s talk",
+      contactLead:
+        "Tell us your idea and we’ll outline how to build it, what it would cost, and how long it would take.",
+      emailCta: "Email us",
+      whatsappCta: "WhatsApp"
+    },
+    demo: {
+      title: "Dakinis One — technical demo",
+      lead: "Explore demo tenants, mockups and JWT login. Postgres and Stripe in the next phase.",
+      enterAdmin: "Enter as admin",
+      viewSystems: "View systems"
+    }
+  },
+  pricing: {
+    intro: {
+      title: "Clear packages",
+      subtitle:
+        "We don’t sell loose hours: you choose a scope with a fixed price and timeline. On the call I recommend a specific package within these ranges — no vague “we’ll see”.",
+      portfolioNote:
+        "Reduced rates while I expand my portfolio of real projects; same proven base that speeds delivery.",
+      valuePoints: [
+        "I already have a foundation built — we don’t start from zero.",
+        "That lowers cost, time and risk for you.",
+        "Focused on solving your operations (time, mess, mistakes), not tech jargon."
+      ]
+    },
+    deliveryLabel: "Delivery:",
+    pack: {
+      mvp: {
+        badge: "Pack 1",
+        name: "Fast MVP",
+        audience: "For smaller clients — your entry offer",
+        delivery: "5 – 10 days",
+        pitch: "I’ll leave you with a working system in under 10 days so you can start operating.",
+        includes: [
+          "Basic login",
+          "Functional panel",
+          "1 module (schedule / clients / orders)",
+          "Deployment included"
+        ]
+      },
+      pro: {
+        badge: "Pack 2",
+        name: "Professional system",
+        audience: "Your main product",
+        delivery: "2 – 4 weeks",
+        pitch: "I’ll build a complete system tailored to your business.",
+        includes: [
+          "Everything in the MVP +",
+          "2–3 modules (schedule + CRM + automation)",
+          "User roles",
+          "UX improvements",
+          "Scalable foundation"
+        ]
+      },
+      advanced: {
+        badge: "Pack 3",
+        name: "Advanced bespoke solution",
+        audience: "Only when your case needs it",
+        delivery: "Scope-dependent (fixed in proposal)",
+        pitch: "Integrations, business rules and automation when the standard offering isn’t enough.",
+        includes: [
+          "Integrations (WhatsApp, external APIs)",
+          "Complex automations",
+          "Logic specific to your operations"
+        ]
+      }
+    },
+    maintenancePitch:
+      "After launch you can maintain and improve it step by step — no surprises.",
+    maintenance: {
+      basic: {
+        name: "Basic support",
+        description: "Incidents, small tweaks and keeping the system healthy in production."
+      },
+      plus: {
+        name: "Support + improvements",
+        description: "Priority support and monthly capacity for small, guided improvements."
+      }
+    }
+  },
+  login: {
+    kicker: "Multi-tenant SaaS access",
+    title: "Sign in",
+    demoPassword: "Demo password for all tenants:",
+    tenants: {
+      clinic: "Aesthetic clinic",
+      barber: "Premium barbershop",
+      restaurant: "Premium restaurant",
+      estate: "Real estate"
+    },
+    email: "Email",
+    password: "Password",
+    totpLabel: "TOTP code (platform administrator)",
+    totpPlaceholder: "6 digits",
+    submitting: "Signing in…",
+    submit: "Sign in",
+    back: "Back",
+    errors: {
+      totpRequired: "Enter the 6-digit code from your authenticator app.",
+      noData:
+        "Login: empty response. Check VITE_API_BASE_URL and that the seed exists in the database.",
+      incomplete: "Incomplete login: missing token or business type in the response.",
+      generic: "Login error"
+    }
+  },
+  legal: {
+    back: "← Home",
+    faq: {
+      title: "FAQ",
+      body:
+        "Frequently asked questions about Dakinis One. This content will grow; for specific help, use the contact section on the main page."
+    },
+    privacy: {
+      title: "Privacy",
+      body:
+        "Information about personal data processing when using this application. Full legal text in preparation; for ARCO rights or privacy questions, use the channels listed on the Dakinis Systems corporate site."
+    },
+    terms: {
+      title: "Terms",
+      body:
+        "Terms and conditions of use. Draft; demo and trial environments are subject to what is agreed in writing per project."
+    },
+    notice: {
+      title: "Legal notice",
+      body:
+        "Legal notice and information about the site and service owner. Dakinis Systems (trading name of Christian Villar). Registration details and applicable law: being updated."
+    }
+  },
+  doc: {
+    default: "Dakinis One | Scheduler + CRM + WhatsApp",
+    login: "Sign in · Dakinis One",
+    admin: "Platform administration · Dakinis One",
+    faq: "FAQ · Dakinis One",
+    privacy: "Privacy · Dakinis One",
+    terms: "Terms · Dakinis One",
+    legal: "Legal notice · Dakinis One",
+    vista: "Preview · {label} · Dakinis One",
+    sistema: "{label} · Dakinis One"
+  }
+};
