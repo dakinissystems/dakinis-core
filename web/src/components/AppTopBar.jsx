@@ -1,19 +1,27 @@
+import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
+import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
+
 const logoSimple = "/Logo%20Simple.jpeg";
 
 export default function AppTopBar({ navigate, session, logout }) {
   return (
     <header className="topbar">
       <div className="container topbar-content">
-        <button
-          type="button"
-          className="brand"
-          style={{ cursor: "pointer", background: "none", border: "none", color: "inherit" }}
-          onClick={() => navigate("/")}
-        >
-          <img src={logoSimple} alt="Logo Dakinis" className="brand-icon" />
+        <a href={DAKINIS_MARKETING_SITE_URL} className="brand brand-external">
+          <img src={logoSimple} alt="Dakinis Systems" className="brand-icon" />
           <span>Dakinis One</span>
-        </button>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+        </a>
+        <div className="topbar-actions">
+          <a
+            href="/#precios"
+            className="btn btn-outline"
+            onClick={(e) => {
+              e.preventDefault();
+              dakinisGoHomeAnchor(navigate, "precios");
+            }}
+          >
+            Paquetes
+          </a>
           {session?.user?.email ? (
             <>
               {session.user.role === "platform_admin" || session.business?.type === "platform" ? (
@@ -58,8 +66,15 @@ export default function AppTopBar({ navigate, session, logout }) {
               >
                 Login
               </a>
-              <a href="/#demo" className="btn btn-outline">
-                Solicitar demo
+              <a
+                href="/#contact"
+                className="btn btn-outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  dakinisGoHomeAnchor(navigate, "contact");
+                }}
+              >
+                Solicitar presupuesto
               </a>
             </>
           )}

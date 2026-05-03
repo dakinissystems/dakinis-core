@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppTopBar from "./components/AppTopBar.jsx";
+import AppFooter from "./components/AppFooter.jsx";
 import { useDakinisSession } from "./context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { DAKINIS_SYSTEM_ROUTE_PREFIX, DAKINIS_VISTA_ROUTE_PREFIX } from "@dakinis/shared/catalog/routes.js";
@@ -8,6 +9,12 @@ import LoginPage from "./pages/LoginPage.jsx";
 import PlatformAdminPage from "./pages/PlatformAdminPage.jsx";
 import VistaMockupPage from "./pages/VistaMockupPage.jsx";
 import SystemPage from "./pages/SystemPage.jsx";
+import {
+  FaqPage,
+  LegalNoticePage,
+  PrivacyPage,
+  TermsPage
+} from "./pages/StaticInfoPages.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -47,6 +54,22 @@ export default function App() {
   useEffect(() => {
     if (currentPath === "/login") {
       document.title = "Iniciar sesión · Dakinis One";
+      return;
+    }
+    if (currentPath === "/faq") {
+      document.title = "FAQ · Dakinis One";
+      return;
+    }
+    if (currentPath === "/privacy") {
+      document.title = "Privacy · Dakinis One";
+      return;
+    }
+    if (currentPath === "/terms") {
+      document.title = "Terms · Dakinis One";
+      return;
+    }
+    if (currentPath === "/legal") {
+      document.title = "Legal notice · Dakinis One";
       return;
     }
     if (currentPath === "/admin") {
@@ -115,6 +138,14 @@ export default function App() {
   const route =
     currentPath === "/login" ? (
       <LoginPage navigate={navigate} />
+    ) : currentPath === "/faq" ? (
+      <FaqPage navigate={navigate} />
+    ) : currentPath === "/privacy" ? (
+      <PrivacyPage navigate={navigate} />
+    ) : currentPath === "/terms" ? (
+      <TermsPage navigate={navigate} />
+    ) : currentPath === "/legal" ? (
+      <LegalNoticePage navigate={navigate} />
     ) : currentPath === "/admin" ? (
       <PlatformAdminPage navigate={navigate} />
     ) : vistaKeyFromPath ? (
@@ -126,9 +157,10 @@ export default function App() {
     );
 
   return (
-    <>
+    <div className="app-shell">
       <AppTopBar navigate={navigate} session={session} logout={logout} />
-      <main>{route}</main>
-    </>
+      <main className="app-main">{route}</main>
+      <AppFooter navigate={navigate} />
+    </div>
   );
 }

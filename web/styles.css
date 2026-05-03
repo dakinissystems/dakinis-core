@@ -21,6 +21,11 @@ body {
   line-height: 1.45;
 }
 
+#precios,
+#contact {
+  scroll-margin-top: 4.75rem;
+}
+
 .container {
   width: min(1100px, 92vw);
   margin: 0 auto;
@@ -42,11 +47,33 @@ body {
   padding: 0.7rem 0;
 }
 
+.topbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 0.65rem;
   font-weight: 700;
+}
+
+a.brand {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.brand:hover .brand-icon {
+  outline: 1px solid rgba(45, 212, 191, 0.45);
+}
+
+a.brand:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 10px;
 }
 
 .brand-icon {
@@ -103,6 +130,157 @@ h3 {
   flex-wrap: wrap;
 }
 
+.hero-actions-secondary {
+  margin-top: 0.85rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.hero-actions-dot {
+  color: var(--muted);
+  user-select: none;
+}
+
+.link-btn {
+  font: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a.link-btn {
+  text-decoration: underline;
+  color: var(--muted);
+}
+
+.link-btn:hover {
+  color: var(--brand);
+}
+
+.pricing-contact-unified {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(8, 18, 30, 0.28);
+}
+
+.contact-unified {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.contact-lead {
+  font-size: 1.05rem;
+  color: #d6eaff;
+  max-width: 48ch;
+}
+
+.contact-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.hero-benefit {
+  color: #d6eaff;
+  font-weight: 500;
+}
+
+.pricing-section .portfolio-lead {
+  font-size: 0.98rem;
+  margin-top: -0.25rem;
+}
+
+.pricing-value-points {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 62ch;
+}
+
+.pricing-value-points li {
+  margin-bottom: 0.35rem;
+}
+
+.pack-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.35rem;
+}
+
+.pack-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pack-badge {
+  margin: 0;
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 0.95rem;
+}
+
+.pack-audience {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.pack-price {
+  margin: 0.35rem 0 0;
+}
+
+.pack-delivery {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.pack-pitch {
+  margin: 0.35rem 0 0;
+  font-style: italic;
+  color: #d6eaff;
+  font-size: 0.98rem;
+}
+
+.pack-includes {
+  margin: 0.5rem 0 0;
+  padding-left: 1.15rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.pack-includes li {
+  margin-bottom: 0.35rem;
+}
+
+.maint-heading {
+  margin-top: 2.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.maint-sub {
+  margin-bottom: 0.75rem;
+}
+
+.maint-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .btn {
   border: 1px solid transparent;
   display: inline-block;
@@ -146,8 +324,121 @@ h3 {
   margin-bottom: 0.8rem;
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+}
+
 section {
   padding: 2.2rem 0;
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: rgba(8, 16, 26, 0.96);
+  padding: 0.85rem 0 1.15rem;
+  margin-top: 2rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-align: center;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-footer-brand:hover {
+  color: var(--brand);
+}
+
+.site-footer-copyright {
+  margin: 0;
+  max-width: 34rem;
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem 0.1rem;
+}
+
+.site-footer-sep {
+  color: var(--muted);
+  opacity: 0.55;
+  user-select: none;
+  padding: 0 0.2rem;
+  font-weight: 400;
+}
+
+.site-footer-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: inherit;
+  background: none;
+  border: none;
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  padding: 0.15rem 0.2rem;
+  border-radius: 4px;
+}
+
+.site-footer-link:hover,
+.site-footer-link:focus-visible {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer-link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.legal-page {
+  padding: 1.5rem 0 3rem;
+}
+
+.legal-back {
+  margin: 0 0 1rem;
+}
+
+.legal-page h1 {
+  margin-top: 0;
+}
+
+.legal-prose {
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.legal-prose p {
+  margin: 0.75rem 0;
 }
 
 .pill-grid {
@@ -463,6 +754,8 @@ section {
   .hero-grid,
   .module-grid,
   .price-grid,
+  .pack-grid,
+  .maint-grid,
   .two-col,
   .cta-card,
   .system-kpis,
