@@ -7,7 +7,12 @@ import {
 import { dakinisResolveAdapter } from "./adapter-resolver.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisGetDb } from "../db/index.js";
+import {
+  dakinisListModulesForPlan,
+  dakinisNormalizeCommercialPlan
+} from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisHandleAuthLogin, dakinisHandleMe } from "./auth-routes.js";
+import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
 
 function dakinisParseJsonSafely(rawBody) {
   if (!rawBody || !String(rawBody).trim()) return {};
@@ -93,6 +98,9 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
     );
   }
 
+  const planDenied = dakinisPlanModuleDenialOrNull(business, url.pathname);
+  if (planDenied) return planDenied;
+
   const modules = dakinisBuildModulesForBusiness(business);
   const metaBase = { businessId: business.id, businessSlug: business.slug };
 
@@ -160,7 +168,18 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
   }
 
   if (req.method === "GET" && url.pathname === "/api/config") {
-    return dakinisJsonSuccess({ config: modules.config }, adapterKey, metaBase);
+    const planTier = dakinisNormalizeCommercialPlan(business.plan);
+    const modulesEnabled = dakinisListModulesForPlan(planTier);
+    return dakinisJsonSuccess(
+      {
+        config: modules.config,
+        plan: business.plan,
+        planTier,
+        modulesEnabled
+      },
+      adapterKey,
+      metaBase
+    );
   }
 
   if (req.method === "POST" && url.pathname === "/api/agenda/slots") {

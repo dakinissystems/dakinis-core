@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
@@ -7,14 +9,29 @@ const logoSimple = "/Logo%20Simple.jpeg";
 
 export default function AppTopBar({ navigate, session, logout }) {
   const { t } = useLocale();
+  const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
+  const tenantVertical = session?.business?.type;
+  const tenantCanOpenMockup =
+    Boolean(session?.token) &&
+    session.user?.role !== "platform_admin" &&
+    session.business?.type !== "platform" &&
+    Boolean(tenantVertical && systemRegistry[tenantVertical]);
 
   return (
     <header className="topbar">
       <div className="container topbar-content">
-        <a href={DAKINIS_MARKETING_SITE_URL} className="brand brand-external">
-          <img src={logoSimple} alt="Dakinis Systems" className="brand-icon" />
-          <span>Dakinis One</span>
-        </a>
+        <div className="brand">
+          <a
+            href={DAKINIS_MARKETING_SITE_URL}
+            className="brand-external brand-icon-link"
+            aria-label={t("nav.corporateSite")}
+          >
+            <img src={logoSimple} alt="" className="brand-icon" />
+          </a>
+          <button type="button" className="brand-title-link" onClick={() => navigate("/")} aria-label={t("nav.homeApp")}>
+            Dakinis One
+          </button>
+        </div>
         <div className="topbar-actions">
           <LanguageSwitcher />
           <a
@@ -34,12 +51,31 @@ export default function AppTopBar({ navigate, session, logout }) {
                   {t("nav.platformPanel")}
                 </button>
               ) : session.business?.slug ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
+                  >
+                    {t("nav.myBusiness")}
+                  </button>
+                  {tenantCanOpenMockup ? (
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => navigate(`/vista/${encodeURIComponent(tenantVertical)}`)}
+                    >
+                      {t("nav.panelMockup")}
+                    </button>
+                  ) : null}
+                </>
+              ) : tenantCanOpenMockup ? (
                 <button
                   type="button"
                   className="btn btn-outline"
-                  onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
+                  onClick={() => navigate(`/vista/${encodeURIComponent(tenantVertical)}`)}
                 >
-                  {t("nav.myBusiness")}
+                  {t("nav.panelMockup")}
                 </button>
               ) : null}
               <span

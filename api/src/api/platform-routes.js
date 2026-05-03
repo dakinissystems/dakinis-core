@@ -4,6 +4,7 @@ import {
   dakinisIsValidBusinessTypeKey,
   dakinisNormalizeBusinessTypeKey
 } from "@dakinis/shared/catalog/business-type-display.js";
+import { dakinisParseCommercialPlanForStorage } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
@@ -23,8 +24,12 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const slug = typeof body.slug === "string" ? body.slug.trim().toLowerCase() : "";
   const type = dakinisNormalizeBusinessTypeKey(typeof body.type === "string" ? body.type : "");
-  const plan =
-    typeof body.plan === "string" && body.plan.trim() ? body.plan.trim() : "starter";
+  const planParsed = dakinisParseCommercialPlanForStorage(
+    typeof body.plan === "string" && body.plan.trim() ? body.plan.trim() : "starter"
+  );
+  if (planParsed === null) {
+    return dakinisJsonError(400, "INVALID_PLAN", "plan debe ser starter, growth o pro (aliases: advanced, enterprise -> pro)");
+  }
 
   if (!name || !slug || !type) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "name, slug y type son obligatorios");
@@ -73,7 +78,7 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
     db.prepare(
       `INSERT INTO business (id, slug, name, type, plan, config_json)
        VALUES (?, ?, ?, ?, ?, NULL)`
-    ).run(id, slug, name, type, plan);
+    ).run(id, slug, name, type, planParsed);
     if (uid && passwordHash) {
       db.prepare(
         `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
@@ -115,6 +120,13 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
     typeRaw === "" ? undefined : dakinisNormalizeBusinessTypeKey(typeRaw);
   const plan = typeof body.plan === "string" ? body.plan.trim() : undefined;
 
+  if (plan !== undefined && plan !== "") {
+    const planParsed = dakinisParseCommercialPlanForStorage(plan);
+    if (planParsed === null) {
+      return dakinisJsonError(400, "INVALID_PLAN", "plan debe ser starter, growth o pro (aliases: advanced, enterprise -> pro)");
+    }
+  }
+
   if (slug !== undefined) {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
       return dakinisJsonError(400, "VALIDATION_ERROR", "slug: solo minusculas, numeros y guiones");
@@ -136,7 +148,10 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
   const nextName = name !== undefined ? name : existing.name;
   const nextSlug = slug !== undefined ? slug : existing.slug;
   const nextType = type !== undefined ? type : existing.type;
-  const nextPlan = plan !== undefined && plan !== "" ? plan : existing.plan;
+  const nextPlan =
+    plan !== undefined && plan !== ""
+      ? dakinisParseCommercialPlanForStorage(plan)
+      : existing.plan;
 
   db.prepare(`UPDATE business SET name = ?, slug = ?, type = ?, plan = ? WHERE id = ?`).run(
     nextName,

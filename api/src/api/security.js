@@ -13,7 +13,8 @@ function dakinisGetClientKey(req) {
       ? forwardedFor.split(",")[0].trim()
       : req.socket.remoteAddress || "unknown";
   const apiKey = req.headers[DAKINIS_API_KEY_HEADER] || "no-key";
-  return `${ip}:${apiKey}`;
+  const biz = typeof req.headers["x-business-id"] === "string" ? req.headers["x-business-id"].trim() : "";
+  return biz ? `${ip}:${apiKey}:biz:${biz}` : `${ip}:${apiKey}`;
 }
 
 function dakinisCleanupRateStore(now) {

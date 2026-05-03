@@ -11,8 +11,10 @@ import {
   dakinisBuildDefaultFormValues
 } from "../data/systemPages.js";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import DemoTenantSystemWelcome from "../components/DemoTenantSystemWelcome.jsx";
 import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
+import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 const logoSimple = "/Logo%20Simple.jpeg";
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -22,6 +24,9 @@ export default function SystemPage({ activeSystemKey, navigate }) {
 
   const hideVerticalSwitcher =
     Boolean(session?.token) && session?.user?.role !== "platform_admin";
+
+  const showDemoWelcome =
+    Boolean(session?.token) && hideVerticalSwitcher && dakinisIsSeedDemoTenantSession(session);
 
   const sistemaSwitcherEntries = useMemo(() => {
     if (hideVerticalSwitcher) return [];
@@ -134,6 +139,9 @@ export default function SystemPage({ activeSystemKey, navigate }) {
         <p className="kicker">Tenant: {tenantSlugForVertical}</p>
         <h2>{systemPageContent.pageTitle}</h2>
         <p className="lead">{systemPageContent.pageDescription}</p>
+        {showDemoWelcome ? (
+          <DemoTenantSystemWelcome activeSystemKey={activeSystemKey} session={session} navigate={navigate} />
+        ) : null}
         <div className="hero-card">
           <h3>Resultados que buscas en {selectedSystem.label}</h3>
           <ul>
@@ -150,18 +158,20 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </article>
           ))}
         </section>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-            {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => navigate(`/vista/${encodeURIComponent(activeSystemKey)}`)}
-          >
-            Vista previa del panel (mockup)
-          </button>
-        </div>
+        {!showDemoWelcome ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
+              {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => navigate(`/vista/${encodeURIComponent(activeSystemKey)}`)}
+            >
+              Vista previa del panel (mockup)
+            </button>
+          </div>
+        ) : null}
         {!hideVerticalSwitcher ? (
           <div className="system-switcher">
             {sistemaSwitcherEntries.map(([systemKey, systemInfo]) => (

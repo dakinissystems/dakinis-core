@@ -6,9 +6,12 @@ export default {
     quote: "Solicitar presupuesto",
     platformPanel: "Panel plataforma",
     myBusiness: "Mi negocio",
+    panelMockup: "Vista mockup",
     platformAdmin: "Administrador plataforma",
     logout: "Salir",
-    language: "Idioma"
+    language: "Idioma",
+    corporateSite: "Dakinis Systems — sitio corporativo",
+    homeApp: "Ir al inicio de la aplicación"
   },
   footer: {
     navAria: "Enlaces pie de página",
@@ -67,6 +70,62 @@ export default {
       lead: "Explora tenants demo, mockups y login JWT. Listo para Postgres y Stripe en siguiente fase.",
       enterAdmin: "Entrar como admin",
       viewSystems: "Ver sistemas"
+    },
+    demoTenant: {
+      ribbonTitle: "Estás en una cuenta demo",
+      ribbonLead:
+        "Usa el mockup para ver el panel tipo app y el bloque inferior para datos guardados por tenant. Contraseña: demo123.",
+      toPanel: "Ir a mi panel funcional",
+      toMockup: "Abrir mockup interactivo",
+      benefitIntro: "Ventajas de probar tu vertical:"
+    }
+  },
+  systemDemo: {
+    badge: "Cuenta demo (seed)",
+    accountLine: "Sesión: {email}",
+    passwordLabel: "Contraseña de esta demo",
+    benefitsTitle: "Qué puedes explorar en esta vertical",
+    mockupPrimary: "Ver mockup del panel — {label}",
+    toHome: "Volver al inicio",
+    functionalHint:
+      "Más abajo: formularios y listados con persistencia real por tenant (SQLite). El mockup es solo maquetación interactiva.",
+    verticals: {
+      clinica: {
+        headline: "Clínica demo: agenda y pacientes sin líos",
+        lead: "Este entorno aísla tus datos de otros negocios. Combina el mockup visual con el flujo funcional de abajo.",
+        benefits: [
+          "Mockup: navega por el panel como si fuera la app final (sin API).",
+          "Panel funcional: registros que se guardan en base de datos por tenant.",
+          "Automatizaciones de ejemplo para recordatorios y seguimiento comercial."
+        ]
+      },
+      peluqueria: {
+        headline: "Peluquería demo: agenda por estilista y reservas",
+        lead: "Prueba cómo se organizan turnos y proveedores en un solo lugar.",
+        benefits: [
+          "Mockup: vista previa del salón con secciones típicas.",
+          "Datos demo persistidos para citas y stock orientativo.",
+          "Enlaces rápidos a reservas y fidelización en el contenido de la página."
+        ]
+      },
+      restaurante: {
+        headline: "Restaurante demo: sala y operación diaria",
+        lead: "Ideal para ver cómo encajan comandas, turnos y alertas en el mismo panel.",
+        benefits: [
+          "Mockup: maquetación de sala y back-of-house.",
+          "Formularios con persistencia para simular carga operativa.",
+          "KPIs y textos orientados a ticket medio y ocupación."
+        ]
+      },
+      inmobiliaria: {
+        headline: "Inmobiliaria demo: visitas y embudo comercial",
+        lead: "Une leads, visitas y proveedores en una demo coherente con tu tipo de negocio.",
+        benefits: [
+          "Mockup: embudo y tablero visual para presentar a equipo comercial.",
+          "Registros por tenant para leads y seguimiento.",
+          "Proveedores y alertas como en operación real."
+        ]
+      }
     }
   },
   pricing: {
@@ -148,6 +207,8 @@ export default {
       restaurant: "Restaurante premium",
       estate: "Inmobiliaria"
     },
+    platformAdmin:
+      "Plataforma — si el servidor define DAKINIS_PLATFORM_TOTP_SECRET, hace falta código TOTP además de la contraseña.",
     email: "Email",
     password: "Contraseña",
     totpLabel: "Código TOTP (administrador plataforma)",
@@ -196,5 +257,15 @@ export default {
     legal: "Aviso legal · Dakinis One",
     vista: "Vista previa · {label} · Dakinis One",
     sistema: "{label} · Dakinis One"
+  },
+  vistaMockup: {
+    kicker: "Vista previa · solo maquetación",
+    title: "Panel tipo app — {label}",
+    lead:
+      "Ejemplo visual de cómo podría verse el programa en este tipo de negocio; no persiste datos ni llama a la API.",
+    home: "Inicio",
+    platformAdmin: "Administración plataforma",
+    goDemoSystem: "Ir al sistema demo",
+    myFunctionalPanel: "Mi panel funcional"
   }
 };

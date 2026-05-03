@@ -1,5 +1,9 @@
 import bcrypt from "bcryptjs";
 import { authenticator } from "otplib";
+import {
+  dakinisListModulesForPlan,
+  dakinisNormalizeCommercialPlan
+} from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisSignUserToken } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
@@ -55,6 +59,9 @@ export function dakinisHandleAuthLogin(rawBody) {
 
   const token = dakinisSignUserToken(user);
 
+  const planTier = dakinisNormalizeCommercialPlan(business.plan);
+  const modulesEnabled = dakinisListModulesForPlan(planTier);
+
   return dakinisJsonSuccess(
     {
       token,
@@ -68,11 +75,13 @@ export function dakinisHandleAuthLogin(rawBody) {
         slug: business.slug,
         name: business.name,
         type: business.type,
-        plan: business.plan
+        plan: business.plan,
+        planTier,
+        modulesEnabled
       }
     },
     business.type,
-    { businessId: business.id, businessSlug: business.slug }
+    { businessId: business.id, businessSlug: business.slug, planTier }
   );
 }
 
@@ -98,8 +107,23 @@ export function dakinisHandleMe(req) {
     return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
   }
 
-  return dakinisJsonSuccess({ user, business }, business.type, {
-    businessId: business.id,
-    businessSlug: business.slug
-  });
+  const planTier = dakinisNormalizeCommercialPlan(business.plan);
+  const modulesEnabled = dakinisListModulesForPlan(planTier);
+
+  return dakinisJsonSuccess(
+    {
+      user,
+      business: {
+        ...business,
+        planTier,
+        modulesEnabled
+      }
+    },
+    business.type,
+    {
+      businessId: business.id,
+      businessSlug: business.slug,
+      planTier
+    }
+  );
 }

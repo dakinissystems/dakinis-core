@@ -33,6 +33,7 @@ import {
   dakinisHandleSupplyDeliveriesPatch,
   dakinisHandleSupplyDeliveriesPost
 } from "./src/api/tenant-supply.js";
+import { dakinisStructuredLog } from "./src/api/structured-logger.js";
 
 dakinisAssertProductionJwtSecret();
 dakinisInitDb();
@@ -188,7 +189,21 @@ const server = http.createServer((req, res) => {
         return;
       }
 
+      const started = Date.now();
       const result = await dakinisDispatch(req, rawBody, url);
+      const ms = Date.now() - started;
+      const rid = result.body?.meta?.requestId;
+      const bizHeader = typeof req.headers["x-business-id"] === "string" ? req.headers["x-business-id"].trim() : "";
+      dakinisStructuredLog({
+        level: result.status >= 500 ? "error" : "info",
+        msg: "http_request",
+        method: req.method,
+        path: url.pathname,
+        status: result.status,
+        ms,
+        requestId: rid,
+        businessIdHeader: bizHeader ? bizHeader.slice(0, 80) : undefined
+      });
       const auth = req.dakinisAuth;
       if (auth?.role) {
         res.setHeader("X-Auth-Method", auth.method || "unknown");

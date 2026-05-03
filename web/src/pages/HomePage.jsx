@@ -8,6 +8,7 @@ import {
   dakinisPackAdvanced,
   dakinisMaintenanceTiers
 } from "../data/pricingCatalog.js";
+import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 const logoGrande = "/Logo%20Grande.jpeg";
 
@@ -29,7 +30,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
   const sistemaButtons = useMemo(() => {
     const all = Object.entries(dakinisSystemRegistry);
     if (!session?.token) return all;
-    if (dakinisIsPlatformAdminSession(session)) return [];
+    if (dakinisIsPlatformAdminSession(session)) return all;
     const tenantType = session.business?.type;
     if (tenantType) return all.filter(([key]) => key === tenantType);
     return all;
@@ -38,7 +39,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
   const vistaButtons = useMemo(() => {
     const all = Object.entries(dakinisSystemRegistry);
     if (!session?.token) return all;
-    if (dakinisIsPlatformAdminSession(session)) return [];
+    if (dakinisIsPlatformAdminSession(session)) return all;
     const tenantType = session.business?.type;
     if (tenantType) return all.filter(([key]) => key === tenantType);
     return all;
@@ -142,26 +143,55 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
             {t("home.modules.lead")}&nbsp;
             <code>dakinis-dev-key</code>
           </p>
-          {dakinisIsPlatformAdminSession(session) ? (
-            <div className="system-switcher">
+          {session?.token && dakinisIsSeedDemoTenantSession(session) && !dakinisIsPlatformAdminSession(session) ? (
+            <article className="home-demo-tenant-ribbon card">
+              <h3 className="home-demo-tenant-ribbon-title">{t("home.demoTenant.ribbonTitle")}</h3>
+              <p className="lead">{t("home.demoTenant.ribbonLead")}</p>
+              <p className="home-demo-tenant-benefit-intro">{t("home.demoTenant.benefitIntro")}</p>
+              <ul className="demo-tenant-benefits">
+                {(() => {
+                  const key = session.business?.type;
+                  const raw = key ? t(`systemDemo.verticals.${key}.benefits`) : [];
+                  return Array.isArray(raw) ? raw : [];
+                })().map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <div className="demo-tenant-welcome-actions">
+                <button
+                  type="button"
+                  className="btn demo-tenant-welcome-cta"
+                  onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
+                >
+                  {t("home.demoTenant.toPanel")}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => navigate(`/vista/${encodeURIComponent(session.business.type)}`)}
+                >
+                  {t("home.demoTenant.toMockup")}
+                </button>
+              </div>
+            </article>
+          ) : null}
+          <div className="system-switcher">
+            {dakinisIsPlatformAdminSession(session) ? (
               <button type="button" className="system-btn active" onClick={() => navigate("/admin")}>
                 {t("home.modules.adminCta")}
               </button>
-            </div>
-          ) : (
-            <div className="system-switcher">
-              {sistemaButtons.map(([systemKey, systemInfo]) => (
-                <button
-                  key={systemKey}
-                  type="button"
-                  className="system-btn"
-                  onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
-                >
-                  {systemInfo.label}
-                </button>
-              ))}
-            </div>
-          )}
+            ) : null}
+            {sistemaButtons.map(([systemKey, systemInfo]) => (
+              <button
+                key={systemKey}
+                type="button"
+                className="system-btn"
+                onClick={() => navigate(`/sistema/${encodeURIComponent(systemKey)}`)}
+              >
+                {systemInfo.label}
+              </button>
+            ))}
+          </div>
           {vistaButtons.length > 0 ? (
             <>
               <h3 style={{ marginTop: "1.75rem" }}>{t("home.modules.mockTitle")}</h3>

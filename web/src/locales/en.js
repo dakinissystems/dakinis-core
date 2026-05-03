@@ -6,9 +6,12 @@ export default {
     quote: "Request a quote",
     platformPanel: "Platform admin",
     myBusiness: "My business",
+    panelMockup: "Panel mockup",
     platformAdmin: "Platform administrator",
     logout: "Log out",
-    language: "Language"
+    language: "Language",
+    corporateSite: "Dakinis Systems — corporate site",
+    homeApp: "Go to app home"
   },
   footer: {
     navAria: "Footer links",
@@ -67,6 +70,62 @@ export default {
       lead: "Explore demo tenants, mockups and JWT login. Postgres and Stripe in the next phase.",
       enterAdmin: "Enter as admin",
       viewSystems: "View systems"
+    },
+    demoTenant: {
+      ribbonTitle: "You’re on a demo account",
+      ribbonLead:
+        "Use the mockup for an app-style panel preview, then scroll for tenant-persisted data. Password: demo123.",
+      toPanel: "Open my functional panel",
+      toMockup: "Open interactive mockup",
+      benefitIntro: "Why try your vertical here:"
+    }
+  },
+  systemDemo: {
+    badge: "Demo (seed) account",
+    accountLine: "Signed in as: {email}",
+    passwordLabel: "Password for this demo",
+    benefitsTitle: "What to explore in this vertical",
+    mockupPrimary: "Open panel mockup — {label}",
+    toHome: "Back to home",
+    functionalHint:
+      "Below: forms and tables with real per-tenant persistence (SQLite). The mockup is interactive layout only.",
+    verticals: {
+      clinica: {
+        headline: "Clinic demo: scheduling and patients without the mess",
+        lead: "Your data is isolated from other businesses. Pair the visual mockup with the functional flow below.",
+        benefits: [
+          "Mockup: browse the panel like the final app (no API).",
+          "Functional panel: records stored in the database per tenant.",
+          "Sample automations for reminders and commercial follow-up."
+        ]
+      },
+      peluqueria: {
+        headline: "Barbershop/salon demo: stylist agenda and bookings",
+        lead: "See how shifts and suppliers fit in one place.",
+        benefits: [
+          "Mockup: preview of the salon with typical sections.",
+          "Persisted demo data for appointments and stock hints.",
+          "Quick paths to bookings and loyalty in the page content."
+        ]
+      },
+      restaurante: {
+        headline: "Restaurant demo: floor and daily operations",
+        lead: "See how orders, shifts and alerts fit in one panel.",
+        benefits: [
+          "Mockup: front-of-house and back-of-house layout.",
+          "Forms with persistence to simulate operational load.",
+          "KPIs and copy focused on ticket and occupancy."
+        ]
+      },
+      inmobiliaria: {
+        headline: "Real estate demo: visits and sales pipeline",
+        lead: "Combine leads, visits and suppliers in a demo aligned with your vertical.",
+        benefits: [
+          "Mockup: funnel and board to show your sales team.",
+          "Per-tenant records for leads and follow-up.",
+          "Suppliers and alerts like in real operations."
+        ]
+      }
     }
   },
   pricing: {
@@ -147,6 +206,8 @@ export default {
       restaurant: "Premium restaurant",
       estate: "Real estate"
     },
+    platformAdmin:
+      "Platform — if the server sets DAKINIS_PLATFORM_TOTP_SECRET, a TOTP code is required in addition to the password.",
     email: "Email",
     password: "Password",
     totpLabel: "TOTP code (platform administrator)",
@@ -195,5 +256,15 @@ export default {
     legal: "Legal notice · Dakinis One",
     vista: "Preview · {label} · Dakinis One",
     sistema: "{label} · Dakinis One"
+  },
+  vistaMockup: {
+    kicker: "Preview · layout only",
+    title: "App-style panel — {label}",
+    lead:
+      "Visual example of how the app could look for this business type; no data persistence or API calls.",
+    home: "Home",
+    platformAdmin: "Platform administration",
+    goDemoSystem: "Open demo system",
+    myFunctionalPanel: "My functional panel"
   }
 };

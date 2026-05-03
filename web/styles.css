@@ -111,6 +111,47 @@ a.brand:focus-visible {
   border-radius: 10px;
 }
 
+.brand-icon-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+.brand-icon-link:hover .brand-icon {
+  outline: 1px solid rgba(45, 212, 191, 0.45);
+}
+
+.brand-icon-link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.brand-title-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.brand-title-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.brand-title-link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
 .brand-icon {
   width: 38px;
   height: 38px;
@@ -810,4 +851,107 @@ section {
     border-right: none;
     border-bottom: 1px solid var(--line);
   }
+}
+
+/* Cuentas demo seed: bienvenida mockup + ventajas */
+.demo-tenant-welcome {
+  margin: 1rem 0 1.5rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.55), rgba(30, 41, 59, 0.35));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+.demo-tenant-welcome-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.demo-tenant-welcome-badge {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+.demo-tenant-welcome-account {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.demo-tenant-welcome-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+}
+
+.demo-tenant-welcome-lead {
+  margin-top: 0.25rem;
+}
+
+.demo-tenant-welcome-password {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.demo-tenant-benefits-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.demo-tenant-benefits {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+.demo-tenant-benefits li {
+  margin-bottom: 0.35rem;
+}
+
+.demo-tenant-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.demo-tenant-welcome-cta {
+  min-width: min(100%, 16rem);
+  padding: 0.65rem 1.15rem;
+  font-weight: 600;
+}
+
+.demo-tenant-welcome-foot {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.home-demo-tenant-ribbon {
+  margin: 1rem 0 1.25rem;
+  padding: 1.15rem 1.35rem;
+  border-radius: 12px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: rgba(15, 23, 42, 0.25);
+}
+
+.home-demo-tenant-ribbon-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+}
+
+.home-demo-tenant-benefit-intro {
+  margin: 0.5rem 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }

@@ -9,6 +9,12 @@ import { dakinisBearerJsonFetch } from "../services/api.js";
 
 const DAKINIS_TYPE_OTHER = "__other__";
 
+const DAKINIS_SAAS_PLAN_OPTIONS = [
+  { value: "starter", label: "Starter (agenda, reservas, dashboard)" },
+  { value: "growth", label: "Growth (+ CRM, leads)" },
+  { value: "pro", label: "Pro (+ WhatsApp API en rutas /api/whatsapp/*)" }
+];
+
 export default function PlatformAdminPage({ navigate }) {
   const { session } = useDakinisSession();
 
@@ -97,10 +103,15 @@ export default function PlatformAdminPage({ navigate }) {
 
   function startEdit(b) {
     setEditingId(b.id);
+    const p = String(b.plan || "")
+      .trim()
+      .toLowerCase();
+    const planSelect =
+      p === "growth" || p === "pro" ? p : p === "advanced" || p === "enterprise" ? "pro" : "starter";
     setEditForm({
       name: b.name,
       slug: b.slug,
-      plan: b.plan
+      plan: planSelect
     });
     const preset = new Set([...verticalKeys, "platform"]);
     if (preset.has(b.type)) {
@@ -218,6 +229,24 @@ export default function PlatformAdminPage({ navigate }) {
           Volver al inicio
         </button>
 
+        <h3 style={{ marginTop: "0.25rem" }}>Vistas mockup por vertical</h3>
+        <p className="lead">
+          Maquetas interactivas del panel por tipo de negocio (solo presentación; no persisten datos). Útiles para
+          revisar UX junto a los tenants demo.
+        </p>
+        <div className="system-switcher" style={{ marginBottom: "1.25rem" }}>
+          {typeSelectOptions.map((o) => (
+            <button
+              key={`vista-${o.value}`}
+              type="button"
+              className="system-btn"
+              onClick={() => navigate(`/vista/${encodeURIComponent(o.value)}`)}
+            >
+              Vista · {o.label}
+            </button>
+          ))}
+        </div>
+
         {loading ? <p className="lead">Cargando…</p> : null}
         {error ? (
           <p className="lead" style={{ color: "#f97316" }}>
@@ -264,11 +293,16 @@ export default function PlatformAdminPage({ navigate }) {
           </label>
           <label className="mockup-field">
             <span>Plan</span>
-            <input
+            <select
               value={createForm.plan}
               onChange={(ev) => setCreateForm((p) => ({ ...p, plan: ev.target.value }))}
-              placeholder="starter"
-            />
+            >
+              {DAKINIS_SAAS_PLAN_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
           </label>
           {createForm.typeSelect === DAKINIS_TYPE_OTHER ? (
             <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
@@ -364,21 +398,33 @@ export default function PlatformAdminPage({ navigate }) {
                 ) : (
                   <label className="mockup-field">
                     <span>Plan</span>
-                    <input
+                    <select
                       value={editForm.plan}
                       onChange={(ev) => setEditForm((p) => ({ ...p, plan: ev.target.value }))}
                       required
-                    />
+                    >
+                      {DAKINIS_SAAS_PLAN_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 )}
                 {editTypeSelect === DAKINIS_TYPE_OTHER ? (
                   <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
                     <span>Plan</span>
-                    <input
+                    <select
                       value={editForm.plan}
                       onChange={(ev) => setEditForm((p) => ({ ...p, plan: ev.target.value }))}
                       required
-                    />
+                    >
+                      {DAKINIS_SAAS_PLAN_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 ) : null}
               </div>
