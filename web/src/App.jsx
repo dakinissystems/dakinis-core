@@ -16,6 +16,10 @@ import {
   PrivacyPage,
   TermsPage
 } from "./pages/StaticInfoPages.jsx";
+import { DashboardPage } from "./app/dashboard/index.js";
+import { CrmPage } from "./app/crm/index.js";
+import { MessagesPage } from "./app/messages/index.js";
+import { SettingsPage } from "./app/settings/index.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -74,6 +78,10 @@ export default function App() {
     }
     if (currentPath === "/admin") {
       document.title = t("doc.admin");
+      return;
+    }
+    if (currentPath.startsWith("/app/")) {
+      document.title = "Dakinis App";
       return;
     }
     if (vistaKeyFromPath && dakinisSystemRegistry[vistaKeyFromPath]) {
@@ -152,6 +160,14 @@ export default function App() {
       <LegalNoticePage navigate={navigate} />
     ) : currentPath === "/admin" ? (
       <PlatformAdminPage navigate={navigate} />
+    ) : currentPath === "/app/dashboard" ? (
+      <DashboardPage navigate={navigate} />
+    ) : currentPath === "/app/crm" ? (
+      <CrmPage navigate={navigate} />
+    ) : currentPath === "/app/messages" ? (
+      <MessagesPage navigate={navigate} />
+    ) : currentPath === "/app/settings" ? (
+      <SettingsPage navigate={navigate} />
     ) : vistaKeyFromPath ? (
       <VistaMockupPage verticalKey={vistaKeyFromPath} navigate={navigate} />
     ) : systemKeyFromPath ? (
@@ -162,7 +178,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <AppTopBar navigate={navigate} session={session} logout={logout} />
+      <AppTopBar navigate={navigate} session={session} logout={logout} currentPath={currentPath} />
       <main className="app-main">{route}</main>
       <AppFooter navigate={navigate} />
     </div>

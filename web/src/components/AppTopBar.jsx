@@ -7,7 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher.jsx";
 
 const logoSimple = "/Logo%20Simple.jpeg";
 
-export default function AppTopBar({ navigate, session, logout }) {
+export default function AppTopBar({ navigate, session, logout, currentPath }) {
   const { t } = useLocale();
   const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
   const tenantVertical = session?.business?.type;
@@ -16,6 +16,11 @@ export default function AppTopBar({ navigate, session, logout }) {
     session.user?.role !== "platform_admin" &&
     session.business?.type !== "platform" &&
     Boolean(tenantVertical && systemRegistry[tenantVertical]);
+  const tenantCanOpenApp =
+    Boolean(session?.token) &&
+    session.user?.role !== "platform_admin" &&
+    session.business?.type !== "platform";
+  const isActive = (path) => currentPath === path;
 
   return (
     <header className="topbar">
@@ -52,6 +57,38 @@ export default function AppTopBar({ navigate, session, logout }) {
                 </button>
               ) : session.business?.slug ? (
                 <>
+                  {tenantCanOpenApp ? (
+                    <div className="topbar-app-nav" aria-label="Dakinis app navigation">
+                      <button
+                        type="button"
+                        className={`btn btn-outline${isActive("/app/dashboard") ? " is-active" : ""}`}
+                        onClick={() => navigate("/app/dashboard")}
+                      >
+                        App
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-outline${isActive("/app/crm") ? " is-active" : ""}`}
+                        onClick={() => navigate("/app/crm")}
+                      >
+                        CRM
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-outline${isActive("/app/messages") ? " is-active" : ""}`}
+                        onClick={() => navigate("/app/messages")}
+                      >
+                        Messages
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-outline${isActive("/app/settings") ? " is-active" : ""}`}
+                        onClick={() => navigate("/app/settings")}
+                      >
+                        Settings
+                      </button>
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     className="btn btn-outline"

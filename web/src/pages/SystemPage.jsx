@@ -163,6 +163,11 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
               {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
             </button>
+            {session?.token ? (
+              <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
+                Abrir app real (/api/v1)
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn"

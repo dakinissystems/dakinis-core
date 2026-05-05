@@ -19,6 +19,7 @@ export function dakinisSignUserToken(userRow) {
     {
       sub: userRow.id,
       bid: userRow.business_id,
+      tenantId: userRow.business_id,
       role: userRow.role,
       email: userRow.email
     },

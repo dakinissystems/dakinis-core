@@ -1,5 +1,7 @@
 import { DAKINIS_PUBLIC_DEFAULT_API_KEY } from "../config/public-defaults.js";
 
+const API_URL = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+
 /** Error de API con `error.code` del backend (p. ej. TOTP_REQUIRED). */
 export class DakinisApiError extends Error {
   constructor(message, { status, code, details } = {}) {
@@ -160,6 +162,37 @@ export async function dakinisPublicJsonFetch(path, options = {}) {
   }
 
   return json;
+}
+
+/** Cliente API compartido con JWT del usuario (multi-tenant real por token). */
+export async function api(endpoint, options = {}) {
+  let sessionToken = "";
+  try {
+    const rawSession = sessionStorage.getItem("dakinis_session_v1");
+    if (rawSession) {
+      const parsed = JSON.parse(rawSession);
+      if (parsed && typeof parsed === "object" && typeof parsed.token === "string") {
+        sessionToken = parsed.token.trim();
+      }
+    }
+  } catch {
+    sessionToken = "";
+  }
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("dakinis_token") ||
+    localStorage.getItem("authToken") ||
+    sessionToken;
+  const url = `${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+  if (token && String(token).trim()) {
+    headers.Authorization = `Bearer ${String(token).trim()}`;
+  }
+  const response = await fetch(url, { ...options, headers });
+  return response.json();
 }
 
 /** GET/POST con solo `Authorization: Bearer` (panel plataforma; sin `x-business-id`). */

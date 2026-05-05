@@ -54,6 +54,26 @@ body {
   flex-wrap: wrap;
 }
 
+.topbar-app-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(16, 35, 56, 0.45);
+}
+
+.topbar-app-nav .btn {
+  padding: 0.5rem 0.7rem;
+}
+
+.topbar-app-nav .btn-outline.is-active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: rgba(45, 212, 191, 0.12);
+}
+
 .lang-switch {
   display: inline-flex;
   border: 1px solid var(--line);
