@@ -15,6 +15,18 @@ function dakinisMigrateUsersTotp(db) {
   }
 }
 
+function dakinisMigratePlatformUserId(db) {
+  const cols = db.prepare("PRAGMA table_info(users)").all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("platform_user_id")) {
+    // SQLite no permite ADD COLUMN ... UNIQUE; la unicidad se aplica con índice.
+    db.exec("ALTER TABLE users ADD COLUMN platform_user_id TEXT");
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_platform_user_id ON users(platform_user_id)"
+    );
+  }
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 
@@ -40,6 +52,7 @@ export function dakinisInitDb() {
   const schemaPath = path.join(__dirname, "schema.sql");
   dbInstance.exec(fs.readFileSync(schemaPath, "utf8"));
   dakinisMigrateUsersTotp(dbInstance);
+  dakinisMigratePlatformUserId(dbInstance);
   dakinisSeed(dbInstance);
 
   return dbInstance;

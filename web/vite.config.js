@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    resolve: {
+      alias: {
+        "@dakinis/shared": path.resolve(__dirname, "../shared")
+      }
+    },
     server: {
       proxy: {
         "/api": {

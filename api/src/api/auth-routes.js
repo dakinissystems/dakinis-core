@@ -5,8 +5,13 @@ import {
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetDb } from "../db/index.js";
-import { dakinisSignUserToken } from "./auth-tenant.js";
+import { dakinisSignUserToken, dakinisGetJwtSecret } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
+import { dakinisResolveBusinessFromHeader } from "./business-context.js";
+import {
+  dakinisVerifyPlatformAccessTokenOnly,
+  dakinisResolveCoreUserFromPlatformToken
+} from "./platform-user-bridge.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -125,5 +130,97 @@ export function dakinisHandleMe(req) {
       businessSlug: business.slug,
       planTier
     }
+  );
+}
+
+/**
+ * Intercambia JWT del IdP (`platform/auth`) por sesión core (JWT emitido por core).
+ * Body JSON: `businessId` o `businessSlug` (uno obligatorio).
+ */
+export function dakinisHandleAuthExchange(req, rawBody) {
+  const authHeader = req.headers.authorization;
+  const token =
+    typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+  if (!token) {
+    return dakinisJsonError(401, "UNAUTHORIZED", "Authorization: Bearer con JWT del IdP requerido");
+  }
+
+  let body = {};
+  try {
+    body = rawBody && String(rawBody).trim() ? JSON.parse(rawBody) : {};
+  } catch {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+
+  const bizRef =
+    (typeof body.businessId === "string" && body.businessId.trim()) ||
+    (typeof body.businessSlug === "string" && body.businessSlug.trim()) ||
+    "";
+
+  if (!bizRef) {
+    return dakinisJsonError(
+      400,
+      "VALIDATION_ERROR",
+      "businessId o businessSlug requerido para enlazar el usuario al tenant"
+    );
+  }
+
+  const business = dakinisResolveBusinessFromHeader(bizRef);
+  if (!business) {
+    return dakinisJsonError(404, "UNKNOWN_TENANT", "Negocio no encontrado", { tenantRef: bizRef });
+  }
+
+  let payload;
+  try {
+    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+  } catch {
+    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
+  }
+
+  let user;
+  try {
+    user = dakinisResolveCoreUserFromPlatformToken(payload, business);
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "PLATFORM_USER_TENANT_MISMATCH") {
+      return dakinisJsonError(
+        403,
+        "PLATFORM_USER_TENANT_MISMATCH",
+        "El email ya esta vinculado a otro negocio en core"
+      );
+    }
+    return dakinisJsonError(
+      400,
+      "INVALID_PLATFORM_IDENTITY",
+      e instanceof Error ? e.message : "Identidad invalida"
+    );
+  }
+
+  const coreJwt = dakinisSignUserToken(user);
+  const planTier = dakinisNormalizeCommercialPlan(business.plan);
+  const modulesEnabled = dakinisListModulesForPlan(planTier);
+
+  return dakinisJsonSuccess(
+    {
+      token: coreJwt,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      },
+      business: {
+        id: business.id,
+        slug: business.slug,
+        name: business.name,
+        type: business.type,
+        plan: business.plan,
+        planTier,
+        modulesEnabled
+      }
+    },
+    business.type,
+    { businessId: business.id, businessSlug: business.slug, planTier }
   );
 }

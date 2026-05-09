@@ -6,7 +6,12 @@ import {
   dakinisHandlePlatformBusinesses,
   dakinisHandlePlatformUsers
 } from "./api/platform-routes.js";
-import { dakinisHandleAuthLoginRequest, dakinisHandleMeRequest, dakinisHandleApiRequest } from "./api/router.js";
+import {
+  dakinisHandleAuthLoginRequest,
+  dakinisHandleAuthExchangeRequest,
+  dakinisHandleMeRequest,
+  dakinisHandleApiRequest
+} from "./api/router.js";
 import {
   dakinisHandleSupplyAlertsDelete,
   dakinisHandleSupplyAlertsList,
@@ -56,6 +61,9 @@ export async function dakinisDispatch(req, rawBody, url) {
   }
   if (path === "/api/auth/login" && req.method === "POST") {
     return dakinisHandleAuthLoginRequest(rawBody);
+  }
+  if (path === "/api/auth/exchange" && req.method === "POST") {
+    return dakinisHandleAuthExchangeRequest(req, rawBody);
   }
   if (!path.startsWith("/api/")) {
     return dakinisJsonError(404, "NOT_FOUND", "Solo rutas /api/* en este servidor");

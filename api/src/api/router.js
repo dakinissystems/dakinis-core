@@ -11,7 +11,7 @@ import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
-import { dakinisHandleAuthLogin, dakinisHandleMe } from "./auth-routes.js";
+import { dakinisHandleAuthLogin, dakinisHandleAuthExchange, dakinisHandleMe } from "./auth-routes.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
 
 function dakinisParseJsonSafely(rawBody) {
@@ -63,6 +63,10 @@ function dakinisAssertOptionalBusinessTypeHeader(req, business) {
 
 export function dakinisHandleAuthLoginRequest(rawBody) {
   return dakinisHandleAuthLogin(rawBody);
+}
+
+export function dakinisHandleAuthExchangeRequest(req, rawBody) {
+  return dakinisHandleAuthExchange(req, rawBody);
 }
 
 export function dakinisHandleMeRequest(req) {

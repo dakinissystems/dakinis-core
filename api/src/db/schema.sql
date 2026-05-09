@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT NOT NULL DEFAULT 'admin',
   totp_secret TEXT,
   totp_enabled INTEGER NOT NULL DEFAULT 0,
+  platform_user_id TEXT UNIQUE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (email),
   FOREIGN KEY (business_id) REFERENCES business(id)

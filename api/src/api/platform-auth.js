@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
 import { dakinisGetJwtSecret } from "./auth-tenant.js";
 import { dakinisJsonError } from "./responses.js";
+import { dakinisVerifyTenantAccessToken } from "./jwt-verify.js";
 
 /** Valida JWT y exige rol `platform_admin` (sin contexto de tenant). */
 export function dakinisRequirePlatformAdmin(req) {
@@ -13,7 +13,7 @@ export function dakinisRequirePlatformAdmin(req) {
     return dakinisJsonError(401, "UNAUTHORIZED", "Token vacío");
   }
   try {
-    const payload = jwt.verify(token, dakinisGetJwtSecret());
+    const payload = dakinisVerifyTenantAccessToken(token, dakinisGetJwtSecret());
     const role = typeof payload.role === "string" ? payload.role : "";
     if (role !== "platform_admin") {
       return dakinisJsonError(403, "FORBIDDEN", "Solo cuentas administrador de plataforma pueden acceder a este recurso");

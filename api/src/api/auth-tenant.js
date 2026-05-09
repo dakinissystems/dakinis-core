@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError } from "./responses.js";
+import { dakinisVerifyTenantAccessToken } from "./jwt-verify.js";
 
 import { DAKINIS_JWT_INSECURE_PLACEHOLDER } from "./jwt-config.js";
 
@@ -15,16 +16,23 @@ export function dakinisGetJwtSecret() {
 }
 
 export function dakinisSignUserToken(userRow) {
+  const issuer = process.env.JWT_CORE_ISSUER || "dakinis-core";
+  const audience = process.env.JWT_CORE_AUDIENCE || "dakinis-core-api";
+  const bid = String(userRow.business_id);
   return jwt.sign(
     {
-      sub: userRow.id,
-      bid: userRow.business_id,
-      tenantId: userRow.business_id,
+      sub: String(userRow.id),
+      tenant: bid,
+      tenantId: bid,
+      bid,
       role: userRow.role,
-      email: userRow.email
+      email: userRow.email,
+      permissions: [],
+      iss: issuer,
+      aud: audience
     },
     DAKINIS_JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "7d", algorithm: "HS256" }
   );
 }
 
@@ -36,8 +44,16 @@ export function dakinisAuthenticateTenant(req, business) {
       return dakinisJsonError(401, "UNAUTHORIZED", "Token ausente", {});
     }
     try {
-      const payload = jwt.verify(token, DAKINIS_JWT_SECRET);
-      const bid = typeof payload.bid === "string" ? payload.bid : "";
+      const payload = dakinisVerifyTenantAccessToken(token, DAKINIS_JWT_SECRET);
+      const bidRaw =
+        typeof payload.bid === "string" && payload.bid
+          ? payload.bid
+          : typeof payload.tenant === "string"
+            ? payload.tenant
+            : typeof payload.tenantId === "string"
+              ? payload.tenantId
+              : "";
+      const bid = bidRaw;
       if (bid !== business.id) {
         return dakinisJsonError(
           403,
