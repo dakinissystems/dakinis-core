@@ -5,6 +5,7 @@
   "type": "module",
   "workspaces": ["shared", "web", "api"],
   "scripts": {
+    "start": "npm run start -w @dakinis/api",
     "dev": "npm run dev -w @dakinis/web",
     "dev:full": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @dakinis/web\" \"npm run start -w @dakinis/api\"",
     "build": "npm run build -w @dakinis/web",
