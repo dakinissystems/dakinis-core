@@ -1,6 +1,9 @@
 import { DAKINIS_PUBLIC_DEFAULT_API_KEY } from "../config/public-defaults.js";
 
-const API_URL = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+/** Gateway público: `VITE_API_BASE_URL` (preferido) o `VITE_API_URL` (p. ej. https://api.dakinissystems.com). */
+const API_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "")
+  .trim()
+  .replace(/\/+$/, "");
 
 /** Error de API con `error.code` del backend (p. ej. TOTP_REQUIRED). */
 export class DakinisApiError extends Error {
@@ -22,7 +25,10 @@ function dakinisTrimOr(value, fallback) {
 
 /** Base URL sin barra final; '' usa rutas relativas (proxy Vite `/api`). */
 export function dakinisApiBaseUrl() {
-  const base = dakinisTrimOr(import.meta.env.VITE_API_BASE_URL, "");
+  const base = dakinisTrimOr(
+    import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL,
+    ""
+  );
   return base.replace(/\/+$/, "");
 }
 

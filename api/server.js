@@ -10,11 +10,32 @@ dakinisInitDb();
 
 const PORT = Number(process.env.PORT || 8787);
 
-/** Origen del SPA en produccion (Render static). Vacio o * permite cualquier origen. */
-const DAKINIS_CORS_ORIGIN = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
+/** Lista de orígenes (coma) desde CORS_ORIGINS o FRONTEND_URLS; si vacío, un solo CORS_ORIGIN/FRONTEND_URL o "*". */
+function dakinisCorsAllowlist() {
+  const multi = (process.env.CORS_ORIGINS || process.env.FRONTEND_URLS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (multi.length) return multi;
+  const single = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "").trim();
+  if (single) return [single];
+  return null;
+}
 
-function dakinisSetCorsHeaders(res) {
-  res.setHeader("Access-Control-Allow-Origin", DAKINIS_CORS_ORIGIN);
+const dakinisCorsAllowlistResolved = dakinisCorsAllowlist();
+
+function dakinisSetCorsHeaders(res, req) {
+  const origin = req.headers.origin;
+  if (dakinisCorsAllowlistResolved?.length) {
+    if (origin && dakinisCorsAllowlistResolved.includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Vary", "Origin");
+    }
+  } else {
+    const fallback = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
+    res.setHeader("Access-Control-Allow-Origin", fallback);
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -23,7 +44,7 @@ function dakinisSetCorsHeaders(res) {
 }
 
 const server = http.createServer((req, res) => {
-  dakinisSetCorsHeaders(res);
+  dakinisSetCorsHeaders(res, req);
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
