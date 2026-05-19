@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["shared", "web", "api"],
+  "workspaces": [
+    "shared",
+    "web",
+    "api"
+  ],
   "scripts": {
     "start": "npm run start -w @dakinis/api",
     "dev": "npm run dev -w @dakinis/web",
     "dev:full": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @dakinis/web\" \"npm run start -w @dakinis/api\"",
     "build": "npm run build -w @dakinis/web",
     "preview": "npm run preview -w @dakinis/web",
-    "start:web": "npm run preview -w @dakinis/web -- --host 0.0.0.0 --port ${PORT:-4173}",
+    "start:web": "serve web/dist -s -n -l tcp://0.0.0.0:${PORT:-8080}",
     "start:api": "npm run start -w @dakinis/api",
     "lint": "eslint eslint.config.js shared web/src web/vite.config.js api",
     "lint:fix": "eslint eslint.config.js shared web/src web/vite.config.js api --fix",
@@ -19,13 +23,16 @@
     "postinstall": "node -e \"0\""
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
     "@eslint/js": "^9.39.4",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.15.0",
     "prettier": "^3.8.3"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
   }
 }

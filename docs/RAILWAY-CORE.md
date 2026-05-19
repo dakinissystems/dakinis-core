@@ -23,7 +23,7 @@ Dominio sugerido: `dakinis-core-production.up.railway.app` (no el dominio del SP
 |-------|--------|
 | **Railpack config** | Variable **`RAILPACK_CONFIG_FILE`** = **`railpack.web.json`** *(obligatorio; si no, usa `railpack.json` = API)* |
 | **Build command** | **Vacío** (borra `npm run build` del UI — Railpack ya construye el SPA) |
-| **Start command** | Vacío o `npm run start:web` |
+| **Start command** | **Vacío** (Railpack ejecuta `serve` sobre `web/dist`; no uses `vite preview` en producción) |
 | Healthcheck | `/` |
 
 Variables del servicio (build + runtime):

@@ -9,3 +9,5 @@
 Opcional si falla el copy: `RAILPACK_NODE_INSTALL_PATTERNS` = `web shared`
 
 Eliminar en este servicio: `CORS_ORIGIN`, `JWT_SECRET`, `SQLITE_PATH`, `VITE_API_URL` (sin `https://`).
+
+**Deploy → Start command:** déjalo **vacío** (usa `npm run start:web` del `railpack.web.json`). Si pones `npm run start:web` en el UI **y** Railpack también arranca, puedes tener dos procesos o puertos distintos y falla el healthcheck en `/`.

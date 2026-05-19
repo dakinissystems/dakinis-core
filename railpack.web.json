@@ -5,10 +5,11 @@
   "steps": {
     "build": {
       "inputs": ["...", { "local": true, "include": ["."] }],
-      "commands": ["npm run build -w @dakinis/web"]
+      "commands": ["npm run build -w @dakinis/web"],
+      "deployOutputs": ["web/dist"]
     }
   },
   "deploy": {
-    "startCommand": "npm run preview -w @dakinis/web -- --host 0.0.0.0 --port ${PORT:-8080}"
+    "startCommand": "npm run start:web"
   }
 }
