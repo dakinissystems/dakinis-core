@@ -47,6 +47,12 @@ Dominio: **core.dakinissystems.com**
 - No uses **Custom Build Command** con `npm ci && npm run build` (duplica install).
 - No ejecutes `rm -rf web/node_modules/.vite` en `railpack.web.json`: Railpack monta esa ruta en caché y `rm` falla con *Device or resource busy*.
 
+## Error `Cannot resolve entry module index.html`
+
+Un paso `build` con `"inputs": [{ "step": "install" }]` solo trae `package.json` + `node_modules`, no `web/index.html` ni `web/src`.
+
+Deja que Railpack genere install **y** build (en `railpack.web.json` solo define `deploy.startCommand`).
+
 ---
 
 ## Error `Missing script: "start:web"`
