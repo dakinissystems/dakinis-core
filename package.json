@@ -10,6 +10,7 @@
     "dev:full": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @dakinis/web\" \"npm run start -w @dakinis/api\"",
     "build": "npm run build -w @dakinis/web",
     "preview": "npm run preview -w @dakinis/web",
+    "start:web": "npm run preview -w @dakinis/web -- --host 0.0.0.0 --port ${PORT:-4173}",
     "start:api": "npm run start -w @dakinis/api",
     "lint": "eslint eslint.config.js shared web/src web/vite.config.js api",
     "lint:fix": "eslint eslint.config.js shared web/src web/vite.config.js api --fix",

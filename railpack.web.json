@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": { "node": "20" },
+  "steps": {
+    "install": {
+      "commands": ["npm ci"]
+    },
+    "build": {
+      "inputs": [{ "step": "install" }],
+      "commands": [
+        "rm -rf web/node_modules/.vite",
+        "npm run build -w @dakinis/web"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "npm run preview -w @dakinis/web -- --host 0.0.0.0 --port ${PORT:-8080}"
+  }
+}

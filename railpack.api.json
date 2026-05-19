@@ -1,13 +1,9 @@
 {
   "$schema": "https://schema.railpack.com",
   "provider": "node",
-  "packages": {
-    "node": "20"
-  },
+  "packages": { "node": "20" },
   "steps": {
-    "install": {
-      "commands": ["npm ci"]
-    }
+    "install": { "commands": ["npm ci"] }
   },
   "deploy": {
     "startCommand": "npm run start -w @dakinis/api"
