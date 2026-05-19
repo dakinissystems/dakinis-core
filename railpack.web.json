@@ -5,10 +5,7 @@
   "steps": {
     "build": {
       "inputs": [{ "step": "install" }],
-      "commands": [
-        "rm -rf web/node_modules/.vite",
-        "npm run build -w @dakinis/web"
-      ]
+      "commands": ["npm run build -w @dakinis/web"]
     }
   },
   "deploy": {

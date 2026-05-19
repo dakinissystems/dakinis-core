@@ -44,9 +44,8 @@ Dominio: **core.dakinissystems.com**
 
 ## Error `EBUSY ... web/node_modules/.vite`
 
-Causa habitual: **Custom Build Command** con `npm ci && npm run build` cuando Railpack ya ejecutó `npm ci` en el paso install.
-
-Solución: borrar el build command personalizado y usar solo `railpack.web.json`.
+- No uses **Custom Build Command** con `npm ci && npm run build` (duplica install).
+- No ejecutes `rm -rf web/node_modules/.vite` en `railpack.web.json`: Railpack monta esa ruta en caché y `rm` falla con *Device or resource busy*.
 
 ---
 
