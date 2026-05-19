@@ -15,7 +15,8 @@
     "lint": "eslint eslint.config.js shared web/src web/vite.config.js api",
     "lint:fix": "eslint eslint.config.js shared web/src web/vite.config.js api --fix",
     "format": "prettier --write eslint.config.js shared web api",
-    "format:check": "prettier --check eslint.config.js shared web api"
+    "format:check": "prettier --check eslint.config.js shared web api",
+    "postinstall": "node -e \"0\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

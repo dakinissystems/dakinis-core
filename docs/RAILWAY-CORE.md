@@ -51,7 +51,12 @@ Dominio: **core.dakinissystems.com**
 
 Un paso `build` con `"inputs": [{ "step": "install" }]` solo trae `package.json` + `node_modules`, no `web/index.html` ni `web/src`.
 
-Deja que Railpack genere install **y** build (en `railpack.web.json` solo define `deploy.startCommand`).
+En monorepos Railpack a veces solo copia `package.json` antes del build. El repo incluye:
+
+- `postinstall` en el root `package.json` (fuerza copia completa en install).
+- `build.inputs` con `"..."` + `{ "local": true, "include": ["."] }` en `railpack.web.json`.
+
+En Core Front no uses `NODE_ENV=production` (rompe devDeps de Vite); usa `NPM_CONFIG_PRODUCTION=false` si hace falta.
 
 ---
 
