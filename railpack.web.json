@@ -5,8 +5,7 @@
   "steps": {
     "build": {
       "inputs": ["...", { "local": true, "include": ["."] }],
-      "commands": ["npm run build -w @dakinis/web"],
-      "deployOutputs": ["web/dist"]
+      "commands": ["npm run build -w @dakinis/web"]
     }
   },
   "deploy": {

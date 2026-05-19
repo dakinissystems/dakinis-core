@@ -58,6 +58,10 @@ En monorepos Railpack a veces solo copia `package.json` antes del build. El repo
 
 En Core Front no uses `NODE_ENV=production` (rompe devDeps de Vite); usa `NPM_CONFIG_PRODUCTION=false` si hace falta.
 
+## Error `cannot unmarshal string into deployOutputs`
+
+En Railpack 0.23+ `deployOutputs` no es `["web/dist"]`; es un objeto `{ "include": ["web/dist"] }` o se omite (copia `/app` completo, recomendado con `serve`).
+
 ---
 
 ## Error `Missing script: "start:web"`
