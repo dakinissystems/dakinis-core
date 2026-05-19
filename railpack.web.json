@@ -4,7 +4,7 @@
   "packages": { "node": "20" },
   "steps": {
     "install": {
-      "commands": ["npm ci"]
+      "commands": ["npm install"]
     },
     "build": {
       "inputs": [{ "step": "install" }],

@@ -21,18 +21,22 @@ Dominio sugerido: `dakinis-core-production.up.railway.app` (no el dominio del SP
 
 | Campo | Valor |
 |-------|--------|
-| **Config file** | **`railpack.web.json`** (Settings → Config-as-code → Add path) |
-| **Build command** | **Vacío** (no pongas `npm ci && ...` — duplica `npm ci` y falla con `EBUSY` en `.vite`) |
-| **Start command** | Vacío (usa `railpack.web.json`) o `npm run start:web` *(requiere `package.json` en `main` con ese script)* |
+| **Railpack config** | Variable **`RAILPACK_CONFIG_FILE`** = **`railpack.web.json`** *(obligatorio; si no, usa `railpack.json` = API)* |
+| **Build command** | **Vacío** (borra `npm run build` del UI — Railpack ya construye el SPA) |
+| **Start command** | Vacío o `npm run start:web` |
 | Healthcheck | `/` |
 
-Variables de **build** (Railway las inyecta en el paso build):
+Variables del servicio (build + runtime):
 
-| Variable | Ejemplo |
-|----------|---------|
+| Variable | Valor |
+|----------|--------|
+| `RAILPACK_CONFIG_FILE` | `railpack.web.json` |
 | `VITE_API_BASE_URL` | `https://dakinis-core-production.up.railway.app` |
+| `NODE_ENV` | `production` |
 
-Sin `JWT_SECRET` ni `SQLITE_PATH` en este servicio.
+Quita del front: `JWT_SECRET`, `SQLITE_PATH`, `CORS_ORIGIN` (solo API).
+
+En Build Logs debe aparecer: `Using config file railpack.web.json` y el deploy `vite preview`, no `npm run start -w @dakinis/api`.
 
 Dominio: **core.dakinissystems.com**
 
@@ -55,3 +59,11 @@ El servicio **Core Front** tiene Custom Start `npm run start:web` pero ese scrip
 3. Confirma **Config file** = `railpack.web.json` (no `railpack.json`, que arranca la API).
 
 Si el build usa `railpack.json` y el start es `npm start`, arrancas la API en el servicio del SPA: el healthcheck en `/` fallará.
+
+---
+
+## Error `npm ci` / `package-lock.json`
+
+Si falla `npm ci` con “existing package-lock.json”, suele ser contexto de build sin lockfile en la capa inicial. Los `railpack.*.json` del repo usan **`npm install`**.
+
+Asegúrate de que `package-lock.json` está en `main` (raíz del repo).
