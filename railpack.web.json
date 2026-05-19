@@ -3,9 +3,6 @@
   "provider": "node",
   "packages": { "node": "20" },
   "steps": {
-    "install": {
-      "commands": ["npm install"]
-    },
     "build": {
       "inputs": [{ "step": "install" }],
       "commands": [

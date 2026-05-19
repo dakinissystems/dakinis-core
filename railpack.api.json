@@ -2,9 +2,6 @@
   "$schema": "https://schema.railpack.com",
   "provider": "node",
   "packages": { "node": "20" },
-  "steps": {
-    "install": { "commands": ["npm install"] }
-  },
   "deploy": {
     "startCommand": "npm run start -w @dakinis/api"
   }

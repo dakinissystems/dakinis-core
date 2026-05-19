@@ -62,8 +62,12 @@ Si el build usa `railpack.json` y el start es `npm start`, arrancas la API en el
 
 ---
 
+## Error `ENOENT ... /app/package.json`
+
+No definas un paso `install` con solo `npm install` / `npm ci` en `railpack.json`: **sustituye** el plan de Railpack y ejecuta npm antes de copiar el código.
+
+Deja que Railpack genere el paso `install` (solo personaliza `build` y `deploy`).
+
 ## Error `npm ci` / `package-lock.json`
 
-Si falla `npm ci` con “existing package-lock.json”, suele ser contexto de build sin lockfile en la capa inicial. Los `railpack.*.json` del repo usan **`npm install`**.
-
-Asegúrate de que `package-lock.json` está en `main` (raíz del repo).
+Asegúrate de que `package-lock.json` está en `main` (raíz del repo). Si falla `npm ci`, no añadas un `install` custom; usa el install automático de Railpack.
