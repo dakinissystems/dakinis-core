@@ -1064,6 +1064,189 @@ section {
   }
 }
 
+/* Alérgenos — checklist restaurante */
+.allergen-panel {
+  margin-top: 1rem;
+}
+
+.allergen-panel__summary {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.allergen-panel__badge {
+  display: inline-block;
+  min-width: 1.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.2);
+  color: var(--brand);
+  font-weight: 700;
+  text-align: center;
+}
+
+.allergen-checklist__group {
+  margin-bottom: 1.25rem;
+}
+
+.allergen-checklist__category {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.allergen-checklist__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.allergen-row {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(8, 16, 26, 0.35);
+}
+
+.allergen-row.is-present {
+  border-color: rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.allergen-row__check {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+
+.allergen-row__check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--brand);
+}
+
+.allergen-row__name {
+  font-weight: 600;
+  flex: 1 1 auto;
+}
+
+.allergen-row__state {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.allergen-row.is-present .allergen-row__state {
+  color: var(--brand);
+}
+
+.allergen-row__hint {
+  margin: 0.35rem 0 0 1.8rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.allergen-row__notes {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.allergen-custom-details {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+
+.allergen-custom-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.allergen-custom-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.allergen-panel__actions {
+  margin-top: 1rem;
+}
+
+.allergen-panel__qr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.allergen-public__inner {
+  max-width: 40rem;
+  padding: clamp(1rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem);
+}
+
+.allergen-public__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.allergen-public__category {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  color: var(--brand);
+}
+
+.allergen-public__item {
+  margin-bottom: 0.5rem;
+  line-height: 1.45;
+}
+
+.allergen-public__notes {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.allergen-public__footer {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .allergen-custom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .allergen-row__hint {
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .topbar-content {
     flex-wrap: wrap;

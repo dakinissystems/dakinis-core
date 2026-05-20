@@ -14,6 +14,7 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import DemoTenantSystemWelcome from "../components/DemoTenantSystemWelcome.jsx";
 import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
+import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 const logoSimple = "/Logo%20Simple.jpeg";
@@ -303,6 +304,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               fallbackAlerts={systemPageContent.suppliersProducts.merchandiseAlerts ?? []}
             />
           </>
+        ) : null}
+
+        {activeSystemKey === "restaurante" ? (
+          <RestaurantStockSection
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+          />
         ) : null}
 
         <h3>Carga de datos (persistencia por tenant)</h3>

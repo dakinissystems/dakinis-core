@@ -1,4 +1,11 @@
 import bcrypt from "bcryptjs";
+import { dakinisEnsureRestaurantKitchenSeed } from "./restaurant-kitchen-seed.js";
+import {
+  DAKINIS_RESTAURANT_DEMO_PRODUCTION,
+  DAKINIS_RESTAURANT_DEMO_PURCHASE,
+  dakinisRestaurantPlanConsumption,
+  dakinisRestaurantPlanOutputs
+} from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const DAKINIS_DEMO_PASSWORD = "demo123";
 
@@ -362,6 +369,78 @@ export function dakinisSeed(db) {
   }
   for (const a of supplyAlertsSeed) {
     insertSupplyAlert.run(a);
+  }
+
+  const restaurantBizId = businesses[4].id;
+  dakinisEnsureRestaurantKitchenSeed(db, restaurantBizId);
+
+  const restaurantDemoDone = db
+    .prepare(`SELECT 1 AS ok FROM tenant_production_batches WHERE id = 'seed-prod-manu'`)
+    .get();
+  if (restaurantDemoDone) return;
+
+  const purchaseRef = "seed-purchase-manu";
+  const slugRows = db
+    .prepare(`SELECT id, slug FROM tenant_stock_items WHERE business_id = ?`)
+    .all(restaurantBizId);
+  const slugToId = Object.fromEntries(slugRows.map((r) => [r.slug, r.id]));
+  const adjust = db.prepare(
+    `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = datetime('now') WHERE id = ?`
+  );
+  const mov = db.prepare(
+    `INSERT INTO tenant_stock_movements (id, business_id, stock_item_id, delta, reason, reference_id)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  );
+  for (const line of DAKINIS_RESTAURANT_DEMO_PURCHASE) {
+    const itemId = slugToId[line.itemSlug];
+    if (!itemId) continue;
+    adjust.run(line.quantity, itemId);
+    mov.run(
+      `sm_${line.itemSlug}_seed`,
+      restaurantBizId,
+      itemId,
+      line.quantity,
+      "Pedido demo Manu",
+      purchaseRef
+    );
+  }
+
+  const recipes = db
+    .prepare(`SELECT slug FROM tenant_recipes WHERE business_id = ?`)
+    .all(restaurantBizId);
+  const recipeSlugs = new Set(recipes.map((r) => r.slug));
+  const plan = DAKINIS_RESTAURANT_DEMO_PRODUCTION.filter((p) => recipeSlugs.has(p.recipeSlug));
+  if (plan.length > 0) {
+    const recipeRows = db
+      .prepare(`SELECT slug, lines_json FROM tenant_recipes WHERE business_id = ?`)
+      .all(restaurantBizId);
+    const recipeList = recipeRows.map((r) => ({
+      slug: r.slug,
+      lines: JSON.parse(r.lines_json || "[]")
+    }));
+    const stockMap = Object.fromEntries(
+      db.prepare(`SELECT slug, quantity FROM tenant_stock_items WHERE business_id = ?`).all(restaurantBizId).map((r) => [r.slug, r.quantity])
+    );
+    const needed = dakinisRestaurantPlanConsumption(plan, recipeList);
+    const batchId = "seed-prod-manu";
+    for (const [slug, qty] of Object.entries(needed)) {
+      const itemId = slugToId[slug];
+      if (!itemId) continue;
+      adjust.run(-qty, itemId);
+      mov.run(`sm_use_${slug}_seed`, restaurantBizId, itemId, -qty, "Produccion demo", batchId);
+    }
+    const outputs = dakinisRestaurantPlanOutputs(plan, recipeList);
+    db.prepare(
+      `INSERT OR IGNORE INTO tenant_production_batches (id, business_id, label, plan_json, outputs_json, notes)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(
+      batchId,
+      restaurantBizId,
+      "Produccion demo (~4 prepizzas, 3 docenas)",
+      JSON.stringify(plan),
+      JSON.stringify(outputs),
+      "Semilla alineada al ejemplo de Manu"
+    );
   }
 }
 

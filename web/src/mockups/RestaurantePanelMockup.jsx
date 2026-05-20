@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  DAKINIS_RESTAURANT_ALLERGEN_CATALOG,
+  DAKINIS_RESTAURANT_EXTRA_ALLERGENS
+} from "@dakinis/shared/catalog/restaurant-allergens.js";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -6,9 +10,37 @@ const TABS = [
   { id: "reservas", label: "Reservas" },
   { id: "espera", label: "Lista de espera" },
   { id: "comandas", label: "Comandas" },
-  { id: "clientes", label: "Clientes / alergias" },
+  { id: "clientes", label: "Alergias por reserva" },
+  { id: "alergenos", label: "Cartel alérgenos" },
   { id: "proveedores", label: "Proveedores" }
 ];
+
+/** Demo: mismos presentes que el seed del tenant restaurante-demo (gluten, huevos). */
+const MOCK_ALLERGEN_CHECKLIST = [
+  ...DAKINIS_RESTAURANT_ALLERGEN_CATALOG.map((item) => ({
+    catalogId: item.id,
+    name: item.name,
+    category: item.category,
+    hint: item.hint,
+    present: item.id === "gluten" || item.id === "eggs",
+    notes:
+      item.id === "gluten"
+        ? "Harina, pizzas, empanadas"
+        : item.id === "eggs"
+          ? "Masas y empanadas"
+          : ""
+  })),
+  ...DAKINIS_RESTAURANT_EXTRA_ALLERGENS.map((item) => ({
+    catalogId: item.id,
+    name: item.name,
+    category: item.category,
+    hint: item.hint,
+    present: false,
+    notes: ""
+  }))
+];
+
+const MOCK_PUBLIC_ALLERGEN_URL = "https://core.dakinissystems.com/alergenos/demo-restaurante";
 
 function Toolbar({ title, badge, user, extra }) {
   return (
@@ -213,10 +245,116 @@ function PanelComandas() {
   );
 }
 
+function PanelAlergenosCartel() {
+  const byCategory = useMemo(() => {
+    const groups = new Map();
+    for (const item of MOCK_ALLERGEN_CHECKLIST) {
+      const cat = item.category || "Otros";
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(item);
+    }
+    return [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, []);
+
+  const presentCount = MOCK_ALLERGEN_CHECKLIST.filter((a) => a.present).length;
+  const presentOnly = MOCK_ALLERGEN_CHECKLIST.filter((a) => a.present);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(MOCK_PUBLIC_ALLERGEN_URL)}`;
+
+  return (
+    <>
+      <article className="card allergen-panel">
+        <h3 style={{ marginTop: 0 }}>Alérgenos e intolerancias (carta / cocina)</h3>
+        <p className="lead" style={{ fontSize: "0.9rem" }}>
+          Lista de referencia — <strong>14 alérgenos obligatorios UE</strong> + extras. Marca{" "}
+          <strong>Sí hay</strong> si el alérgeno está en vuestro menú o cocina; el cartel QR solo muestra los
+          marcados.
+        </p>
+        <p className="allergen-panel__summary">
+          <span className="allergen-panel__badge">{presentCount}</span> marcados como presentes · 14 obligatorios
+          UE
+        </p>
+
+        <div className="allergen-checklist">
+          {byCategory.map(([category, items]) => (
+            <section key={category} className="allergen-checklist__group">
+              <h5 className="allergen-checklist__category">{category}</h5>
+              <ul className="allergen-checklist__items">
+                {items.map((item) => (
+                  <li
+                    key={item.catalogId}
+                    className={`allergen-row${item.present ? " is-present" : ""}`}
+                  >
+                    <label className="allergen-row__check">
+                      <input type="checkbox" checked={Boolean(item.present)} readOnly disabled />
+                      <span className="allergen-row__name">{item.name}</span>
+                      <span className="allergen-row__state">{item.present ? "Sí hay" : "No hay"}</span>
+                    </label>
+                    <p className="allergen-row__hint">{item.hint}</p>
+                    {item.present && item.notes ? (
+                      <p className="kpi-label" style={{ margin: "0.35rem 0 0 1.8rem" }}>
+                        {item.notes}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+
+        <div className="allergen-panel__actions">
+          <button type="button" className="btn" disabled>
+            Guardar y actualizar QR
+          </button>
+          <span className="mockup-badge" style={{ marginLeft: "0.5rem" }}>
+            Vista mockup
+          </span>
+        </div>
+
+        <div className="allergen-panel__qr">
+          <img src={qrUrl} width={140} height={140} alt="QR alergias (demo)" />
+          <div>
+            <a href={MOCK_PUBLIC_ALLERGEN_URL} target="_blank" rel="noreferrer">
+              {MOCK_PUBLIC_ALLERGEN_URL}
+            </a>
+            <p className="kpi-label">Vista pública: solo alérgenos marcados «Sí hay»</p>
+          </div>
+        </div>
+      </article>
+
+      <article className="card" style={{ marginTop: "1rem" }}>
+        <h3 style={{ marginTop: 0 }}>Vista cliente (QR / cartel)</h3>
+        <p className="lead" style={{ fontSize: "0.9rem" }}>
+          Lo que ve el comensal al escanear el QR — sin login:
+        </p>
+        <p className="kicker" style={{ marginBottom: "0.5rem" }}>
+          Restaurante demo · Manu
+        </p>
+        {presentOnly.length ? (
+          <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+            {presentOnly.map((a) => (
+              <li key={a.catalogId} style={{ marginBottom: "0.35rem" }}>
+                <strong>{a.name}</strong>
+                {a.notes ? <span style={{ color: "var(--muted)" }}> — {a.notes}</span> : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="lead">Sin alérgenos declarados en carta.</p>
+        )}
+      </article>
+    </>
+  );
+}
+
 function PanelClientes() {
   return (
     <article className="card" style={{ overflow: "auto" }}>
-      <h3 style={{ marginTop: 0 }}>Alergias e intolerancias (reserva)</h3>
+      <h3 style={{ marginTop: 0 }}>Alergias por comensal (reserva)</h3>
+      <p className="lead" style={{ fontSize: "0.85rem", marginTop: 0 }}>
+        Notas de sala para esta noche — distinto del{" "}
+        <strong>cartel legal de alérgenos</strong> (pestaña Cartel alérgenos).
+      </p>
       <table className="mockup-table">
         <thead>
           <tr>
@@ -267,7 +405,8 @@ const TOOLBAR = {
   reservas: { title: "Reservas", badge: "Lista completa", extra: "52 cubiertos previstos" },
   espera: { title: "Lista de espera", badge: "3 grupos", extra: "Tiempo medio 22 min" },
   comandas: { title: "Comandas", badge: "Cocina + bar", extra: "Turno noche" },
-  clientes: { title: "Clientes y restricciones", badge: "Fichas reserva", extra: "52 cubiertos previstos" },
+  clientes: { title: "Alergias por reserva", badge: "2 mesas con nota", extra: "52 cubiertos previstos" },
+  alergenos: { title: "Cartel alérgenos", badge: "2 presentes en carta", extra: "QR cartel sala" },
   proveedores: { title: "Proveedores", badge: "2 entregas", extra: "Semana actual" }
 };
 
@@ -288,6 +427,7 @@ export default function RestaurantePanelMockup() {
         {tab === "espera" ? <PanelEspera /> : null}
         {tab === "comandas" ? <PanelComandas /> : null}
         {tab === "clientes" ? <PanelClientes /> : null}
+        {tab === "alergenos" ? <PanelAlergenosCartel /> : null}
         {tab === "proveedores" ? <PanelProveedores /> : null}
       </div>
     </div>

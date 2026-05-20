@@ -10,6 +10,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import PlatformAdminPage from "./pages/PlatformAdminPage.jsx";
 import VistaMockupPage from "./pages/VistaMockupPage.jsx";
 import SystemPage from "./pages/SystemPage.jsx";
+import PublicAllergiesPage from "./pages/PublicAllergiesPage.jsx";
 import {
   FaqPage,
   LegalNoticePage,
@@ -27,6 +28,13 @@ function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
   const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
   return dakinisSystemRegistry[verticalKey] ? verticalKey : null;
+}
+
+function dakinisGetAllergiesTokenFromPath(pathname) {
+  const prefix = "/alergenos/";
+  if (!pathname.startsWith(prefix)) return null;
+  const token = decodeURIComponent(pathname.slice(prefix.length)).replace(/\/$/, "");
+  return token || null;
 }
 
 function dakinisGetVerticalFromVistaPath(pathname) {
@@ -54,6 +62,7 @@ export default function App() {
 
   const systemKeyFromPath = dakinisGetVerticalFromPath(currentPath);
   const vistaKeyFromPath = dakinisGetVerticalFromVistaPath(currentPath);
+  const allergiesTokenFromPath = dakinisGetAllergiesTokenFromPath(currentPath);
 
   useEffect(() => {
     if (currentPath === "/login") {
@@ -168,6 +177,8 @@ export default function App() {
       <MessagesPage navigate={navigate} />
     ) : currentPath === "/app/settings" ? (
       <SettingsPage navigate={navigate} />
+    ) : allergiesTokenFromPath ? (
+      <PublicAllergiesPage token={allergiesTokenFromPath} />
     ) : vistaKeyFromPath ? (
       <VistaMockupPage verticalKey={vistaKeyFromPath} navigate={navigate} />
     ) : systemKeyFromPath ? (

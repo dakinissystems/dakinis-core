@@ -71,3 +71,71 @@ CREATE TABLE IF NOT EXISTS tenant_supply_alerts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_supply_alerts_business ON tenant_supply_alerts(business_id);
+
+-- Restaurante: stock, recetas, producción y cartel QR de alergias
+CREATE TABLE IF NOT EXISTS tenant_stock_items (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  name TEXT NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'u',
+  quantity REAL NOT NULL DEFAULT 0,
+  min_quantity REAL NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (business_id, slug),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_items_business ON tenant_stock_items(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_recipes (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  name TEXT NOT NULL,
+  output_label TEXT NOT NULL DEFAULT '',
+  output_quantity REAL NOT NULL DEFAULT 1,
+  output_unit TEXT NOT NULL DEFAULT 'u',
+  lines_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (business_id, slug),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recipes_business ON tenant_recipes(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_production_batches (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  label TEXT NOT NULL DEFAULT '',
+  plan_json TEXT NOT NULL,
+  outputs_json TEXT NOT NULL DEFAULT '[]',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_production_batches_business ON tenant_production_batches(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_stock_movements (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  stock_item_id TEXT NOT NULL,
+  delta REAL NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  reference_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id),
+  FOREIGN KEY (stock_item_id) REFERENCES tenant_stock_items(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_movements_business ON tenant_stock_movements(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
+  business_id TEXT PRIMARY KEY,
+  public_token TEXT UNIQUE NOT NULL,
+  venue_name TEXT NOT NULL DEFAULT '',
+  allergies_json TEXT NOT NULL DEFAULT '[]',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id)
+);

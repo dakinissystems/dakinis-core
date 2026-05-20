@@ -10,6 +10,8 @@
     "./catalog/business-type-display.js": "./catalog/business-type-display.js",
     "./catalog/routes.js": "./catalog/routes.js",
     "./catalog/system-modules.js": "./catalog/system-modules.js",
-    "./catalog/plan-modules.js": "./catalog/plan-modules.js"
+    "./catalog/plan-modules.js": "./catalog/plan-modules.js",
+    "./catalog/restaurant-kitchen.js": "./catalog/restaurant-kitchen.js",
+    "./catalog/restaurant-allergens.js": "./catalog/restaurant-allergens.js"
   }
 }

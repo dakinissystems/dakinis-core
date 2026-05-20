@@ -13,6 +13,14 @@ import {
   dakinisHandleApiRequest
 } from "./api/router.js";
 import {
+  dakinisHandlePublicRestaurantAllergiesGet,
+  dakinisHandleRestaurantKitchenGet,
+  dakinisHandleRestaurantProductionPost,
+  dakinisHandleRestaurantProductionSimulatePost,
+  dakinisHandleRestaurantProfilePatch,
+  dakinisHandleRestaurantStockPurchasePost
+} from "./api/tenant-restaurant.js";
+import {
   dakinisHandleSupplyAlertsDelete,
   dakinisHandleSupplyAlertsList,
   dakinisHandleSupplyAlertsPatch,
@@ -59,6 +67,11 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
   }
+
+  const publicAllergiesMatch = /^\/api\/public\/restaurant\/([^/]+)\/allergies$/.exec(path);
+  if (publicAllergiesMatch && req.method === "GET") {
+    return dakinisHandlePublicRestaurantAllergiesGet(publicAllergiesMatch[1]);
+  }
   if (path === "/api/auth/login" && req.method === "POST") {
     return dakinisHandleAuthLoginRequest(rawBody);
   }
@@ -86,6 +99,16 @@ export async function dakinisDispatch(req, rawBody, url) {
   const supplyAlertId = /^\/api\/tenant\/supply\/alerts\/([^/]+)$/.exec(path);
   if (supplyAlertId && req.method === "PATCH") return dakinisHandleSupplyAlertsPatch(req, supplyAlertId[1], rawBody);
   if (supplyAlertId && req.method === "DELETE") return dakinisHandleSupplyAlertsDelete(req, supplyAlertId[1]);
+
+  if (path === "/api/tenant/restaurant/kitchen" && req.method === "GET") return dakinisHandleRestaurantKitchenGet(req);
+  if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
+    return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
+  if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")
+    return dakinisHandleRestaurantProductionSimulatePost(req, rawBody);
+  if (path === "/api/tenant/restaurant/production" && req.method === "POST")
+    return dakinisHandleRestaurantProductionPost(req, rawBody);
+  if (path === "/api/tenant/restaurant/profile" && req.method === "PATCH")
+    return dakinisHandleRestaurantProfilePatch(req, rawBody);
 
   const moduleResult =
     dakinisHandleUsersRoute(req, rawBody, path) ||

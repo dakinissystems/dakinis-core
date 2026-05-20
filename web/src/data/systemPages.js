@@ -205,7 +205,8 @@ export const DAKINIS_SYSTEM_PAGE_CONTENT = {
       "Coordina reservas por mesa y turno, gestiona comensales recurrentes y automatiza confirmaciones por WhatsApp.",
     highlights: [
       "Plan de sala por turnos",
-      "CRM con preferencias y alergias",
+      "Stock y recetas (pizzas / empanadas)",
+      "QR de alergias actualizable",
       "Menos no-show en horas punta"
     ],
     ctaLabel: "Solicitar demo para restaurante premium",

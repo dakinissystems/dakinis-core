@@ -1,7 +1,20 @@
+import { useEffect, useState } from "react";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
+import { dakinisTenantJsonFetch } from "../../services/api.js";
 
 export default function SettingsPage({ navigate }) {
   const { session, logout } = useDakinisSession();
+  const [allergiesUrl, setAllergiesUrl] = useState("");
+
+  useEffect(() => {
+    if (session?.business?.type !== "restaurante" || !session?.token) return;
+    dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", session)
+      .then((json) => {
+        const token = json?.data?.profile?.publicToken;
+        if (token) setAllergiesUrl(`${window.location.origin}/alergenos/${token}`);
+      })
+      .catch(() => {});
+  }, [session]);
 
   return (
     <section className="modules">
@@ -22,6 +35,25 @@ export default function SettingsPage({ navigate }) {
             <strong>Tipo:</strong> {session?.business?.type || "-"}
           </p>
         </div>
+        {session?.business?.type === "restaurante" ? (
+          <div className="card" style={{ marginTop: "1rem" }}>
+            <h3>Restaurante — alergias y stock</h3>
+            <p className="lead">
+              Edita alergias y el QR en{" "}
+              <button type="button" className="btn btn-outline" onClick={() => navigate("/sistema/restaurante")}>
+                Sistema restaurante
+              </button>
+              .
+            </p>
+            {allergiesUrl ? (
+              <p>
+                <a href={allergiesUrl} target="_blank" rel="noreferrer">
+                  {allergiesUrl}
+                </a>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
             Dashboard
