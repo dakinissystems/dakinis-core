@@ -67,14 +67,16 @@ export default function LoginPage({ navigate }) {
   }
 
   return (
-    <section className="modules">
-      <div className="container" style={{ maxWidth: 480 }}>
+    <section className="modules login-page">
+      <div className="container login-page__inner">
         <p className="kicker">{t("login.kicker")}</p>
-        <h2>{t("login.title")}</h2>
-        <p className="lead">
+        <h2 className="login-page__title">{t("login.title")}</h2>
+        <p className="lead login-page__lead">
           {t("login.demoPassword")} <code className="config-box">demo123</code>
         </p>
-        <ul className="demo-tenant-list">
+        <details className="login-demo-details card">
+          <summary>Cuentas demo</summary>
+          <ul className="demo-tenant-list">
           <li>
             <code className="config-box">admin@dakinis-platform.local</code>
             <span className="demo-tenant-label">{t("login.platformAdmin")}</span>
@@ -95,8 +97,9 @@ export default function LoginPage({ navigate }) {
             <code className="config-box">admin@inmobiliaria-demo.local</code>
             <span className="demo-tenant-label">{t("login.tenants.estate")}</span>
           </li>
-        </ul>
-        <form className="mockup-form card" onSubmit={handleSubmit} style={{ gridTemplateColumns: "1fr" }}>
+          </ul>
+        </details>
+        <form className="mockup-form card login-form" onSubmit={handleSubmit}>
           <label className="mockup-field">
             <span>{t("login.email")}</span>
             <input
@@ -136,17 +139,15 @@ export default function LoginPage({ navigate }) {
               />
             </label>
           ) : null}
-          {error ? (
-            <p className="lead" style={{ color: "#f97316", gridColumn: "1 / -1" }}>
-              {error}
-            </p>
-          ) : null}
-          <button type="submit" className="btn" disabled={loading}>
-            {loading ? t("login.submitting") : t("login.submit")}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-            {t("login.back")}
-          </button>
+          {error ? <p className="login-form__error">{error}</p> : null}
+          <div className="login-form__actions">
+            <button type="submit" className="btn login-form__submit" disabled={loading}>
+              {loading ? t("login.submitting") : t("login.submit")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
+              {t("login.back")}
+            </button>
+          </div>
         </form>
       </div>
     </section>

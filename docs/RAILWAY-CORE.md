@@ -31,7 +31,7 @@ Variables del servicio (build + runtime):
 | Variable | Valor |
 |----------|--------|
 | `RAILPACK_CONFIG_FILE` | `railpack.web.json` |
-| `VITE_API_BASE_URL` | `https://dakinis-core-production.up.railway.app` |
+| **`API_UPSTREAM`** | `https://dakinis-core-production.up.railway.app` (proxy `/api` en Core Front) |
 | `NODE_ENV` | `production` |
 
 Quita del front: `JWT_SECRET`, `SQLITE_PATH`, `CORS_ORIGIN` (solo API).

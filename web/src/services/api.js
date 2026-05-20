@@ -23,13 +23,45 @@ function dakinisTrimOr(value, fallback) {
   return s === "" ? fallback : s;
 }
 
-/** Base URL sin barra final; '' usa rutas relativas (proxy Vite `/api`). */
+/** En producción (core.dakinissystems.com) el front hace proxy de `/api` → API_UPSTREAM. */
+function dakinisPreferSameOriginApi() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host === "core.dakinissystems.com" || host.endsWith(".up.railway.app");
+}
+
+/** Normaliza URL de API (añade https:// si falta). */
+function dakinisNormalizeApiBase(raw) {
+  const s = String(raw || "").trim().replace(/\/+$/, "");
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  return `https://${s}`;
+}
+
+/** Base URL sin barra final; '' usa `/api` en el mismo origen (proxy dev o serve-production). */
 export function dakinisApiBaseUrl() {
-  const base = dakinisTrimOr(
-    import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL,
-    ""
-  );
-  return base.replace(/\/+$/, "");
+  if (dakinisPreferSameOriginApi()) return "";
+
+  const fromMeta =
+    typeof document !== "undefined"
+      ? document.querySelector('meta[name="dakinis-api-base"]')?.getAttribute("content")?.trim()
+      : "";
+  const fromEnv = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
+  return dakinisNormalizeApiBase(fromMeta || fromEnv);
+}
+
+async function dakinisFetchJson(url, init) {
+  let res;
+  try {
+    res = await fetch(url, init);
+  } catch (err) {
+    const hint =
+      dakinisApiBaseUrl() === ""
+        ? "No se pudo contactar /api en este sitio. En Railway (Core Front): API_UPSTREAM=https://tu-api.railway.app y redeploy."
+        : `No se pudo contactar ${url}. Revisa CORS en la API (CORS_ORIGIN=https://core.dakinissystems.com) o usa proxy same-origin.`;
+    throw new Error(err instanceof Error ? `${err.message}. ${hint}` : hint);
+  }
+  return res;
 }
 
 /** GET / POST JSON con multi-tenant. `businessId` puede ser slug o UUID. */
@@ -86,34 +118,8 @@ export async function dakinisTenantJsonFetch(path, session, options = {}) {
     fetchOpts.body = bodyPayload;
   }
 
-  const res = await fetch(url, fetchOpts);
-  let json = null;
-  try {
-    json = await res.json();
-  } catch {
-    json = null;
-  }
-
-  if (!res.ok) {
-    const code = json?.error?.code;
-    const msg = json?.error?.message || res.statusText || "Error HTTP";
-    if (code) {
-      throw new DakinisApiError(msg, {
-        status: res.status,
-        code,
-        details: json?.error?.details
-      });
-    }
-    throw new Error(`${msg} (${res.status})`);
-  }
-
-  if (json == null) {
-    throw new Error(
-      "Respuesta vacía o no JSON. En Render: VITE_API_BASE_URL debe ser la URL del servicio API (no la del sitio estático)."
-    );
-  }
-
-  return json;
+  const res = await dakinisFetchJson(url, fetchOpts);
+  return dakinisParseJsonResponse(res, url);
 }
 
 export async function dakinisPublicJsonFetch(path, options = {}) {
@@ -141,7 +147,11 @@ export async function dakinisPublicJsonFetch(path, options = {}) {
   if (body !== undefined) {
     init.body = body;
   }
-  const res = await fetch(url, init);
+  const res = await dakinisFetchJson(url, init);
+  return dakinisParseJsonResponse(res, url);
+}
+
+async function dakinisParseJsonResponse(res, url) {
   let json = null;
   try {
     json = await res.json();
@@ -160,13 +170,11 @@ export async function dakinisPublicJsonFetch(path, options = {}) {
     }
     throw new Error(`${msg} (${res.status})`);
   }
-
   if (json == null) {
     throw new Error(
-      "Respuesta vacía o no JSON. En Render: VITE_API_BASE_URL debe ser la URL del servicio API (no la del sitio estático)."
+      `Respuesta vacía o no JSON desde ${url}. Si es el front en Railway, define API_UPSTREAM (servicio API), no solo VITE_API_BASE_URL en build.`
     );
   }
-
   return json;
 }
 
@@ -221,29 +229,6 @@ export async function dakinisBearerJsonFetch(path, token, options = {}) {
   if (body !== undefined) {
     init.body = body;
   }
-  const res = await fetch(url, init);
-  let json = null;
-  try {
-    json = await res.json();
-  } catch {
-    json = null;
-  }
-  if (!res.ok) {
-    const code = json?.error?.code;
-    const msg = json?.error?.message || res.statusText || "Error HTTP";
-    if (code) {
-      throw new DakinisApiError(msg, {
-        status: res.status,
-        code,
-        details: json?.error?.details
-      });
-    }
-    throw new Error(`${msg} (${res.status})`);
-  }
-  if (json == null) {
-    throw new Error(
-      "Respuesta vacía o no JSON. En Render: VITE_API_BASE_URL debe ser la URL del servicio API (no la del sitio estático)."
-    );
-  }
-  return json;
+  const res = await dakinisFetchJson(url, init);
+  return dakinisParseJsonResponse(res, url);
 }
