@@ -57,34 +57,34 @@ export default function AppTopBar({ navigate, session, logout, currentPath }) {
               ) : session.business?.slug ? (
                 <>
                   {tenantCanOpenApp ? (
-                    <div className="topbar-app-nav" aria-label="Dakinis app navigation">
+                    <div className="topbar-app-nav" aria-label={t("appNav.aria")}>
                       <button
                         type="button"
                         className={`btn btn-outline${isActive("/app/dashboard") ? " is-active" : ""}`}
                         onClick={() => navigate("/app/dashboard")}
                       >
-                        App
+                        {t("appNav.app")}
                       </button>
                       <button
                         type="button"
                         className={`btn btn-outline${isActive("/app/crm") ? " is-active" : ""}`}
                         onClick={() => navigate("/app/crm")}
                       >
-                        CRM
+                        {t("appNav.crm")}
                       </button>
                       <button
                         type="button"
                         className={`btn btn-outline${isActive("/app/messages") ? " is-active" : ""}`}
                         onClick={() => navigate("/app/messages")}
                       >
-                        Messages
+                        {t("appNav.messages")}
                       </button>
                       <button
                         type="button"
                         className={`btn btn-outline${isActive("/app/settings") ? " is-active" : ""}`}
                         onClick={() => navigate("/app/settings")}
                       >
-                        Settings
+                        {t("appNav.settings")}
                       </button>
                     </div>
                   ) : null}

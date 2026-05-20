@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import {
   dakinisAppointmentCanSchedule,
@@ -12,6 +13,7 @@ function JsonBox({ data }) {
 }
 
 export default function DashboardPage({ navigate }) {
+  const { t } = useLocale();
   const { session } = useDakinisSession();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -21,10 +23,10 @@ export default function DashboardPage({ navigate }) {
     return (
       <section className="modules">
         <div className="container">
-          <h2>Dashboard privado</h2>
-          <p className="lead">Debes iniciar sesion para usar el flujo real con JWT.</p>
+          <h2>{t("app.dashboard.title")}</h2>
+          <p className="lead">{t("app.loginRequired")}</p>
           <button className="btn" type="button" onClick={() => navigate("/login")}>
-            Ir a login
+            {t("app.goLogin")}
           </button>
         </div>
       </section>
@@ -38,7 +40,7 @@ export default function DashboardPage({ navigate }) {
       const data = await fn();
       setResult({ label, data });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error llamando API");
+      setError(err instanceof Error ? err.message : t("app.apiError"));
     } finally {
       setLoading(false);
     }
@@ -47,24 +49,26 @@ export default function DashboardPage({ navigate }) {
   return (
     <section className="modules">
       <div className="container">
-        <p className="kicker">JWT tenant: {session.business?.slug || session.business?.id}</p>
-        <h2>Dashboard API v1</h2>
-        <p className="lead">Pruebas rápidas de appointments y whatsapp usando Authorization Bearer.</p>
+        <p className="kicker">
+          {t("app.dashboard.kicker", { slug: session.business?.slug || session.business?.id })}
+        </p>
+        <h2>{t("app.dashboard.heading")}</h2>
+        <p className="lead">{t("app.dashboard.lead")}</p>
         <div className="pill-grid" style={{ marginBottom: "1rem" }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/crm")}>
-            CRM
+            {t("appNav.crm")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/messages")}>
-            Messages
+            {t("appNav.messages")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/settings")}>
-            Settings
+            {t("appNav.settings")}
           </button>
         </div>
 
         <div className="module-grid">
           <article className="card">
-            <h3>Appointments</h3>
+            <h3>{t("app.dashboard.appointments")}</h3>
             <div className="pill-grid">
               <button
                 type="button"
@@ -74,7 +78,7 @@ export default function DashboardPage({ navigate }) {
                   run("slots", () => dakinisAppointmentSlots("2026-05-06T09:00:00Z", "2026-05-06T18:00:00Z"))
                 }
               >
-                Slots
+                {t("app.dashboard.slots")}
               </button>
               <button
                 type="button"
@@ -86,7 +90,7 @@ export default function DashboardPage({ navigate }) {
                   )
                 }
               >
-                Can Schedule
+                {t("app.dashboard.canSchedule")}
               </button>
               <button
                 type="button"
@@ -94,20 +98,20 @@ export default function DashboardPage({ navigate }) {
                 disabled={loading}
                 onClick={() => run("booking-link", () => dakinisAppointmentLink(session.business?.slug))}
               >
-                Booking Link
+                {t("app.dashboard.link")}
               </button>
             </div>
           </article>
 
           <article className="card">
-            <h3>WhatsApp</h3>
+            <h3>{t("app.dashboard.whatsapp")}</h3>
             <button
               type="button"
               className="btn"
               disabled={loading}
               onClick={() => run("whatsapp-rules", () => dakinisWhatsappRules())}
             >
-              Listar reglas
+              {t("app.dashboard.rules")}
             </button>
           </article>
         </div>

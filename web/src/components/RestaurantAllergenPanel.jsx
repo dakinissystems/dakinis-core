@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 
 export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile, onSaved, busy, setBusy, setError }) {
+  const { t } = useLocale();
   const [checklist, setChecklist] = useState(() => profile?.allergenChecklist ?? []);
   const [customAllergies, setCustomAllergies] = useState(() => profile?.customAllergies ?? []);
 
@@ -51,7 +53,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
       });
       await onSaved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se guardaron alergias");
+      setError(e instanceof Error ? e.message : t("allergens.saveError"));
     } finally {
       setBusy(false);
     }
@@ -69,14 +71,11 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
 
   return (
     <article className="card allergen-panel">
-      <h4>Alérgenos e intolerancias (carta / cocina)</h4>
-      <p className="lead">
-        Lista de referencia (14 alérgenos UE + extras). Marca <strong>Sí</strong> si el alérgeno está presente en
-        vuestro menú o cocina; el cartel QR solo muestra los marcados.
-      </p>
+      <h4>{t("allergens.panelTitle")}</h4>
+      <p className="lead">{t("allergens.panelLead")}</p>
       <p className="allergen-panel__summary">
-        <span className="allergen-panel__badge">{presentCount}</span> marcados como presentes ·{" "}
-        {profile?.totalCatalogCount ?? 14} obligatorios UE
+        <span className="allergen-panel__badge">{presentCount}</span>{" "}
+        {t("allergens.summary", { euCount: profile?.totalCatalogCount ?? 14 })}
       </p>
 
       {apiSession?.token ? (
@@ -95,14 +94,16 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                           onChange={(e) => dakinisToggleCatalog(item.catalogId, e.target.checked)}
                         />
                         <span className="allergen-row__name">{item.name}</span>
-                        <span className="allergen-row__state">{item.present ? "Sí hay" : "No hay"}</span>
+                        <span className="allergen-row__state">
+                          {item.present ? t("allergens.presentYes") : t("allergens.presentNo")}
+                        </span>
                       </label>
                       <p className="allergen-row__hint">{item.hint}</p>
                       {item.present ? (
                         <input
                           className="allergen-row__notes"
                           type="text"
-                          placeholder="Dónde aparece (ej. harina, tapas, salsa…)"
+                          placeholder={t("allergens.notesPlaceholder")}
                           value={item.notes || ""}
                           onChange={(e) => dakinisUpdateCatalogNotes(item.catalogId, e.target.value)}
                         />
@@ -115,7 +116,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
           </div>
 
           <details className="allergen-custom-details">
-            <summary>Otros / personalizados</summary>
+            <summary>{t("allergens.customSummary")}</summary>
             {customAllergies.map((c, idx) => (
               <div key={c.id || idx} className="allergen-custom-row">
                 <label>
@@ -128,10 +129,10 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                       setCustomAllergies(next);
                     }}
                   />
-                  Presente
+                  {t("allergens.customPresent")}
                 </label>
                 <input
-                  placeholder="Nombre"
+                  placeholder={t("allergens.customName")}
                   value={c.name}
                   onChange={(e) => {
                     const next = [...customAllergies];
@@ -140,7 +141,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                   }}
                 />
                 <input
-                  placeholder="Notas"
+                  placeholder={t("allergens.customNotes")}
                   value={c.notes || ""}
                   onChange={(e) => {
                     const next = [...customAllergies];
@@ -153,7 +154,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                   className="btn btn-outline"
                   onClick={() => setCustomAllergies((prev) => prev.filter((_, i) => i !== idx))}
                 >
-                  Quitar
+                  {t("allergens.remove")}
                 </button>
               </div>
             ))}
@@ -167,29 +168,29 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                 ])
               }
             >
-              Añadir otro
+              {t("allergens.addCustom")}
             </button>
           </details>
 
           <div className="allergen-panel__actions">
             <button type="button" className="btn" disabled={busy} onClick={dakinisSave}>
-              Guardar y actualizar QR
+              {t("allergens.save")}
             </button>
           </div>
         </>
       ) : (
-        <p className="lead">Inicia sesión como admin del restaurante para editar el checklist.</p>
+        <p className="lead">{t("allergens.loginToEdit")}</p>
       )}
 
       {publicUrl ? (
         <div className="allergen-panel__qr">
-          <img src={qrImageUrl} width={160} height={160} alt="QR alergias" />
+          <img src={qrImageUrl} width={160} height={160} alt={t("allergens.qrAlt")} />
           <div>
             <a href={publicUrl} target="_blank" rel="noreferrer">
               {publicUrl}
             </a>
             <p className="kpi-label">
-              Vista pública (tabla): solo alérgenos «Sí hay». También:{" "}
+              {t("allergens.publicViewHint")}{" "}
               {profile?.publicPathBySlug ? (
                 <a href={`${window.location.origin}${profile.publicPathBySlug}`} target="_blank" rel="noreferrer">
                   {profile.publicPathBySlug}
@@ -200,7 +201,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
         </div>
       ) : (
         <p className="lead" style={{ color: "#fdba74" }}>
-          Guarda el cartel una vez para generar el enlace y el QR.
+          {t("allergens.saveOnceForQr")}
         </p>
       )}
     </article>

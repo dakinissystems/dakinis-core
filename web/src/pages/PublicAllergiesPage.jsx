@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 import RestaurantAllergenPanel from "../components/RestaurantAllergenPanel.jsx";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 
 export default function PublicAllergiesPage({ token, navigate }) {
   const { session } = useDakinisSession();
+  const { locale, t } = useLocale();
+  const dateLocale = locale === "en" ? "en-US" : "es-ES";
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [editProfile, setEditProfile] = useState(null);
@@ -21,15 +24,15 @@ export default function PublicAllergiesPage({ token, navigate }) {
       });
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json?.error?.message || "No disponible");
+        throw new Error(json?.error?.message || t("allergens.notFound"));
       }
       setData(json.data);
     } catch (e) {
       if (e?.name === "AbortError") return;
-      setError(e instanceof Error ? e.message : "Error al cargar");
+      setError(e instanceof Error ? e.message : t("allergens.loadError"));
       setData(null);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,9 +68,9 @@ export default function PublicAllergiesPage({ token, navigate }) {
       const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", session, fetchOpts);
       setEditProfile(json?.data?.profile ?? null);
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : "No se pudo cargar el editor");
+      setEditError(e instanceof Error ? e.message : t("allergens.editorLoadError"));
     }
-  }, [canEdit, session, data?.businessSlug, fetchOpts]);
+  }, [canEdit, session, data?.businessSlug, fetchOpts, t]);
 
   useEffect(() => {
     reloadEditProfile();
@@ -82,26 +85,25 @@ export default function PublicAllergiesPage({ token, navigate }) {
     return (
       <section className="modules allergen-public">
         <div className="container allergen-public__inner">
-          <h2>Información de alergias</h2>
+          <h2>{t("allergens.publicTitle")}</h2>
           <p className="lead allergen-public__error">{error}</p>
-          <p className="kpi-label">Enlace escaneado: /alergenos/{token}</p>
+          <p className="kpi-label">{t("allergens.scannedLink", { token })}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
             <button type="button" className="btn" onClick={() => setReloadKey((k) => k + 1)}>
-              Reintentar
+              {t("allergens.retry")}
             </button>
             <a className="btn btn-outline" href={demoSlugUrl}>
-              Probar demo (restaurante-demo)
+              {t("allergens.tryDemo")}
             </a>
             <button type="button" className="btn btn-outline" onClick={() => navigate?.("/login")}>
-              Iniciar sesión
+              {t("allergens.signIn")}
             </button>
             <button type="button" className="btn btn-outline" onClick={() => navigate?.("/sistema/restaurante")}>
-              Cocina / stock
+              {t("allergens.kitchenStock")}
             </button>
           </div>
           <p className="lead" style={{ fontSize: "0.85rem", marginTop: "1rem" }}>
-            El QR debe apuntar al enlace que aparece en <strong>Cocina / stock</strong> tras guardar el cartel. Si la
-            API en Railway no está actualizada, redeploy de <strong>Core Back</strong> y <strong>Core Front</strong>.
+            {t("allergens.errorHint")}
           </p>
         </div>
       </section>
@@ -112,7 +114,7 @@ export default function PublicAllergiesPage({ token, navigate }) {
     return (
       <section className="modules allergen-public">
         <div className="container">
-          <p className="lead">Cargando…</p>
+          <p className="lead">{t("allergens.loading")}</p>
         </div>
       </section>
     );
@@ -124,41 +126,38 @@ export default function PublicAllergiesPage({ token, navigate }) {
       ? `${window.location.origin}/alergenos/${data.publicToken}`
       : "";
 
+  const declaredLabel =
+    presentList.length === 1 ? t("allergens.declared") : t("allergens.declaredPlural");
+
   return (
     <section className="modules allergen-public">
       <div className="container allergen-public__inner">
-        <p className="kicker">Cartel digital</p>
+        <p className="kicker">{t("allergens.publicKicker")}</p>
         <h1>{data.venueName}</h1>
-        <p className="lead">
-          Alérgenos e ingredientes <strong>presentes</strong> en nuestra carta o cocina. Consulta con el
-          personal antes de pedir.
-        </p>
+        <p className="lead">{t("allergens.publicLead")}</p>
         <p className="kpi-label">
-          Actualizado: {data.updatedAt ? new Date(data.updatedAt).toLocaleString("es-ES") : "—"}
+          {t("allergens.updated")}{" "}
+          {data.updatedAt ? new Date(data.updatedAt).toLocaleString(dateLocale) : "—"}
         </p>
 
         <article className="card allergen-public__card">
           {presentList.length ? (
             <>
               <p className="allergen-public__table-title">
-                <strong>{presentList.length}</strong> alérgeno{presentList.length === 1 ? "" : "s"} declarado
-                {presentList.length === 1 ? "" : "s"} en carta
+                <strong>{presentList.length}</strong> {declaredLabel}
               </p>
               <AllergenPublicTable allergens={presentList} />
             </>
           ) : (
-            <AllergenPublicTable
-              allergens={[]}
-              emptyMessage="Este establecimiento no ha declarado alérgenos presentes en carta. Pregunta al personal."
-            />
+            <AllergenPublicTable allergens={[]} emptyMessage={t("allergens.emptyDeclared")} />
           )}
         </article>
 
         {canEdit ? (
           <div className="allergen-public__editor">
-            <h2 className="allergen-public__editor-title">Editar cartel (admin)</h2>
+            <h2 className="allergen-public__editor-title">{t("allergens.editTitle")}</h2>
             <p className="lead" style={{ fontSize: "0.9rem" }}>
-              Marca los alérgenos presentes y pulsa guardar; el QR y esta página se actualizan al instante.
+              {t("allergens.editLead")}
             </p>
             {editError ? <p className="lead allergen-public__error">{editError}</p> : null}
             {editProfile ? (
@@ -172,11 +171,11 @@ export default function PublicAllergiesPage({ token, navigate }) {
                 setError={setEditError}
               />
             ) : (
-              <p className="lead">Cargando editor…</p>
+              <p className="lead">{t("allergens.loadingEditor")}</p>
             )}
             {canonicalUrl ? (
               <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-                URL del QR:{" "}
+                {t("allergens.qrUrl")}{" "}
                 <a href={canonicalUrl} target="_blank" rel="noreferrer">
                   {canonicalUrl}
                 </a>
@@ -185,18 +184,15 @@ export default function PublicAllergiesPage({ token, navigate }) {
           </div>
         ) : (
           <p className="kpi-label" style={{ marginTop: "1rem" }}>
-            ¿Eres el restaurante?{" "}
+            {t("allergens.ownerPrompt")}{" "}
             <button type="button" className="btn btn-outline" onClick={() => navigate?.("/login")}>
-              Inicia sesión
+              {t("allergens.ownerLogin")}
             </button>{" "}
-            para editar el cartel.
+            {t("allergens.ownerEditHint")}
           </p>
         )}
 
-        <p className="kpi-label allergen-public__footer">
-          Referencia: 14 alérgenos obligatorios (UE). Solo se listan los marcados como presentes por el
-          restaurante.
-        </p>
+        <p className="kpi-label allergen-public__footer">{t("allergens.footerRef")}</p>
       </div>
     </section>
   );

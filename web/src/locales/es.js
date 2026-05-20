@@ -256,7 +256,9 @@ export default {
     terms: "Términos · Dakinis One",
     legal: "Aviso legal · Dakinis One",
     vista: "Vista previa · {label} · Dakinis One",
-    sistema: "{label} · Dakinis One"
+    sistema: "{label} · Dakinis One",
+    app: "Dakinis App",
+    allergies: "Cartel de alergias · Dakinis One"
   },
   vistaMockup: {
     kicker: "Vista previa · solo maquetación",
@@ -267,5 +269,189 @@ export default {
     platformAdmin: "Administración plataforma",
     goDemoSystem: "Ir al sistema demo",
     myFunctionalPanel: "Mi panel funcional"
+  },
+  appNav: {
+    aria: "Navegación de la app",
+    app: "App",
+    crm: "CRM",
+    messages: "Mensajes",
+    settings: "Ajustes"
+  },
+  allergens: {
+    panelTitle: "Alérgenos e intolerancias (carta / cocina)",
+    panelLead:
+      "Lista de referencia (14 alérgenos UE + extras). Marca Sí si el alérgeno está presente en vuestro menú o cocina; el cartel QR solo muestra los marcados.",
+    summary: "marcados como presentes · {euCount} obligatorios UE",
+    presentYes: "Sí hay",
+    presentNo: "No hay",
+    notesPlaceholder: "Dónde aparece (ej. harina, tapas, salsa…)",
+    customSummary: "Otros / personalizados",
+    customPresent: "Presente",
+    customName: "Nombre",
+    customNotes: "Notas",
+    remove: "Quitar",
+    addCustom: "Añadir otro",
+    save: "Guardar y actualizar QR",
+    loginToEdit: "Inicia sesión como admin del restaurante para editar el checklist.",
+    qrAlt: "QR alergias",
+    publicViewHint: "Vista pública (tabla): solo alérgenos «Sí hay». También:",
+    saveOnceForQr: "Guarda el cartel una vez para generar el enlace y el QR.",
+    saveError: "No se guardaron alergias",
+    publicTitle: "Información de alergias",
+    publicKicker: "Cartel digital",
+    publicLead:
+      "Alérgenos e ingredientes presentes en nuestra carta o cocina. Consulta con el personal antes de pedir.",
+    updated: "Actualizado:",
+    declared: "alérgeno declarado en carta",
+    declaredPlural: "alérgenos declarados en carta",
+    emptyDeclared:
+      "Este establecimiento no ha declarado alérgenos presentes en carta. Pregunta al personal.",
+    editTitle: "Editar cartel (admin)",
+    editLead: "Marca los alérgenos presentes y pulsa guardar; el QR y esta página se actualizan al instante.",
+    qrUrl: "URL del QR:",
+    ownerPrompt: "¿Eres el restaurante?",
+    ownerLogin: "Inicia sesión",
+    ownerEditHint: "para editar el cartel.",
+    footerRef:
+      "Referencia: 14 alérgenos obligatorios (UE). Solo se listan los marcados como presentes por el restaurante.",
+    loading: "Cargando…",
+    loadingEditor: "Cargando editor…",
+    retry: "Reintentar",
+    tryDemo: "Probar demo (restaurante-demo)",
+    signIn: "Iniciar sesión",
+    kitchenStock: "Cocina / stock",
+    scannedLink: "Enlace escaneado: /alergenos/{token}",
+    errorHint:
+      "El QR debe apuntar al enlace que aparece en Cocina / stock tras guardar el cartel. Si la API en Railway no está actualizada, redeploy de Core Back y Core Front.",
+    loadError: "Error al cargar",
+    editorLoadError: "No se pudo cargar el editor",
+    notFound: "Cartel de alergias no encontrado"
+  },
+  kitchen: {
+    loading: "Cargando stock y recetas…",
+    title: "Stock, recetas y producción",
+    lead:
+      "Recetas (Manu): Pizza — 1 prepizza con 1 kg harina, 600 ml agua, 25 g sal, 10 g levadura. Empanadas — 3 docenas con 1 kg cebolla, ½ kg morrón, 1 kg carne, 36 tapas, 4 huevos, ¼ frasco aceitunas. Pedido ejemplo → ~4 prepizzas y ~3 docenas.",
+    inventory: "Inventario actual",
+    ingredient: "Insumo",
+    stock: "Stock",
+    minimum: "Mínimo",
+    demoPurchase: "Cargar pedido Manu (compra)",
+    recipes: "Recetas y producción",
+    maxBatches: "Máximo (solo esta receta): {count} tandas",
+    batches: "Tandas",
+    simulate: "Simular consumo",
+    registerProduction: "Registrar producción",
+    planOk: "Plan viable:",
+    shortage: "Falta {item}: necesitas {needed}, hay {available}",
+    lastProductions: "Últimas producciones",
+    loadError: "No se pudo cargar cocina/stock",
+    simulateError: "Error al simular",
+    purchaseError: "Error al registrar compra",
+    productionError: "Stock insuficiente o error al producir"
+  },
+  system: {
+    tenant: "Tenant: {slug}",
+    resultsTitle: "Resultados que buscas en {label}",
+    home: "Inicio",
+    backToSystems: "Volver a sistemas",
+    openRealApp: "Abrir app real (/api/v1)",
+    mockupPreview: "Vista previa del panel (mockup)",
+    sessionLocked:
+      "Sesión activa: no puedes cambiar de vertical; solo el panel de tu negocio ({label}).",
+    adaptedLead:
+      "Esta vista muestra cómo trabaja Dakinis adaptado a {label}: agendas, datos de clientes y avisos, sin exponer aspectos internos para visitantes que exploran la demo.",
+    dailyOps: "Operación diaria del negocio",
+    automations: "Automatizaciones activas",
+    quickActions: "Acciones rápidas",
+    suppliers: "Proveedores o aliados",
+    products: "Productos o servicios por proveedor",
+    colName: "Nombre",
+    colContact: "Contacto",
+    colScope: "Ámbito",
+    colSupplier: "Proveedor",
+    colItem: "Ítem",
+    colRef: "Ref.",
+    colNotes: "Notas",
+    dataLoad: "Carga de datos (persistencia por tenant)",
+    recordsError: "API registros: {error}. Mostrando local o datos mixtos.",
+    recordsSynced: "Últimos datos guardados en tu espacio demo y listos para usar en pantalla.",
+    saveEntity: "Guardar {entity}",
+    listing: "Listado desde base de datos",
+    noRecords: "Sin registros aún para este tenant.",
+    includes: "Tu sistema incluye",
+    includesLead:
+      "Piezas funcionales disponibles para tu tipo de negocio; el detalle técnico y la parametrización quedan bajo tu control en la implementación.",
+    ctaPanel: "Un panel por cliente, datos aislados.",
+    recordsLoadError: "No se cargaron registros",
+    saveLocalFallback: "Guardado solo en local hasta que la API esté disponible"
+  },
+  admin: {
+    restricted: "Acceso restringido a administradores de plataforma.",
+    goLogin: "Ir al login",
+    kicker: "Plataforma",
+    title: "Administración multi-tenant",
+    lead:
+      "Acceso con cuenta de administrador de plataforma y contraseña configurada en el servidor (seed demo habitual: demo123). Si el servidor define DAKINIS_PLATFORM_TOTP_SECRET, usa también el código TOTP en el login. Esta vista está en /admin o desde Panel plataforma en la barra.",
+    backHome: "Volver al inicio",
+    mockupsTitle: "Vistas mockup por vertical",
+    mockupsLead:
+      "Maquetas interactivas del panel por tipo de negocio (solo presentación; no persisten datos). Útiles para revisar UX junto a los tenants demo.",
+    vistaButton: "Vista · {label}",
+    other: "Otro",
+    loadError: "Error al cargar datos",
+    createError: "No se pudo crear el negocio",
+    saveError: "No se pudo guardar",
+    typeCustomRequired:
+      "Indica un identificador para el tipo nuevo (solo letras, números y guiones; ej. gimnasio-centro).",
+    typeCustomEditRequired: "Indica un identificador para el tipo personalizado."
+  },
+  app: {
+    loginRequired: "Debes iniciar sesión para usar el flujo real con JWT.",
+    goLogin: "Ir a login",
+    apiError: "Error llamando API",
+    dashboard: {
+      title: "Dashboard privado",
+      kicker: "JWT tenant: {slug}",
+      heading: "Dashboard API v1",
+      lead: "Pruebas rápidas de appointments y whatsapp usando Authorization Bearer.",
+      appointments: "Appointments",
+      slots: "Slots",
+      canSchedule: "Can schedule",
+      link: "Link",
+      whatsapp: "WhatsApp",
+      rules: "Listar reglas"
+    },
+    crm: {
+      title: "CRM",
+      heading: "CRM v1",
+      loginLead: "Inicia sesión para usar el tenant real por JWT.",
+      client: "Cliente",
+      segment: "Segmentar",
+      timeline: "Timeline",
+      error: "Error CRM"
+    },
+    messages: {
+      title: "Mensajes",
+      heading: "Messages v1",
+      loginLead: "Inicia sesión para usar endpoints privados del tenant.",
+      confirmation: "Confirmación",
+      reminder: "Recordatorio",
+      reactivation: "Reactivación",
+      error: "Error messages"
+    },
+    settings: {
+      title: "Ajustes",
+      lead: "Sesión activa y contexto de tenant real.",
+      user: "Usuario:",
+      role: "Rol:",
+      tenant: "Tenant:",
+      type: "Tipo:",
+      restaurantBlock: "Restaurante — alergias y stock",
+      restaurantLead: "Edita alergias y el QR en",
+      restaurantLink: "Sistema restaurante",
+      publicAllergies: "Cartel público:",
+      logout: "Cerrar sesión"
+    }
   }
 };

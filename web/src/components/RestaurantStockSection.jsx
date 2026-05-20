@@ -3,6 +3,7 @@ import {
   DAKINIS_RESTAURANT_DEMO_PRODUCTION,
   DAKINIS_RESTAURANT_DEMO_PURCHASE
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
 
@@ -15,6 +16,8 @@ function dakinisFormatQty(value, unit) {
 }
 
 export default function RestaurantStockSection({ apiSession, tenantSlugForVertical, activeSystemKey }) {
+  const { locale, t } = useLocale();
+  const dateLocale = locale === "en" ? "en-US" : "es-ES";
   const [kitchen, setKitchen] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -42,9 +45,9 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       const data = json?.data;
       setKitchen(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo cargar cocina/stock");
+      setError(e instanceof Error ? e.message : t("kitchen.loadError"));
     }
-  }, [apiSession, fetchOpts]);
+  }, [apiSession, fetchOpts, t]);
 
   useEffect(() => {
     reload();
@@ -61,7 +64,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       });
       setSimulation(json?.data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al simular");
+      setError(e instanceof Error ? e.message : t("kitchen.simulateError"));
       setSimulation(null);
     } finally {
       setBusy(false);
@@ -79,7 +82,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       });
       await reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al registrar compra");
+      setError(e instanceof Error ? e.message : t("kitchen.purchaseError"));
     } finally {
       setBusy(false);
     }
@@ -97,7 +100,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       setSimulation(null);
       await reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Stock insuficiente o error al producir");
+      setError(e instanceof Error ? e.message : t("kitchen.productionError"));
     } finally {
       setBusy(false);
     }
@@ -114,19 +117,15 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
   if (!kitchen) {
     return (
       <p className="lead" style={{ marginTop: "1rem" }}>
-        Cargando stock y recetas…
+        {t("kitchen.loading")}
       </p>
     );
   }
 
   return (
     <section style={{ marginTop: "2rem" }}>
-      <h3>Stock, recetas y producción</h3>
-      <p className="lead">
-        Recetas (Manu): <strong>Pizza</strong> — 1 prepizza con 1 kg harina, 600 ml agua, 25 g sal, 10 g levadura.
-        <strong> Empanadas</strong> — 3 docenas con 1 kg cebolla, ½ kg morrón, 1 kg carne, 36 tapas, 4 huevos, ¼
-        frasco aceitunas. Pedido ejemplo → ~4 prepizzas y ~3 docenas.
-      </p>
+      <h3>{t("kitchen.title")}</h3>
+      <p className="lead">{t("kitchen.lead")}</p>
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
           {error}
@@ -135,14 +134,14 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
 
       <div className="module-grid" style={{ display: "grid", gap: "1rem" }}>
         <article className="card">
-          <h4>Inventario actual</h4>
+          <h4>{t("kitchen.inventory")}</h4>
           <div className="mockup-table-wrap">
             <table className="mockup-table">
               <thead>
                 <tr>
-                  <th>Insumo</th>
-                  <th>Stock</th>
-                  <th>Mínimo</th>
+                  <th>{t("kitchen.ingredient")}</th>
+                  <th>{t("kitchen.stock")}</th>
+                  <th>{t("kitchen.minimum")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,12 +158,12 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
             </table>
           </div>
           <button type="button" className="btn btn-outline" disabled={busy} onClick={dakinisApplyDemoPurchase}>
-            Cargar pedido Manu (compra)
+            {t("kitchen.demoPurchase")}
           </button>
         </article>
 
         <article className="card">
-          <h4>Recetas y producción</h4>
+          <h4>{t("kitchen.recipes")}</h4>
           {kitchen.recipes.map((recipe) => (
             <div key={recipe.id} style={{ marginBottom: "1rem" }}>
               <p>
@@ -178,11 +177,12 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
                 ))}
               </ul>
               <p className="kpi-label">
-                Máximo (solo esta receta):{" "}
-                {kitchen.maxPerRecipe.find((m) => m.recipeSlug === recipe.slug)?.maxBatches ?? 0} tandas
+                {t("kitchen.maxBatches", {
+                  count: kitchen.maxPerRecipe.find((m) => m.recipeSlug === recipe.slug)?.maxBatches ?? 0
+                })}
               </p>
               <label className="mockup-field">
-                <span>Tandas</span>
+                <span>{t("kitchen.batches")}</span>
                 <input
                   type="number"
                   min="0"
@@ -195,24 +195,28 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
           ))}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             <button type="button" className="btn btn-outline" disabled={busy} onClick={dakinisRunSimulate}>
-              Simular consumo
+              {t("kitchen.simulate")}
             </button>
             <button type="button" className="btn" disabled={busy || !apiSession?.token} onClick={dakinisApplyProduction}>
-              Registrar producción
+              {t("kitchen.registerProduction")}
             </button>
           </div>
           {simulation ? (
             <div style={{ marginTop: "0.75rem" }}>
               {simulation.validation?.ok ? (
                 <p className="lead" style={{ color: "#86efac" }}>
-                  Plan viable:{" "}
+                  {t("kitchen.planOk")}{" "}
                   {simulation.outputs?.map((o) => `${o.totalOutput} ${o.outputLabel}`).join(" · ")}
                 </p>
               ) : (
                 <ul>
                   {simulation.validation?.shortages?.map((s) => (
                     <li key={s.itemSlug} style={{ color: "#fdba74" }}>
-                      Falta {itemNames[s.itemSlug] || s.itemSlug}: necesitas {s.needed}, hay {s.available}
+                      {t("kitchen.shortage", {
+                        item: itemNames[s.itemSlug] || s.itemSlug,
+                        needed: s.needed,
+                        available: s.available
+                      })}
                     </li>
                   ))}
                 </ul>
@@ -224,11 +228,11 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
 
       {kitchen.productionHistory?.length ? (
         <article className="card" style={{ marginTop: "1rem" }}>
-          <h4>Últimas producciones</h4>
+          <h4>{t("kitchen.lastProductions")}</h4>
           <ul>
             {kitchen.productionHistory.map((b) => (
               <li key={b.id}>
-                <strong>{b.label}</strong> — {new Date(b.createdAt).toLocaleString("es-ES")}
+                <strong>{b.label}</strong> — {new Date(b.createdAt).toLocaleString(dateLocale)}
                 {b.outputs?.map((o) => (
                   <span key={o.recipeSlug}>
                     {" "}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import {
   dakinisMessageConfirmation,
@@ -7,6 +8,7 @@ import {
 } from "../../services/messages.js";
 
 export default function MessagesPage({ navigate }) {
+  const { t } = useLocale();
   const { session } = useDakinisSession();
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
@@ -15,10 +17,10 @@ export default function MessagesPage({ navigate }) {
     return (
       <section className="modules">
         <div className="container">
-          <h2>Messages</h2>
-          <p className="lead">Inicia sesion para usar endpoints privados del tenant.</p>
+          <h2>{t("app.messages.title")}</h2>
+          <p className="lead">{t("app.messages.loginLead")}</p>
           <button className="btn" type="button" onClick={() => navigate("/login")}>
-            Ir a login
+            {t("app.goLogin")}
           </button>
         </div>
       </section>
@@ -37,26 +39,26 @@ export default function MessagesPage({ navigate }) {
             : await dakinisMessageReactivation(payload);
       setResult(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error messages");
+      setError(err instanceof Error ? err.message : t("app.messages.error"));
     }
   }
 
   return (
     <section className="modules">
       <div className="container">
-        <h2>Messages v1</h2>
+        <h2>{t("app.messages.heading")}</h2>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button type="button" className="btn" onClick={() => run("confirmation")}>
-            Confirmacion
+            {t("app.messages.confirmation")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => run("reminder")}>
-            Reminder
+            {t("app.messages.reminder")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => run("reactivation")}>
-            Reactivation
+            {t("app.messages.reactivation")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
-            Dashboard
+            {t("appNav.app")}
           </button>
         </div>
         {error ? <p className="lead" style={{ color: "#f97316" }}>{error}</p> : null}

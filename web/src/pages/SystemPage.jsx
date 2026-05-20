@@ -5,11 +5,9 @@ import {
   DAKINIS_BUSINESS_SLUG_BY_VERTICAL,
   DAKINIS_ENTITY_BY_VERTICAL
 } from "@dakinis/shared/catalog/business-mapping.js";
-import {
-  DAKINIS_SYSTEM_PAGE_CONTENT,
-  DAKINIS_SYSTEM_MOCKUPS,
-  dakinisBuildDefaultFormValues
-} from "../data/systemPages.js";
+import { dakinisGetSystemPageContent } from "../data/getSystemPageContent.js";
+import { DAKINIS_SYSTEM_MOCKUPS, dakinisBuildDefaultFormValues } from "../data/systemPages.js";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import DemoTenantSystemWelcome from "../components/DemoTenantSystemWelcome.jsx";
 import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
@@ -22,6 +20,7 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 export default function SystemPage({ activeSystemKey, navigate }) {
   const { session } = useDakinisSession();
+  const { locale, t } = useLocale();
 
   const hideVerticalSwitcher =
     Boolean(session?.token) && session?.user?.role !== "platform_admin";
@@ -39,8 +38,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
     return all;
   }, [session, hideVerticalSwitcher]);
   const selectedSystem = dakinisSystemRegistry[activeSystemKey] || dakinisSystemRegistry.clinica;
-  const systemPageContent =
-    DAKINIS_SYSTEM_PAGE_CONTENT[activeSystemKey] || DAKINIS_SYSTEM_PAGE_CONTENT.clinica;
+  const systemPageContent = dakinisGetSystemPageContent(locale, activeSystemKey);
   const activeMockup = DAKINIS_SYSTEM_MOCKUPS[activeSystemKey] || DAKINIS_SYSTEM_MOCKUPS.clinica;
   const tenantSlugForVertical = DAKINIS_BUSINESS_SLUG_BY_VERTICAL[activeSystemKey];
   const entityName = DAKINIS_ENTITY_BY_VERTICAL[activeSystemKey];
@@ -91,7 +89,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
         }
       } catch (error) {
         if (error?.name === "AbortError") return;
-        setRecordsError(error instanceof Error ? error.message : "No se cargaron registros");
+        setRecordsError(error instanceof Error ? error.message : t("system.recordsLoadError"));
         setRecordsSynced(false);
       }
     },
@@ -129,7 +127,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
       setRecords((prev) => [newRecord, ...prev]);
       setRecordsSynced(false);
       const fallbackMsg =
-        error instanceof Error ? error.message : "Guardado solo en local hasta que la API este disponible";
+        error instanceof Error ? error.message : t("system.saveLocalFallback");
       setRecordsError((prevE) => prevE || fallbackMsg);
     }
   }
@@ -137,14 +135,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
   return (
     <section className="modules">
       <div className="container">
-        <p className="kicker">Tenant: {tenantSlugForVertical}</p>
+        <p className="kicker">{t("system.tenant", { slug: tenantSlugForVertical })}</p>
         <h2>{systemPageContent.pageTitle}</h2>
         <p className="lead">{systemPageContent.pageDescription}</p>
         {showDemoWelcome ? (
           <DemoTenantSystemWelcome activeSystemKey={activeSystemKey} session={session} navigate={navigate} />
         ) : null}
         <div className="hero-card">
-          <h3>Resultados que buscas en {selectedSystem.label}</h3>
+          <h3>{t("system.resultsTitle", { label: selectedSystem.label })}</h3>
           <ul>
             {systemPageContent.highlights.map((item) => (
               <li key={`${activeSystemKey}-${item}`}>{item}</li>
@@ -162,11 +160,11 @@ export default function SystemPage({ activeSystemKey, navigate }) {
         {!showDemoWelcome ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
             <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
-              {hideVerticalSwitcher ? "Inicio" : "Volver a sistemas"}
+              {hideVerticalSwitcher ? t("system.home") : t("system.backToSystems")}
             </button>
             {session?.token ? (
               <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
-                Abrir app real (/api/v1)
+                {t("system.openRealApp")}
               </button>
             ) : null}
             <button
@@ -174,7 +172,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               className="btn"
               onClick={() => navigate(`/vista/${encodeURIComponent(activeSystemKey)}`)}
             >
-              Vista previa del panel (mockup)
+              {t("system.mockupPreview")}
             </button>
           </div>
         ) : null}
@@ -193,17 +191,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           </div>
         ) : (
           <p className="lead" style={{ marginTop: "0.75rem" }}>
-            Sesión activa: no puedes cambiar de vertical; solo el panel de tu negocio (
-            <strong>{selectedSystem.label}</strong>
-            ).
+            {t("system.sessionLocked", { label: selectedSystem.label })}
           </p>
         )}
         <p className="lead">
-          Esta vista muestra cómo trabaja Dakinis adaptado a <strong>{selectedSystem.label}</strong>: agendas, datos de
-          clientes y avisos, sin exponer aspectos internos para visitantes que exploran la demo.
+          {t("system.adaptedLead", { label: selectedSystem.label })}
         </p>
 
-        <h3>Operacion diaria del negocio</h3>
+        <h3>{t("system.dailyOps")}</h3>
         <div className="module-grid">
           {systemPageContent.workflow.map((block) => (
             <article className="card" key={`${activeSystemKey}-${block.title}`}>
@@ -217,7 +212,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           ))}
         </div>
 
-        <h3>Automatizaciones activas</h3>
+        <h3>{t("system.automations")}</h3>
         <div className="two-col">
           <article className="card">
             <ul>
@@ -227,7 +222,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </ul>
           </article>
           <article className="card">
-            <h3>Acciones rapidas</h3>
+            <h3>{t("system.quickActions")}</h3>
             <div className="pill-grid">
               {systemPageContent.quickActions.map((action) => (
                 <span key={`${activeSystemKey}-${action}`}>{action}</span>
@@ -249,13 +244,13 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               }}
             >
               <article className="card" style={{ overflow: "auto" }}>
-                <h4>Proveedores o aliados</h4>
+                <h4>{t("system.suppliers")}</h4>
                 <table className="mockup-table">
                   <thead>
                     <tr>
-                      <th>Nombre</th>
-                      <th>Contacto</th>
-                      <th>Ámbito</th>
+                      <th>{t("system.colName")}</th>
+                      <th>{t("system.colContact")}</th>
+                      <th>{t("system.colScope")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,14 +265,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
                 </table>
               </article>
               <article className="card" style={{ overflow: "auto" }}>
-                <h4>Productos o servicios por proveedor</h4>
+                <h4>{t("system.products")}</h4>
                 <table className="mockup-table">
                   <thead>
                     <tr>
-                      <th>Proveedor</th>
-                      <th>Ítem</th>
-                      <th>Ref.</th>
-                      <th>Notas</th>
+                      <th>{t("system.colSupplier")}</th>
+                      <th>{t("system.colItem")}</th>
+                      <th>{t("system.colRef")}</th>
+                      <th>{t("system.colNotes")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -314,13 +309,13 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           />
         ) : null}
 
-        <h3>Carga de datos (persistencia por tenant)</h3>
+        <h3>{t("system.dataLoad")}</h3>
         {recordsError ? (
           <p className="lead" style={{ color: "#fdba74" }}>
-            API registros: {recordsError}. Mostrando local o datos mixtos.
+            {t("system.recordsError", { error: recordsError })}
           </p>
         ) : recordsSynced ? (
-          <p className="lead">Últimos datos guardados en tu espacio demo y listos para usar en pantalla.</p>
+          <p className="lead">{t("system.recordsSynced")}</p>
         ) : null}
 
         <form className="mockup-form card" onSubmit={dakinisHandleMockSubmit}>
@@ -350,14 +345,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </label>
           ))}
           <button type="submit" className="btn">
-            Guardar {activeMockup.entityLabel}
+            {t("system.saveEntity", { entity: activeMockup.entityLabel })}
           </button>
         </form>
 
-        <h3>Listado desde base de datos</h3>
+        <h3>{t("system.listing")}</h3>
         <article className="card">
           {records.length === 0 ? (
-            <p className="lead">Sin registros aun para este tenant.</p>
+            <p className="lead">{t("system.noRecords")}</p>
           ) : (
             <div className="mockup-table-wrap">
               <table className="mockup-table">
@@ -389,11 +384,8 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           activeSystemKey={activeSystemKey}
         />
 
-        <h3>Tu sistema incluye</h3>
-        <p className="lead">
-          Piezas funcionales disponibles para tu tipo de negocio; el detalle técnico y la parametrización quedan bajo tu
-          control en la implementación.
-        </p>
+        <h3>{t("system.includes")}</h3>
+        <p className="lead">{t("system.includesLead")}</p>
         <div className="module-grid">
           {selectedSystem.modules.map((moduleInfo) => (
             <article className="card" key={`biz-${moduleInfo.title}`}>
@@ -412,7 +404,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             <img src={DAKINIS_LOGO_SIMPLE} alt="Isotipo Dakinis" className="cta-logo" width={48} height={48} />
             <div>
               <h2>{selectedSystem.label}</h2>
-              <p>Un panel por cliente, datos aislados.</p>
+              <p>{t("system.ctaPanel")}</p>
             </div>
             <a href="https://wa.me/" className="btn">
               {systemPageContent.ctaLabel}

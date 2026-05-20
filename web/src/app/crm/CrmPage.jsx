@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisCrmSegment, dakinisCrmTimeline } from "../../services/crm.js";
 
 export default function CrmPage({ navigate }) {
+  const { t } = useLocale();
   const { session } = useDakinisSession();
   const [clientName, setClientName] = useState("Cliente demo");
   const [result, setResult] = useState(null);
@@ -29,25 +31,25 @@ export default function CrmPage({ navigate }) {
       const json = mode === "segment" ? await dakinisCrmSegment(client) : await dakinisCrmTimeline(client);
       setResult(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error CRM");
+      setError(err instanceof Error ? err.message : t("app.crm.error"));
     }
   }
 
   return (
     <section className="modules">
       <div className="container">
-        <h2>CRM v1</h2>
+        <h2>{t("app.crm.heading")}</h2>
         <div className="mockup-form card" style={{ gridTemplateColumns: "1fr" }}>
           <label className="mockup-field">
-            <span>Cliente</span>
+            <span>{t("app.crm.client")}</span>
             <input value={clientName} onChange={(e) => setClientName(e.target.value)} />
           </label>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button type="button" className="btn" onClick={() => run("segment")}>
-              Segmentar
+              {t("app.crm.segment")}
             </button>
             <button type="button" className="btn btn-outline" onClick={() => run("timeline")}>
-              Timeline
+              {t("app.crm.timeline")}
             </button>
             <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
               Dashboard

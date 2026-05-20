@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisTenantJsonFetch } from "../../services/api.js";
 
 export default function SettingsPage({ navigate }) {
+  const { t } = useLocale();
   const { session, logout } = useDakinisSession();
   const [allergiesUrl, setAllergiesUrl] = useState("");
 
@@ -19,34 +21,36 @@ export default function SettingsPage({ navigate }) {
   return (
     <section className="modules">
       <div className="container">
-        <h2>Settings</h2>
-        <p className="lead">Sesión activa y contexto de tenant real.</p>
+        <h2>{t("app.settings.title")}</h2>
+        <p className="lead">{t("app.settings.lead")}</p>
         <div className="card">
           <p>
-            <strong>Usuario:</strong> {session?.user?.email || "-"}
+            <strong>{t("app.settings.user")}</strong> {session?.user?.email || "-"}
           </p>
           <p>
-            <strong>Rol:</strong> {session?.user?.role || "-"}
+            <strong>{t("app.settings.role")}</strong> {session?.user?.role || "-"}
           </p>
           <p>
-            <strong>Tenant:</strong> {session?.business?.slug || session?.business?.id || "-"}
+            <strong>{t("app.settings.tenant")}</strong>{" "}
+            {session?.business?.slug || session?.business?.id || "-"}
           </p>
           <p>
-            <strong>Tipo:</strong> {session?.business?.type || "-"}
+            <strong>{t("app.settings.type")}</strong> {session?.business?.type || "-"}
           </p>
         </div>
         {session?.business?.type === "restaurante" ? (
           <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>Restaurante — alergias y stock</h3>
+            <h3>{t("app.settings.restaurantBlock")}</h3>
             <p className="lead">
-              Edita alergias y el QR en{" "}
+              {t("app.settings.restaurantLead")}{" "}
               <button type="button" className="btn btn-outline" onClick={() => navigate("/sistema/restaurante")}>
-                Sistema restaurante
+                {t("app.settings.restaurantLink")}
               </button>
               .
             </p>
             {allergiesUrl ? (
               <p>
+                <strong>{t("app.settings.publicAllergies")}</strong>{" "}
                 <a href={allergiesUrl} target="_blank" rel="noreferrer">
                   {allergiesUrl}
                 </a>
@@ -56,7 +60,7 @@ export default function SettingsPage({ navigate }) {
         ) : null}
         <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
-            Dashboard
+            {t("appNav.app")}
           </button>
           <button
             type="button"
@@ -66,7 +70,7 @@ export default function SettingsPage({ navigate }) {
               navigate("/login");
             }}
           >
-            Cerrar sesión
+            {t("app.settings.logout")}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import {
@@ -16,6 +17,7 @@ const DAKINIS_SAAS_PLAN_OPTIONS = [
 ];
 
 export default function PlatformAdminPage({ navigate }) {
+  const { t } = useLocale();
   const { session } = useDakinisSession();
 
   const typeSelectOptions = useMemo(() => {
@@ -29,17 +31,17 @@ export default function PlatformAdminPage({ navigate }) {
   const verticalKeys = useMemo(() => typeSelectOptions.map((o) => o.value), [typeSelectOptions]);
 
   const typeSelectOptionsCreate = useMemo(
-    () => [...typeSelectOptions, { value: DAKINIS_TYPE_OTHER, label: "Otro" }],
-    [typeSelectOptions]
+    () => [...typeSelectOptions, { value: DAKINIS_TYPE_OTHER, label: t("admin.other") }],
+    [typeSelectOptions, t]
   );
 
   const typeSelectOptionsEdit = useMemo(
     () => [
       ...typeSelectOptions,
       { value: "platform", label: dakinisFormatBusinessTypeLabel("platform") },
-      { value: DAKINIS_TYPE_OTHER, label: "Otro" }
+      { value: DAKINIS_TYPE_OTHER, label: t("admin.other") }
     ],
-    [typeSelectOptions]
+    [typeSelectOptions, t]
   );
 
   const [businesses, setBusinesses] = useState([]);
@@ -84,7 +86,7 @@ export default function PlatformAdminPage({ navigate }) {
       setUsers(uJson?.data?.users || []);
     } catch (e) {
       if (e?.name === "AbortError") return;
-      setError(e instanceof Error ? e.message : "Error al cargar datos");
+      setError(e instanceof Error ? e.message : t("admin.loadError"));
     } finally {
       setLoading(false);
     }
@@ -131,7 +133,7 @@ export default function PlatformAdminPage({ navigate }) {
         ? dakinisNormalizeBusinessTypeKey(createForm.typeCustom)
         : createForm.typeSelect;
     if (createForm.typeSelect === DAKINIS_TYPE_OTHER && !type) {
-      setError("Indica un identificador para el tipo nuevo (solo letras, números y guiones; ej. gimnasio-centro).");
+      setError(t("admin.typeCustomRequired"));
       return;
     }
     setSaving(true);
@@ -163,7 +165,7 @@ export default function PlatformAdminPage({ navigate }) {
       }));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el negocio");
+      setError(err instanceof Error ? err.message : t("admin.createError"));
     } finally {
       setSaving(false);
     }
@@ -177,7 +179,7 @@ export default function PlatformAdminPage({ navigate }) {
         ? dakinisNormalizeBusinessTypeKey(editTypeCustom)
         : editTypeSelect;
     if (editTypeSelect === DAKINIS_TYPE_OTHER && !type) {
-      setError("Indica un identificador para el tipo personalizado.");
+      setError(t("admin.typeCustomEditRequired"));
       return;
     }
     setSaving(true);
@@ -195,7 +197,7 @@ export default function PlatformAdminPage({ navigate }) {
       setEditingId(null);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar");
+      setError(err instanceof Error ? err.message : t("admin.saveError"));
     } finally {
       setSaving(false);
     }
@@ -205,9 +207,9 @@ export default function PlatformAdminPage({ navigate }) {
     return (
       <section className="modules">
         <div className="container">
-          <p className="lead">Acceso restringido a administradores de plataforma.</p>
+          <p className="lead">{t("admin.restricted")}</p>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/login")}>
-            Ir al login
+            {t("admin.goLogin")}
           </button>
         </div>
       </section>
@@ -217,23 +219,15 @@ export default function PlatformAdminPage({ navigate }) {
   return (
     <section className="modules">
       <div className="container">
-        <p className="kicker">Plataforma</p>
-        <h2>Administración multi-tenant</h2>
-        <p className="lead">
-          Acceso con cuenta de administrador de plataforma y contraseña configurada en el servidor (seed demo habitual:{" "}
-          <code className="config-box">demo123</code>). Si el servidor define <code>DAKINIS_PLATFORM_TOTP_SECRET</code>,
-          usa también el código TOTP en el login. Esta vista está en <code className="config-box">/admin</code> o desde{" "}
-          <strong>Panel plataforma</strong> en la barra.
-        </p>
+        <p className="kicker">{t("admin.kicker")}</p>
+        <h2>{t("admin.title")}</h2>
+        <p className="lead">{t("admin.lead")}</p>
         <button type="button" className="btn btn-outline" style={{ marginBottom: "1rem" }} onClick={() => navigate("/")}>
-          Volver al inicio
+          {t("admin.backHome")}
         </button>
 
-        <h3 style={{ marginTop: "0.25rem" }}>Vistas mockup por vertical</h3>
-        <p className="lead">
-          Maquetas interactivas del panel por tipo de negocio (solo presentación; no persisten datos). Útiles para
-          revisar UX junto a los tenants demo.
-        </p>
+        <h3 style={{ marginTop: "0.25rem" }}>{t("admin.mockupsTitle")}</h3>
+        <p className="lead">{t("admin.mockupsLead")}</p>
         <div className="system-switcher" style={{ marginBottom: "1.25rem" }}>
           {typeSelectOptions.map((o) => (
             <button
@@ -242,7 +236,7 @@ export default function PlatformAdminPage({ navigate }) {
               className="system-btn"
               onClick={() => navigate(`/vista/${encodeURIComponent(o.value)}`)}
             >
-              Vista · {o.label}
+              {t("admin.vistaButton", { label: o.label })}
             </button>
           ))}
         </div>

@@ -90,7 +90,11 @@ export default function App() {
       return;
     }
     if (currentPath.startsWith("/app/")) {
-      document.title = "Dakinis App";
+      document.title = t("doc.app");
+      return;
+    }
+    if (allergiesTokenFromPath) {
+      document.title = t("doc.allergies");
       return;
     }
     if (vistaKeyFromPath && dakinisSystemRegistry[vistaKeyFromPath]) {
@@ -106,7 +110,7 @@ export default function App() {
       return;
     }
     document.title = t("doc.default");
-  }, [currentPath, systemKeyFromPath, vistaKeyFromPath, locale, t]);
+  }, [currentPath, systemKeyFromPath, vistaKeyFromPath, allergiesTokenFromPath, locale, t]);
 
   /** Bloquea cambiar de vertical con la sesión de un tenant; envía admins de plataforma al panel /admin. */
   useEffect(() => {
