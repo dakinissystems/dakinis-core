@@ -1275,6 +1275,21 @@ section {
   margin: 0;
 }
 
+.allergen-public__editor {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.allergen-public__editor-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.allergen-public__error {
+  color: #fdba74;
+}
+
 .allergen-public__footer {
   margin-top: 1.5rem;
 }

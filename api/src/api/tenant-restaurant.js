@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { dakinisGetDb } from "../db/index.js";
-import { dakinisEnsureRestaurantKitchenSeed } from "../db/restaurant-kitchen-seed.js";
+import {
+  dakinisEnsureRestaurantKitchenSeed,
+  dakinisEnsureRestaurantProfile
+} from "../db/restaurant-kitchen-seed.js";
 import {
   DAKINIS_RESTAURANT_ALLERGEN_CATALOG,
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS,
@@ -122,6 +125,8 @@ export function dakinisHandleRestaurantKitchenGet(req) {
   const recipeSlugs = recipes.map((r) => ({ ...r, slug: r.slug, lines: r.lines }));
   const maxPerRecipe = dakinisRestaurantMaxBatchesPerRecipe(stockBySlug, recipeSlugs);
 
+  dakinisEnsureRestaurantProfile(db, businessId);
+
   const profile = db
     .prepare(`SELECT public_token, venue_name, allergies_json, updated_at FROM tenant_restaurant_profile WHERE business_id = ?`)
     .get(businessId);
@@ -162,6 +167,7 @@ export function dakinisHandleRestaurantKitchenGet(req) {
         ? {
             publicToken: profile.public_token,
             venueName: profile.venue_name,
+            businessSlug: req.dakinisBusiness.slug,
             allergies: savedAllergies,
             allergenChecklist,
             customAllergies,
@@ -172,7 +178,8 @@ export function dakinisHandleRestaurantKitchenGet(req) {
             presentAllergenCount: presentCount,
             totalCatalogCount: DAKINIS_RESTAURANT_ALLERGEN_CATALOG.length,
             updatedAt: profile.updated_at,
-            publicPath: `/alergenos/${profile.public_token}`
+            publicPath: `/alergenos/${profile.public_token}`,
+            publicPathBySlug: `/alergenos/${req.dakinisBusiness.slug}`
           }
         : null
     },
@@ -311,6 +318,7 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
   dakinisEnsureRestaurantKitchenSeed(db, businessId);
+  dakinisEnsureRestaurantProfile(db, businessId);
 
   const venueName =
     typeof body.venueName === "string" && body.venueName.trim()
@@ -324,7 +332,11 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
     .prepare(`SELECT venue_name, allergies_json FROM tenant_restaurant_profile WHERE business_id = ?`)
     .get(businessId);
 
-  const nextVenue = venueName ?? current?.venue_name ?? "Restaurante";
+  if (!current) {
+    return dakinisJsonError(500, "PROFILE_ERROR", "No se pudo crear el perfil del restaurante");
+  }
+
+  const nextVenue = venueName ?? current.venue_name ?? "Restaurante";
   let nextAllergies = current?.allergies_json ?? "[]";
   if (checklist || customAllergies) {
     nextAllergies = JSON.stringify(
@@ -354,15 +366,19 @@ export function dakinisHandlePublicRestaurantAllergiesGet(token) {
   const db = dakinisGetDb();
   const profile = db
     .prepare(
-      `SELECT p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
+      `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
        FROM tenant_restaurant_profile p
        JOIN business b ON b.id = p.business_id
-       WHERE p.public_token = ?`
+       WHERE p.public_token = ? OR b.slug = ?`
     )
-    .get(t);
+    .get(t, t);
 
   if (!profile) {
-    return dakinisJsonError(404, "NOT_FOUND", "Cartel de alergias no encontrado");
+    return dakinisJsonError(
+      404,
+      "NOT_FOUND",
+      "Cartel de alergias no encontrado. El restaurante debe guardar el cartel en el panel (Cocina / stock) para activar el QR."
+    );
   }
 
   let savedAllergies = [];
@@ -379,6 +395,8 @@ export function dakinisHandlePublicRestaurantAllergiesGet(token) {
     {
       venueName: profile.venue_name || profile.business_name,
       businessSlug: profile.slug,
+      publicToken: profile.public_token,
+      publicPath: `/alergenos/${profile.public_token}`,
       allergies: presentAllergies,
       presentAllergies,
       absentCount:

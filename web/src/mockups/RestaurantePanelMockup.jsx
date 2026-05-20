@@ -41,7 +41,7 @@ const MOCK_ALLERGEN_CHECKLIST = [
   }))
 ];
 
-const MOCK_PUBLIC_ALLERGEN_URL = "https://core.dakinissystems.com/alergenos/demo-restaurante";
+const MOCK_PUBLIC_ALLERGEN_URL = "https://core.dakinissystems.com/alergenos/restaurante-demo";
 
 function Toolbar({ title, badge, user, extra }) {
   return (

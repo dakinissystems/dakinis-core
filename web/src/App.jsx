@@ -178,7 +178,7 @@ export default function App() {
     ) : currentPath === "/app/settings" ? (
       <SettingsPage navigate={navigate} />
     ) : allergiesTokenFromPath ? (
-      <PublicAllergiesPage token={allergiesTokenFromPath} />
+      <PublicAllergiesPage token={allergiesTokenFromPath} navigate={navigate} />
     ) : vistaKeyFromPath ? (
       <VistaMockupPage verticalKey={vistaKeyFromPath} navigate={navigate} />
     ) : systemKeyFromPath ? (

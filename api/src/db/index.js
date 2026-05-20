@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { dakinisSeed } from "./seed.js";
+import { dakinisEnsureAllRestaurantProfiles } from "./restaurant-kitchen-seed.js";
 
 function dakinisMigrateUsersTotp(db) {
   const cols = db.prepare("PRAGMA table_info(users)").all();
@@ -54,6 +55,7 @@ export function dakinisInitDb() {
   dakinisMigrateUsersTotp(dbInstance);
   dakinisMigratePlatformUserId(dbInstance);
   dakinisSeed(dbInstance);
+  dakinisEnsureAllRestaurantProfiles(dbInstance);
 
   return dbInstance;
 }

@@ -6,9 +6,9 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
   const [customAllergies, setCustomAllergies] = useState(() => profile?.customAllergies ?? []);
 
   useEffect(() => {
-    if (profile?.allergenChecklist) setChecklist(profile.allergenChecklist);
+    if (profile?.allergenChecklist?.length) setChecklist(profile.allergenChecklist);
     if (profile?.customAllergies) setCustomAllergies(profile.customAllergies);
-  }, [profile?.allergenChecklist, profile?.customAllergies, profile?.updatedAt]);
+  }, [profile?.allergenChecklist, profile?.customAllergies, profile?.updatedAt, profile?.publicToken]);
 
   const presentCount = useMemo(
     () => checklist.filter((a) => a.present).length + customAllergies.filter((a) => a.present).length,
@@ -185,10 +185,21 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
             <a href={publicUrl} target="_blank" rel="noreferrer">
               {publicUrl}
             </a>
-            <p className="kpi-label">Vista pública: solo alérgenos marcados «Sí hay»</p>
+            <p className="kpi-label">
+              Vista pública (tabla): solo alérgenos «Sí hay». También:{" "}
+              {profile?.publicPathBySlug ? (
+                <a href={`${window.location.origin}${profile.publicPathBySlug}`} target="_blank" rel="noreferrer">
+                  {profile.publicPathBySlug}
+                </a>
+              ) : null}
+            </p>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <p className="lead" style={{ color: "#fdba74" }}>
+          Guarda el cartel una vez para generar el enlace y el QR.
+        </p>
+      )}
     </article>
   );
 }
