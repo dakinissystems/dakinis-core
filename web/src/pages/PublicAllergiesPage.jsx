@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 
 export default function PublicAllergiesPage({ token }) {
   const [data, setData] = useState(null);
@@ -26,16 +27,10 @@ export default function PublicAllergiesPage({ token }) {
     return () => controller.abort();
   }, [token]);
 
-  const byCategory = useMemo(() => {
-    const list = data?.presentAllergies ?? data?.allergies ?? [];
-    const groups = new Map();
-    for (const a of list) {
-      const cat = a.category || "Otros";
-      if (!groups.has(cat)) groups.set(cat, []);
-      groups.get(cat).push(a);
-    }
-    return [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [data]);
+  const presentList = useMemo(
+    () => data?.presentAllergies ?? data?.allergies ?? [],
+    [data]
+  );
 
   if (error) {
     return (
@@ -58,8 +53,6 @@ export default function PublicAllergiesPage({ token }) {
     );
   }
 
-  const presentList = data.presentAllergies ?? data.allergies ?? [];
-
   return (
     <section className="modules allergen-public">
       <div className="container allergen-public__inner">
@@ -73,27 +66,22 @@ export default function PublicAllergiesPage({ token }) {
           Actualizado: {data.updatedAt ? new Date(data.updatedAt).toLocaleString("es-ES") : "—"}
         </p>
 
-        {presentList.length ? (
-          <div className="allergen-public__list">
-            {byCategory.map(([category, items]) => (
-              <section key={category} className="card allergen-public__group">
-                <h2 className="allergen-public__category">{category}</h2>
-                <ul>
-                  {items.map((a) => (
-                    <li key={a.catalogId || a.id || a.name} className="allergen-public__item">
-                      <strong>{a.name}</strong>
-                      {a.notes ? <span className="allergen-public__notes"> — {a.notes}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        ) : (
-          <p className="lead card" style={{ padding: "1.25rem" }}>
-            Este establecimiento no ha declarado alérgenos presentes en carta. Pregunta al personal.
-          </p>
-        )}
+        <article className="card allergen-public__card">
+          {presentList.length ? (
+            <>
+              <p className="allergen-public__table-title">
+                <strong>{presentList.length}</strong> alérgeno{presentList.length === 1 ? "" : "s"} declarado
+                {presentList.length === 1 ? "" : "s"} en carta
+              </p>
+              <AllergenPublicTable allergens={presentList} />
+            </>
+          ) : (
+            <AllergenPublicTable
+              allergens={[]}
+              emptyMessage="Este establecimiento no ha declarado alérgenos presentes en carta. Pregunta al personal."
+            />
+          )}
+        </article>
 
         <p className="kpi-label allergen-public__footer">
           Referencia: 14 alérgenos obligatorios (UE). Solo se listan los marcados como presentes por el

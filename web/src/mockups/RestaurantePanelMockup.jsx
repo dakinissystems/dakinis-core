@@ -3,6 +3,7 @@ import {
   DAKINIS_RESTAURANT_ALLERGEN_CATALOG,
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
+import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -330,18 +331,10 @@ function PanelAlergenosCartel() {
         <p className="kicker" style={{ marginBottom: "0.5rem" }}>
           Restaurante demo · Manu
         </p>
-        {presentOnly.length ? (
-          <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-            {presentOnly.map((a) => (
-              <li key={a.catalogId} style={{ marginBottom: "0.35rem" }}>
-                <strong>{a.name}</strong>
-                {a.notes ? <span style={{ color: "var(--muted)" }}> — {a.notes}</span> : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="lead">Sin alérgenos declarados en carta.</p>
-        )}
+        <AllergenPublicTable
+          allergens={presentOnly}
+          emptyMessage="Sin alérgenos declarados en carta."
+        />
       </article>
     </>
   );
