@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" fill="none" role="img" aria-label="Dakinis One">
+  <rect x="8" y="16" width="88" height="88" rx="18" fill="#0f766e"/>
+  <path d="M28 76V44l14 18 14-18v32" stroke="#ecfdf5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="112" y="58" fill="#ecfdf5" font-family="system-ui,Segoe UI,sans-serif" font-size="36" font-weight="700">Dakinis</text>
+  <text x="112" y="92" fill="#5eead4" font-family="system-ui,Segoe UI,sans-serif" font-size="22" font-weight="500">One</text>
+</svg>

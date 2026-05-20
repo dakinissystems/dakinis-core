@@ -8,6 +8,8 @@
 
 Opcional en build (no necesario si usas `API_UPSTREAM`): quita `VITE_API_BASE_URL` del servicio front para forzar `/api` same-origin.
 
+Opcional: `VITE_MARKETING_SITE_URL=https://dakinissystems.com/` (logo/cabecera → landing). Los enlaces a productos van en el repo **landing**, no en Core.
+
 Opcional si falla el copy: `RAILPACK_NODE_INSTALL_PATTERNS` = `web shared`
 
 Eliminar en este servicio: `CORS_ORIGIN`, `JWT_SECRET`, `SQLITE_PATH`, `VITE_API_URL` (sin `https://`).

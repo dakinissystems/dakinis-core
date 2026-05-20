@@ -8,9 +8,8 @@ import {
   dakinisPackAdvanced,
   dakinisMaintenanceTiers
 } from "../data/pricingCatalog.js";
+import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
-
-const logoGrande = "/Logo%20Grande.jpeg";
 
 const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
 const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
@@ -122,7 +121,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
             <p className="lead">{t("home.hero.stack")}</p>
           </div>
           <div className="hero-card">
-            <img src={logoGrande} alt="Dakinis Scheduler + CRM + WhatsApp" className="hero-logo" />
+            <img src={DAKINIS_LOGO_LARGE} alt="Dakinis Scheduler + CRM + WhatsApp" className="hero-logo" />
             <ul>
               <li>
                 {t("home.hero.cardLi1Prefix")}

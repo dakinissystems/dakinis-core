@@ -17,7 +17,7 @@ import TenantTeamSection from "../components/TenantTeamSection.jsx";
 import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
-const logoSimple = "/Logo%20Simple.jpeg";
+import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 export default function SystemPage({ activeSystemKey, navigate }) {
@@ -409,7 +409,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
 
         <section className="cta">
           <div className="cta-card">
-            <img src={logoSimple} alt="Isotipo Dakinis" className="cta-logo" />
+            <img src={DAKINIS_LOGO_SIMPLE} alt="Isotipo Dakinis" className="cta-logo" width={48} height={48} />
             <div>
               <h2>{selectedSystem.label}</h2>
               <p>Un panel por cliente, datos aislados.</p>

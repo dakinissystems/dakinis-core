@@ -1,11 +1,10 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
+import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
+import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
-
-const logoSimple = "/Logo%20Simple.jpeg";
 
 export default function AppTopBar({ navigate, session, logout, currentPath }) {
   const { t } = useLocale();
@@ -31,7 +30,7 @@ export default function AppTopBar({ navigate, session, logout, currentPath }) {
             className="brand-external brand-icon-link"
             aria-label={t("nav.corporateSite")}
           >
-            <img src={logoSimple} alt="" className="brand-icon" />
+            <img src={DAKINIS_LOGO_SIMPLE} alt="" className="brand-icon" width={40} height={40} />
           </a>
           <button type="button" className="brand-title-link" onClick={() => navigate("/")} aria-label={t("nav.homeApp")}>
             Dakinis One

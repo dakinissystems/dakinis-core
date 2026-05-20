@@ -1,5 +1,5 @@
-# Blueprint Render: API (Node) + Static Site (Vite).
-# Ajusta nombres y rutas. Documentacion: https://render.com/docs/blueprint-spec
+# DEPRECADO — produccion en Railway (core.dakinissystems.com).
+# No usar Render para Core; ver docs/RAILWAY-CORE.md y docs/RAILWAY-FRONT-VARS.md
 
 services:
   - type: web

@@ -1,8 +1,7 @@
-import { DAKINIS_MARKETING_SITE_URL } from "../config/marketing.js";
+import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
+import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
-
-const logoSimple = "/Logo%20Simple.jpeg";
 
 function Sep() {
   return (
@@ -35,7 +34,7 @@ export default function AppFooter({ navigate }) {
     <footer className="site-footer">
       <div className="container site-footer-inner">
         <a href={DAKINIS_MARKETING_SITE_URL} className="site-footer-brand">
-          <img src={logoSimple} alt="Dakinis Systems" className="brand-icon" width={38} height={38} />
+          <img src={DAKINIS_LOGO_SIMPLE} alt="Dakinis Systems" className="brand-icon" width={38} height={38} />
           <span>Dakinis One</span>
         </a>
 
