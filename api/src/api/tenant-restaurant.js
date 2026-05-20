@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dakinisGetDb } from "../db/index.js";
 import {
+  dakinisEnsureAllRestaurantProfiles,
   dakinisEnsureRestaurantKitchenSeed,
   dakinisEnsureRestaurantProfile
 } from "../db/restaurant-kitchen-seed.js";
@@ -359,26 +360,62 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   return dakinisHandleRestaurantKitchenGet(req);
 }
 
-export function dakinisHandlePublicRestaurantAllergiesGet(token) {
-  const t = typeof token === "string" ? token.trim() : "";
-  if (!t) return dakinisJsonError(400, "VALIDATION_ERROR", "token invalido");
-
-  const db = dakinisGetDb();
-  const profile = db
+function dakinisLoadPublicAllergenProfile(db, key) {
+  return db
     .prepare(
       `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
        FROM tenant_restaurant_profile p
        JOIN business b ON b.id = p.business_id
-       WHERE p.public_token = ? OR b.slug = ?`
+       WHERE p.public_token = ? OR lower(b.slug) = lower(?)`
     )
-    .get(t, t);
+    .get(key, key);
+}
+
+function dakinisProvisionPublicAllergenProfile(db, key) {
+  const biz = db
+    .prepare(
+      `SELECT id, name, slug, type FROM business WHERE lower(slug) = lower(?) OR id = ? LIMIT 1`
+    )
+    .get(key, key);
+
+  if (!biz || String(biz.type).toLowerCase() !== "restaurante") {
+    return null;
+  }
+
+  dakinisEnsureRestaurantKitchenSeed(db, biz.id);
+
+  return db
+    .prepare(
+      `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
+       FROM tenant_restaurant_profile p
+       JOIN business b ON b.id = p.business_id
+       WHERE p.business_id = ?`
+    )
+    .get(biz.id);
+}
+
+export function dakinisHandlePublicRestaurantAllergiesGet(token) {
+  let t = typeof token === "string" ? token.trim() : "";
+  try {
+    t = decodeURIComponent(t).trim();
+  } catch {
+    /* keep raw */
+  }
+  if (!t) return dakinisJsonError(400, "VALIDATION_ERROR", "token invalido");
+
+  const db = dakinisGetDb();
+  dakinisEnsureAllRestaurantProfiles(db);
+
+  let profile = dakinisLoadPublicAllergenProfile(db, t);
+  if (!profile) {
+    profile = dakinisProvisionPublicAllergenProfile(db, t);
+  }
 
   if (!profile) {
-    return dakinisJsonError(
-      404,
-      "NOT_FOUND",
-      "Cartel de alergias no encontrado. El restaurante debe guardar el cartel en el panel (Cocina / stock) para activar el QR."
-    );
+    return dakinisJsonError(404, "NOT_FOUND", "Cartel de alergias no encontrado para este enlace.", {
+      token: t,
+      hint: "Usa el enlace del panel Cocina/stock o /alergenos/restaurante-demo si eres el tenant demo."
+    });
   }
 
   let savedAllergies = [];

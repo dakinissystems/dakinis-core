@@ -78,19 +78,30 @@ export default function PublicAllergiesPage({ token, navigate }) {
   }
 
   if (error) {
+    const demoSlugUrl = `${window.location.origin}/alergenos/restaurante-demo`;
     return (
       <section className="modules allergen-public">
         <div className="container allergen-public__inner">
           <h2>Información de alergias</h2>
           <p className="lead allergen-public__error">{error}</p>
-          <p className="lead" style={{ fontSize: "0.9rem" }}>
-            Si eres el restaurante, inicia sesión y guarda el cartel en{" "}
+          <p className="kpi-label">Enlace escaneado: /alergenos/{token}</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
+            <button type="button" className="btn" onClick={() => setReloadKey((k) => k + 1)}>
+              Reintentar
+            </button>
+            <a className="btn btn-outline" href={demoSlugUrl}>
+              Probar demo (restaurante-demo)
+            </a>
             <button type="button" className="btn btn-outline" onClick={() => navigate?.("/login")}>
               Iniciar sesión
-            </button>{" "}
-            → <button type="button" className="btn btn-outline" onClick={() => navigate?.("/sistema/restaurante")}>
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate?.("/sistema/restaurante")}>
               Cocina / stock
             </button>
+          </div>
+          <p className="lead" style={{ fontSize: "0.85rem", marginTop: "1rem" }}>
+            El QR debe apuntar al enlace que aparece en <strong>Cocina / stock</strong> tras guardar el cartel. Si la
+            API en Railway no está actualizada, redeploy de <strong>Core Back</strong> y <strong>Core Front</strong>.
           </p>
         </div>
       </section>

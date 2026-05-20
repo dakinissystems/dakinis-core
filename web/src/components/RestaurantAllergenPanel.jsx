@@ -16,10 +16,13 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
   );
 
   const publicUrl = useMemo(() => {
+    if (profile?.publicPathBySlug && profile?.businessSlug) {
+      return `${window.location.origin}${profile.publicPathBySlug}`;
+    }
     const token = profile?.publicToken;
     if (!token) return "";
     return `${window.location.origin}/alergenos/${token}`;
-  }, [profile?.publicToken]);
+  }, [profile?.publicToken, profile?.publicPathBySlug, profile?.businessSlug]);
 
   const qrImageUrl = useMemo(() => {
     if (!publicUrl) return "";
