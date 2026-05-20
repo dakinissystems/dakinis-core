@@ -1,6 +1,4 @@
-export default dakinisGetSystemPageContent("es");
-
-const _legacyClinica = {
+export default {
   clinica: {
     pageTitle: "Sistema para Clínica estética",
     pageDescription:
