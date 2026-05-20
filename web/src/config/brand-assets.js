@@ -1,3 +1,5 @@
-/** Logos servidos desde web/public (Vite copia a dist). */
-export const DAKINIS_LOGO_SIMPLE = "/brand/logo-simple.svg";
-export const DAKINIS_LOGO_LARGE = "/brand/logo-large.svg";
+/** Logo Dakinis One — servido desde web/public/brand (Vite → dist). */
+export const DAKINIS_LOGO_PATH = "/brand/dakinis-one.png";
+
+export const DAKINIS_LOGO_SIMPLE = DAKINIS_LOGO_PATH;
+export const DAKINIS_LOGO_LARGE = DAKINIS_LOGO_PATH;

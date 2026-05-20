@@ -121,7 +121,14 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
             <p className="lead">{t("home.hero.stack")}</p>
           </div>
           <div className="hero-card">
-            <img src={DAKINIS_LOGO_LARGE} alt="Dakinis Scheduler + CRM + WhatsApp" className="hero-logo" />
+            <img
+              src={DAKINIS_LOGO_LARGE}
+              alt="Dakinis One"
+              className="hero-logo"
+              width={320}
+              height={120}
+              loading="eager"
+            />
             <ul>
               <li>
                 {t("home.hero.cardLi1Prefix")}
