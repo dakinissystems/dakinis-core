@@ -1,7 +1,18 @@
 import { useLocale } from "../context/LocaleContext.jsx";
+import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 
-function LegalShell({ navigate, title, children }) {
+function LegalShell({ navigate, docKey }) {
   const { t } = useLocale();
+  const doc = t(`legal.${docKey}`);
+  const isDoc = doc && typeof doc === "object" && !Array.isArray(doc);
+  const title = isDoc && doc.title ? doc.title : docKey;
+  const sections =
+    isDoc && Array.isArray(doc.sections)
+      ? doc.sections
+      : isDoc && doc.body
+        ? [{ h: null, p: doc.body }]
+        : [];
+
   return (
     <div className="container legal-page">
       <p className="legal-back">
@@ -10,43 +21,36 @@ function LegalShell({ navigate, title, children }) {
         </button>
       </p>
       <h1>{title}</h1>
-      <div className="legal-prose">{children}</div>
+      {t("legal.updated") ? <p className="kpi-label">{t("legal.updated")}</p> : null}
+      <div className="legal-prose">
+        {sections.map((section) => (
+          <section key={section.h || section.p.slice(0, 24)}>
+            {section.h ? <h2>{section.h}</h2> : null}
+            <p>{section.p}</p>
+          </section>
+        ))}
+      </div>
+      <p className="kpi-label" style={{ marginTop: "1.5rem" }}>
+        <a href={DAKINIS_MARKETING_SITE_URL} target="_blank" rel="noreferrer">
+          {t("legal.corporateLink")}
+        </a>
+      </p>
     </div>
   );
 }
 
 export function FaqPage({ navigate }) {
-  const { t } = useLocale();
-  return (
-    <LegalShell navigate={navigate} title={t("legal.faq.title")}>
-      <p>{t("legal.faq.body")}</p>
-    </LegalShell>
-  );
+  return <LegalShell navigate={navigate} docKey="faq" />;
 }
 
 export function PrivacyPage({ navigate }) {
-  const { t } = useLocale();
-  return (
-    <LegalShell navigate={navigate} title={t("legal.privacy.title")}>
-      <p>{t("legal.privacy.body")}</p>
-    </LegalShell>
-  );
+  return <LegalShell navigate={navigate} docKey="privacy" />;
 }
 
 export function TermsPage({ navigate }) {
-  const { t } = useLocale();
-  return (
-    <LegalShell navigate={navigate} title={t("legal.terms.title")}>
-      <p>{t("legal.terms.body")}</p>
-    </LegalShell>
-  );
+  return <LegalShell navigate={navigate} docKey="terms" />;
 }
 
 export function LegalNoticePage({ navigate }) {
-  const { t } = useLocale();
-  return (
-    <LegalShell navigate={navigate} title={t("legal.notice.title")}>
-      <p>{t("legal.notice.body")}</p>
-    </LegalShell>
-  );
+  return <LegalShell navigate={navigate} docKey="notice" />;
 }

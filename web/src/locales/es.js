@@ -1,3 +1,5 @@
+import { legalCoreEs } from "./legal-core.js";
+
 /** Textos por defecto (español). */
 export default {
   nav: {
@@ -224,29 +226,7 @@ export default {
       generic: "Error de login"
     }
   },
-  legal: {
-    back: "← Inicio",
-    faq: {
-      title: "FAQ",
-      body:
-        "Preguntas frecuentes sobre Dakinis One. Este contenido se ampliará; si necesitas ayuda concreta, usa la sección de contacto en la página principal."
-    },
-    privacy: {
-      title: "Privacidad",
-      body:
-        "Información sobre el tratamiento de datos personales en el uso de esta aplicación. Texto legal completo en preparación; para ejercer derechos ARCO o consultas de privacidad, contacta a través de los canales indicados en el sitio corporativo de Dakinis Systems."
-    },
-    terms: {
-      title: "Términos",
-      body:
-        "Términos y condiciones de uso del servicio. Borrador; el uso de la demo y entornos de prueba queda sujeto a lo acordado por escrito en cada proyecto."
-    },
-    notice: {
-      title: "Aviso legal",
-      body:
-        "Aviso legal e información del titular del sitio y del servicio. Dakinis Systems (nombre comercial de Christian Villar). Detalle de datos registrales y normativa aplicable: en actualización."
-    }
-  },
+  legal: legalCoreEs,
   doc: {
     default: "Dakinis One | Scheduler + CRM + WhatsApp",
     login: "Iniciar sesión · Dakinis One",

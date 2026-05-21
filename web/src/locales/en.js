@@ -1,3 +1,5 @@
+import { legalCoreEn } from "./legal-core.js";
+
 /** English UI strings. */
 export default {
   nav: {
@@ -223,29 +225,7 @@ export default {
       generic: "Login error"
     }
   },
-  legal: {
-    back: "← Home",
-    faq: {
-      title: "FAQ",
-      body:
-        "Frequently asked questions about Dakinis One. This content will grow; for specific help, use the contact section on the main page."
-    },
-    privacy: {
-      title: "Privacy",
-      body:
-        "Information about personal data processing when using this application. Full legal text in preparation; for ARCO rights or privacy questions, use the channels listed on the Dakinis Systems corporate site."
-    },
-    terms: {
-      title: "Terms",
-      body:
-        "Terms and conditions of use. Draft; demo and trial environments are subject to what is agreed in writing per project."
-    },
-    notice: {
-      title: "Legal notice",
-      body:
-        "Legal notice and information about the site and service owner. Dakinis Systems (trading name of Christian Villar). Registration details and applicable law: being updated."
-    }
-  },
+  legal: legalCoreEn,
   doc: {
     default: "Dakinis One | Scheduler + CRM + WhatsApp",
     login: "Sign in · Dakinis One",
