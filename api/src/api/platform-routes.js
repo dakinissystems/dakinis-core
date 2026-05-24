@@ -8,6 +8,7 @@ import { dakinisParseCommercialPlanForStorage } from "@dakinis/shared/catalog/pl
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } from "../db/query.js";
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import { dakinisPublishEvent } from "../lib/event-bus.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -101,6 +102,16 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
     [id]
   );
+
+  await dakinisPublishEvent("tenant.created", {
+    tenantId: id,
+    slug,
+    name,
+    type,
+    plan: planParsed,
+    ownerUserId: uid ?? null
+  });
+
   return dakinisJsonSuccess({ business: row, initialUser }, "platform", {});
 }
 

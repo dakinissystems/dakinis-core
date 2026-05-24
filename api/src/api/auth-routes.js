@@ -12,6 +12,7 @@ import {
   dakinisVerifyPlatformAccessTokenOnly,
   dakinisResolveCoreUserFromPlatformToken
 } from "./platform-user-bridge.js";
+import { dakinisPublishEvent } from "../lib/event-bus.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -69,6 +70,13 @@ export async function dakinisHandleAuthLogin(rawBody) {
 
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+
+  await dakinisPublishEvent("user.login", {
+    userId: user.id,
+    tenantId: business.id,
+    role: user.role,
+    source: "core_local"
+  });
 
   return dakinisJsonSuccess(
     {
@@ -205,6 +213,13 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
   const coreJwt = dakinisSignUserToken(user);
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+
+  await dakinisPublishEvent("user.login", {
+    userId: user.id,
+    tenantId: business.id,
+    role: user.role,
+    source: "platform_idp"
+  });
 
   return dakinisJsonSuccess(
     {
