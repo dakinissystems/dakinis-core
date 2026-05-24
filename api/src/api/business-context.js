@@ -1,13 +1,14 @@
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryOne } from "../db/query.js";
 
-export function dakinisResolveBusinessFromHeader(businessIdHeader) {
+export async function dakinisResolveBusinessFromHeader(businessIdHeader) {
   if (businessIdHeader === undefined || businessIdHeader === null) return null;
   const raw = String(businessIdHeader).trim();
   if (!raw) return null;
 
-  const db = dakinisGetDb();
-  const byId = db.prepare("SELECT * FROM business WHERE id = ?").get(raw);
+  const byId = await dakinisQueryOne("SELECT * FROM business WHERE id = ?", [raw]);
   if (byId) return byId;
 
-  return db.prepare("SELECT * FROM business WHERE lower(slug) = lower(?)").get(raw) || null;
+  return (
+    (await dakinisQueryOne("SELECT * FROM business WHERE lower(slug) = lower(?)", [raw])) || null
+  );
 }

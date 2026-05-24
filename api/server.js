@@ -6,7 +6,6 @@ import { dakinisStructuredLog } from "./src/api/structured-logger.js";
 import { dakinisDispatch } from "./src/app.js";
 
 dakinisAssertProductionJwtSecret();
-dakinisInitDb();
 
 const PORT = Number(process.env.PORT || 8787);
 
@@ -103,7 +102,18 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Dakinis API listening on port ${PORT}`);
-  console.log(`SQLite DB: ${process.env.SQLITE_PATH || "./data/dakinis.db"} (multi-tenant)`);
-});
+dakinisInitDb()
+  .then((driver) => {
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`Dakinis API listening on port ${PORT}`);
+      if (driver === "postgres") {
+        console.log(`Database: PostgreSQL (${process.env.DATABASE_URL ? "DATABASE_URL" : "configured"})`);
+      } else {
+        console.log(`SQLite DB: ${process.env.SQLITE_PATH || "./data/dakinis.db"} (multi-tenant)`);
+      }
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialize database:", err);
+    process.exit(1);
+  });

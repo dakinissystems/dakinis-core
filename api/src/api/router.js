@@ -6,7 +6,8 @@ import {
 } from "./contracts.js";
 import { dakinisResolveAdapter } from "./adapter-resolver.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
+import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
@@ -61,19 +62,19 @@ function dakinisAssertOptionalBusinessTypeHeader(req, business) {
   return null;
 }
 
-export function dakinisHandleAuthLoginRequest(rawBody) {
+export async function dakinisHandleAuthLoginRequest(rawBody) {
   return dakinisHandleAuthLogin(rawBody);
 }
 
-export function dakinisHandleAuthExchangeRequest(req, rawBody) {
+export async function dakinisHandleAuthExchangeRequest(req, rawBody) {
   return dakinisHandleAuthExchange(req, rawBody);
 }
 
-export function dakinisHandleMeRequest(req) {
+export async function dakinisHandleMeRequest(req) {
   return dakinisHandleMe(req);
 }
 
-export function dakinisHandleApiRequest(req, rawBody, url) {
+export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/health") {
     return dakinisJsonSuccess({ status: "up" }, "custom");
   }
@@ -127,14 +128,13 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
         expected: expectedEntity
       });
     }
-    const db = dakinisGetDb();
-    const rows = db
-      .prepare(
-        `SELECT id, payload, created_at FROM tenant_records
+    const orderCreated = dakinisSqlOrderCreatedAtDesc("created_at");
+    const rows = await dakinisQueryAll(
+      `SELECT id, payload, created_at FROM tenant_records
          WHERE business_id = ? AND entity = ?
-         ORDER BY datetime(created_at) DESC`
-      )
-      .all(business.id, entity);
+         ORDER BY ${orderCreated}`,
+      [business.id, entity]
+    );
     const records = rows.flatMap((r) => {
       try {
         const parsed = JSON.parse(r.payload);
@@ -161,13 +161,12 @@ export function dakinisHandleApiRequest(req, rawBody, url) {
         ? record.id.trim()
         : `row_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const row = { ...record, id };
-    const db = dakinisGetDb();
-    db.prepare("INSERT INTO tenant_records (id, business_id, entity, payload) VALUES (?, ?, ?, ?)").run(
+    await dakinisRun("INSERT INTO tenant_records (id, business_id, entity, payload) VALUES (?, ?, ?, ?)", [
       id,
       business.id,
       entity,
       JSON.stringify(row)
-    );
+    ]);
     return dakinisJsonSuccess({ record: row }, adapterKey, metaBase);
   }
 

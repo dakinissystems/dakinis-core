@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 const SEVERITIES = new Set(["info", "warning", "critical"]);
@@ -59,19 +59,17 @@ function dakinisRowAlert(r) {
   };
 }
 
-export function dakinisHandleSupplyDeliveriesList(req) {
+export async function dakinisHandleSupplyDeliveriesList(req) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
 
-  const db = dakinisGetDb();
-  const rows = db
-    .prepare(
-      `SELECT id, supplier, arrival_window, contents, status, created_at
+  const rows = await dakinisQueryAll(
+    `SELECT id, supplier, arrival_window, contents, status, created_at
        FROM tenant_supply_deliveries
        WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC`
-    )
-    .all(req.dakinisBusiness.id);
+       ORDER BY datetime(created_at) DESC`,
+    [req.dakinisBusiness.id]
+  );
 
   return dakinisJsonSuccess(
     { deliveries: rows.map(dakinisRowDelivery) },
@@ -80,7 +78,7 @@ export function dakinisHandleSupplyDeliveriesList(req) {
   );
 }
 
-export function dakinisHandleSupplyDeliveriesPost(req, rawBody) {
+export async function dakinisHandleSupplyDeliveriesPost(req, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -99,17 +97,17 @@ export function dakinisHandleSupplyDeliveriesPost(req, rawBody) {
   }
 
   const id = `sd_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  const db = dakinisGetDb();
-  db.prepare(
+  await dakinisRun(
     `INSERT INTO tenant_supply_deliveries (id, business_id, supplier, arrival_window, contents, status)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(id, req.dakinisBusiness.id, supplier, arrivalWindow, contents, status);
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, req.dakinisBusiness.id, supplier, arrivalWindow, contents, status]
+  );
 
-  const row = db.prepare(`SELECT * FROM tenant_supply_deliveries WHERE id = ?`).get(id);
+  const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_deliveries WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ delivery: dakinisRowDelivery(row) }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
-export function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBody) {
+export async function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -121,10 +119,10 @@ export function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBody) {
   const body = dakinisParseJson(rawBody);
   if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
 
-  const db = dakinisGetDb();
-  const existing = db
-    .prepare(`SELECT * FROM tenant_supply_deliveries WHERE id = ? AND business_id = ?`)
-    .get(id, req.dakinisBusiness.id);
+  const existing = await dakinisQueryOne(
+    `SELECT * FROM tenant_supply_deliveries WHERE id = ? AND business_id = ?`,
+    [id, req.dakinisBusiness.id]
+  );
   if (!existing) return dakinisJsonError(404, "NOT_FOUND", "Entrega no encontrada");
 
   const supplier =
@@ -142,15 +140,16 @@ export function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "supplier y arrivalWindow no pueden quedar vacios");
   }
 
-  db.prepare(
-    `UPDATE tenant_supply_deliveries SET supplier = ?, arrival_window = ?, contents = ?, status = ? WHERE id = ? AND business_id = ?`
-  ).run(supplier, arrivalWindow, contents, status, id, req.dakinisBusiness.id);
+  await dakinisRun(
+    `UPDATE tenant_supply_deliveries SET supplier = ?, arrival_window = ?, contents = ?, status = ? WHERE id = ? AND business_id = ?`,
+    [supplier, arrivalWindow, contents, status, id, req.dakinisBusiness.id]
+  );
 
-  const row = db.prepare(`SELECT * FROM tenant_supply_deliveries WHERE id = ?`).get(id);
+  const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_deliveries WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ delivery: dakinisRowDelivery(row) }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
-export function dakinisHandleSupplyDeliveriesDelete(req, deliveryId) {
+export async function dakinisHandleSupplyDeliveriesDelete(req, deliveryId) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -159,29 +158,26 @@ export function dakinisHandleSupplyDeliveriesDelete(req, deliveryId) {
   const id = typeof deliveryId === "string" ? deliveryId.trim() : "";
   if (!id) return dakinisJsonError(400, "VALIDATION_ERROR", "id invalido");
 
-  const db = dakinisGetDb();
-  const r = db.prepare(`DELETE FROM tenant_supply_deliveries WHERE id = ? AND business_id = ?`).run(
+  const r = await dakinisRun(`DELETE FROM tenant_supply_deliveries WHERE id = ? AND business_id = ?`, [
     id,
     req.dakinisBusiness.id
-  );
+  ]);
   if (r.changes === 0) return dakinisJsonError(404, "NOT_FOUND", "Entrega no encontrada");
 
   return dakinisJsonSuccess({ deleted: true, id }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
-export function dakinisHandleSupplyAlertsList(req) {
+export async function dakinisHandleSupplyAlertsList(req) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
 
-  const db = dakinisGetDb();
-  const rows = db
-    .prepare(
-      `SELECT id, title, product_ref, condition_text, severity, created_at
+  const rows = await dakinisQueryAll(
+    `SELECT id, title, product_ref, condition_text, severity, created_at
        FROM tenant_supply_alerts
        WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC`
-    )
-    .all(req.dakinisBusiness.id);
+       ORDER BY datetime(created_at) DESC`,
+    [req.dakinisBusiness.id]
+  );
 
   return dakinisJsonSuccess(
     { alerts: rows.map(dakinisRowAlert) },
@@ -190,7 +186,7 @@ export function dakinisHandleSupplyAlertsList(req) {
   );
 }
 
-export function dakinisHandleSupplyAlertsPost(req, rawBody) {
+export async function dakinisHandleSupplyAlertsPost(req, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -210,17 +206,17 @@ export function dakinisHandleSupplyAlertsPost(req, rawBody) {
   }
 
   const id = `sa_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  const db = dakinisGetDb();
-  db.prepare(
+  await dakinisRun(
     `INSERT INTO tenant_supply_alerts (id, business_id, title, product_ref, condition_text, severity)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(id, req.dakinisBusiness.id, title, productRef, conditionText, severity);
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, req.dakinisBusiness.id, title, productRef, conditionText, severity]
+  );
 
-  const row = db.prepare(`SELECT * FROM tenant_supply_alerts WHERE id = ?`).get(id);
+  const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_alerts WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ alert: dakinisRowAlert(row) }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
-export function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
+export async function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -232,11 +228,10 @@ export function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
   const body = dakinisParseJson(rawBody);
   if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
 
-  const db = dakinisGetDb();
-  const existing = db.prepare(`SELECT * FROM tenant_supply_alerts WHERE id = ? AND business_id = ?`).get(
+  const existing = await dakinisQueryOne(`SELECT * FROM tenant_supply_alerts WHERE id = ? AND business_id = ?`, [
     id,
     req.dakinisBusiness.id
-  );
+  ]);
   if (!existing) return dakinisJsonError(404, "NOT_FOUND", "Alerta no encontrada");
 
   const title = body.title !== undefined ? String(body.title).trim() : existing.title;
@@ -251,15 +246,16 @@ export function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "title y condition no pueden quedar vacios");
   }
 
-  db.prepare(
-    `UPDATE tenant_supply_alerts SET title = ?, product_ref = ?, condition_text = ?, severity = ? WHERE id = ? AND business_id = ?`
-  ).run(title, productRef, conditionText, severity, id, req.dakinisBusiness.id);
+  await dakinisRun(
+    `UPDATE tenant_supply_alerts SET title = ?, product_ref = ?, condition_text = ?, severity = ? WHERE id = ? AND business_id = ?`,
+    [title, productRef, conditionText, severity, id, req.dakinisBusiness.id]
+  );
 
-  const row = db.prepare(`SELECT * FROM tenant_supply_alerts WHERE id = ?`).get(id);
+  const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_alerts WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ alert: dakinisRowAlert(row) }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
-export function dakinisHandleSupplyAlertsDelete(req, alertId) {
+export async function dakinisHandleSupplyAlertsDelete(req, alertId) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -268,11 +264,10 @@ export function dakinisHandleSupplyAlertsDelete(req, alertId) {
   const id = typeof alertId === "string" ? alertId.trim() : "";
   if (!id) return dakinisJsonError(400, "VALIDATION_ERROR", "id invalido");
 
-  const db = dakinisGetDb();
-  const r = db.prepare(`DELETE FROM tenant_supply_alerts WHERE id = ? AND business_id = ?`).run(
+  const r = await dakinisRun(`DELETE FROM tenant_supply_alerts WHERE id = ? AND business_id = ?`, [
     id,
     req.dakinisBusiness.id
-  );
+  ]);
   if (r.changes === 0) return dakinisJsonError(404, "NOT_FOUND", "Alerta no encontrada");
 
   return dakinisJsonSuccess({ deleted: true, id }, req.dakinisBusiness.type, dakinisMeta(req));

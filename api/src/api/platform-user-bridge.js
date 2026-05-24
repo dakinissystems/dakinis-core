@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { dakinisGetDb } from "../db/index.js";
+import { randomUUID } from "node:crypto";
+import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 import {
   getPlatformJwtAudience,
   getPlatformJwtIssuer
@@ -21,10 +22,9 @@ function dakinisMapPlatformRoleToCoreRole(platformRole) {
 }
 
 /**
- * Resuelve o crea usuario SQLite enlazado al IdP (UUID sub + email).
+ * Resuelve o crea usuario enlazado al IdP (UUID sub + email).
  */
-export function dakinisResolveCoreUserFromPlatformToken(payload, targetBusiness) {
-  const db = dakinisGetDb();
+export async function dakinisResolveCoreUserFromPlatformToken(payload, targetBusiness) {
   const platformSub = String(payload.sub || "").trim();
   const email =
     typeof payload.email === "string" ? payload.email.toLowerCase().trim() : "";
@@ -34,9 +34,9 @@ export function dakinisResolveCoreUserFromPlatformToken(payload, targetBusiness)
     throw err;
   }
 
-  let user = db.prepare("SELECT * FROM users WHERE platform_user_id = ?").get(platformSub);
+  let user = await dakinisQueryOne("SELECT * FROM users WHERE platform_user_id = ?", [platformSub]);
   if (!user) {
-    user = db.prepare("SELECT * FROM users WHERE lower(email) = ?").get(email);
+    user = await dakinisQueryOne("SELECT * FROM users WHERE lower(email) = ?", [email]);
   }
 
   if (user) {
@@ -46,30 +46,30 @@ export function dakinisResolveCoreUserFromPlatformToken(payload, targetBusiness)
       throw err;
     }
     if (!user.platform_user_id) {
-      db.prepare("UPDATE users SET platform_user_id = ? WHERE id = ?").run(platformSub, user.id);
-      user = db.prepare("SELECT * FROM users WHERE id = ?").get(user.id);
+      await dakinisRun("UPDATE users SET platform_user_id = ? WHERE id = ?", [platformSub, user.id]);
+      user = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [user.id]);
     }
     return user;
   }
 
-  const newId = `usr_plat_${platformSub.replace(/-/g, "")}`;
+  const newId = `usr_plat_${platformSub.replace(/-/g, "") || randomUUID().replace(/-/g, "").slice(0, 12)}`;
   const role = dakinisMapPlatformRoleToCoreRole(payload.role);
   const passwordHash = bcrypt.hashSync(SSO_PASSWORD_PLACEHOLDER, 10);
-  db.prepare(
+  await dakinisRun(
     `INSERT INTO users (id, business_id, email, password_hash, role, platform_user_id, totp_enabled)
-     VALUES (?, ?, ?, ?, ?, ?, 0)`
-  ).run(newId, targetBusiness.id, email, passwordHash, role, platformSub);
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [newId, targetBusiness.id, email, passwordHash, role, platformSub, false]
+  );
 
-  return db.prepare("SELECT * FROM users WHERE id = ?").get(newId);
+  return dakinisQueryOne("SELECT * FROM users WHERE id = ?", [newId]);
 }
 
-export function dakinisResolvePlatformTenantClaimToBusinessId(rawSlug) {
+export async function dakinisResolvePlatformTenantClaimToBusinessId(rawSlug) {
   const slug = String(rawSlug || "").trim();
   if (!slug) return "";
-  const db = dakinisGetDb();
-  const byId = db.prepare("SELECT id FROM business WHERE id = ?").get(slug);
+  const byId = await dakinisQueryOne("SELECT id FROM business WHERE id = ?", [slug]);
   if (byId) return byId.id;
-  const bySlug = db.prepare("SELECT id FROM business WHERE lower(slug) = lower(?)").get(slug);
+  const bySlug = await dakinisQueryOne("SELECT id FROM business WHERE lower(slug) = lower(?)", [slug]);
   return bySlug ? bySlug.id : "";
 }
 

@@ -129,3 +129,13 @@ export function dakinisEnsureAllRestaurantProfiles(db) {
     dakinisEnsureRestaurantProfile(db, row.id);
   }
 }
+
+/** Versión async (PostgreSQL vía query layer). */
+export async function dakinisEnsureAllRestaurantProfilesAsync() {
+  const { dakinisQueryAll } = await import("./query.js");
+  const { dakinisEnsureRestaurantProfileAsync } = await import("./restaurant-kitchen-async.js");
+  const rows = await dakinisQueryAll(`SELECT id FROM business WHERE type = 'restaurante'`);
+  for (const row of rows) {
+    await dakinisEnsureRestaurantProfileAsync(row.id);
+  }
+}

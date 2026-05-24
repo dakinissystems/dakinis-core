@@ -82,9 +82,9 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisJsonError(404, "NOT_FOUND", "Solo rutas /api/* en este servidor");
   }
 
-  const tenant = dakinisResolveTenant(req);
+  const tenant = await dakinisResolveTenant(req);
   if (tenant.error) return tenant.error;
-  const authError = dakinisAuthenticateRequest(req, tenant.business);
+  const authError = await dakinisAuthenticateRequest(req, tenant.business);
   if (authError) return authError;
 
   if (path === "/api/me" && req.method === "GET") return dakinisHandleMeRequest(req);

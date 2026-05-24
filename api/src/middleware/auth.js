@@ -1,4 +1,4 @@
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryOne } from "../db/query.js";
 import { dakinisJsonError } from "../api/responses.js";
 import { dakinisGetJwtSecret } from "../api/auth-tenant.js";
 import { dakinisVerifyTenantAccessToken } from "../api/jwt-verify.js";
@@ -42,7 +42,7 @@ function dakinisExtractCoreJwtTenantIdentity(payload) {
  * Contexto de tenant antes de `dakinisAuthenticateRequest`: si el JWT es del IdP y el claim
  * `tenant` no mapea a un `business.id`, `tenantId` queda vacío y se usa `x-business-id`.
  */
-export function dakinisDecodeTenantFromJwt(req) {
+export async function dakinisDecodeTenantFromJwt(req) {
   const token = dakinisReadBearerToken(req);
   if (!token) return null;
   try {
@@ -52,7 +52,7 @@ export function dakinisDecodeTenantFromJwt(req) {
         (payload.tenant && String(payload.tenant).trim()) ||
         (payload.tenantId && String(payload.tenantId).trim()) ||
         "";
-      const mapped = dakinisResolvePlatformTenantClaimToBusinessId(claim);
+      const mapped = await dakinisResolvePlatformTenantClaimToBusinessId(claim);
       return {
         userId: "",
         email: typeof payload.email === "string" ? payload.email : "",
@@ -66,7 +66,7 @@ export function dakinisDecodeTenantFromJwt(req) {
   }
 }
 
-export function dakinisAuthenticateRequest(req, business) {
+export async function dakinisAuthenticateRequest(req, business) {
   const token = dakinisReadBearerToken(req);
   if (!token) {
     const apiKeyRaw = req.headers["x-api-key"];
@@ -83,10 +83,10 @@ export function dakinisAuthenticateRequest(req, business) {
         source: "DAKINIS_MASTER_API_KEY"
       };
     } else {
-      const db = dakinisGetDb();
-      const row = db
-        .prepare("SELECT * FROM tenant_api_keys WHERE key_value = ? AND business_id = ?")
-        .get(keyString, business.id);
+      const row = await dakinisQueryOne(
+        "SELECT * FROM tenant_api_keys WHERE key_value = ? AND business_id = ?",
+        [keyString, business.id]
+      );
       if (!row) {
         return dakinisJsonError(401, "UNAUTHORIZED", "API key invalida para este tenant");
       }
@@ -114,7 +114,7 @@ export function dakinisAuthenticateRequest(req, business) {
   let jwtIdentity;
   if (dakinisIsPlatformIdpPayload(payload)) {
     try {
-      const user = dakinisResolveCoreUserFromPlatformToken(payload, business);
+      const user = await dakinisResolveCoreUserFromPlatformToken(payload, business);
       jwtIdentity = {
         userId: user.id,
         email: user.email,

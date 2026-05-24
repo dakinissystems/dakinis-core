@@ -3,8 +3,8 @@ import { dakinisResolveBusinessFromHeader } from "../api/business-context.js";
 import { dakinisJsonError } from "../api/responses.js";
 import { dakinisDecodeTenantFromJwt } from "./auth.js";
 
-export function dakinisResolveTenant(req) {
-  const jwtIdentity = dakinisDecodeTenantFromJwt(req);
+export async function dakinisResolveTenant(req) {
+  const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
   const fromJwt = typeof jwtIdentity?.tenantId === "string" ? jwtIdentity.tenantId.trim() : "";
   const bidHeader = req.headers[DAKINIS_BUSINESS_ID_HEADER];
   const fromHeader = typeof bidHeader === "string" ? bidHeader.trim() : "";
@@ -16,7 +16,7 @@ export function dakinisResolveTenant(req) {
     };
   }
 
-  const business = dakinisResolveBusinessFromHeader(tenantRef);
+  const business = await dakinisResolveBusinessFromHeader(tenantRef);
   if (!business) {
     return {
       error: dakinisJsonError(404, "UNKNOWN_TENANT", "Tenant no encontrado", {

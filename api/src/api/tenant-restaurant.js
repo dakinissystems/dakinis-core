@@ -1,10 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { dakinisGetDb } from "../db/index.js";
-import {
-  dakinisEnsureAllRestaurantProfiles,
-  dakinisEnsureRestaurantKitchenSeed,
-  dakinisEnsureRestaurantProfile
-} from "../db/restaurant-kitchen-seed.js";
+import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
+import { dakinisEnsureAllRestaurantProfilesAsync } from "../db/restaurant-kitchen-seed.js";
+import { dakinisEnsureRestaurantProfileAsync } from "../db/restaurant-kitchen-async.js";
 import {
   DAKINIS_RESTAURANT_ALLERGEN_CATALOG,
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS,
@@ -13,6 +10,8 @@ import {
   dakinisSerializeAllergenProfile
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import {
+  DAKINIS_RESTAURANT_DEFAULT_ITEMS,
+  DAKINIS_RESTAURANT_DEFAULT_RECIPES,
   dakinisRestaurantMaxBatchesPerRecipe,
   dakinisRestaurantPlanConsumption,
   dakinisRestaurantPlanOutputs,
@@ -76,61 +75,98 @@ function dakinisRowRecipe(r) {
   };
 }
 
-function dakinisStockMapBySlug(db, businessId) {
-  const rows = db
-    .prepare(`SELECT slug, quantity FROM tenant_stock_items WHERE business_id = ?`)
-    .all(businessId);
+async function dakinisStockMapBySlug(businessId) {
+  const rows = await dakinisQueryAll(`SELECT slug, quantity FROM tenant_stock_items WHERE business_id = ?`, [
+    businessId
+  ]);
   const map = {};
   for (const r of rows) map[r.slug] = r.quantity;
   return map;
 }
 
-function dakinisListRecipes(db, businessId) {
-  return db
-    .prepare(
-      `SELECT id, slug, name, output_label, output_quantity, output_unit, lines_json, created_at
-       FROM tenant_recipes WHERE business_id = ? ORDER BY name`
-    )
-    .all(businessId)
-    .map(dakinisRowRecipe);
+async function dakinisListRecipes(businessId) {
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, output_label, output_quantity, output_unit, lines_json, created_at
+       FROM tenant_recipes WHERE business_id = ? ORDER BY name`,
+    [businessId]
+  );
+  return rows.map(dakinisRowRecipe);
 }
 
-function dakinisAdjustStock(db, businessId, itemId, delta, reason, referenceId) {
-  db.prepare(
-    `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = datetime('now') WHERE id = ? AND business_id = ?`
-  ).run(delta, itemId, businessId);
-  db.prepare(
+async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId) {
+  await dakinisRun(
+    `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = datetime('now') WHERE id = ? AND business_id = ?`,
+    [delta, itemId, businessId]
+  );
+  await dakinisRun(
     `INSERT INTO tenant_stock_movements (id, business_id, stock_item_id, delta, reason, reference_id)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(dakinisNewId("sm"), businessId, itemId, delta, reason, referenceId ?? null);
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [dakinisNewId("sm"), businessId, itemId, delta, reason, referenceId ?? null]
+  );
 }
 
-export function dakinisHandleRestaurantKitchenGet(req) {
+async function dakinisEnsureRestaurantKitchenSeedAsync(businessId) {
+  await dakinisEnsureRestaurantProfileAsync(businessId);
+
+  const countRow = await dakinisQueryOne(`SELECT COUNT(*) AS c FROM tenant_stock_items WHERE business_id = ?`, [
+    businessId
+  ]);
+  const count = countRow?.c;
+  if (Number(count) > 0) return;
+
+  for (const item of DAKINIS_RESTAURANT_DEFAULT_ITEMS) {
+    const id = dakinisNewId("stk");
+    await dakinisRun(
+      `INSERT INTO tenant_stock_items (id, business_id, slug, name, unit, quantity, min_quantity)
+       VALUES (?, ?, ?, ?, ?, 0, ?)`,
+      [id, businessId, item.slug, item.name, item.unit, item.minQuantity]
+    );
+  }
+
+  for (const recipe of DAKINIS_RESTAURANT_DEFAULT_RECIPES) {
+    await dakinisRun(
+      `INSERT INTO tenant_recipes (id, business_id, slug, name, output_label, output_quantity, output_unit, lines_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        dakinisNewId("rcp"),
+        businessId,
+        recipe.slug,
+        recipe.name,
+        recipe.outputLabel,
+        recipe.outputQuantity,
+        recipe.outputUnit,
+        JSON.stringify(recipe.lines)
+      ]
+    );
+  }
+}
+
+export async function dakinisHandleRestaurantKitchenGet(req) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
 
-  const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
-  dakinisEnsureRestaurantKitchenSeed(db, businessId);
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
-  const items = db
-    .prepare(
+  const items = (
+    await dakinisQueryAll(
       `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
-       FROM tenant_stock_items WHERE business_id = ? ORDER BY name`
+       FROM tenant_stock_items WHERE business_id = ? ORDER BY name`,
+      [businessId]
     )
-    .all(businessId)
-    .map(dakinisRowStockItem);
+  ).map(dakinisRowStockItem);
 
-  const recipes = dakinisListRecipes(db, businessId);
-  const stockBySlug = dakinisStockMapBySlug(db, businessId);
+  const recipes = await dakinisListRecipes(businessId);
+  const stockBySlug = await dakinisStockMapBySlug(businessId);
   const recipeSlugs = recipes.map((r) => ({ ...r, slug: r.slug, lines: r.lines }));
   const maxPerRecipe = dakinisRestaurantMaxBatchesPerRecipe(stockBySlug, recipeSlugs);
 
-  dakinisEnsureRestaurantProfile(db, businessId);
+  await dakinisEnsureRestaurantProfileAsync(businessId);
 
-  const profile = db
-    .prepare(`SELECT public_token, venue_name, allergies_json, updated_at FROM tenant_restaurant_profile WHERE business_id = ?`)
-    .get(businessId);
+  const profile = await dakinisQueryOne(
+    `SELECT public_token, venue_name, allergies_json, updated_at FROM tenant_restaurant_profile WHERE business_id = ?`,
+    [businessId]
+  );
 
   let savedAllergies = [];
   try {
@@ -142,21 +178,21 @@ export function dakinisHandleRestaurantKitchenGet(req) {
   const { checklist: allergenChecklist, customAllergies } = dakinisMergeAllergenChecklist(savedAllergies);
   const presentCount = allergenChecklist.filter((a) => a.present).length + customAllergies.filter((a) => a.present).length;
 
-  const batches = db
-    .prepare(
+  const batches = (
+    await dakinisQueryAll(
       `SELECT id, label, plan_json, outputs_json, notes, created_at
        FROM tenant_production_batches WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC LIMIT 20`
+       ORDER BY datetime(created_at) DESC LIMIT 20`,
+      [businessId]
     )
-    .all(businessId)
-    .map((b) => ({
-      id: b.id,
-      label: b.label,
-      plan: JSON.parse(b.plan_json || "[]"),
-      outputs: JSON.parse(b.outputs_json || "[]"),
-      notes: b.notes,
-      createdAt: b.created_at
-    }));
+  ).map((b) => ({
+    id: b.id,
+    label: b.label,
+    plan: JSON.parse(b.plan_json || "[]"),
+    outputs: JSON.parse(b.outputs_json || "[]"),
+    notes: b.notes,
+    createdAt: b.created_at
+  }));
 
   return dakinisJsonSuccess(
     {
@@ -189,7 +225,7 @@ export function dakinisHandleRestaurantKitchenGet(req) {
   );
 }
 
-export function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
+export async function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -203,9 +239,8 @@ export function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "lines[] con itemSlug y quantity");
   }
 
-  const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
-  dakinisEnsureRestaurantKitchenSeed(db, businessId);
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
   const label = typeof body.label === "string" ? body.label.trim() : "Compra / pedido";
   const refId = dakinisNewId("pur");
@@ -214,17 +249,18 @@ export function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
     const slug = typeof line.itemSlug === "string" ? line.itemSlug.trim() : "";
     const qty = Number(line.quantity);
     if (!slug || !Number.isFinite(qty) || qty <= 0) continue;
-    const row = db
-      .prepare(`SELECT id FROM tenant_stock_items WHERE business_id = ? AND slug = ?`)
-      .get(businessId, slug);
+    const row = await dakinisQueryOne(`SELECT id FROM tenant_stock_items WHERE business_id = ? AND slug = ?`, [
+      businessId,
+      slug
+    ]);
     if (!row) continue;
-    dakinisAdjustStock(db, businessId, row.id, qty, label || "compra", refId);
+    await dakinisAdjustStock(businessId, row.id, qty, label || "compra", refId);
   }
 
   return dakinisHandleRestaurantKitchenGet(req);
 }
 
-export function dakinisHandleRestaurantProductionSimulatePost(req, rawBody) {
+export async function dakinisHandleRestaurantProductionSimulatePost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
 
@@ -232,12 +268,11 @@ export function dakinisHandleRestaurantProductionSimulatePost(req, rawBody) {
   if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
 
   const plan = Array.isArray(body.plan) ? body.plan : [];
-  const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
-  dakinisEnsureRestaurantKitchenSeed(db, businessId);
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
-  const recipes = dakinisListRecipes(db, businessId);
-  const stockBySlug = dakinisStockMapBySlug(db, businessId);
+  const recipes = await dakinisListRecipes(businessId);
+  const stockBySlug = await dakinisStockMapBySlug(businessId);
   const validation = dakinisRestaurantValidatePlan(plan, recipes, stockBySlug);
 
   return dakinisJsonSuccess(
@@ -252,7 +287,7 @@ export function dakinisHandleRestaurantProductionSimulatePost(req, rawBody) {
   );
 }
 
-export function dakinisHandleRestaurantProductionPost(req, rawBody) {
+export async function dakinisHandleRestaurantProductionPost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -266,12 +301,11 @@ export function dakinisHandleRestaurantProductionPost(req, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "plan[] con recipeSlug y batches");
   }
 
-  const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
-  dakinisEnsureRestaurantKitchenSeed(db, businessId);
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
-  const recipes = dakinisListRecipes(db, businessId);
-  const stockBySlug = dakinisStockMapBySlug(db, businessId);
+  const recipes = await dakinisListRecipes(businessId);
+  const stockBySlug = await dakinisStockMapBySlug(businessId);
   const validation = dakinisRestaurantValidatePlan(plan, recipes, stockBySlug);
   if (!validation.ok) {
     return dakinisJsonError(409, "INSUFFICIENT_STOCK", "Stock insuficiente para el plan", {
@@ -284,30 +318,32 @@ export function dakinisHandleRestaurantProductionPost(req, rawBody) {
   const label = typeof body.label === "string" ? body.label.trim() : "Produccion";
 
   for (const [slug, qty] of Object.entries(needed)) {
-    const row = db
-      .prepare(`SELECT id FROM tenant_stock_items WHERE business_id = ? AND slug = ?`)
-      .get(businessId, slug);
+    const row = await dakinisQueryOne(`SELECT id FROM tenant_stock_items WHERE business_id = ? AND slug = ?`, [
+      businessId,
+      slug
+    ]);
     if (!row) continue;
-    dakinisAdjustStock(db, businessId, row.id, -qty, label, batchId);
+    await dakinisAdjustStock(businessId, row.id, -qty, label, batchId);
   }
 
   const outputs = dakinisRestaurantPlanOutputs(plan, recipes);
-  db.prepare(
+  await dakinisRun(
     `INSERT INTO tenant_production_batches (id, business_id, label, plan_json, outputs_json, notes)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(
-    batchId,
-    businessId,
-    label,
-    JSON.stringify(plan),
-    JSON.stringify(outputs),
-    typeof body.notes === "string" ? body.notes.trim() : ""
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      batchId,
+      businessId,
+      label,
+      JSON.stringify(plan),
+      JSON.stringify(outputs),
+      typeof body.notes === "string" ? body.notes.trim() : ""
+    ]
   );
 
   return dakinisHandleRestaurantKitchenGet(req);
 }
 
-export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
+export async function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
   const jwtErr = dakinisRequireTenantJwt(req);
@@ -316,10 +352,9 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   const body = dakinisParseJson(rawBody);
   if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
 
-  const db = dakinisGetDb();
   const businessId = req.dakinisBusiness.id;
-  dakinisEnsureRestaurantKitchenSeed(db, businessId);
-  dakinisEnsureRestaurantProfile(db, businessId);
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
+  await dakinisEnsureRestaurantProfileAsync(businessId);
 
   const venueName =
     typeof body.venueName === "string" && body.venueName.trim()
@@ -329,9 +364,10 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   const customAllergies = Array.isArray(body.customAllergies) ? body.customAllergies : null;
   const legacyAllergies = Array.isArray(body.allergies) ? body.allergies : null;
 
-  const current = db
-    .prepare(`SELECT venue_name, allergies_json FROM tenant_restaurant_profile WHERE business_id = ?`)
-    .get(businessId);
+  const current = await dakinisQueryOne(
+    `SELECT venue_name, allergies_json FROM tenant_restaurant_profile WHERE business_id = ?`,
+    [businessId]
+  );
 
   if (!current) {
     return dakinisJsonError(500, "PROFILE_ERROR", "No se pudo crear el perfil del restaurante");
@@ -352,49 +388,47 @@ export function dakinisHandleRestaurantProfilePatch(req, rawBody) {
     );
   }
 
-  db.prepare(
+  await dakinisRun(
     `UPDATE tenant_restaurant_profile SET venue_name = ?, allergies_json = ?, updated_at = datetime('now')
-     WHERE business_id = ?`
-  ).run(nextVenue, nextAllergies, businessId);
+     WHERE business_id = ?`,
+    [nextVenue, nextAllergies, businessId]
+  );
 
   return dakinisHandleRestaurantKitchenGet(req);
 }
 
-function dakinisLoadPublicAllergenProfile(db, key) {
-  return db
-    .prepare(
-      `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
+async function dakinisLoadPublicAllergenProfile(key) {
+  return dakinisQueryOne(
+    `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
        FROM tenant_restaurant_profile p
        JOIN business b ON b.id = p.business_id
-       WHERE p.public_token = ? OR lower(b.slug) = lower(?)`
-    )
-    .get(key, key);
+       WHERE p.public_token = ? OR lower(b.slug) = lower(?)`,
+    [key, key]
+  );
 }
 
-function dakinisProvisionPublicAllergenProfile(db, key) {
-  const biz = db
-    .prepare(
-      `SELECT id, name, slug, type FROM business WHERE lower(slug) = lower(?) OR id = ? LIMIT 1`
-    )
-    .get(key, key);
+async function dakinisProvisionPublicAllergenProfile(key) {
+  const biz = await dakinisQueryOne(
+    `SELECT id, name, slug, type FROM business WHERE lower(slug) = lower(?) OR id = ? LIMIT 1`,
+    [key, key]
+  );
 
   if (!biz || String(biz.type).toLowerCase() !== "restaurante") {
     return null;
   }
 
-  dakinisEnsureRestaurantKitchenSeed(db, biz.id);
+  await dakinisEnsureRestaurantKitchenSeedAsync(biz.id);
 
-  return db
-    .prepare(
-      `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
+  return dakinisQueryOne(
+    `SELECT p.public_token, p.venue_name, p.allergies_json, p.updated_at, b.name AS business_name, b.slug
        FROM tenant_restaurant_profile p
        JOIN business b ON b.id = p.business_id
-       WHERE p.business_id = ?`
-    )
-    .get(biz.id);
+       WHERE p.business_id = ?`,
+    [biz.id]
+  );
 }
 
-export function dakinisHandlePublicRestaurantAllergiesGet(token) {
+export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
   let t = typeof token === "string" ? token.trim() : "";
   try {
     t = decodeURIComponent(t).trim();
@@ -403,12 +437,11 @@ export function dakinisHandlePublicRestaurantAllergiesGet(token) {
   }
   if (!t) return dakinisJsonError(400, "VALIDATION_ERROR", "token invalido");
 
-  const db = dakinisGetDb();
-  dakinisEnsureAllRestaurantProfiles(db);
+  await dakinisEnsureAllRestaurantProfilesAsync();
 
-  let profile = dakinisLoadPublicAllergenProfile(db, t);
+  let profile = await dakinisLoadPublicAllergenProfile(t);
   if (!profile) {
-    profile = dakinisProvisionPublicAllergenProfile(db, t);
+    profile = await dakinisProvisionPublicAllergenProfile(t);
   }
 
   if (!profile) {

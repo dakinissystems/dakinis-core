@@ -16,6 +16,7 @@ import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
+import { DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 export default function SystemPage({ activeSystemKey, navigate }) {
@@ -406,7 +407,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               <h2>{selectedSystem.label}</h2>
               <p>{t("system.ctaPanel")}</p>
             </div>
-            <a href="https://wa.me/" className="btn">
+            <a href={DAKINIS_CONTACT_WHATSAPP_URL} className="btn" target="_blank" rel="noreferrer">
               {systemPageContent.ctaLabel}
             </a>
           </div>

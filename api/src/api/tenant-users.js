@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
+import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 const TENANT_USER_ROLES = new Set(["admin", "member"]);
@@ -40,25 +41,26 @@ function dakinisTenantUsersForbiddenIfPlatform(business) {
   return null;
 }
 
-function dakinisCountAdminsInBusiness(db, businessId) {
-  const row = db
-    .prepare(`SELECT COUNT(*) AS n FROM users WHERE business_id = ? AND role = 'admin'`)
-    .get(businessId);
-  return typeof row?.n === "number" ? row.n : 0;
+async function dakinisCountAdminsInBusiness(businessId) {
+  const row = await dakinisQueryOne(
+    `SELECT COUNT(*) AS n FROM users WHERE business_id = ? AND role = 'admin'`,
+    [businessId]
+  );
+  const n = row?.n;
+  return typeof n === "number" ? n : Number(n) || 0;
 }
 
-export function dakinisHandleTenantUsersGet(req) {
+export async function dakinisHandleTenantUsersGet(req) {
   const bizErr = dakinisTenantUsersForbiddenIfPlatform(req.dakinisBusiness);
   if (bizErr) return bizErr;
   const authErr = dakinisRequireTenantJwtAdmin(req);
   if (authErr) return authErr;
 
-  const db = dakinisGetDb();
-  const rows = db
-    .prepare(
-      `SELECT id, email, role, created_at FROM users WHERE business_id = ? ORDER BY email COLLATE NOCASE`
-    )
-    .all(req.dakinisBusiness.id);
+  const orderEmail = dakinisSqlOrderEmail("email");
+  const rows = await dakinisQueryAll(
+    `SELECT id, email, role, created_at FROM users WHERE business_id = ? ORDER BY ${orderEmail}`,
+    [req.dakinisBusiness.id]
+  );
 
   return dakinisJsonSuccess({ users: rows }, req.dakinisBusiness.type, {
     businessId: req.dakinisBusiness.id,
@@ -66,7 +68,7 @@ export function dakinisHandleTenantUsersGet(req) {
   });
 }
 
-export function dakinisHandleTenantUsersPost(req, rawBody) {
+export async function dakinisHandleTenantUsersPost(req, rawBody) {
   const bizErr = dakinisTenantUsersForbiddenIfPlatform(req.dakinisBusiness);
   if (bizErr) return bizErr;
   const authErr = dakinisRequireTenantJwtAdmin(req);
@@ -91,8 +93,7 @@ export function dakinisHandleTenantUsersPost(req, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "role debe ser admin o member");
   }
 
-  const db = dakinisGetDb();
-  const exists = db.prepare("SELECT id FROM users WHERE lower(email) = lower(?)").get(email);
+  const exists = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?)", [email]);
   if (exists) {
     return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ese email");
   }
@@ -100,14 +101,13 @@ export function dakinisHandleTenantUsersPost(req, rawBody) {
   const id = `usr_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
   const passwordHash = bcrypt.hashSync(password, 10);
 
-  db.prepare(
+  await dakinisRun(
     `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
-     VALUES (?, ?, ?, ?, ?, NULL, 0)`
-  ).run(id, req.dakinisBusiness.id, email, passwordHash, role);
+     VALUES (?, ?, ?, ?, ?, NULL, ?)`,
+    [id, req.dakinisBusiness.id, email, passwordHash, role, 0]
+  );
 
-  const row = db
-    .prepare(`SELECT id, email, role, created_at FROM users WHERE id = ?`)
-    .get(id);
+  const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
 
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {
     businessId: req.dakinisBusiness.id,
@@ -115,7 +115,7 @@ export function dakinisHandleTenantUsersPost(req, rawBody) {
   });
 }
 
-export function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
+export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
   const bizErr = dakinisTenantUsersForbiddenIfPlatform(req.dakinisBusiness);
   if (bizErr) return bizErr;
   const authErr = dakinisRequireTenantJwtAdmin(req);
@@ -131,10 +131,10 @@ export function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
 
-  const db = dakinisGetDb();
-  const target = db
-    .prepare("SELECT * FROM users WHERE id = ? AND business_id = ?")
-    .get(id, req.dakinisBusiness.id);
+  const target = await dakinisQueryOne("SELECT * FROM users WHERE id = ? AND business_id = ?", [
+    id,
+    req.dakinisBusiness.id
+  ]);
 
   if (!target) {
     return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado en este negocio");
@@ -154,26 +154,26 @@ export function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
   }
 
   if (roleIn !== undefined && roleIn !== target.role && target.role === "admin") {
-    const admins = dakinisCountAdminsInBusiness(db, req.dakinisBusiness.id);
+    const admins = await dakinisCountAdminsInBusiness(req.dakinisBusiness.id);
     if (admins <= 1 && roleIn !== "admin") {
       return dakinisJsonError(400, "LAST_ADMIN", "Debe existir al menos un administrador en el negocio");
     }
   }
 
-  let nextRole = roleIn !== undefined ? roleIn : target.role;
+  const nextRole = roleIn !== undefined ? roleIn : target.role;
   let nextHash = target.password_hash;
   if (newPassword !== undefined && newPassword.length > 0) {
     nextHash = bcrypt.hashSync(newPassword, 10);
   }
 
-  db.prepare(`UPDATE users SET role = ?, password_hash = ? WHERE id = ? AND business_id = ?`).run(
+  await dakinisRun(`UPDATE users SET role = ?, password_hash = ? WHERE id = ? AND business_id = ?`, [
     nextRole,
     nextHash,
     id,
     req.dakinisBusiness.id
-  );
+  ]);
 
-  const row = db.prepare(`SELECT id, email, role, created_at FROM users WHERE id = ?`).get(id);
+  const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {
     businessId: req.dakinisBusiness.id,
     businessSlug: req.dakinisBusiness.slug

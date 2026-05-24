@@ -4,7 +4,7 @@ import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryOne } from "../db/query.js";
 import { dakinisSignUserToken, dakinisGetJwtSecret } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
 import { dakinisResolveBusinessFromHeader } from "./business-context.js";
@@ -22,7 +22,11 @@ function dakinisParseLoginBody(rawBody) {
   }
 }
 
-export function dakinisHandleAuthLogin(rawBody) {
+function dakinisIsTotpEnabled(user) {
+  return Number(user.totp_enabled) === 1 || user.totp_enabled === true;
+}
+
+export async function dakinisHandleAuthLogin(rawBody) {
   const body = dakinisParseLoginBody(rawBody);
   if (body === null) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
@@ -34,14 +38,13 @@ export function dakinisHandleAuthLogin(rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "email y password son obligatorios");
   }
 
-  const db = dakinisGetDb();
-  const user = db.prepare("SELECT * FROM users WHERE lower(email) = lower(?)").get(email);
+  const user = await dakinisQueryOne("SELECT * FROM users WHERE lower(email) = lower(?)", [email]);
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return dakinisJsonError(401, "INVALID_CREDENTIALS", "Credenciales invalidas");
   }
 
-  if (user.role === "platform_admin" && Number(user.totp_enabled) === 1) {
+  if (user.role === "platform_admin" && dakinisIsTotpEnabled(user)) {
     const totpToken =
       typeof body.totpCode === "string" ? body.totpCode.trim().replace(/\s+/g, "") : "";
     if (!totpToken) {
@@ -57,7 +60,7 @@ export function dakinisHandleAuthLogin(rawBody) {
     }
   }
 
-  const business = db.prepare("SELECT * FROM business WHERE id = ?").get(user.business_id);
+  const business = await dakinisQueryOne("SELECT * FROM business WHERE id = ?", [user.business_id]);
   if (!business) {
     return dakinisJsonError(500, "INTERNAL_ERROR", "Negocio asociado no encontrado");
   }
@@ -90,24 +93,25 @@ export function dakinisHandleAuthLogin(rawBody) {
   );
 }
 
-export function dakinisHandleMe(req) {
+export async function dakinisHandleMe(req) {
   const auth = req.dakinisAuth;
   if (!auth || auth.method !== "jwt") {
     return dakinisJsonError(401, "UNAUTHORIZED", "/api/me requiere Authorization: Bearer (JWT tras login)");
   }
 
-  const db = dakinisGetDb();
-  const user = db
-    .prepare("SELECT id, business_id, email, role, created_at FROM users WHERE id = ?")
-    .get(auth.userId);
+  const user = await dakinisQueryOne(
+    "SELECT id, business_id, email, role, created_at FROM users WHERE id = ?",
+    [auth.userId]
+  );
 
   if (!user) {
     return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado");
   }
 
-  const business = db
-    .prepare("SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?")
-    .get(user.business_id);
+  const business = await dakinisQueryOne(
+    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
+    [user.business_id]
+  );
   if (!business) {
     return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
   }
@@ -137,7 +141,7 @@ export function dakinisHandleMe(req) {
  * Intercambia JWT del IdP (`platform/auth`) por sesión core (JWT emitido por core).
  * Body JSON: `businessId` o `businessSlug` (uno obligatorio).
  */
-export function dakinisHandleAuthExchange(req, rawBody) {
+export async function dakinisHandleAuthExchange(req, rawBody) {
   const authHeader = req.headers.authorization;
   const token =
     typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
@@ -167,7 +171,7 @@ export function dakinisHandleAuthExchange(req, rawBody) {
     );
   }
 
-  const business = dakinisResolveBusinessFromHeader(bizRef);
+  const business = await dakinisResolveBusinessFromHeader(bizRef);
   if (!business) {
     return dakinisJsonError(404, "UNKNOWN_TENANT", "Negocio no encontrado", { tenantRef: bizRef });
   }
@@ -181,7 +185,7 @@ export function dakinisHandleAuthExchange(req, rawBody) {
 
   let user;
   try {
-    user = dakinisResolveCoreUserFromPlatformToken(payload, business);
+    user = await dakinisResolveCoreUserFromPlatformToken(payload, business);
   } catch (e) {
     const code = e && e.code;
     if (code === "PLATFORM_USER_TENANT_MISMATCH") {

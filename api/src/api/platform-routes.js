@@ -5,7 +5,8 @@ import {
   dakinisNormalizeBusinessTypeKey
 } from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisParseCommercialPlanForStorage } from "@dakinis/shared/catalog/plan-modules.js";
-import { dakinisGetDb } from "../db/index.js";
+import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } from "../db/query.js";
+import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 function dakinisParseJson(rawBody) {
@@ -16,7 +17,7 @@ function dakinisParseJson(rawBody) {
   }
 }
 
-export function dakinisHandlePlatformBusinessCreate(rawBody) {
+export async function dakinisHandlePlatformBusinessCreate(rawBody) {
   const body = dakinisParseJson(rawBody);
   if (body === null) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
@@ -41,8 +42,7 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa clinica, peluqueria, restaurante, inmobiliaria o una clave personalizada (minusculas, numeros, guiones, 2-48 caracteres). No uses platform al crear.");
   }
 
-  const db = dakinisGetDb();
-  const exists = db.prepare("SELECT id FROM business WHERE lower(slug) = lower(?)").get(slug);
+  const exists = await dakinisQueryOne("SELECT id FROM business WHERE lower(slug) = lower(?)", [slug]);
   if (exists) {
     return dakinisJsonError(409, "SLUG_TAKEN", "Ya existe un negocio con ese slug");
   }
@@ -62,7 +62,7 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
     if (ownerPassword.length < 8) {
       return dakinisJsonError(400, "VALIDATION_ERROR", "ownerPassword: minimo 8 caracteres");
     }
-    const emailTaken = db.prepare("SELECT id FROM users WHERE lower(email) = lower(?)").get(ownerEmail);
+    const emailTaken = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?)", [ownerEmail]);
     if (emailTaken) {
       return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ownerEmail");
     }
@@ -74,30 +74,37 @@ export function dakinisHandlePlatformBusinessCreate(rawBody) {
   const passwordHash =
     ownerEmail && ownerPassword ? bcrypt.hashSync(ownerPassword, 10) : null;
 
-  const tx = db.transaction(() => {
-    db.prepare(
+  await dakinisWithTransaction(async (tx) => {
+    await tx.run(
       `INSERT INTO business (id, slug, name, type, plan, config_json)
-       VALUES (?, ?, ?, ?, ?, NULL)`
-    ).run(id, slug, name, type, planParsed);
+       VALUES (?, ?, ?, ?, ?, NULL)`,
+      [id, slug, name, type, planParsed]
+    );
     if (uid && passwordHash) {
-      db.prepare(
+      await tx.run(
         `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
-         VALUES (?, ?, ?, ?, 'admin', NULL, 0)`
-      ).run(uid, id, ownerEmail, passwordHash);
+         VALUES (?, ?, ?, ?, 'admin', NULL, ?)`,
+        [uid, id, ownerEmail, passwordHash, 0]
+      );
     }
   });
-  tx();
 
   let initialUser = null;
   if (uid) {
-    initialUser = db.prepare(`SELECT id, email, role, created_at FROM users WHERE id = ?`).get(uid);
+    initialUser = await dakinisQueryOne(
+      `SELECT id, email, role, created_at FROM users WHERE id = ?`,
+      [uid]
+    );
   }
 
-  const row = db.prepare("SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?").get(id);
+  const row = await dakinisQueryOne(
+    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
+    [id]
+  );
   return dakinisJsonSuccess({ business: row, initialUser }, "platform", {});
 }
 
-export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
+export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
   const id = typeof businessId === "string" ? businessId.trim() : "";
   if (!id) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "id de negocio invalido");
@@ -107,8 +114,7 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
 
-  const db = dakinisGetDb();
-  const existing = db.prepare("SELECT * FROM business WHERE id = ?").get(id);
+  const existing = await dakinisQueryOne("SELECT * FROM business WHERE id = ?", [id]);
   if (!existing) {
     return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
   }
@@ -132,7 +138,10 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
       return dakinisJsonError(400, "VALIDATION_ERROR", "slug: solo minusculas, numeros y guiones");
     }
     if (slug !== existing.slug) {
-      const clash = db.prepare("SELECT id FROM business WHERE lower(slug) = lower(?) AND id != ?").get(slug, id);
+      const clash = await dakinisQueryOne(
+        "SELECT id FROM business WHERE lower(slug) = lower(?) AND id != ?",
+        [slug, id]
+      );
       if (clash) {
         return dakinisJsonError(409, "SLUG_TAKEN", "Ya existe otro negocio con ese slug");
       }
@@ -153,40 +162,40 @@ export function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
       ? dakinisParseCommercialPlanForStorage(plan)
       : existing.plan;
 
-  db.prepare(`UPDATE business SET name = ?, slug = ?, type = ?, plan = ? WHERE id = ?`).run(
+  await dakinisRun(`UPDATE business SET name = ?, slug = ?, type = ?, plan = ? WHERE id = ?`, [
     nextName,
     nextSlug,
     nextType,
     nextPlan,
     id
-  );
+  ]);
 
-  const row = db.prepare("SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?").get(id);
+  const row = await dakinisQueryOne(
+    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
+    [id]
+  );
   return dakinisJsonSuccess({ business: row }, "platform", {});
 }
 
-export function dakinisHandlePlatformBusinesses() {
-  const db = dakinisGetDb();
-  const rows = db
-    .prepare(
-      `SELECT id, slug, name, type, plan, created_at
+export async function dakinisHandlePlatformBusinesses() {
+  const orderName = dakinisSqlOrderEmail("name");
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, type, plan, created_at
        FROM business
-       ORDER BY name COLLATE NOCASE`
-    )
-    .all();
+       ORDER BY ${orderName}`
+  );
   return dakinisJsonSuccess({ businesses: rows }, "platform", {});
 }
 
-export function dakinisHandlePlatformUsers() {
-  const db = dakinisGetDb();
-  const rows = db
-    .prepare(
-      `SELECT u.id, u.email, u.role, u.created_at,
+export async function dakinisHandlePlatformUsers() {
+  const orderBiz = dakinisSqlOrderEmail("b.name");
+  const orderEmail = dakinisSqlOrderEmail("u.email");
+  const rows = await dakinisQueryAll(
+    `SELECT u.id, u.email, u.role, u.created_at,
               b.slug AS business_slug, b.name AS business_name, b.type AS business_type, b.plan AS business_plan
        FROM users u
        JOIN business b ON b.id = u.business_id
-       ORDER BY b.name COLLATE NOCASE, u.email COLLATE NOCASE`
-    )
-    .all();
+       ORDER BY ${orderBiz}, ${orderEmail}`
+  );
   return dakinisJsonSuccess({ users: rows }, "platform", {});
 }

@@ -9,14 +9,11 @@ import {
   dakinisMaintenanceTiers
 } from "../data/pricingCatalog.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
+import { DAKINIS_CONTACT_EMAIL, DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
 const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
-
-/** Sustituye por tu email y número WhatsApp (formato internacional sin + en wa.me). */
-const DAKINIS_CONTACT_EMAIL = "hola@tudominio.com";
-const DAKINIS_CONTACT_WA = "https://wa.me/34600000000";
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
@@ -286,7 +283,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
               <a href={`mailto:${DAKINIS_CONTACT_EMAIL}`} className="btn">
                 {t("home.pricing.emailCta")}
               </a>
-              <a href={DAKINIS_CONTACT_WA} className="btn btn-outline" target="_blank" rel="noreferrer">
+              <a href={DAKINIS_CONTACT_WHATSAPP_URL} className="btn btn-outline" target="_blank" rel="noreferrer">
                 {t("home.pricing.whatsappCta")}
               </a>
             </div>
