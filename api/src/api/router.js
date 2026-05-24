@@ -8,6 +8,8 @@ import { dakinisResolveAdapter } from "./adapter-resolver.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
+import { dakinisGetDbDriver } from "../db/index.js";
+import { dakinisIsSentryEnabled } from "../lib/sentry.js";
 import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
@@ -76,7 +78,16 @@ export async function dakinisHandleMeRequest(req) {
 
 export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/health") {
-    return dakinisJsonSuccess({ status: "up" }, "custom");
+    return dakinisJsonSuccess(
+      {
+        status: "up",
+        service: "dakinis-core-api",
+        db: dakinisGetDbDriver(),
+        sentry: dakinisIsSentryEnabled(),
+        uptimeSec: Math.floor(process.uptime())
+      },
+      "custom"
+    );
   }
 
   const business = req.dakinisBusiness;
