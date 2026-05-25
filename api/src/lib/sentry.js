@@ -14,7 +14,10 @@ export async function dakinisInitSentry(serviceName) {
     Sentry.init({
       dsn,
       environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development",
-      release: process.env.SENTRY_RELEASE || undefined,
+      release:
+        process.env.SENTRY_RELEASE ||
+        process.env.RAILWAY_GIT_COMMIT_SHA ||
+        undefined,
       tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE || 0.1),
       initialScope: { tags: { service: serviceName } }
     });
@@ -42,4 +45,18 @@ export function dakinisCaptureException(error, context = {}) {
 
 export function dakinisIsSentryEnabled() {
   return sentryReady;
+}
+
+export function dakinisCaptureMessage(message, level = "info", context = {}) {
+  if (!sentryReady) return;
+  import("@sentry/node")
+    .then((Sentry) => {
+      Sentry.withScope((scope) => {
+        for (const [k, v] of Object.entries(context)) {
+          scope.setExtra(k, v);
+        }
+        Sentry.captureMessage(message, level);
+      });
+    })
+    .catch(() => {});
 }

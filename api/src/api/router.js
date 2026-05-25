@@ -15,6 +15,10 @@ import {
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisHandleAuthLogin, dakinisHandleAuthExchange, dakinisHandleMe } from "./auth-routes.js";
+import { dakinisPublishEvent } from "../lib/event-bus.js";
+import { dakinisPostgresSchema } from "../db/schema-config.js";
+import { dakinisIsSupabasePoolerUrl } from "../db/postgres-connection.js";
+import { dakinisValidateDatabaseUrl, dakinisMaskDatabaseUrl } from "../db/validate-database-url.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
 
 function dakinisParseJsonSafely(rawBody) {
@@ -78,11 +82,26 @@ export async function dakinisHandleMeRequest(req) {
 
 export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/health") {
+    const dbUrlCheck = dakinisValidateDatabaseUrl(process.env.DATABASE_URL || "");
     return dakinisJsonSuccess(
       {
         status: "up",
         service: "dakinis-core-api",
         db: dakinisGetDbDriver(),
+        postgresSchema: dakinisGetDbDriver() === "postgres" ? dakinisPostgresSchema() : undefined,
+        databaseProvider: dbUrlCheck.meta.provider,
+        databasePooler:
+          dakinisGetDbDriver() === "postgres"
+            ? dakinisIsSupabasePoolerUrl(process.env.DATABASE_URL || "")
+            : false,
+        databaseUrlValid: dbUrlCheck.ok,
+        databaseUrlWarnings: dbUrlCheck.warnings.length ? dbUrlCheck.warnings : undefined,
+        databaseHost: dbUrlCheck.meta.host || undefined,
+        databasePort: dbUrlCheck.meta.port || undefined,
+        databaseUriMasked:
+          dakinisGetDbDriver() === "postgres"
+            ? dakinisMaskDatabaseUrl(process.env.DATABASE_URL || "")
+            : undefined,
         sentry: dakinisIsSentryEnabled(),
         uptimeSec: Math.floor(process.uptime())
       },
@@ -178,6 +197,22 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
       entity,
       JSON.stringify(row)
     ]);
+
+    if (entity === "reserva" || entity === "comanda" || entity === "paciente") {
+      await dakinisPublishEvent("booking.created", {
+        tenantId: business.id,
+        recordId: id,
+        entity
+      });
+    }
+    if (entity === "lead") {
+      await dakinisPublishEvent("crm.lead.created", {
+        tenantId: business.id,
+        recordId: id,
+        entity
+      });
+    }
+
     return dakinisJsonSuccess({ record: row }, adapterKey, metaBase);
   }
 
@@ -234,6 +269,11 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/confirmation") {
     const message = modules.whatsapp.dakinisFormatBookingConfirmedMessage(payload);
+    await dakinisPublishEvent("message.sent", {
+      tenantId: business.id,
+      channel: "whatsapp",
+      kind: "confirmation"
+    });
     return dakinisJsonSuccess({ message }, adapterKey, metaBase);
   }
 

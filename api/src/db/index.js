@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { dakinisResolveDbDriver } from "./dialect.js";
+import { dakinisShouldSeedDemo } from "./schema-config.js";
 import { dakinisInitPostgresPool } from "./postgres.js";
 import { dakinisSetSqliteDb } from "./query.js";
 import { dakinisSeed } from "./seed.js";
@@ -57,8 +58,7 @@ function dakinisInitSqlite() {
 
 async function dakinisInitPostgres() {
   await dakinisInitPostgresPool();
-  const seedDemo = String(process.env.CORE_SEED_DEMO ?? "true").toLowerCase() !== "false";
-  if (seedDemo) {
+  if (dakinisShouldSeedDemo()) {
     await dakinisSeedMinimalPostgres();
     await dakinisEnsureAllRestaurantProfilesAsync();
   }

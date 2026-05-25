@@ -110,6 +110,8 @@ function createNativeServer() {
 
 async function start() {
   await dakinisInitSentry("dakinis-core-api");
+  const { dakinisRegisterEventConsumers } = await import("./src/lib/event-consumers.js");
+  dakinisRegisterEventConsumers();
   const driver = await dakinisInitDb();
 
   if (USE_FASTIFY) {

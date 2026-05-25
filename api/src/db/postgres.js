@@ -1,5 +1,8 @@
 import pg from "pg";
 import { dakinisResolveDbDriver, dakinisToPostgresPlaceholders } from "./dialect.js";
+import { dakinisPostgresSchema } from "./schema-config.js";
+import { dakinisBuildPgPoolConfig, dakinisIsSupabasePoolerUrl } from "./postgres-connection.js";
+import { dakinisValidateDatabaseUrl, dakinisMaskDatabaseUrl } from "./validate-database-url.js";
 
 const { Pool } = pg;
 
@@ -18,11 +21,24 @@ export async function dakinisInitPostgresPool() {
   if (!connectionString) {
     throw new Error("DATABASE_URL requerido para DB_DRIVER=postgres");
   }
-  pgPool = new Pool({ connectionString, max: 20 });
+
+  const validation = dakinisValidateDatabaseUrl(connectionString);
+  if (!validation.ok) {
+    throw new Error(`DATABASE_URL inválida: ${validation.errors.join("; ")}`);
+  }
+  for (const w of validation.warnings) {
+    console.warn("[db]", w);
+  }
+
+  pgPool = new Pool(dakinisBuildPgPoolConfig(connectionString));
+  const schema = dakinisPostgresSchema();
   pgPool.on("connect", (client) => {
-    client.query("SET search_path TO dakinis_core, public").catch(() => {});
+    client.query(`SET search_path TO ${schema}, public`).catch(() => {});
   });
   await pgPool.query("SELECT 1");
+  console.info(
+    `[db] PostgreSQL connected schema=${schema} pooler=${dakinisIsSupabasePoolerUrl(connectionString)}`
+  );
   return pgPool;
 }
 
@@ -67,7 +83,7 @@ export async function dakinisPgTransaction(fn) {
   const client = await dakinisGetPgPool().connect();
   try {
     await client.query("BEGIN");
-    await client.query("SET search_path TO dakinis_core, public");
+    await client.query(`SET search_path TO ${dakinisPostgresSchema()}, public`);
     const tx = {
       queryOne: async (sql, params = []) => {
         const res = await client.query(dakinisToPostgresPlaceholders(sql), params);

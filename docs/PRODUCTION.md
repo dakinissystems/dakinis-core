@@ -1,43 +1,37 @@
-# Core API — producción (Railway / Docker)
+# Core API — producción (Railway + Supabase)
 
-## PostgreSQL (recomendado)
+## Supabase PostgreSQL (obligatorio en prod)
 
-En Railway (servicio `dakinis-core-api`):
+Usa **Transaction pooler** puerto **6543** (no el Postgres plugin de Railway).
 
 ```env
+NODE_ENV=production
+PORT=4001
 DB_DRIVER=postgres
-DATABASE_URL=postgresql://USER:PASS@HOST:5432/dakinis
+DATABASE_URL=postgresql://postgres.xxx:PASSWORD@....pooler.supabase.com:6543/postgres
+DATABASE_SSL=true
+POSTGRES_SCHEMA=dakinis_core_prod
 CORE_SEED_DEMO=false
-JWT_SECRET=<mismo que auth>
+JWT_SECRET=<mismo que dakinis-auth>
 CORS_ORIGIN=https://core.dakinissystems.com
-```
-
-El schema `dakinis_core` se crea con `docker/postgres/init/03-dakinis-core-schema.sql`.  
-En Postgres gestionado, ejecuta ese SQL una vez.
-
-## SQLite (solo dev / demos)
-
-```env
-DB_DRIVER=sqlite
-SQLITE_PATH=/app/data/dakinis.db
-```
-
-## Observabilidad
-
-```env
-SENTRY_DSN=https://...@sentry.io/...
-SENTRY_ENVIRONMENT=production
-```
-
-## Fastify (opt-in)
-
-```env
-USE_FASTIFY=true
-```
-
-## Event bus (Redis)
-
-```env
+REDIS_URL=${{Redis.REDIS_URL}}
 DAKINIS_EVENT_BUS=redis
-REDIS_URL=redis://...
+TRUST_PROXY=true
 ```
+
+Schemas SQL: [`docs/supabase/schemas/`](../../../docs/supabase/schemas/) — ejecutar en Supabase SQL Editor.
+
+- `CORE_SEED_DEMO` omitido en prod + Postgres → **sin seed** automático.
+- Alias: `DB_SCHEMA=core_prod` → `dakinis_core_prod`.
+
+## Health
+
+`GET /api/health` → `db`, `postgresSchema`, `databasePooler`, `sentry`.
+
+## SQLite
+
+Solo desarrollo local (`DB_DRIVER=sqlite`).
+
+## Railway
+
+[`docs/RAILWAY-PRODUCTION.md`](../../../docs/RAILWAY-PRODUCTION.md)

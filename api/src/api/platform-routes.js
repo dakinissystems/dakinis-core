@@ -185,6 +185,14 @@ export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
     "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
     [id]
   );
+
+  await dakinisPublishEvent("tenant.updated", {
+    tenantId: id,
+    slug: nextSlug,
+    type: nextType,
+    plan: nextPlan
+  });
+
   return dakinisJsonSuccess({ business: row }, "platform", {});
 }
 
