@@ -8,7 +8,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dakinis/auth-client": "file:../../shared/packages/auth-client",
     "@dakinis/shared": "*",
     "@sentry/react": "^9.30.0",
     "react": "^19.2.5",

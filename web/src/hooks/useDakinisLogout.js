@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { dakinisPerformClientLogout } from "@dakinis/auth-client/logout";
+import { dakinisPerformClientLogout } from "@dakinis/shared/auth/client-logout.js";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisClearAuthToken } from "../services/auth.js";
 
