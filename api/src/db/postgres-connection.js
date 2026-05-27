@@ -10,21 +10,32 @@ export function dakinisIsSupabasePoolerUrl(connectionString) {
 }
 
 /**
+ * Pooler Supabase (6543): `SET search_path` en `connect` no persiste — fijar en URI.
  * @param {string} connectionString
+ * @param {string} [postgresSchema] e.g. dakinis_core_prod
  * @returns {import("pg").PoolConfig}
  */
-export function dakinisBuildPgPoolConfig(connectionString) {
+export function dakinisBuildPgPoolConfig(connectionString, postgresSchema) {
   const useSsl =
     String(process.env.DATABASE_SSL || "").toLowerCase() !== "false" &&
     (dakinisIsSupabasePoolerUrl(connectionString) ||
       String(process.env.DATABASE_SSL || "").toLowerCase() === "true");
 
   const max = Number(process.env.DATABASE_POOL_MAX || 10);
-  const isPooler = dakinisIsSupabasePoolerUrl(connectionString);
+  let resolvedCs = String(connectionString || "").trim();
+  const isPooler = dakinisIsSupabasePoolerUrl(resolvedCs);
+
+  const safeSchema = String(postgresSchema || "")
+    .trim()
+    .replace(/[^a-z0-9_]/gi, "");
+  if (safeSchema && !/search_path/i.test(resolvedCs)) {
+    const libpqOpt = encodeURIComponent(`-c search_path=${safeSchema},public`);
+    resolvedCs += resolvedCs.includes("?") ? `&options=${libpqOpt}` : `?options=${libpqOpt}`;
+  }
 
   /** @type {import("pg").PoolConfig} */
   const config = {
-    connectionString,
+    connectionString: resolvedCs,
     max,
     idleTimeoutMillis: Number(process.env.DATABASE_IDLE_TIMEOUT_MS || 30000),
     connectionTimeoutMillis: Number(process.env.DATABASE_CONNECT_TIMEOUT_MS || 10000)

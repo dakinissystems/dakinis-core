@@ -30,14 +30,23 @@ export async function dakinisInitPostgresPool() {
     console.warn("[db]", w);
   }
 
-  pgPool = new Pool(dakinisBuildPgPoolConfig(connectionString));
   const schema = dakinisPostgresSchema();
+  pgPool = new Pool(dakinisBuildPgPoolConfig(connectionString, schema));
   pgPool.on("connect", (client) => {
     client.query(`SET search_path TO ${schema}, public`).catch(() => {});
   });
   await pgPool.query("SELECT 1");
+  const businessCheck = await pgPool.query("SELECT to_regclass($1::text) AS reg", [
+    `${schema}.business`
+  ]);
+  const hasBusiness = Boolean(businessCheck.rows[0]?.reg);
+  if (!hasBusiness) {
+    console.error(
+      `[db] Tabla ${schema}.business no existe. Ejecuta docs/supabase/schemas/02-dakinis-core-prod.sql en Supabase y POSTGRES_SCHEMA=${schema} en Railway.`
+    );
+  }
   console.info(
-    `[db] PostgreSQL connected schema=${schema} pooler=${dakinisIsSupabasePoolerUrl(connectionString)}`
+    `[db] PostgreSQL connected schema=${schema} pooler=${dakinisIsSupabasePoolerUrl(connectionString)} businessTable=${hasBusiness ? "ok" : "MISSING"}`
   );
   return pgPool;
 }
