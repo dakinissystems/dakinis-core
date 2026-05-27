@@ -19,6 +19,7 @@ export async function dakinisInitSentry(serviceName) {
         process.env.RAILWAY_GIT_COMMIT_SHA ||
         undefined,
       tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE || 0.1),
+      sendDefaultPii: false,
       initialScope: { tags: { service: serviceName } }
     });
     sentryReady = true;

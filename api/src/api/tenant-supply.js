@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
@@ -67,7 +68,7 @@ export async function dakinisHandleSupplyDeliveriesList(req) {
     `SELECT id, supplier, arrival_window, contents, status, created_at
        FROM tenant_supply_deliveries
        WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC`,
+       ORDER BY ${dakinisSqlOrderCreatedAtDesc("created_at")}`,
     [req.dakinisBusiness.id]
   );
 
@@ -175,7 +176,7 @@ export async function dakinisHandleSupplyAlertsList(req) {
     `SELECT id, title, product_ref, condition_text, severity, created_at
        FROM tenant_supply_alerts
        WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC`,
+       ORDER BY ${dakinisSqlOrderCreatedAtDesc("created_at")}`,
     [req.dakinisBusiness.id]
   );
 

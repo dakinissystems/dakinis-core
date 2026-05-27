@@ -26,6 +26,11 @@ export function dakinisSqlOrderCreatedAtDesc(column = "created_at") {
     : `datetime(${column}) DESC`;
 }
 
+/** Expresión SQL para “ahora” en columnas timestamptz / texto (UPDATE … SET updated_at = …). */
+export function dakinisSqlTimestampNow() {
+  return dakinisResolveDbDriver() === "postgres" ? "now()" : "datetime('now')";
+}
+
 /** INSERT OR IGNORE (SQLite) → ON CONFLICT DO NOTHING (Postgres). */
 export function dakinisSqlInsertIgnore(table, columns) {
   const cols = columns.join(", ");

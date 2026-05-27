@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { dakinisSqlOrderCreatedAtDesc, dakinisSqlTimestampNow } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
 import { dakinisEnsureAllRestaurantProfilesAsync } from "../db/restaurant-kitchen-seed.js";
 import { dakinisEnsureRestaurantProfileAsync } from "../db/restaurant-kitchen-async.js";
@@ -95,7 +96,7 @@ async function dakinisListRecipes(businessId) {
 
 async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId) {
   await dakinisRun(
-    `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = datetime('now') WHERE id = ? AND business_id = ?`,
+    `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = ${dakinisSqlTimestampNow()} WHERE id = ? AND business_id = ?`,
     [delta, itemId, businessId]
   );
   await dakinisRun(
@@ -182,7 +183,7 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
     await dakinisQueryAll(
       `SELECT id, label, plan_json, outputs_json, notes, created_at
        FROM tenant_production_batches WHERE business_id = ?
-       ORDER BY datetime(created_at) DESC LIMIT 20`,
+       ORDER BY ${dakinisSqlOrderCreatedAtDesc("created_at")} LIMIT 20`,
       [businessId]
     )
   ).map((b) => ({
@@ -389,7 +390,7 @@ export async function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   }
 
   await dakinisRun(
-    `UPDATE tenant_restaurant_profile SET venue_name = ?, allergies_json = ?, updated_at = datetime('now')
+    `UPDATE tenant_restaurant_profile SET venue_name = ?, allergies_json = ?, updated_at = ${dakinisSqlTimestampNow()}
      WHERE business_id = ?`,
     [nextVenue, nextAllergies, businessId]
   );
