@@ -98,10 +98,15 @@ export default function SystemPage({ activeSystemKey, navigate }) {
   );
 
   useEffect(() => {
+    if (!session?.token) {
+      setRecordsError("");
+      setRecordsSynced(false);
+      return undefined;
+    }
     const controller = new AbortController();
     reloadRecordsFromApi(controller.signal);
     return () => controller.abort();
-  }, [reloadRecordsFromApi]);
+  }, [reloadRecordsFromApi, session?.token]);
 
   function dakinisHandleMockFieldChange(fieldKey, value) {
     setMockFormValues((prev) => ({

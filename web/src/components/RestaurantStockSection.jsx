@@ -38,19 +38,35 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
     return map;
   }, [kitchen?.items]);
 
-  const reload = useCallback(async () => {
-    setError("");
-    try {
-      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", apiSession, fetchOpts);
-      const data = json?.data;
-      setKitchen(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("kitchen.loadError"));
-    }
-  }, [apiSession, fetchOpts, t]);
+  const reload = useCallback(
+    async (signal) => {
+      if (!apiSession?.token) {
+        setKitchen(null);
+        setError("");
+        setSimulation(null);
+        return;
+      }
+      setError("");
+      try {
+        const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", apiSession, {
+          ...fetchOpts,
+          signal
+        });
+        if (signal?.aborted) return;
+        const data = json?.data;
+        setKitchen(data);
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : t("kitchen.loadError"));
+      }
+    },
+    [apiSession, fetchOpts, t]
+  );
 
   useEffect(() => {
-    reload();
+    const ctrl = new AbortController();
+    reload(ctrl.signal);
+    return () => ctrl.abort();
   }, [reload]);
 
   async function dakinisRunSimulate() {
@@ -80,7 +96,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
         method: "POST",
         body: { label: "Pedido Manu (demo)", lines: DAKINIS_RESTAURANT_DEMO_PURCHASE }
       });
-      await reload();
+      await reload(undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("kitchen.purchaseError"));
     } finally {
@@ -98,7 +114,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
         body: { label: "Produccion cocina", plan, notes: "Registrado desde panel restaurante" }
       });
       setSimulation(null);
-      await reload();
+      await reload(undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("kitchen.productionError"));
     } finally {

@@ -55,6 +55,19 @@ export default function SupplyDeliveriesAndAlerts({
 
   const loadSupply = useCallback(
     async (signal) => {
+      if (!apiSession?.token) {
+        setLoadError("");
+        setLoading(false);
+        setDeliveries(
+          fallbackDeliveries.map((r, i) =>
+            dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` })
+          )
+        );
+        setAlerts(
+          fallbackAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` }))
+        );
+        return;
+      }
       setLoadError("");
       setLoading(true);
       try {

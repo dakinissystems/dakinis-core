@@ -127,7 +127,14 @@ export default function AppTopBar({ navigate, session, logout, currentPath }) {
                   ? t("nav.platformAdmin")
                   : session.user.email}
               </span>
-              <button type="button" className="btn btn-outline" onClick={logout}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  logout();
+                  navigate("/");
+                }}
+              >
                 {t("nav.logout")}
               </button>
             </>
