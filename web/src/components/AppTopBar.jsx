@@ -6,7 +6,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 
-export default function AppTopBar({ navigate, session, logout, currentPath }) {
+export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
   const { t } = useLocale();
   const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
   const tenantVertical = session?.business?.type;
@@ -127,14 +127,7 @@ export default function AppTopBar({ navigate, session, logout, currentPath }) {
                   ? t("nav.platformAdmin")
                   : session.user.email}
               </span>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => {
-                  logout();
-                  navigate("/");
-                }}
-              >
+              <button type="button" className="btn btn-outline" onClick={() => onSignOut?.()}>
                 {t("nav.logout")}
               </button>
             </>

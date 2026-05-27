@@ -4,6 +4,7 @@ import AppTopBar from "../components/AppTopBar.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import HomePage from "../pages/HomePage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
@@ -32,7 +33,8 @@ function dakinisIsPlatformAdminSession(session) {
 function Shell({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, logout } = useDakinisSession();
+  const { session } = useDakinisSession();
+  const signOut = useDakinisLogout();
 
   const navigateCompat = (pathname) => navigate(pathname);
 
@@ -41,7 +43,7 @@ function Shell({ children }) {
       <AppTopBar
         navigate={navigateCompat}
         session={session}
-        logout={logout}
+        onSignOut={signOut}
         currentPath={location.pathname}
       />
       <main className="app-main">{children}</main>

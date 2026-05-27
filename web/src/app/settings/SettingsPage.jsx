@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
+import { useDakinisLogout } from "../../hooks/useDakinisLogout.js";
 import { dakinisTenantJsonFetch } from "../../services/api.js";
 
 export default function SettingsPage({ navigate }) {
   const { t } = useLocale();
-  const { session, logout } = useDakinisSession();
+  const { session } = useDakinisSession();
+  const signOut = useDakinisLogout();
   const [allergiesUrl, setAllergiesUrl] = useState("");
 
   useEffect(() => {
@@ -62,14 +64,7 @@ export default function SettingsPage({ navigate }) {
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
             {t("appNav.app")}
           </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
-          >
+          <button type="button" className="btn" onClick={() => signOut()}>
             {t("app.settings.logout")}
           </button>
         </div>

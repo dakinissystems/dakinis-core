@@ -30,6 +30,7 @@ export function DakinisSessionProvider({ children }) {
     }
   }, []);
 
+  /** Clears session only — UI should use `useDakinisLogout()` for redirect. */
   const logout = useCallback(() => {
     setSession(null);
   }, [setSession]);
