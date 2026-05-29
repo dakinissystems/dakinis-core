@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  DAKINIS_MUSHROOM_INFO_ROW_ID,
+  DAKINIS_RESTAURANT_MUSHROOM_OPTIONS,
+  dakinisEnsureMushroomInfoRow,
+  dakinisFindMushroomInfoRow,
+  dakinisResolveMushroomSelection,
+  dakinisSyncMushroomsInCustomAllergies
+} from "@dakinis/shared/catalog/restaurant-mushrooms.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 
@@ -6,10 +14,26 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
   const { t } = useLocale();
   const [checklist, setChecklist] = useState(() => profile?.allergenChecklist ?? []);
   const [customAllergies, setCustomAllergies] = useState(() => profile?.customAllergies ?? []);
+  const [selectedMushrooms, setSelectedMushrooms] = useState(() => {
+    const hit = dakinisFindMushroomInfoRow(profile?.customAllergies ?? []);
+    return hit
+      ? dakinisResolveMushroomSelection(hit.row.mushroomTypes, hit.row.notes)
+      : [];
+  });
+  const [mushroomSectionOpen, setMushroomSectionOpen] = useState(() =>
+    Boolean(dakinisFindMushroomInfoRow(profile?.customAllergies ?? []))
+  );
 
   useEffect(() => {
     if (profile?.allergenChecklist?.length) setChecklist(profile.allergenChecklist);
-    if (profile?.customAllergies) setCustomAllergies(profile.customAllergies);
+    if (profile?.customAllergies) {
+      setCustomAllergies(profile.customAllergies);
+      const hit = dakinisFindMushroomInfoRow(profile.customAllergies);
+      setSelectedMushrooms(
+        hit ? dakinisResolveMushroomSelection(hit.row.mushroomTypes, hit.row.notes) : []
+      );
+      setMushroomSectionOpen(Boolean(hit));
+    }
   }, [profile?.allergenChecklist, profile?.customAllergies, profile?.updatedAt, profile?.publicToken]);
 
   const presentCount = useMemo(
@@ -41,15 +65,35 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
     setChecklist((prev) => prev.map((a) => (a.catalogId === catalogId ? { ...a, notes } : a)));
   }
 
+  function dakinisToggleMushroom(name) {
+    setSelectedMushrooms((prev) => {
+      const has = prev.includes(name);
+      if (has) return prev.filter((m) => m !== name);
+      return [...prev, name].sort(
+        (a, b) =>
+          DAKINIS_RESTAURANT_MUSHROOM_OPTIONS.findIndex((o) => o.name === a) -
+          DAKINIS_RESTAURANT_MUSHROOM_OPTIONS.findIndex((o) => o.name === b)
+      );
+    });
+  }
+
+  function dakinisEnableMushroomSection() {
+    setMushroomSectionOpen(true);
+    setCustomAllergies((prev) => dakinisEnsureMushroomInfoRow(prev, selectedMushrooms));
+  }
+
   async function dakinisSave() {
     if (!apiSession?.token) return;
     setBusy(true);
     setError("");
+    const customToSave = mushroomSectionOpen
+      ? dakinisSyncMushroomsInCustomAllergies(customAllergies, selectedMushrooms)
+      : customAllergies;
     try {
       await dakinisTenantJsonFetch("/api/tenant/restaurant/profile", apiSession, {
         ...fetchOpts,
         method: "PATCH",
-        body: { allergenChecklist: checklist, customAllergies }
+        body: { allergenChecklist: checklist, customAllergies: customToSave }
       });
       await onSaved?.();
     } catch (e) {
@@ -115,9 +159,45 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
             ))}
           </div>
 
+          <section className="allergen-mushroom-section">
+            <h5 className="allergen-checklist__category">{t("allergens.mushroomTitle")}</h5>
+            <p className="allergen-mushroom-section__lead">{t("allergens.mushroomLead")}</p>
+            {mushroomSectionOpen ? (
+              <>
+                <ul className="allergen-mushroom-grid" role="list">
+                  {DAKINIS_RESTAURANT_MUSHROOM_OPTIONS.map((opt) => (
+                    <li key={opt.id}>
+                      <label className="allergen-mushroom-chip">
+                        <input
+                          type="checkbox"
+                          checked={selectedMushrooms.includes(opt.name)}
+                          onChange={() => dakinisToggleMushroom(opt.name)}
+                        />
+                        <span>{opt.name}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <p className="kpi-label allergen-mushroom-section__hint">
+                  {selectedMushrooms.length
+                    ? t("allergens.mushroomSelected", { count: selectedMushrooms.length })
+                    : t("allergens.mushroomNoneSelected")}
+                </p>
+              </>
+            ) : (
+              <button type="button" className="btn btn-outline" onClick={dakinisEnableMushroomSection}>
+                {t("allergens.mushroomEnable")}
+              </button>
+            )}
+          </section>
+
           <details className="allergen-custom-details">
             <summary>{t("allergens.customSummary")}</summary>
-            {customAllergies.map((c, idx) => (
+            {customAllergies.map((c, idx) => {
+              if (c.id === DAKINIS_MUSHROOM_INFO_ROW_ID || (c.name === "Hongos" && c.category === "Ingredientes")) {
+                return null;
+              }
+              return (
               <div key={c.id || idx} className="allergen-custom-row">
                 <label>
                   <input
@@ -157,7 +237,8 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                   {t("allergens.remove")}
                 </button>
               </div>
-            ))}
+            );
+            })}
             <button
               type="button"
               className="btn btn-outline"
@@ -189,6 +270,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
             <a href={publicUrl} target="_blank" rel="noreferrer">
               {publicUrl}
             </a>
+            <p className="kpi-label">{t("allergens.qrUrlStable")}</p>
             <p className="kpi-label">
               {t("allergens.publicViewHint")}{" "}
               {profile?.publicPathBySlug ? (

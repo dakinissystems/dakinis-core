@@ -270,7 +270,7 @@ export default {
     customNotes: "Notes",
     remove: "Remove",
     addCustom: "Add another",
-    save: "Save and update QR",
+    save: "Save and update poster",
     loginToEdit: "Sign in as restaurant admin to edit the checklist.",
     qrAlt: "Allergies QR",
     publicViewHint: "Public view (table): only allergens marked as present. Also:",
@@ -294,8 +294,18 @@ export default {
     modalAllergens: "Allergens in this dish",
     modalClose: "Close",
     catalogSummaryToggle: "View summary by allergen type (EU)",
+    mushroomTitle: "Mushrooms on menu",
+    mushroomLead:
+      "Select mushroom types that may be used (e.g. in noodles). Updates the public poster and UDON / Pad Thai / Noodles dishes.",
+    mushroomEnable: "Enable mushroom declaration",
+    mushroomSelected: "{count} types selected",
+    mushroomNoneSelected: "No mushrooms selected (hidden on public poster).",
+    modalMushrooms: "Mushrooms that may be present",
+    qrUrlStable:
+      "The QR link does not change when you save; only the poster content updates (no need to reprint the QR).",
     editTitle: "Edit poster (admin)",
-    editLead: "Mark present allergens and save; the QR and this page update immediately.",
+    editLead:
+      "Mark present allergens and save; the public poster updates immediately (same QR URL).",
     qrUrl: "QR URL:",
     ownerPrompt: "Are you the restaurant?",
     ownerLogin: "Sign in",

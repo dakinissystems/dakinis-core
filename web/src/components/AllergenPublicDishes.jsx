@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { dakinisSplitPublicAllergenDisplay } from "@dakinis/shared/catalog/restaurant-allergens.js";
+import { dakinisResolveMushroomSelection } from "@dakinis/shared/catalog/restaurant-mushrooms.js";
 import AllergenPublicTable from "./AllergenPublicTable.jsx";
 
 /**
@@ -102,12 +103,25 @@ export default function AllergenPublicDishes({
         </>
       ) : null}
 
-      {infoRows.map((row) => (
-        <aside key={row.id || row.name} className="allergen-public__info-banner" role="note">
-          <strong>{row.name}</strong>
-          {row.notes ? <p>{row.notes}</p> : null}
-        </aside>
-      ))}
+      {infoRows.map((row) => {
+        const mushroomTags = dakinisResolveMushroomSelection(row.mushroomTypes, row.notes);
+        const notesTail = row.notes?.includes(". ")
+          ? row.notes.split(/\.\s+/).slice(1).join(". ")
+          : "";
+        return (
+          <aside key={row.id || row.name} className="allergen-public__info-banner" role="note">
+            <strong>{row.name}</strong>
+            {mushroomTags.length ? (
+              <ul className="allergen-modal__tags allergen-public__info-tags">
+                {mushroomTags.map((tag) => (
+                  <li key={tag}>{tag}</li>
+                ))}
+              </ul>
+            ) : null}
+            {notesTail ? <p>{notesTail}</p> : !mushroomTags.length && row.notes ? <p>{row.notes}</p> : null}
+          </aside>
+        );
+      })}
 
       {catalogRows.length ? (
         <details
@@ -159,8 +173,23 @@ export default function AllergenPublicDishes({
               <p className="lead allergen-modal__none">{t("allergens.dishNoAllergensShort")}</p>
             )}
 
-            {selected.extraNotes ? (
+            {selected.mushroomTags?.length ? (
+              <>
+                <p className="allergen-modal__label">{t("allergens.modalMushrooms")}</p>
+                <ul className="allergen-modal__tags">
+                  {selected.mushroomTags.map((tag) => (
+                    <li key={tag}>{tag}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+
+            {selected.extraNotes && !selected.mushroomTags?.length ? (
               <p className="allergen-modal__extra">{selected.extraNotes}</p>
+            ) : selected.extraNotes && selected.mushroomTags?.length ? (
+              <p className="allergen-modal__extra allergen-modal__extra--muted">
+                {selected.extraNotes.replace(/Hongos que pueden estar presentes:[^.]+\.\s*/i, "").trim()}
+              </p>
             ) : null}
 
             <button type="button" className="btn btn-outline allergen-modal__done" onClick={closeModal}>

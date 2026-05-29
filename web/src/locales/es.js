@@ -271,7 +271,7 @@ export default {
     customNotes: "Notas",
     remove: "Quitar",
     addCustom: "Añadir otro",
-    save: "Guardar y actualizar QR",
+    save: "Guardar y actualizar cartel",
     loginToEdit: "Inicia sesión como admin del restaurante para editar el checklist.",
     qrAlt: "QR alergias",
     publicViewHint: "Vista pública (tabla): solo alérgenos «Sí hay». También:",
@@ -295,8 +295,18 @@ export default {
     modalAllergens: "Alérgenos en este plato",
     modalClose: "Cerrar",
     catalogSummaryToggle: "Ver resumen por tipo de alérgeno (UE)",
+    mushroomTitle: "Hongos en carta",
+    mushroomLead:
+      "Marca los tipos de hongo que pueden usarse (p. ej. en noodles). Se actualizan el cartel público y los platos UDON / Pad Thai / Noodles.",
+    mushroomEnable: "Activar declaración de hongos",
+    mushroomSelected: "{count} tipos seleccionados",
+    mushroomNoneSelected: "Ningún hongo seleccionado (no se mostrará en el cartel).",
+    modalMushrooms: "Hongos que pueden estar presentes",
+    qrUrlStable:
+      "El enlace del QR no cambia al guardar; solo se actualiza el contenido del cartel (no hace falta reimprimir el QR).",
     editTitle: "Editar cartel (admin)",
-    editLead: "Marca los alérgenos presentes y pulsa guardar; el QR y esta página se actualizan al instante.",
+    editLead:
+      "Marca los alérgenos presentes y pulsa guardar; el cartel público se actualiza al instante (misma URL del QR).",
     qrUrl: "URL del QR:",
     ownerPrompt: "¿Eres el restaurante?",
     ownerLogin: "Inicia sesión",

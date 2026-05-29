@@ -1299,6 +1299,63 @@ section {
   line-height: 1.45;
 }
 
+.allergen-public__info-tags {
+  margin: 0.5rem 0 0;
+}
+
+.allergen-mushroom-section {
+  margin: 1rem 0;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.allergen-mushroom-section__lead {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.allergen-mushroom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 7.5rem), 1fr));
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allergen-mushroom-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  user-select: none;
+}
+
+.allergen-mushroom-chip:has(input:checked) {
+  border-color: var(--brand);
+  background: rgba(45, 212, 191, 0.1);
+}
+
+.allergen-mushroom-chip input {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.allergen-mushroom-section__hint {
+  margin-top: 0.5rem;
+}
+
+.allergen-modal__extra--muted {
+  font-size: 0.82rem;
+}
+
 .allergen-public__catalog-details {
   margin-top: 1.25rem;
   padding-top: 0.75rem;

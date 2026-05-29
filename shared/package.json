@@ -13,6 +13,7 @@
     "./catalog/plan-modules.js": "./catalog/plan-modules.js",
     "./catalog/restaurant-kitchen.js": "./catalog/restaurant-kitchen.js",
     "./catalog/restaurant-allergens.js": "./catalog/restaurant-allergens.js",
+    "./catalog/restaurant-mushrooms.js": "./catalog/restaurant-mushrooms.js",
     "./auth/client-logout.js": "./auth/client-logout.js"
   }
 }

@@ -3,6 +3,11 @@
  * Uso: checklist en admin + cartel QR público.
  */
 
+import {
+  dakinisParseMushroomTypesFromNotes,
+  dakinisResolveMushroomSelection
+} from "./restaurant-mushrooms.js";
+
 export const DAKINIS_RESTAURANT_ALLERGEN_CATALOG = [
   { id: "gluten", name: "Gluten", category: "Cereales", hint: "Trigo, centeno, cebada, avena, harina, pan, pasta, tapas" },
   { id: "crustaceans", name: "Crustáceos", category: "Marisco", hint: "Gambas, langostinos, cangrejo, etc." },
@@ -65,7 +70,8 @@ export function dakinisMergeAllergenChecklist(saved = []) {
           hint: row.hint || "",
           present: row.present !== false,
           severity: row.severity || "info",
-          notes: row.notes || ""
+          notes: row.notes || "",
+          mushroomTypes: dakinisResolveMushroomSelection(row.mushroomTypes, row.notes)
         });
       }
     }
@@ -157,13 +163,15 @@ export function dakinisSplitPublicAllergenDisplay(presentList = []) {
     const key = String(row.id || row.name).toLowerCase();
     if (dishesMap.has(key)) continue;
     const parsed = dakinisParseDishAllergenNotes(row.notes);
+    const mushroomTags = dakinisParseMushroomTypesFromNotes(parsed.extra);
     dishesMap.set(key, {
       id: row.id || key,
       name: row.name,
       category: row.category || "Plato",
       notes: row.notes || "",
       allergenTags: parsed.allergens,
-      extraNotes: parsed.extra
+      extraNotes: parsed.extra,
+      mushroomTags
     });
   }
 
@@ -187,14 +195,18 @@ export function dakinisSerializeAllergenProfile(checklist = [], customAllergies 
   }));
   for (const c of customAllergies) {
     if (!c.name?.trim()) continue;
-    rows.push({
+    const row = {
       id: c.id || `custom_${Date.now()}`,
       name: c.name.trim(),
       category: c.category || "Otro",
       present: Boolean(c.present),
       severity: c.severity || "info",
       notes: String(c.notes || "").trim()
-    });
+    };
+    if (Array.isArray(c.mushroomTypes) && c.mushroomTypes.length) {
+      row.mushroomTypes = c.mushroomTypes.map((s) => String(s).trim()).filter(Boolean);
+    }
+    rows.push(row);
   }
   return rows;
 }
