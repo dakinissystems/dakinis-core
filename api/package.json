@@ -6,7 +6,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "start:fastify": "USE_FASTIFY=true node server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "seed:dumpling-house": "node scripts/seed-dumpling-house.mjs"
   },
   "dependencies": {
     "@dakinis/shared": "*",

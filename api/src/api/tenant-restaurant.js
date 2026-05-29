@@ -8,7 +8,8 @@ import {
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS,
   dakinisAllergensForPublicDisplay,
   dakinisMergeAllergenChecklist,
-  dakinisSerializeAllergenProfile
+  dakinisSerializeAllergenProfile,
+  dakinisSplitPublicAllergenDisplay
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import {
   DAKINIS_RESTAURANT_DEFAULT_ITEMS,
@@ -460,6 +461,7 @@ export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
   }
 
   const presentAllergies = dakinisAllergensForPublicDisplay(savedAllergies);
+  const { dishes, infoRows, catalogRows } = dakinisSplitPublicAllergenDisplay(presentAllergies);
   const { checklist, customAllergies } = dakinisMergeAllergenChecklist(savedAllergies);
 
   return dakinisJsonSuccess(
@@ -470,6 +472,9 @@ export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
       publicPath: `/alergenos/${profile.public_token}`,
       allergies: presentAllergies,
       presentAllergies,
+      dishes,
+      infoRows,
+      catalogRows,
       absentCount:
         checklist.filter((a) => !a.present).length +
         customAllergies.filter((c) => !c.present).length,

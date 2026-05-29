@@ -94,7 +94,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/purchase", apiSession, {
         ...fetchOpts,
         method: "POST",
-        body: { label: "Pedido Manu (demo)", lines: DAKINIS_RESTAURANT_DEMO_PURCHASE }
+        body: { label: "Pedido", lines: DAKINIS_RESTAURANT_DEMO_PURCHASE }
       });
       await reload(undefined);
     } catch (e) {

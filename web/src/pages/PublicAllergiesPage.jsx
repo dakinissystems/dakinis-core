@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
+import AllergenPublicDishes from "../components/AllergenPublicDishes.jsx";
 import RestaurantAllergenPanel from "../components/RestaurantAllergenPanel.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
@@ -126,9 +126,6 @@ export default function PublicAllergiesPage({ token, navigate }) {
       ? `${window.location.origin}/alergenos/${data.publicToken}`
       : "";
 
-  const declaredLabel =
-    presentList.length === 1 ? t("allergens.declared") : t("allergens.declaredPlural");
-
   return (
     <section className="modules allergen-public">
       <div className="container allergen-public__inner">
@@ -141,16 +138,13 @@ export default function PublicAllergiesPage({ token, navigate }) {
         </p>
 
         <article className="card allergen-public__card">
-          {presentList.length ? (
-            <>
-              <p className="allergen-public__table-title">
-                <strong>{presentList.length}</strong> {declaredLabel}
-              </p>
-              <AllergenPublicTable allergens={presentList} />
-            </>
-          ) : (
-            <AllergenPublicTable allergens={[]} emptyMessage={t("allergens.emptyDeclared")} />
-          )}
+          <AllergenPublicDishes
+            presentList={presentList}
+            dishes={data.dishes}
+            infoRows={data.infoRows}
+            catalogRows={data.catalogRows}
+            t={t}
+          />
         </article>
 
         {canEdit ? (

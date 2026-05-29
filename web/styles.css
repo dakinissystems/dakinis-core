@@ -1209,8 +1209,249 @@ section {
 }
 
 .allergen-public__inner {
-  max-width: 40rem;
+  max-width: min(52rem, 100%);
   padding: clamp(1rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem);
+}
+
+.allergen-public__hint-inline {
+  display: inline;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.allergen-dish-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.allergen-dish-group__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.allergen-dish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.allergen-dish-card {
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.allergen-dish-card:hover,
+.allergen-dish-card:focus-visible {
+  border-color: var(--brand);
+  background: rgba(45, 212, 191, 0.08);
+  outline: none;
+}
+
+.allergen-dish-card:active {
+  transform: scale(0.98);
+}
+
+.allergen-dish-card__name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.allergen-dish-card__meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.allergen-public__info-banner {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  background: rgba(45, 212, 191, 0.06);
+  font-size: 0.9rem;
+}
+
+.allergen-public__info-banner p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.allergen-public__catalog-details {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.allergen-public__catalog-details summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--brand);
+  font-weight: 600;
+  user-select: none;
+}
+
+.allergen-public__catalog-details[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.allergen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: clamp(0.5rem, 3vw, 1.5rem);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  animation: allergen-modal-fade 0.2s ease;
+}
+
+@keyframes allergen-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.allergen-modal__panel {
+  position: relative;
+  width: min(100%, 28rem);
+  max-height: min(85vh, 32rem);
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 14px 14px 10px 10px;
+  border: 1px solid var(--line);
+  background: var(--card, #1a1f2e);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  animation: allergen-modal-slide 0.22s ease;
+}
+
+@keyframes allergen-modal-slide {
+  from {
+    transform: translateY(12px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (min-width: 520px) {
+  .allergen-modal {
+    align-items: center;
+  }
+
+  .allergen-modal__panel {
+    border-radius: 14px;
+  }
+}
+
+.allergen-modal__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.allergen-modal__close:hover,
+.allergen-modal__close:focus-visible {
+  color: var(--text, #fff);
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.allergen-modal__category {
+  margin: 0 2rem 0.25rem 0;
+  font-size: 0.75rem;
+}
+
+.allergen-modal__title {
+  margin: 0 2rem 0.75rem 0;
+  font-size: clamp(1.1rem, 4vw, 1.35rem);
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.allergen-modal__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.allergen-modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.allergen-modal__tags li {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(45, 212, 191, 0.15);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  color: var(--text, #e8f4f2);
+}
+
+.allergen-modal__none {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.allergen-modal__extra {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.allergen-modal__done {
+  width: 100%;
+  margin-top: 0.25rem;
 }
 
 .allergen-public__card {
