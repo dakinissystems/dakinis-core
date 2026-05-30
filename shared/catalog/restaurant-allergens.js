@@ -3,6 +3,7 @@
  * Uso: checklist en admin + cartel QR público.
  */
 
+import { dakinisDumplingResolvePdfKey } from "./dumpling-pdf-aliases.js";
 import {
   dakinisParseMushroomTypesFromNotes,
   dakinisResolveMushroomSelection
@@ -71,7 +72,8 @@ export function dakinisMergeAllergenChecklist(saved = []) {
           present: row.present !== false,
           severity: row.severity || "info",
           notes: row.notes || "",
-          mushroomTypes: dakinisResolveMushroomSelection(row.mushroomTypes, row.notes)
+          mushroomTypes: dakinisResolveMushroomSelection(row.mushroomTypes, row.notes),
+          canonicalKey: row.canonicalKey || null
         });
       }
     }
@@ -134,6 +136,34 @@ export function dakinisPublicDishDisplayKey(name = "") {
     .replace(/\p{M}/gu, "");
 }
 
+const PDF_STYLE_NAME_RE =
+  /^(GYOZA|SIUMAI|MINI PAN|BAO DE|BAO CREMA|WANTUN|HAKAO|PADTHAI|UDON CON|NOODLES VEGETAL|ROLLITO VIETNAMITA|ROLLITO LANGOSTINO Y MANGO|ROLLITO VEGETAL \d)/i;
+
+/**
+ * Elige el nombre de carta más corto / legible al fusionar duplicados.
+ * @param {string} candidate
+ * @param {string} current
+ */
+export function dakinisPreferPublicDishLabel(candidate, current) {
+  const c = dakinisFormatPublicDishName(candidate);
+  const cur = dakinisFormatPublicDishName(current);
+  if (!cur) return true;
+  if (!c) return false;
+  if (PDF_STYLE_NAME_RE.test(cur) && !PDF_STYLE_NAME_RE.test(c)) return true;
+  if (!PDF_STYLE_NAME_RE.test(cur) && PDF_STYLE_NAME_RE.test(c)) return false;
+  if (c.length !== cur.length) return c.length < cur.length;
+  return c.localeCompare(cur, "es") < 0;
+}
+
+/**
+ * Clave única de plato (ficha PDF / menú). Usa canonicalKey guardado en seed.
+ * @param {object} row
+ */
+export function dakinisDishRowCanonicalKey(row) {
+  if (row?.canonicalKey) return String(row.canonicalKey).toLowerCase().trim();
+  return dakinisDumplingResolvePdfKey(row?.name || "").toLowerCase().trim();
+}
+
 /**
  * Separa notas de plato: "Huevo, Soja, Gluten. Hongos que pueden…"
  * @returns {{ allergens: string[], extra: string }}
@@ -181,14 +211,14 @@ export function dakinisSplitPublicAllergenDisplay(presentList = []) {
       continue;
     }
 
-    const displayName = dakinisFormatPublicDishName(row.name);
-    const key = dakinisPublicDishDisplayKey(row.name);
+    const key = dakinisDishRowCanonicalKey(row);
     const parsed = dakinisParseDishAllergenNotes(row.notes);
     const mushroomTags = dakinisParseMushroomTypesFromNotes(parsed.extra);
     const entry = {
-      id: row.id || key,
+      id: row.id || `dish_${key.replace(/\s+/g, "_").slice(0, 48)}`,
       name: row.name,
-      displayName,
+      canonicalKey: row.canonicalKey || key,
+      displayName: dakinisFormatPublicDishName(row.name),
       category: row.category || "Plato",
       notes: row.notes || "",
       allergenTags: parsed.allergens,
@@ -196,8 +226,14 @@ export function dakinisSplitPublicAllergenDisplay(presentList = []) {
       mushroomTags
     };
     const prev = dishesMap.get(key);
-    if (!prev || entry.allergenTags.length > prev.allergenTags.length) {
+    if (!prev || dakinisPreferPublicDishLabel(entry.name, prev.name)) {
+      entry.displayName = dakinisFormatPublicDishName(entry.name);
       dishesMap.set(key, entry);
+    } else if (prev && entry.allergenTags.length > prev.allergenTags.length) {
+      prev.allergenTags = entry.allergenTags;
+      prev.extraNotes = entry.extraNotes;
+      prev.mushroomTags = entry.mushroomTags;
+      prev.notes = entry.notes;
     }
   }
 
@@ -216,13 +252,22 @@ export function dakinisEnrichPublicDishesList(dishList = []) {
   const map = new Map();
   for (const d of dishList) {
     if (!d?.name) continue;
-    const displayName = d.displayName || dakinisFormatPublicDishName(d.name);
-    const key = dakinisPublicDishDisplayKey(d.name);
-    const entry = { ...d, displayName };
+    const key = dakinisDishRowCanonicalKey(d);
+    const entry = {
+      ...d,
+      canonicalKey: d.canonicalKey || key,
+      displayName: d.displayName || dakinisFormatPublicDishName(d.name)
+    };
     const prev = map.get(key);
-    const prevTags = prev?.allergenTags?.length ?? 0;
-    const nextTags = entry.allergenTags?.length ?? 0;
-    if (!prev || nextTags > prevTags) map.set(key, entry);
+    if (!prev || dakinisPreferPublicDishLabel(entry.name, prev.name)) {
+      entry.displayName = dakinisFormatPublicDishName(entry.name);
+      map.set(key, entry);
+    } else if (prev && (entry.allergenTags?.length ?? 0) > (prev.allergenTags?.length ?? 0)) {
+      prev.allergenTags = entry.allergenTags;
+      prev.extraNotes = entry.extraNotes;
+      prev.mushroomTags = entry.mushroomTags;
+      prev.notes = entry.notes;
+    }
   }
   return [...map.values()].sort((a, b) => a.displayName.localeCompare(b.displayName, "es"));
 }
@@ -250,6 +295,7 @@ export function dakinisSerializeAllergenProfile(checklist = [], customAllergies 
     if (Array.isArray(c.mushroomTypes) && c.mushroomTypes.length) {
       row.mushroomTypes = c.mushroomTypes.map((s) => String(s).trim()).filter(Boolean);
     }
+    if (c.canonicalKey) row.canonicalKey = String(c.canonicalKey).trim();
     rows.push(row);
   }
   return rows;

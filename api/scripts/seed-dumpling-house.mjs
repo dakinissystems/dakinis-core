@@ -27,14 +27,9 @@ import { dakinisResolveDbDriver } from "../src/db/dialect.js";
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import {
-  DUMPLING_HOUSE_MENU_ITEMS,
-  DUMPLING_HOUSE_PDF_ALLERGENS,
   DUMPLING_HOUSE_TENANT,
-  DUMPLING_ALLERGEN_ES_TO_CATALOG,
   dumplingBuildConfigJson,
-  dumplingAllergensForPdfKey,
-  dumplingResolvePdfKey,
-  dumplingDishAllergenNotes,
+  dumplingBuildDedupedDishRows,
   dumplingMushroomCustomAllergenRow
 } from "../../../../docs/supabase/seeds/dumpling-house-data.js";
 
@@ -53,63 +48,8 @@ const STOCK_ITEMS = [
   { slug: "sesamo", name: "Sésamo", unit: "kg", quantity: 2, minQuantity: 0.5 }
 ];
 
-function dakinisCategoryLabel(cat) {
-  const map = {
-    combo: "Combo",
-    entrante: "Entrante",
-    plato: "Plato principal",
-    arroz: "Arroz",
-    noodle: "Noodles"
-  };
-  return map[cat] || cat;
-}
-
 function dakinisBuildAllergenProfile() {
-  const dishRows = [];
-  const catalogHits = new Map();
-
-  function addDish(displayName, category, pdfKey) {
-    const allergens = dumplingAllergensForPdfKey(pdfKey);
-    const notes = allergens.length ? allergens.join(", ") : "Sin alérgenos declarados en carta";
-    dishRows.push({
-      id: `dish_${displayName.replace(/\s+/g, "_").toLowerCase().slice(0, 40)}`,
-      name: displayName,
-      category: dakinisCategoryLabel(category),
-      present: true,
-      severity: allergens.length ? "alta" : "info",
-      notes
-    });
-    for (const es of allergens) {
-      const catalogId = DUMPLING_ALLERGEN_ES_TO_CATALOG[es];
-      if (!catalogId) continue;
-      const list = catalogHits.get(catalogId) || new Set();
-      list.add(displayName);
-      catalogHits.set(catalogId, list);
-    }
-  }
-
-  for (const item of DUMPLING_HOUSE_MENU_ITEMS) {
-    if (item.category === "combo") {
-      for (const part of item.comboIncludes || []) {
-        if (/REFRESCO|AGUA/i.test(part)) continue;
-        const pdfKey = dumplingResolvePdfKey(part);
-        addDish(part, "combo", pdfKey);
-      }
-      continue;
-    }
-    const pdfKey = item.pdfKey || item.name;
-    addDish(item.name, item.category, pdfKey);
-  }
-
-  for (const pdfName of Object.keys(DUMPLING_HOUSE_PDF_ALLERGENS)) {
-    if (!dishRows.some((d) => d.notes.includes(pdfName) || d.name === pdfName)) {
-      const allergens = DUMPLING_HOUSE_PDF_ALLERGENS[pdfName];
-      if (allergens.length) {
-        addDish(pdfName, "entrante", pdfName);
-      }
-    }
-  }
-
+  const { dishRows, catalogHits } = dumplingBuildDedupedDishRows();
   const checklist = DAKINIS_RESTAURANT_FULL_CATALOG.map((c) => {
     const dishes = catalogHits.get(c.id);
     return {
@@ -121,10 +61,7 @@ function dakinisBuildAllergenProfile() {
       notes: dishes?.size ? `Platos: ${[...dishes].sort().join("; ")}` : ""
     };
   });
-
-  dishRows.push(dumplingMushroomCustomAllergenRow());
-
-  return dakinisSerializeAllergenProfile(checklist, dishRows);
+  return dakinisSerializeAllergenProfile(checklist, [...dishRows, dumplingMushroomCustomAllergenRow()]);
 }
 
 async function dakinisUpsertPostgres() {
