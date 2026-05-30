@@ -65,6 +65,113 @@ export const DAKINIS_RESTAURANT_DEMO_PRODUCTION = [
   { recipeSlug: "empanadas-docena", batches: 1 }
 ];
 
+/** Dumpling House — mismos slugs que inventario en seed (kg / L). */
+export const DAKINIS_DUMPLING_STOCK_ITEMS = [
+  { slug: "harina-trigo", name: "Harina de trigo", unit: "kg", minQuantity: 5 },
+  { slug: "arroz", name: "Arroz", unit: "kg", minQuantity: 5 },
+  { slug: "cerdo", name: "Cerdo", unit: "kg", minQuantity: 3 },
+  { slug: "pollo", name: "Pollo", unit: "kg", minQuantity: 3 },
+  { slug: "ternera", name: "Ternera", unit: "kg", minQuantity: 2 },
+  { slug: "pato", name: "Pato", unit: "kg", minQuantity: 2 },
+  { slug: "langostino", name: "Langostino", unit: "kg", minQuantity: 2 },
+  { slug: "verduras", name: "Verduras mix", unit: "kg", minQuantity: 3 },
+  { slug: "soja-salsa", name: "Salsa de soja", unit: "L", minQuantity: 1 },
+  { slug: "sesamo", name: "Sésamo", unit: "kg", minQuantity: 0.5 }
+];
+
+export const DAKINIS_DUMPLING_DEFAULT_RECIPES = [
+  {
+    slug: "gyozas-pollo",
+    name: "Gyozas de pollo (8 uds)",
+    outputLabel: "Gyozas",
+    outputQuantity: 8,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "harina-trigo", quantity: 0.25, unit: "kg" },
+      { itemSlug: "pollo", quantity: 0.5, unit: "kg" },
+      { itemSlug: "verduras", quantity: 0.2, unit: "kg" },
+      { itemSlug: "soja-salsa", quantity: 0.1, unit: "L" },
+      { itemSlug: "sesamo", quantity: 0.02, unit: "kg" }
+    ]
+  },
+  {
+    slug: "gyozas-cerdo",
+    name: "Gyozas de cerdo (8 uds)",
+    outputLabel: "Gyozas",
+    outputQuantity: 8,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "harina-trigo", quantity: 0.25, unit: "kg" },
+      { itemSlug: "cerdo", quantity: 0.5, unit: "kg" },
+      { itemSlug: "verduras", quantity: 0.2, unit: "kg" },
+      { itemSlug: "soja-salsa", quantity: 0.1, unit: "L" },
+      { itemSlug: "sesamo", quantity: 0.02, unit: "kg" }
+    ]
+  },
+  {
+    slug: "gyozas-vegetal",
+    name: "Gyozas vegetales (8 uds)",
+    outputLabel: "Gyozas",
+    outputQuantity: 8,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "harina-trigo", quantity: 0.25, unit: "kg" },
+      { itemSlug: "verduras", quantity: 0.35, unit: "kg" },
+      { itemSlug: "soja-salsa", quantity: 0.1, unit: "L" },
+      { itemSlug: "sesamo", quantity: 0.02, unit: "kg" }
+    ]
+  },
+  {
+    slug: "noodles-vegetal",
+    name: "Noodles vegetal (ración)",
+    outputLabel: "Raciones",
+    outputQuantity: 1,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "harina-trigo", quantity: 0.15, unit: "kg" },
+      { itemSlug: "verduras", quantity: 0.3, unit: "kg" },
+      { itemSlug: "soja-salsa", quantity: 0.15, unit: "L" },
+      { itemSlug: "sesamo", quantity: 0.01, unit: "kg" }
+    ]
+  },
+  {
+    slug: "rollitos-vegetal",
+    name: "Rollitos vegetales (2 uds)",
+    outputLabel: "Rollitos",
+    outputQuantity: 2,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "harina-trigo", quantity: 0.1, unit: "kg" },
+      { itemSlug: "verduras", quantity: 0.15, unit: "kg" },
+      { itemSlug: "soja-salsa", quantity: 0.05, unit: "L" },
+      { itemSlug: "sesamo", quantity: 0.01, unit: "kg" }
+    ]
+  }
+];
+
+/** Pedido de reposición típico Dumpling House. */
+export const DAKINIS_DUMPLING_DEMO_PURCHASE = [
+  { itemSlug: "harina-trigo", quantity: 10 },
+  { itemSlug: "arroz", quantity: 10 },
+  { itemSlug: "pollo", quantity: 8 },
+  { itemSlug: "cerdo", quantity: 8 },
+  { itemSlug: "ternera", quantity: 5 },
+  { itemSlug: "verduras", quantity: 6 },
+  { itemSlug: "soja-salsa", quantity: 3 },
+  { itemSlug: "sesamo", quantity: 1 },
+  { itemSlug: "langostino", quantity: 4 },
+  { itemSlug: "pato", quantity: 4 }
+];
+
+/** Plan demo: ~32 gyozas pollo + ~15 gyozas cerdo + noodles. */
+export const DAKINIS_DUMPLING_DEMO_PRODUCTION = [
+  { recipeSlug: "gyozas-pollo", batches: 4 },
+  { recipeSlug: "gyozas-cerdo", batches: 2 },
+  { recipeSlug: "noodles-vegetal", batches: 3 }
+];
+
+export const DAKINIS_DUMPLING_HOUSE_SLUG = "dumpling-house";
+
 /**
  * Consumo total de insumos para N batches de varias recetas.
  * @param {Array<{ recipeSlug: string, batches: number }>} plan

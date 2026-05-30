@@ -12,6 +12,9 @@ import {
   dakinisSplitPublicAllergenDisplay
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import {
+  DAKINIS_DUMPLING_DEFAULT_RECIPES,
+  DAKINIS_DUMPLING_HOUSE_SLUG,
+  DAKINIS_DUMPLING_STOCK_ITEMS,
   DAKINIS_RESTAURANT_DEFAULT_ITEMS,
   DAKINIS_RESTAURANT_DEFAULT_RECIPES,
   dakinisRestaurantMaxBatchesPerRecipe,
@@ -110,36 +113,50 @@ async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId
 async function dakinisEnsureRestaurantKitchenSeedAsync(businessId) {
   await dakinisEnsureRestaurantProfileAsync(businessId);
 
+  const biz = await dakinisQueryOne(`SELECT slug FROM business WHERE id = ?`, [businessId]);
+  const isDumpling = biz?.slug === DAKINIS_DUMPLING_HOUSE_SLUG;
+  const defaultItems = isDumpling ? DAKINIS_DUMPLING_STOCK_ITEMS : DAKINIS_RESTAURANT_DEFAULT_ITEMS;
+  const defaultRecipes = isDumpling ? DAKINIS_DUMPLING_DEFAULT_RECIPES : DAKINIS_RESTAURANT_DEFAULT_RECIPES;
+
   const countRow = await dakinisQueryOne(`SELECT COUNT(*) AS c FROM tenant_stock_items WHERE business_id = ?`, [
     businessId
   ]);
-  const count = countRow?.c;
-  if (Number(count) > 0) return;
-
-  for (const item of DAKINIS_RESTAURANT_DEFAULT_ITEMS) {
-    const id = dakinisNewId("stk");
-    await dakinisRun(
-      `INSERT INTO tenant_stock_items (id, business_id, slug, name, unit, quantity, min_quantity)
-       VALUES (?, ?, ?, ?, ?, 0, ?)`,
-      [id, businessId, item.slug, item.name, item.unit, item.minQuantity]
-    );
+  if (Number(countRow?.c) === 0) {
+    for (const item of defaultItems) {
+      const id = dakinisNewId("stk");
+      await dakinisRun(
+        `INSERT INTO tenant_stock_items (id, business_id, slug, name, unit, quantity, min_quantity)
+         VALUES (?, ?, ?, ?, ?, 0, ?)`,
+        [id, businessId, item.slug, item.name, item.unit, item.minQuantity]
+      );
+    }
   }
 
-  for (const recipe of DAKINIS_RESTAURANT_DEFAULT_RECIPES) {
-    await dakinisRun(
-      `INSERT INTO tenant_recipes (id, business_id, slug, name, output_label, output_quantity, output_unit, lines_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        dakinisNewId("rcp"),
-        businessId,
-        recipe.slug,
-        recipe.name,
-        recipe.outputLabel,
-        recipe.outputQuantity,
-        recipe.outputUnit,
-        JSON.stringify(recipe.lines)
-      ]
-    );
+  const recipeRows = await dakinisQueryAll(`SELECT slug FROM tenant_recipes WHERE business_id = ?`, [businessId]);
+  const recipeSlugs = recipeRows.map((r) => r.slug);
+  const hasManuRecipes = recipeSlugs.some((s) => s === "pizza-prepizza" || s === "empanadas-docena");
+  const needsRecipes = recipeSlugs.length === 0 || (isDumpling && hasManuRecipes);
+
+  if (needsRecipes) {
+    if (recipeSlugs.length > 0) {
+      await dakinisRun(`DELETE FROM tenant_recipes WHERE business_id = ?`, [businessId]);
+    }
+    for (const recipe of defaultRecipes) {
+      await dakinisRun(
+        `INSERT INTO tenant_recipes (id, business_id, slug, name, output_label, output_quantity, output_unit, lines_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          dakinisNewId("rcp"),
+          businessId,
+          recipe.slug,
+          recipe.name,
+          recipe.outputLabel,
+          recipe.outputQuantity,
+          recipe.outputUnit,
+          JSON.stringify(recipe.lines)
+        ]
+      );
+    }
   }
 }
 

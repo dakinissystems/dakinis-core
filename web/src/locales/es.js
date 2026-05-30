@@ -336,6 +336,8 @@ export default {
     title: "Stock, recetas y producción",
     lead:
       "Recetas (Manu): Pizza — 1 prepizza con 1 kg harina, 600 ml agua, 25 g sal, 10 g levadura. Empanadas — 3 docenas con 1 kg cebolla, ½ kg morrón, 1 kg carne, 36 tapas, 4 huevos, ¼ frasco aceitunas. Pedido ejemplo → ~4 prepizzas y ~3 docenas.",
+    leadDumpling:
+      "Recetas Dumpling House: Gyozas (8 uds) — harina, pollo/cerdo/verduras, salsa de soja y sésamo. También noodles vegetal y rollitos. «Cargar pedido» repone insumos; plan demo ~4 tandas gyozas pollo, 2 de cerdo y 3 raciones noodles.",
     inventory: "Inventario actual",
     ingredient: "Insumo",
     stock: "Stock",

@@ -335,6 +335,8 @@ export default {
     title: "Stock, recipes and production",
     lead:
       "Recipes (Manu): Pizza — 1 base with 1 kg flour, 600 ml water, 25 g salt, 10 g yeast. Empanadas — 3 dozen with 1 kg onion, ½ kg pepper, 1 kg meat, 36 shells, 4 eggs, ¼ jar olives. Sample order → ~4 bases and ~3 dozen.",
+    leadDumpling:
+      "Dumpling House recipes: Gyozas (8 pcs) — flour, chicken/pork/veg, soy sauce and sesame. Also veg noodles and spring rolls. «Load order» restocks; demo plan ~4 chicken gyoza batches, 2 pork and 3 noodle portions.",
     inventory: "Current inventory",
     ingredient: "Ingredient",
     stock: "Stock",

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  DAKINIS_DUMPLING_DEMO_PRODUCTION,
+  DAKINIS_DUMPLING_DEMO_PURCHASE,
+  DAKINIS_DUMPLING_HOUSE_SLUG,
   DAKINIS_RESTAURANT_DEMO_PRODUCTION,
   DAKINIS_RESTAURANT_DEMO_PURCHASE
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
@@ -18,10 +21,13 @@ function dakinisFormatQty(value, unit) {
 export default function RestaurantStockSection({ apiSession, tenantSlugForVertical, activeSystemKey }) {
   const { locale, t } = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
+  const isDumplingHouse = tenantSlugForVertical === DAKINIS_DUMPLING_HOUSE_SLUG;
+  const demoProduction = isDumplingHouse ? DAKINIS_DUMPLING_DEMO_PRODUCTION : DAKINIS_RESTAURANT_DEMO_PRODUCTION;
+  const demoPurchase = isDumplingHouse ? DAKINIS_DUMPLING_DEMO_PURCHASE : DAKINIS_RESTAURANT_DEMO_PURCHASE;
   const [kitchen, setKitchen] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [plan, setPlan] = useState(() => DAKINIS_RESTAURANT_DEMO_PRODUCTION.map((p) => ({ ...p })));
+  const [plan, setPlan] = useState(() => demoProduction.map((p) => ({ ...p })));
   const [simulation, setSimulation] = useState(null);
 
   const fetchOpts = useMemo(
@@ -94,7 +100,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/purchase", apiSession, {
         ...fetchOpts,
         method: "POST",
-        body: { label: "Pedido", lines: DAKINIS_RESTAURANT_DEMO_PURCHASE }
+        body: { label: "Pedido", lines: demoPurchase }
       });
       await reload(undefined);
     } catch (e) {
@@ -141,7 +147,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
   return (
     <section style={{ marginTop: "2rem" }}>
       <h3>{t("kitchen.title")}</h3>
-      <p className="lead">{t("kitchen.lead")}</p>
+      <p className="lead">{t(isDumplingHouse ? "kitchen.leadDumpling" : "kitchen.lead")}</p>
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
           {error}

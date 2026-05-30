@@ -21,6 +21,7 @@ import {
   DAKINIS_RESTAURANT_FULL_CATALOG,
   dakinisSerializeAllergenProfile
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
+import { DAKINIS_DUMPLING_DEFAULT_RECIPES } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisInitPostgresPool } from "../src/db/postgres.js";
 import { dakinisQueryOne, dakinisRun, dakinisQueryAll } from "../src/db/query.js";
 import { dakinisResolveDbDriver } from "../src/db/dialect.js";
@@ -64,6 +65,33 @@ function dakinisBuildAllergenProfile() {
   return dakinisSerializeAllergenProfile(checklist, [...dishRows, dumplingMushroomCustomAllergenRow()]);
 }
 
+async function dakinisUpsertDumplingRecipes(businessId) {
+  await dakinisRun(`DELETE FROM tenant_recipes WHERE business_id = ?`, [businessId]);
+  for (const recipe of DAKINIS_DUMPLING_DEFAULT_RECIPES) {
+    const id = `rcp_${recipe.slug}_${businessId.slice(-8)}`;
+    await dakinisRun(
+      `INSERT INTO tenant_recipes (id, business_id, slug, name, output_label, output_quantity, output_unit, lines_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (id) DO UPDATE SET
+         name = EXCLUDED.name,
+         output_label = EXCLUDED.output_label,
+         output_quantity = EXCLUDED.output_quantity,
+         output_unit = EXCLUDED.output_unit,
+         lines_json = EXCLUDED.lines_json`,
+      [
+        id,
+        businessId,
+        recipe.slug,
+        recipe.name,
+        recipe.outputLabel,
+        recipe.outputQuantity,
+        recipe.outputUnit,
+        JSON.stringify(recipe.lines)
+      ]
+    );
+  }
+}
+
 async function dakinisUpsertPostgres() {
   await dakinisInitPostgresPool();
   const t = DUMPLING_HOUSE_TENANT;
@@ -83,7 +111,8 @@ async function dakinisUpsertPostgres() {
       `UPDATE tenant_restaurant_profile SET venue_name = ?, allergies_json = ?, updated_at = NOW() WHERE business_id = ?`,
       [t.venueName, allergiesJson, biz.id]
     );
-    console.log(`[seed] Actualizado business_id=${biz.id}`);
+    await dakinisUpsertDumplingRecipes(biz.id);
+    console.log(`[seed] Actualizado business_id=${biz.id} (recetas Dumpling)`);
     return;
   }
 
@@ -112,6 +141,8 @@ async function dakinisUpsertPostgres() {
       [id, t.businessId, item.slug, item.name, item.unit, item.quantity, item.minQuantity]
     );
   }
+
+  await dakinisUpsertDumplingRecipes(t.businessId);
 
   console.log("[seed] Dumpling House creado en Postgres.");
   console.log(`  slug: ${t.slug}`);
@@ -158,6 +189,24 @@ function dakinisUpsertSqlite() {
       `INSERT OR IGNORE INTO tenant_stock_items (id, business_id, slug, name, unit, quantity, min_quantity)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).run(id, t.businessId, item.slug, item.name, item.unit, item.quantity, item.minQuantity);
+  }
+
+  db.prepare(`DELETE FROM tenant_recipes WHERE business_id = ?`).run(t.businessId);
+  for (const recipe of DAKINIS_DUMPLING_DEFAULT_RECIPES) {
+    const id = `rcp_${recipe.slug}_${t.businessId.slice(-8)}`;
+    db.prepare(
+      `INSERT INTO tenant_recipes (id, business_id, slug, name, output_label, output_quantity, output_unit, lines_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      id,
+      t.businessId,
+      recipe.slug,
+      recipe.name,
+      recipe.outputLabel,
+      recipe.outputQuantity,
+      recipe.outputUnit,
+      JSON.stringify(recipe.lines)
+    );
   }
 
   db.close();
