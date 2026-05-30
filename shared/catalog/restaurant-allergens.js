@@ -114,6 +114,27 @@ export const DAKINIS_RESTAURANT_DISH_CATEGORIES = new Set([
 ]);
 
 /**
+ * Nombre legible en cartel QR: quita cantidades al inicio (2 ROLLITO…) y al final (4 UDS, 8UDS).
+ * @param {string} name
+ * @returns {string}
+ */
+export function dakinisFormatPublicDishName(name = "") {
+  let s = String(name).trim();
+  if (!s) return "";
+  s = s.replace(/^\d+\s+/, "");
+  s = s.replace(/\s+\d+\s*UDS?\b/gi, "");
+  return s.replace(/\s{2,}/g, " ").trim() || String(name).trim();
+}
+
+/** Clave para deduplicar platos con el mismo nombre visible. */
+export function dakinisPublicDishDisplayKey(name = "") {
+  return dakinisFormatPublicDishName(name)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
+/**
  * Separa notas de plato: "Huevo, Soja, Gluten. Hongos que pueden…"
  * @returns {{ allergens: string[], extra: string }}
  */
@@ -160,27 +181,50 @@ export function dakinisSplitPublicAllergenDisplay(presentList = []) {
       continue;
     }
 
-    const key = String(row.id || row.name).toLowerCase();
-    if (dishesMap.has(key)) continue;
+    const displayName = dakinisFormatPublicDishName(row.name);
+    const key = dakinisPublicDishDisplayKey(row.name);
     const parsed = dakinisParseDishAllergenNotes(row.notes);
     const mushroomTags = dakinisParseMushroomTypesFromNotes(parsed.extra);
-    dishesMap.set(key, {
+    const entry = {
       id: row.id || key,
       name: row.name,
+      displayName,
       category: row.category || "Plato",
       notes: row.notes || "",
       allergenTags: parsed.allergens,
       extraNotes: parsed.extra,
       mushroomTags
-    });
+    };
+    const prev = dishesMap.get(key);
+    if (!prev || entry.allergenTags.length > prev.allergenTags.length) {
+      dishesMap.set(key, entry);
+    }
   }
 
-  const dishes = [...dishesMap.values()].sort(
-    (a, b) =>
-      a.category.localeCompare(b.category, "es") || a.name.localeCompare(b.name, "es")
-  );
+  return {
+    dishes: dakinisEnrichPublicDishesList([...dishesMap.values()]),
+    infoRows,
+    catalogRows
+  };
+}
 
-  return { dishes, infoRows, catalogRows };
+/**
+ * displayName, dedupe por nombre visible y orden A–Z (vista QR).
+ * @param {Array} dishList
+ */
+export function dakinisEnrichPublicDishesList(dishList = []) {
+  const map = new Map();
+  for (const d of dishList) {
+    if (!d?.name) continue;
+    const displayName = d.displayName || dakinisFormatPublicDishName(d.name);
+    const key = dakinisPublicDishDisplayKey(d.name);
+    const entry = { ...d, displayName };
+    const prev = map.get(key);
+    const prevTags = prev?.allergenTags?.length ?? 0;
+    const nextTags = entry.allergenTags?.length ?? 0;
+    if (!prev || nextTags > prevTags) map.set(key, entry);
+  }
+  return [...map.values()].sort((a, b) => a.displayName.localeCompare(b.displayName, "es"));
 }
 
 /** Serializa checklist + custom para guardar en profile. */

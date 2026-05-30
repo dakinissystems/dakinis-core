@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { dakinisSplitPublicAllergenDisplay } from "@dakinis/shared/catalog/restaurant-allergens.js";
+import {
+  dakinisEnrichPublicDishesList,
+  dakinisFormatPublicDishName,
+  dakinisSplitPublicAllergenDisplay
+} from "@dakinis/shared/catalog/restaurant-allergens.js";
 import { dakinisResolveMushroomSelection } from "@dakinis/shared/catalog/restaurant-mushrooms.js";
 import AllergenPublicTable from "./AllergenPublicTable.jsx";
+
+function dakinisNormalizeSearch(text = "") {
+  return String(text)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
 
 /**
  * Cartel QR: platos en rejilla; al pulsar, modal con alérgenos del plato.
@@ -19,11 +30,12 @@ export default function AllergenPublicDishes({
 }) {
   const [selected, setSelected] = useState(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const split = useMemo(() => {
     if (dishesProp) {
       return {
-        dishes: dishesProp,
+        dishes: dakinisEnrichPublicDishesList(dishesProp),
         infoRows: infoRowsProp ?? [],
         catalogRows: catalogRowsProp ?? []
       };
@@ -33,15 +45,17 @@ export default function AllergenPublicDishes({
 
   const { dishes, infoRows, catalogRows } = split;
 
-  const grouped = useMemo(() => {
-    const map = new Map();
-    for (const d of dishes) {
-      const cat = d.category || t("allergens.dishCategoryOther");
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat).push(d);
-    }
-    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], "es"));
-  }, [dishes, t]);
+  const searchNorm = useMemo(() => dakinisNormalizeSearch(searchQuery.trim()), [searchQuery]);
+
+  const filteredDishes = useMemo(() => {
+    if (!searchNorm) return dishes;
+    return dishes.filter((d) => {
+      const label = d.displayName || dakinisFormatPublicDishName(d.name);
+      const name = dakinisNormalizeSearch(label);
+      const raw = dakinisNormalizeSearch(d.name);
+      return name.includes(searchNorm) || raw.includes(searchNorm);
+    });
+  }, [dishes, searchNorm]);
 
   const closeModal = useCallback(() => setSelected(null), []);
 
@@ -69,37 +83,75 @@ export default function AllergenPublicDishes({
     <>
       {dishes.length ? (
         <>
+          <div className="allergen-public__search">
+            <label className="sr-only" htmlFor="allergen-dish-search">
+              {t("allergens.dishSearchLabel")}
+            </label>
+            <input
+              id="allergen-dish-search"
+              type="search"
+              className="allergen-public__search-input"
+              placeholder={t("allergens.dishSearchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                className="allergen-public__search-clear"
+                aria-label={t("allergens.dishSearchClear")}
+                onClick={() => setSearchQuery("")}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
+
           <p className="allergen-public__table-title">
-            <strong>{dishes.length}</strong> {dishes.length === 1 ? t("allergens.dishCountOne") : t("allergens.dishCountMany")}{" "}
+            {searchNorm ? (
+              <>
+                <strong>{filteredDishes.length}</strong>{" "}
+                {t("allergens.dishSearchResults", { total: dishes.length })}
+              </>
+            ) : (
+              <>
+                <strong>{dishes.length}</strong>{" "}
+                {dishes.length === 1 ? t("allergens.dishCountOne") : t("allergens.dishCountMany")}
+              </>
+            )}{" "}
             <span className="allergen-public__hint-inline">{t("allergens.dishTapHint")}</span>
           </p>
 
-          <div className="allergen-dish-groups">
-            {grouped.map(([category, items]) => (
-              <section key={category} className="allergen-dish-group">
-                <h2 className="allergen-dish-group__title">{category}</h2>
-                <ul className="allergen-dish-grid" role="list">
-                  {items.map((dish) => (
-                    <li key={dish.id}>
-                      <button
-                        type="button"
-                        className="allergen-dish-card"
-                        onClick={() => setSelected(dish)}
-                        aria-haspopup="dialog"
-                      >
-                        <span className="allergen-dish-card__name">{dish.name}</span>
-                        <span className="allergen-dish-card__meta">
-                          {dish.allergenTags.length
-                            ? t("allergens.dishAllergenCount", { count: dish.allergenTags.length })
-                            : t("allergens.dishNoAllergensShort")}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
+          {searchNorm && !filteredDishes.length ? (
+            <p className="lead allergen-public__search-empty" role="status">
+              {t("allergens.dishSearchNoMatch", { query: searchQuery.trim() })}
+            </p>
+          ) : null}
+
+          <ul className="allergen-dish-grid allergen-dish-grid--flat" role="list">
+            {filteredDishes.map((dish) => {
+              const label = dish.displayName || dakinisFormatPublicDishName(dish.name);
+              return (
+                <li key={dish.id}>
+                  <button
+                    type="button"
+                    className="allergen-dish-card"
+                    onClick={() => setSelected({ ...dish, displayName: label })}
+                    aria-haspopup="dialog"
+                  >
+                    <span className="allergen-dish-card__name">{label}</span>
+                    <span className="allergen-dish-card__meta">
+                      {dish.allergenTags.length
+                        ? t("allergens.dishAllergenCount", { count: dish.allergenTags.length })
+                        : t("allergens.dishNoAllergensShort")}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </>
       ) : null}
 
@@ -155,9 +207,8 @@ export default function AllergenPublicDishes({
             >
               ×
             </button>
-            <p className="kicker allergen-modal__category">{selected.category}</p>
             <h2 id="allergen-modal-title" className="allergen-modal__title">
-              {selected.name}
+              {selected.displayName || dakinisFormatPublicDishName(selected.name)}
             </h2>
 
             {selected.allergenTags.length ? (
