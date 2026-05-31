@@ -229,6 +229,34 @@ export const DAKINIS_FERMINA_DEMO_PRODUCTION = [
 
 export const DAKINIS_FERMINA_HOUSE_SLUG = "fermina-food";
 
+/** Filas de carta para cartel QR (categoría Entrante → rejilla pública). */
+export const DAKINIS_FERMINA_DISH_ALLERGEN_ROWS = [
+  {
+    id: "dish_cheddar_jalapeno_bites",
+    name: "Bites cheddar y jalapeños",
+    category: "Entrante",
+    present: true,
+    severity: "alta",
+    notes: "Leche, Gluten"
+  },
+  {
+    id: "dish_chicken_bites",
+    name: "Chicken bites",
+    category: "Entrante",
+    present: true,
+    severity: "alta",
+    notes: "Gluten"
+  },
+  {
+    id: "dish_choripan",
+    name: "Choripán",
+    category: "Entrante",
+    present: true,
+    severity: "alta",
+    notes: "Gluten"
+  }
+];
+
 /**
  * Consumo total de insumos para N batches de varias recetas.
  * @param {Array<{ recipeSlug: string, batches: number }>} plan

@@ -45,6 +45,12 @@ export default function AllergenPublicDishes({
 
   const { dishes, infoRows, catalogRows } = split;
 
+  useEffect(() => {
+    if (!dishes.length && !infoRows.length && catalogRows.length) {
+      setCatalogOpen(true);
+    }
+  }, [dishes.length, infoRows.length, catalogRows.length]);
+
   const searchNorm = useMemo(() => dakinisNormalizeSearch(searchQuery.trim()), [searchQuery]);
 
   const filteredDishes = useMemo(() => {
@@ -73,7 +79,7 @@ export default function AllergenPublicDishes({
     };
   }, [selected, closeModal]);
 
-  if (!dishes.length && !infoRows.length) {
+  if (!dishes.length && !infoRows.length && !catalogRows.length) {
     return (
       <p className="lead allergen-public__empty">{t("allergens.emptyDeclared")}</p>
     );

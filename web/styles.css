@@ -1716,6 +1716,45 @@ section {
   text-align: right;
 }
 
+.mockup-print-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  align-items: start;
+}
+
+.mockup-print-grid__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mockup-print-grid__label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mockup-print-grid .fermina-print-sheet {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  font-size: 0.82rem;
+}
+
+.mockup-print-grid .fermina-print-sheet .mockup-table {
+  font-size: 0.8rem;
+}
+
+.mockup-print-grid .fermina-print-sheet .mockup-table th,
+.mockup-print-grid .fermina-print-sheet .mockup-table td {
+  padding: 0.35rem 0.4rem;
+  color: #111;
+  border-color: #ccc;
+}
+
 @media print {
   body * {
     visibility: hidden;

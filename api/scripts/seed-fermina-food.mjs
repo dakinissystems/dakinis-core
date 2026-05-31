@@ -11,7 +11,10 @@ import {
   DAKINIS_RESTAURANT_FULL_CATALOG,
   dakinisSerializeAllergenProfile
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
-import { DAKINIS_FERMINA_DEFAULT_RECIPES } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import {
+  DAKINIS_FERMINA_DEFAULT_RECIPES,
+  DAKINIS_FERMINA_DISH_ALLERGEN_ROWS
+} from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisInitPostgresPool } from "../src/db/postgres.js";
 import { dakinisQueryOne, dakinisRun } from "../src/db/query.js";
 import { dakinisResolveDbDriver } from "../src/db/dialect.js";
@@ -42,7 +45,7 @@ function dakinisBuildAllergiesJson() {
           notes: ""
         };
   });
-  return dakinisSerializeAllergenProfile(checklist, []);
+  return dakinisSerializeAllergenProfile(checklist, DAKINIS_FERMINA_DISH_ALLERGEN_ROWS);
 }
 
 async function dakinisUpsertFerminaRecipes(businessId, run) {

@@ -16,6 +16,7 @@ import {
   DAKINIS_DUMPLING_HOUSE_SLUG,
   DAKINIS_DUMPLING_STOCK_ITEMS,
   DAKINIS_FERMINA_DEFAULT_RECIPES,
+  DAKINIS_FERMINA_DISH_ALLERGEN_ROWS,
   DAKINIS_FERMINA_DEMO_PURCHASE,
   DAKINIS_FERMINA_DEMO_PRODUCTION,
   DAKINIS_FERMINA_HOUSE_SLUG,
@@ -490,6 +491,15 @@ export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
     savedAllergies = JSON.parse(profile.allergies_json || "[]");
   } catch {
     savedAllergies = [];
+  }
+
+  if (profile.slug === DAKINIS_FERMINA_HOUSE_SLUG) {
+    const hasDishRows = savedAllergies.some(
+      (r) => r?.present !== false && String(r?.id || "").startsWith("dish_")
+    );
+    if (!hasDishRows) {
+      savedAllergies = [...savedAllergies, ...DAKINIS_FERMINA_DISH_ALLERGEN_ROWS];
+    }
   }
 
   const presentAllergies = dakinisAllergensForPublicDisplay(savedAllergies);

@@ -109,6 +109,7 @@ export function dakinisAllergensForPublicDisplay(saved = []) {
 export const DAKINIS_RESTAURANT_DISH_CATEGORIES = new Set([
   "Combo",
   "Entrante",
+  "Clásico",
   "Plato principal",
   "Plato",
   "Arroz",

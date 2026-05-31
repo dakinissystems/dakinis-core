@@ -225,24 +225,292 @@ function PanelEspera() {
   );
 }
 
-function PanelComandas() {
+const MOCK_FERMINA_LINES = [
+  { name: "Bites cheddar y jalapeños", qty: 2, unitPrice: 8.5 },
+  { name: "Chicken bites", qty: 1, unitPrice: 9.5 },
+  { name: "Choripán", qty: 2, unitPrice: 7.5 }
+];
+
+const MOCK_FERMINA_ORDER = {
+  orderNumber: 1042,
+  customerName: "Mesa terraza 3",
+  table: "Terraza 3",
+  channel: "salon",
+  status: "cocina",
+  notes: "Sin picante en los bites",
+  total: 41.5,
+  lines: MOCK_FERMINA_LINES
+};
+
+const MOCK_FERMINA_INVOICE_CLIENT = {
+  invoiceNumber: "FF-C-2026-0008",
+  type: "cliente",
+  customerName: "Lucía Ortega",
+  taxId: "",
+  total: 26.5,
+  lines: [
+    { name: "Bites cheddar y jalapeños", qty: 1, unitPrice: 8.5 },
+    { name: "Choripán", qty: 2, unitPrice: 7.5 }
+  ]
+};
+
+const MOCK_FERMINA_INVOICE_GESTOR = {
+  invoiceNumber: "FF-G-2026-0003",
+  type: "gestor",
+  customerName: "Fermina Food SRL",
+  taxId: "30-71234567-8",
+  subtotal: 41.5,
+  tax: 8.72,
+  total: 50.22,
+  lines: MOCK_FERMINA_LINES
+};
+
+function MockFerminaPrintSheet({ kind, doc, caption }) {
+  const isComanda = kind === "comanda";
+  const lineTotal = (l) => (l.qty * l.unitPrice).toFixed(2);
+
   return (
-    <div className="two-col">
-      <article className="card">
-        <h3 style={{ marginTop: 0 }}>Cocina — pedidos activos</h3>
-        <div className="pill-grid">
-          <span>T4 · Entrantes x4</span>
-          <span>I2 · Principal x2</span>
-          <span>Barra · 3 tapas</span>
-        </div>
-      </article>
-      <article className="card">
-        <h3 style={{ marginTop: 0 }}>Bar — prepago</h3>
-        <p className="lead" style={{ fontSize: "0.9rem" }}>
-          Coherencia con reservas: los comensales con menú degustación aparecen agrupados por mesa.
+    <div className="mockup-print-grid__cell">
+      <p className="mockup-print-grid__label">{caption}</p>
+      <article className="fermina-print-sheet" aria-label={caption}>
+        <img src="/assets/fermina-logo.png" alt="" className="fermina-print-sheet__logo" width={140} />
+        <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>
+          {isComanda ? `Comanda #${doc.orderNumber}` : doc.invoiceNumber}
+        </h2>
+        <p className="kpi-label" style={{ color: "#444", margin: "0 0 0.5rem" }}>
+          Fermina Food · 31/5/2026, 20:45
         </p>
+        {!isComanda ? (
+          <p style={{ margin: "0 0 0.35rem", fontSize: "0.9rem" }}>
+            <strong>
+              {doc.type === "gestor" ? "Gestor / contabilidad" : "Cliente (ticket)"}
+            </strong>
+            {doc.taxId ? ` · ${doc.taxId}` : ""}
+          </p>
+        ) : null}
+        <p style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
+          <strong>{doc.customerName}</strong>
+          {doc.table ? ` · ${doc.table}` : ""}
+          {isComanda && doc.channel === "takeaway" ? " · Para llevar" : null}
+        </p>
+        <table className="mockup-table">
+          <thead>
+            <tr>
+              <th>Plato</th>
+              <th>Cant.</th>
+              <th>Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {doc.lines.map((l, i) => (
+              <tr key={i}>
+                <td>{l.name}</td>
+                <td>{l.qty}</td>
+                <td>{lineTotal(l)} €</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="fermina-print-sheet__total">
+          <strong>{doc.total.toFixed(2)} €</strong>
+        </p>
+        {!isComanda && doc.type === "gestor" && doc.subtotal != null ? (
+          <p style={{ fontSize: "0.75rem", color: "#555", margin: "0.35rem 0 0", textAlign: "right" }}>
+            Base {doc.subtotal.toFixed(2)} € · IVA 21% {doc.tax?.toFixed(2)} €
+          </p>
+        ) : null}
+        {isComanda && doc.notes ? (
+          <p style={{ fontSize: "0.8rem", marginTop: "0.5rem" }}>{doc.notes}</p>
+        ) : null}
       </article>
     </div>
+  );
+}
+
+function PanelComandas() {
+  return (
+    <>
+      <article className="card fermina-ops--branded" style={{ marginBottom: "1rem" }}>
+        <div className="fermina-ops__header" style={{ marginBottom: "0.75rem" }}>
+          <img src="/assets/fermina-logo.png" alt="Fermina Food" className="fermina-ops__logo" width={160} />
+          <div>
+            <p className="kicker" style={{ margin: 0 }}>
+              Comida argentina · demo operativa
+            </p>
+            <p className="lead" style={{ margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
+              Misma UX que el panel real en <code>/sistema/restaurante</code> (tenant Fermina Food).
+            </p>
+          </div>
+          <span className="mockup-badge">Solo mockup</span>
+        </div>
+
+        <div className="fermina-ops__grid">
+          <div>
+            <h4 style={{ marginTop: 0 }}>Nueva comanda</h4>
+            <div className="fermina-ops__fields">
+              <label className="mockup-field">
+                <span>Cliente</span>
+                <input type="text" readOnly value="Walk-in barra" />
+              </label>
+              <label className="mockup-field">
+                <span>Mesa / zona</span>
+                <input type="text" readOnly value="Barra 2" />
+              </label>
+              <label className="mockup-field">
+                <span>Canal</span>
+                <select disabled>
+                  <option>Salón</option>
+                </select>
+              </label>
+            </div>
+            <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
+              {[
+                { name: "Bites cheddar y jalapeños", price: "8,50 €", hint: "9 uds/porción" },
+                { name: "Chicken bites", price: "9,50 €", hint: "11 uds/porción" },
+                { name: "Choripán", price: "7,50 €", hint: "" }
+              ].map((item) => (
+                <li key={item.name} className="fermina-menu-item">
+                  <span>
+                    <strong>{item.name}</strong>
+                    {item.hint ? (
+                      <span className="kpi-label" style={{ display: "block" }}>
+                        {item.hint}
+                      </span>
+                    ) : null}
+                  </span>
+                  <div className="fermina-menu-item__qty">
+                    <button type="button" className="btn btn-outline" disabled aria-hidden>
+                      −
+                    </button>
+                    <span>{item.name.includes("Choripán") ? 2 : 1}</span>
+                    <button type="button" className="btn btn-outline" disabled aria-hidden>
+                      +
+                    </button>
+                    <span className="kpi-label">{item.price}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              <button type="button" className="btn" disabled>
+                Enviar a cocina
+              </button>
+              <button type="button" className="btn btn-outline" disabled>
+                Facturar carrito (26,50 €)
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h4 style={{ marginTop: 0 }}>Comandas activas</h4>
+            <ul className="fermina-order-list">
+              <li className="fermina-order-card">
+                <div className="fermina-order-card__head">
+                  <strong>#1042 · Terraza 3</strong>
+                  <span className="mockup-badge">Cocina</span>
+                </div>
+                <p className="kpi-label" style={{ margin: "0.25rem 0" }}>
+                  {MOCK_FERMINA_LINES.map((l) => `${l.qty}× ${l.name}`).join(" · ")}
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>{MOCK_FERMINA_ORDER.total.toFixed(2)} €</strong>
+                </p>
+                <div className="fermina-order-card__actions">
+                  <button type="button" className="btn btn-outline" disabled>
+                    Imprimir
+                  </button>
+                  <button type="button" className="btn btn-outline" disabled>
+                    Factura
+                  </button>
+                  <button type="button" className="btn btn-outline" disabled>
+                    Lista
+                  </button>
+                </div>
+              </li>
+              <li className="fermina-order-card">
+                <div className="fermina-order-card__head">
+                  <strong>#1041 · Para llevar</strong>
+                  <span className="mockup-badge">Nueva</span>
+                </div>
+                <p className="kpi-label" style={{ margin: "0.25rem 0" }}>
+                  1× Chicken bites
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>9,50 €</strong>
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article className="card" style={{ marginBottom: "1rem" }}>
+        <h3 style={{ marginTop: 0 }}>Facturas emitidas</h3>
+        <table className="mockup-table">
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Tipo</th>
+              <th>Cliente</th>
+              <th>Total</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{MOCK_FERMINA_INVOICE_CLIENT.invoiceNumber}</td>
+              <td>Cliente (ticket)</td>
+              <td>{MOCK_FERMINA_INVOICE_CLIENT.customerName}</td>
+              <td>{MOCK_FERMINA_INVOICE_CLIENT.total.toFixed(2)} €</td>
+              <td>
+                <button type="button" className="btn btn-outline" disabled>
+                  Imprimir
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>{MOCK_FERMINA_INVOICE_GESTOR.invoiceNumber}</td>
+              <td>Gestor / contabilidad</td>
+              <td>{MOCK_FERMINA_INVOICE_GESTOR.customerName}</td>
+              <td>{MOCK_FERMINA_INVOICE_GESTOR.total.toFixed(2)} €</td>
+              <td>
+                <button type="button" className="btn btn-outline" disabled>
+                  Imprimir
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
+          Cliente: ticket simplificado para el comensal. Gestor: incluye CUIT y desglose IVA para contabilidad.
+        </p>
+      </article>
+
+      <article className="card">
+        <h3 style={{ marginTop: 0 }}>Vistas de impresión (como sale al imprimir)</h3>
+        <p className="lead" style={{ fontSize: "0.9rem" }}>
+          Al pulsar <strong>Imprimir</strong> en comanda o factura, el navegador abre esta hoja (logo Fermina,
+          líneas y total).
+        </p>
+        <div className="mockup-print-grid" style={{ marginTop: "1rem" }}>
+          <MockFerminaPrintSheet
+            kind="comanda"
+            doc={MOCK_FERMINA_ORDER}
+            caption="Comanda cocina"
+          />
+          <MockFerminaPrintSheet
+            kind="factura"
+            doc={MOCK_FERMINA_INVOICE_CLIENT}
+            caption="Factura cliente"
+          />
+          <MockFerminaPrintSheet
+            kind="factura"
+            doc={MOCK_FERMINA_INVOICE_GESTOR}
+            caption="Factura gestor"
+          />
+        </div>
+      </article>
+    </>
   );
 }
 
@@ -397,7 +665,7 @@ const TOOLBAR = {
   mapa: { title: "Servicio noche", badge: "Terraza + interior", extra: "52 cubiertos previstos" },
   reservas: { title: "Reservas", badge: "Lista completa", extra: "52 cubiertos previstos" },
   espera: { title: "Lista de espera", badge: "3 grupos", extra: "Tiempo medio 22 min" },
-  comandas: { title: "Comandas", badge: "Cocina + bar", extra: "Turno noche" },
+  comandas: { title: "Comandas y facturación", badge: "Fermina Food", extra: "Cliente + gestor" },
   clientes: { title: "Alergias por reserva", badge: "2 mesas con nota", extra: "52 cubiertos previstos" },
   alergenos: { title: "Cartel alérgenos", badge: "2 presentes en carta", extra: "QR cartel sala" },
   proveedores: { title: "Proveedores", badge: "2 entregas", extra: "Semana actual" }
