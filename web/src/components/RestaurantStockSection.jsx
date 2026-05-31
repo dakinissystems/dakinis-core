@@ -25,9 +25,19 @@ function dakinisFormatQty(value, unit) {
 export default function RestaurantStockSection({ apiSession, tenantSlugForVertical, activeSystemKey }) {
   const { locale, t } = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
-  const isDumplingHouse = tenantSlugForVertical === DAKINIS_DUMPLING_HOUSE_SLUG;
-  const demoProduction = isDumplingHouse ? DAKINIS_DUMPLING_DEMO_PRODUCTION : DAKINIS_RESTAURANT_DEMO_PRODUCTION;
-  const demoPurchase = isDumplingHouse ? DAKINIS_DUMPLING_DEMO_PURCHASE : DAKINIS_RESTAURANT_DEMO_PURCHASE;
+  const effectiveSlug = dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical);
+  const isFerminaHouse = effectiveSlug === DAKINIS_FERMINA_HOUSE_SLUG;
+  const isDumplingHouse = effectiveSlug === DAKINIS_DUMPLING_HOUSE_SLUG;
+  const demoProduction = isFerminaHouse
+    ? DAKINIS_FERMINA_DEMO_PRODUCTION
+    : isDumplingHouse
+      ? DAKINIS_DUMPLING_DEMO_PRODUCTION
+      : DAKINIS_RESTAURANT_DEMO_PRODUCTION;
+  const demoPurchase = isFerminaHouse
+    ? DAKINIS_FERMINA_DEMO_PURCHASE
+    : isDumplingHouse
+      ? DAKINIS_DUMPLING_DEMO_PURCHASE
+      : DAKINIS_RESTAURANT_DEMO_PURCHASE;
   const [kitchen, setKitchen] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

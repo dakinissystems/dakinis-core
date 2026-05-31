@@ -13,7 +13,8 @@ function dakinisEmptyCart() {
 export default function RestaurantComandasSection({ apiSession, tenantSlugForVertical, activeSystemKey }) {
   const { locale, t } = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
-  const isFermina = tenantSlugForVertical === DAKINIS_FERMINA_HOUSE_SLUG;
+  const effectiveSlug = dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical);
+  const isFermina = effectiveSlug === DAKINIS_FERMINA_HOUSE_SLUG;
 
   const [menu, setMenu] = useState([]);
   const [brand, setBrand] = useState(null);
