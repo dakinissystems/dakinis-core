@@ -3,11 +3,15 @@ import {
   DAKINIS_DUMPLING_DEMO_PRODUCTION,
   DAKINIS_DUMPLING_DEMO_PURCHASE,
   DAKINIS_DUMPLING_HOUSE_SLUG,
+  DAKINIS_FERMINA_DEMO_PRODUCTION,
+  DAKINIS_FERMINA_DEMO_PURCHASE,
+  DAKINIS_FERMINA_HOUSE_SLUG,
   DAKINIS_RESTAURANT_DEMO_PRODUCTION,
   DAKINIS_RESTAURANT_DEMO_PURCHASE
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
 
 function dakinisFormatQty(value, unit) {
@@ -32,10 +36,10 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
 
   const fetchOpts = useMemo(
     () => ({
-      businessId: tenantSlugForVertical,
+      businessId: effectiveSlug,
       businessTypeHeader: activeSystemKey
     }),
-    [tenantSlugForVertical, activeSystemKey]
+    [effectiveSlug, activeSystemKey]
   );
 
   const itemNames = useMemo(() => {
@@ -147,7 +151,11 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
   return (
     <section style={{ marginTop: "2rem" }}>
       <h3>{t("kitchen.title")}</h3>
-      <p className="lead">{t(isDumplingHouse ? "kitchen.leadDumpling" : "kitchen.lead")}</p>
+      <p className="lead">
+        {t(
+          isFerminaHouse ? "kitchen.leadFermina" : isDumplingHouse ? "kitchen.leadDumpling" : "kitchen.lead"
+        )}
+      </p>
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
           {error}

@@ -21,6 +21,14 @@ import {
   dakinisHandleRestaurantStockPurchasePost
 } from "./api/tenant-restaurant.js";
 import {
+  dakinisHandleRestaurantInvoicesList,
+  dakinisHandleRestaurantInvoicesPost,
+  dakinisHandleRestaurantMenuGet,
+  dakinisHandleRestaurantOrdersList,
+  dakinisHandleRestaurantOrdersPatch,
+  dakinisHandleRestaurantOrdersPost
+} from "./api/tenant-restaurant-orders.js";
+import {
   dakinisHandleSupplyAlertsDelete,
   dakinisHandleSupplyAlertsList,
   dakinisHandleSupplyAlertsPatch,
@@ -109,6 +117,16 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandleRestaurantProductionPost(req, rawBody);
   if (path === "/api/tenant/restaurant/profile" && req.method === "PATCH")
     return dakinisHandleRestaurantProfilePatch(req, rawBody);
+  if (path === "/api/tenant/restaurant/menu" && req.method === "GET") return dakinisHandleRestaurantMenuGet(req);
+  if (path === "/api/tenant/restaurant/orders" && req.method === "GET") return dakinisHandleRestaurantOrdersList(req);
+  if (path === "/api/tenant/restaurant/orders" && req.method === "POST")
+    return dakinisHandleRestaurantOrdersPost(req, rawBody);
+  const restaurantOrderId = /^\/api\/tenant\/restaurant\/orders\/([^/]+)$/.exec(path);
+  if (restaurantOrderId && req.method === "PATCH")
+    return dakinisHandleRestaurantOrdersPatch(req, restaurantOrderId[1], rawBody);
+  if (path === "/api/tenant/restaurant/invoices" && req.method === "GET") return dakinisHandleRestaurantInvoicesList(req);
+  if (path === "/api/tenant/restaurant/invoices" && req.method === "POST")
+    return dakinisHandleRestaurantInvoicesPost(req, rawBody);
 
   const moduleResult =
     dakinisHandleUsersRoute(req, rawBody, path) ||

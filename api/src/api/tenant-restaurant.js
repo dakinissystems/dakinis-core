@@ -15,6 +15,11 @@ import {
   DAKINIS_DUMPLING_DEFAULT_RECIPES,
   DAKINIS_DUMPLING_HOUSE_SLUG,
   DAKINIS_DUMPLING_STOCK_ITEMS,
+  DAKINIS_FERMINA_DEFAULT_RECIPES,
+  DAKINIS_FERMINA_DEMO_PURCHASE,
+  DAKINIS_FERMINA_DEMO_PRODUCTION,
+  DAKINIS_FERMINA_HOUSE_SLUG,
+  DAKINIS_FERMINA_STOCK_ITEMS,
   DAKINIS_RESTAURANT_DEFAULT_ITEMS,
   DAKINIS_RESTAURANT_DEFAULT_RECIPES,
   dakinisRestaurantMaxBatchesPerRecipe,
@@ -115,8 +120,17 @@ async function dakinisEnsureRestaurantKitchenSeedAsync(businessId) {
 
   const biz = await dakinisQueryOne(`SELECT slug FROM business WHERE id = ?`, [businessId]);
   const isDumpling = biz?.slug === DAKINIS_DUMPLING_HOUSE_SLUG;
-  const defaultItems = isDumpling ? DAKINIS_DUMPLING_STOCK_ITEMS : DAKINIS_RESTAURANT_DEFAULT_ITEMS;
-  const defaultRecipes = isDumpling ? DAKINIS_DUMPLING_DEFAULT_RECIPES : DAKINIS_RESTAURANT_DEFAULT_RECIPES;
+  const isFermina = biz?.slug === DAKINIS_FERMINA_HOUSE_SLUG;
+  const defaultItems = isFermina
+    ? DAKINIS_FERMINA_STOCK_ITEMS
+    : isDumpling
+      ? DAKINIS_DUMPLING_STOCK_ITEMS
+      : DAKINIS_RESTAURANT_DEFAULT_ITEMS;
+  const defaultRecipes = isFermina
+    ? DAKINIS_FERMINA_DEFAULT_RECIPES
+    : isDumpling
+      ? DAKINIS_DUMPLING_DEFAULT_RECIPES
+      : DAKINIS_RESTAURANT_DEFAULT_RECIPES;
 
   const countRow = await dakinisQueryOne(`SELECT COUNT(*) AS c FROM tenant_stock_items WHERE business_id = ?`, [
     businessId
@@ -135,7 +149,8 @@ async function dakinisEnsureRestaurantKitchenSeedAsync(businessId) {
   const recipeRows = await dakinisQueryAll(`SELECT slug FROM tenant_recipes WHERE business_id = ?`, [businessId]);
   const recipeSlugs = recipeRows.map((r) => r.slug);
   const hasManuRecipes = recipeSlugs.some((s) => s === "pizza-prepizza" || s === "empanadas-docena");
-  const needsRecipes = recipeSlugs.length === 0 || (isDumpling && hasManuRecipes);
+  const needsRecipes =
+    recipeSlugs.length === 0 || ((isDumpling || isFermina) && hasManuRecipes);
 
   if (needsRecipes) {
     if (recipeSlugs.length > 0) {

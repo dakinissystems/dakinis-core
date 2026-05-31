@@ -1582,6 +1582,167 @@ section {
   margin-top: 0.25rem;
 }
 
+/* Fermina Food — comandas, impresión */
+.fermina-ops--branded {
+  --fermina-brand: #8a9a7b;
+  border-radius: 12px;
+  padding: 0.25rem 0;
+}
+
+.fermina-ops__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(138, 154, 123, 0.25), rgba(0, 0, 0, 0.15));
+}
+
+.fermina-ops__logo {
+  max-width: min(200px, 45vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.fermina-ops__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .fermina-ops__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fermina-ops__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.fermina-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fermina-menu-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.fermina-menu-item__qty {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fermina-menu-item__qty span {
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.fermina-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fermina-order-card {
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  border-left: 4px solid var(--fermina-brand, var(--brand));
+}
+
+.fermina-order-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.fermina-order-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.fermina-print-host {
+  margin-top: 1.5rem;
+}
+
+.fermina-print-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.fermina-print-sheet {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+}
+
+.fermina-print-sheet__logo {
+  display: block;
+  margin: 0 auto 0.75rem;
+}
+
+.fermina-print-sheet__total {
+  font-size: 1.15rem;
+  text-align: right;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .fermina-print-host,
+  .fermina-print-host * {
+    visibility: visible;
+  }
+
+  .fermina-print-host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .fermina-print-sheet {
+    border: none;
+    max-width: 100%;
+  }
+}
+
 .allergen-public__card {
   margin-top: 1rem;
   padding: clamp(0.85rem, 3vw, 1.25rem);

@@ -13,6 +13,7 @@ import DemoTenantSystemWelcome from "../components/DemoTenantSystemWelcome.jsx";
 import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
 import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
+import RestaurantComandasSection from "../components/RestaurantComandasSection.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
@@ -308,11 +309,18 @@ export default function SystemPage({ activeSystemKey, navigate }) {
         ) : null}
 
         {activeSystemKey === "restaurante" ? (
-          <RestaurantStockSection
-            apiSession={apiSession}
-            tenantSlugForVertical={tenantSlugForVertical}
-            activeSystemKey={activeSystemKey}
-          />
+          <>
+            <RestaurantComandasSection
+              apiSession={apiSession}
+              tenantSlugForVertical={tenantSlugForVertical}
+              activeSystemKey={activeSystemKey}
+            />
+            <RestaurantStockSection
+              apiSession={apiSession}
+              tenantSlugForVertical={tenantSlugForVertical}
+              activeSystemKey={activeSystemKey}
+            />
+          </>
         ) : null}
 
         <h3>{t("system.dataLoad")}</h3>

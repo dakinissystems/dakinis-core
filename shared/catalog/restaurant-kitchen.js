@@ -172,6 +172,63 @@ export const DAKINIS_DUMPLING_DEMO_PRODUCTION = [
 
 export const DAKINIS_DUMPLING_HOUSE_SLUG = "dumpling-house";
 
+/** Fermina Food — bites (bolsa → unidades) + choripán. */
+export const DAKINIS_FERMINA_STOCK_ITEMS = [
+  { slug: "bites-cheddar", name: "Bites cheddar y jalapeños (bolsa)", unit: "u", minQuantity: 90 },
+  { slug: "bites-pollo", name: "Chicken bites (bolsa)", unit: "u", minQuantity: 120 },
+  { slug: "pan-choripan", name: "Pan de choripán", unit: "u", minQuantity: 10 },
+  { slug: "chorizo", name: "Chorizo", unit: "u", minQuantity: 12 },
+  { slug: "chimichurri", name: "Chimichurri", unit: "L", minQuantity: 0.5 },
+  { slug: "pan-burger", name: "Pan (otros)", unit: "u", minQuantity: 5 }
+];
+
+export const DAKINIS_FERMINA_DEFAULT_RECIPES = [
+  {
+    slug: "porcion-cheddar-bites",
+    name: "Porción bites cheddar y jalapeños (9 uds/bolsa ~50)",
+    outputLabel: "Porciones",
+    outputQuantity: 1,
+    outputUnit: "u",
+    lines: [{ itemSlug: "bites-cheddar", quantity: 9, unit: "u" }]
+  },
+  {
+    slug: "porcion-chicken-bites",
+    name: "Porción chicken bites (11 uds/bolsa ~120)",
+    outputLabel: "Porciones",
+    outputQuantity: 1,
+    outputUnit: "u",
+    lines: [{ itemSlug: "bites-pollo", quantity: 11, unit: "u" }]
+  },
+  {
+    slug: "choripan-unidad",
+    name: "Choripán",
+    outputLabel: "Choripanes",
+    outputQuantity: 1,
+    outputUnit: "u",
+    lines: [
+      { itemSlug: "pan-choripan", quantity: 1, unit: "u" },
+      { itemSlug: "chorizo", quantity: 1, unit: "u" },
+      { itemSlug: "chimichurri", quantity: 0.02, unit: "L" }
+    ]
+  }
+];
+
+export const DAKINIS_FERMINA_DEMO_PURCHASE = [
+  { itemSlug: "bites-cheddar", quantity: 100 },
+  { itemSlug: "bites-pollo", quantity: 120 },
+  { itemSlug: "pan-choripan", quantity: 20 },
+  { itemSlug: "chorizo", quantity: 24 },
+  { itemSlug: "chimichurri", quantity: 1 }
+];
+
+export const DAKINIS_FERMINA_DEMO_PRODUCTION = [
+  { recipeSlug: "porcion-cheddar-bites", batches: 8 },
+  { recipeSlug: "porcion-chicken-bites", batches: 6 },
+  { recipeSlug: "choripan-unidad", batches: 10 }
+];
+
+export const DAKINIS_FERMINA_HOUSE_SLUG = "fermina-food";
+
 /**
  * Consumo total de insumos para N batches de varias recetas.
  * @param {Array<{ recipeSlug: string, batches: number }>} plan
