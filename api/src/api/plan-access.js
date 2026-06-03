@@ -28,7 +28,7 @@ export function dakinisTenantApiPathRequiredModule(pathname) {
   if (pathname === "/api/health") return null;
   if (pathname.startsWith("/api/agenda/")) return "agenda";
   if (pathname.startsWith("/api/booking/")) return "booking";
-  if (pathname.startsWith("/api/crm/")) return "crm";
+  if (pathname.startsWith("/api/crm/") || pathname.startsWith("/api/v1/crm/")) return "crm";
   if (pathname.startsWith("/api/whatsapp/")) return "whatsapp";
   if (pathname.startsWith("/api/leads/")) return "leads";
   if (pathname.startsWith("/api/dashboard/")) return "dashboard";

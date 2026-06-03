@@ -46,6 +46,22 @@ function dakinisMigrateWhatsappTables(db) {
   db.exec(fs.readFileSync(path.join(__dirname, "schema-whatsapp-migrate.sql"), "utf8"));
 }
 
+function dakinisMigrateCrmTables(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-crm-migrate.sql"), "utf8"));
+  dakinisMigrateWhatsappCrmColumns(db);
+}
+
+function dakinisMigrateWhatsappCrmColumns(db) {
+  const cols = db.prepare("PRAGMA table_info(tenant_whatsapp_messages)").all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("contact_id")) {
+    db.exec("ALTER TABLE tenant_whatsapp_messages ADD COLUMN contact_id TEXT");
+  }
+  if (!names.has("conversation_id")) {
+    db.exec("ALTER TABLE tenant_whatsapp_messages ADD COLUMN conversation_id TEXT");
+  }
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 
@@ -65,6 +81,7 @@ function dakinisInitSqlite() {
   dakinisMigratePlatformUserId(db);
   dakinisMigratePlatformKv(db);
   dakinisMigrateWhatsappTables(db);
+  dakinisMigrateCrmTables(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

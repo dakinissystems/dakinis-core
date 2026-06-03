@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
+import {
+  dakinisCrmEnsureWhatsappContext,
+  dakinisCrmLinkWhatsappMessage
+} from "./crm-whatsapp-link.js";
 
 const DAKINIS_WHATSAPP_ENTITY = "whatsapp.message";
 
@@ -27,10 +31,23 @@ export async function dakinisStoreWhatsappMessage(businessId, record) {
   const id = `wa_${randomUUID()}`;
 
   if (await dakinisWhatsappTablesReady()) {
+    let contactId = record.contactId || null;
+    let conversationId = record.conversationId || null;
+
+    if (peer && !contactId) {
+      const ctx = await dakinisCrmEnsureWhatsappContext(businessId, peer, {
+        profileName: record.profileName
+      });
+      if (ctx) {
+        contactId = ctx.contact.id;
+        conversationId = ctx.conversation.id;
+      }
+    }
+
     await dakinisRun(
       `INSERT INTO tenant_whatsapp_messages
-        (id, business_id, direction, wamid, peer_phone, body_text, msg_type, payload_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, business_id, direction, wamid, peer_phone, body_text, msg_type, payload_json, contact_id, conversation_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         businessId,
@@ -39,10 +56,24 @@ export async function dakinisStoreWhatsappMessage(businessId, record) {
         peer,
         bodyText,
         String(record.type || record.msg_type || "text"),
-        JSON.stringify(record)
+        JSON.stringify(record),
+        contactId,
+        conversationId
       ]
     );
+
     if (peer) {
+      await dakinisCrmLinkWhatsappMessage(businessId, {
+        phone: peer,
+        direction: record.direction === "outbound" ? "outbound" : "inbound",
+        body: bodyText,
+        messageId: id,
+        profileName: record.profileName,
+        contactId: contactId || undefined,
+        conversationId: conversationId || undefined
+      });
+    }
+    if (peer && !contactId) {
       await dakinisUpsertWhatsappContact(businessId, {
         phone: peer,
         wa_profile_name: record.profileName,
