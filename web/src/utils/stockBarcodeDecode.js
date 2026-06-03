@@ -1,0 +1,153 @@
+const BARCODE_READERS = [
+  "ean_reader",
+  "ean_8_reader",
+  "code_128_reader",
+  "code_39_reader",
+  "upc_reader",
+  "upc_e_reader",
+  "codabar_reader",
+  "i2of5_reader"
+];
+
+function dakinisScaleImageToDataUrl(dataUrl, maxSize = 1200) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      const scale = maxSize / Math.max(w, h, 1);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      try {
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function dakinisTryDecodeWithZXing(dataUrl) {
+  if (!dataUrl) return null;
+  try {
+    const { BrowserMultiFormatReader } = await import("@zxing/browser");
+    const codeReader = new BrowserMultiFormatReader();
+    const result = await codeReader.decodeFromImageUrl(dataUrl);
+    if (result?.getText()) return result.getText().trim();
+  } catch {
+    /* sin código */
+  }
+  return null;
+}
+
+async function dakinisQuaggaDecodeSingle(src) {
+  const Quagga = (await import("@ericblade/quagga2")).default;
+  const configs = [
+    { size: 1200, patchSize: "large", halfSample: false, singleChannel: false },
+    { size: 1200, patchSize: "medium", halfSample: false, singleChannel: true },
+    { size: 800, patchSize: "large", halfSample: true, singleChannel: false },
+    { size: 1600, patchSize: "large", halfSample: false, singleChannel: false },
+    { size: 800, patchSize: "medium", halfSample: false, singleChannel: false },
+    { size: 600, patchSize: "medium", halfSample: true, singleChannel: true }
+  ];
+
+  for (const { size, patchSize, halfSample, singleChannel } of configs) {
+    try {
+      const result = await Quagga.decodeSingle({
+        decoder: { readers: BARCODE_READERS, multiple: false },
+        locate: true,
+        src,
+        numOfWorkers: 0,
+        inputStream: { size, singleChannel: !!singleChannel },
+        locator: { patchSize: patchSize || "medium", halfSample: !!halfSample }
+      });
+      if (result?.codeResult?.code) return result.codeResult.code;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+/** Decodifica imagen (foto o captura): Quagga multi-config + ZXing (QR y 1D). */
+export async function dakinisDecodeBarcodeFromImage(dataUrl) {
+  let code = await dakinisQuaggaDecodeSingle(dataUrl);
+  if (code) return code;
+
+  const scaled1200 = await dakinisScaleImageToDataUrl(dataUrl, 1200);
+  if (scaled1200 !== dataUrl) {
+    code = await dakinisQuaggaDecodeSingle(scaled1200);
+    if (code) return code;
+  }
+
+  const scaled800 = await dakinisScaleImageToDataUrl(dataUrl, 800);
+  if (scaled800 !== dataUrl) {
+    code = await dakinisQuaggaDecodeSingle(scaled800);
+    if (code) return code;
+  }
+
+  code = await dakinisTryDecodeWithZXing(dataUrl);
+  if (code) return code;
+  code = await dakinisTryDecodeWithZXing(scaled1200 || dataUrl);
+  if (code) return code;
+  return dakinisTryDecodeWithZXing(scaled800 || dataUrl);
+}
+
+/**
+ * Inicia escáner en vivo (1D). onCode(code) en cada detección.
+ * Devuelve función stop().
+ */
+export async function dakinisStartLiveBarcodeScanner(videoEl, onCode) {
+  const Quagga = (await import("@ericblade/quagga2")).default;
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: "environment",
+      width: { min: 640, ideal: 1280, max: 1920 },
+      height: { min: 480, ideal: 720, max: 1080 }
+    }
+  });
+
+  videoEl.srcObject = stream;
+  videoEl.setAttribute("playsinline", "true");
+  videoEl.muted = true;
+  await videoEl.play();
+
+  const config = {
+    inputStream: {
+      type: "LiveStream",
+      target: videoEl,
+      constraints: { ...stream.getVideoTracks()[0].getSettings() }
+    },
+    decoder: { readers: BARCODE_READERS },
+    locate: true
+  };
+
+  await Quagga.init(config);
+  Quagga.start();
+
+  let active = true;
+  const handler = (result) => {
+    if (!active) return;
+    const code = result?.codeResult?.code;
+    if (code) onCode(String(code).trim());
+  };
+  Quagga.onDetected(handler);
+
+  return () => {
+    active = false;
+    try {
+      Quagga.stop();
+    } catch {
+      /* ignore */
+    }
+    stream.getTracks().forEach((t) => t.stop());
+    videoEl.srcObject = null;
+  };
+}

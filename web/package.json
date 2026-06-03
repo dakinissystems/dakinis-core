@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@dakinis/shared": "*",
+    "@ericblade/quagga2": "^1.8.5",
+    "@zxing/browser": "^0.1.5",
     "@sentry/react": "^9.30.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

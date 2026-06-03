@@ -1582,6 +1582,214 @@ section {
   margin-top: 0.25rem;
 }
 
+/* Restaurante — roles y plano de mesas */
+.restaurant-role-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--line);
+}
+
+.restaurant-floor__canvas-wrap {
+  overflow: auto;
+  margin-bottom: 0.75rem;
+}
+
+.restaurant-floor__canvas {
+  position: relative;
+  min-height: 320px;
+  height: min(58vh, 480px);
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: linear-gradient(180deg, #1a2332 0%, #121820 100%);
+  overflow: hidden;
+  user-select: none;
+}
+
+.restaurant-floor__canvas--editable {
+  cursor: default;
+}
+
+.restaurant-floor__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 4% 4%;
+  pointer-events: none;
+}
+
+.restaurant-floor__zone {
+  position: absolute;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.restaurant-floor__zone--salon {
+  left: 6%;
+  top: 8%;
+}
+
+.restaurant-floor__zone--terraza {
+  left: 6%;
+  bottom: 10%;
+}
+
+.restaurant-floor__zone--barra {
+  right: 8%;
+  top: 42%;
+}
+
+.restaurant-floor__table {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 4.5rem;
+  padding: 0.5rem 0.55rem 0.45rem;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
+  z-index: 1;
+}
+
+.restaurant-floor__table.is-draggable {
+  cursor: grab;
+}
+
+.restaurant-floor__table.is-draggable:active,
+.restaurant-floor__table.is-dragging {
+  cursor: grabbing;
+}
+
+.restaurant-floor__table.is-dragging {
+  z-index: 20;
+  transform: translate(-50%, -50%) scale(1.06);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  border-color: var(--brand);
+  background: rgba(138, 154, 123, 0.55);
+  transition: none;
+}
+
+.restaurant-floor__table-grip {
+  display: block;
+  width: 1.25rem;
+  height: 0.2rem;
+  margin: 0 auto 0.25rem;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0.2rem 0 rgba(255, 255, 255, 0.35);
+}
+
+.restaurant-floor__table.is-draggable:hover {
+  border-color: var(--brand);
+}
+
+.restaurant-floor__table.is-busy {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.restaurant-floor__table.is-selected {
+  border-color: var(--brand);
+  background: rgba(138, 154, 123, 0.45);
+  box-shadow: 0 0 0 3px rgba(138, 154, 123, 0.35);
+}
+
+.restaurant-floor__table.is-dragging {
+  opacity: 0.92;
+  z-index: 5;
+}
+
+.restaurant-floor__table-label {
+  display: block;
+  font-weight: 700;
+}
+
+.restaurant-floor__table-total {
+  display: block;
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+  opacity: 0.9;
+}
+
+.restaurant-floor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.restaurant-floor__add-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.restaurant-floor__hint {
+  margin: 0;
+  flex: 1 1 100%;
+}
+
+.restaurant-floor__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.restaurant-floor__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.restaurant-floor__swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.restaurant-floor__swatch--busy {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.35);
+}
+
+.restaurant-floor__swatch--selected {
+  border-color: var(--brand);
+  background: rgba(138, 154, 123, 0.5);
+}
+
+.restaurant-floor__swatch--drag {
+  border-color: #94a3b8;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.restaurant-mesas__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Fermina Food — comandas, impresión */
 .fermina-ops--branded {
   --fermina-brand: #8a9a7b;
@@ -2035,5 +2243,286 @@ section {
 
   .container {
     width: min(1100px, 94vw);
+  }
+}
+
+/* Stock scanner (proyecto-stock pattern) */
+.stock-scanner__intro {
+  margin: 0 0 0.75rem;
+}
+
+.stock-scanner__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stock-scanner__btn--stop {
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+.stock-scanner__file {
+  cursor: pointer;
+  margin: 0;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stock-scanner__viewport {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 1rem;
+  aspect-ratio: 4 / 3;
+  background: #0a1520;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.stock-scanner__viewport.is-live {
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.35);
+}
+
+.stock-scanner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.stock-scanner__viewport.is-live .stock-scanner__video {
+  display: block;
+}
+
+.stock-scanner__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.stock-scanner__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.stock-scanner__code-input {
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.stock-scan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-top: 0.75rem;
+}
+
+.stock-scan-actions__dir {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Responsive tenants — touch-friendly panels (todos los verticales) */
+.tenant-touch-btn,
+.btn.tenant-touch-btn {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  touch-action: manipulation;
+}
+
+.tenant-panel-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.tenant-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tenant-table-scroll {
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0.75rem;
+}
+
+.mockup-sidebar-nav--horizontal {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: 0.35rem;
+  padding-bottom: 0.25rem;
+}
+
+.mockup-sidebar-nav--horizontal .mockup-nav-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 2.75rem;
+}
+
+.fermina-comandas-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap !important;
+  padding-bottom: 0.25rem;
+}
+
+.fermina-comandas-tabs .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 2.75rem;
+}
+
+.restaurant-role-nav .btn {
+  min-height: 2.75rem;
+  flex: 1 1 auto;
+  min-width: min(100%, 8rem);
+}
+
+@media (max-width: 768px) {
+  .stock-scanner__controls {
+    flex-direction: column;
+  }
+
+  .stock-scanner__controls .btn,
+  .stock-scanner__file {
+    width: 100%;
+  }
+
+  .stock-scan-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stock-scan-actions__dir {
+    width: 100%;
+  }
+
+  .stock-scan-actions__dir .btn {
+    flex: 1;
+  }
+
+  .mockup-page-bar {
+    flex-direction: column;
+  }
+
+  .mockup-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mockup-sidebar {
+    padding: 0.75rem;
+  }
+
+  .mockup-sidebar-nav:not(.mockup-sidebar-nav--horizontal) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mockup-sidebar-nav:not(.mockup-sidebar-nav--horizontal) .mockup-nav-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 2.75rem;
+  }
+
+  .mockup-main {
+    padding: 0.85rem;
+  }
+
+  .mockup-field input,
+  .mockup-field select,
+  .mockup-field textarea {
+    min-height: 2.75rem;
+    font-size: 16px;
+  }
+
+  .fermina-menu-item__qty .btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  .tenant-stock-table thead {
+    display: none;
+  }
+
+  .tenant-stock-table tbody tr {
+    display: block;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tenant-stock-table tbody td {
+    display: block;
+    border: none;
+    padding: 0.2rem 0;
+  }
+
+  .tenant-stock-table tbody td::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--brand);
+    font-weight: 600;
+  }
+
+  .tenant-stock-table tbody td[data-label]:first-child::before {
+    display: none;
+  }
+
+  .tenant-stock-table tbody td:first-child {
+    font-weight: 700;
+    padding-top: 0.35rem;
+  }
+
+  .restaurant-floor__canvas {
+    min-height: 260px;
+    height: min(50vh, 380px);
+  }
+
+  .restaurant-floor__table {
+    min-width: 3.75rem;
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .module-grid,
+  .tenant-panel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .system-switcher {
+    gap: 0.4rem;
+  }
+
+  .system-btn {
+    min-height: 2.5rem;
+  }
+
+  .hero h1 {
+    font-size: 1.65rem;
   }
 }

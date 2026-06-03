@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DAKINIS_RESTAURANT_ALLERGEN_CATALOG,
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS
@@ -6,7 +6,15 @@ import {
 import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 import { FerminaComandasSubnav } from "../components/FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "../components/FerminaPrintSheet.jsx";
+import RestaurantMesasPanel from "../components/RestaurantMesasPanel.jsx";
+import RestaurantRoleNav, {
+  dakinisReadRestaurantRole,
+  dakinisWriteRestaurantRole
+} from "../components/RestaurantRoleNav.jsx";
+import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
+import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
+import { dakinisTableItemCount } from "../utils/restaurantFloorPlan.js";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -288,18 +296,12 @@ const FERMINA_COMANDAS_VIEWS = [
   { id: "facturas", label: "Facturas" }
 ];
 
-/** 5 mesas salón + 5 terraza (cuenta abierta por mesa hasta cerrar con cobro). */
-const FERMINA_TABLES = [
-  ...[1, 2, 3, 4, 5].map((n) => ({ id: `salon-${n}`, zone: "salon", label: `Salón ${n}` })),
-  ...[1, 2, 3, 4, 5].map((n) => ({ id: `terraza-${n}`, zone: "terraza", label: `Terraza ${n}` }))
-];
-
-function ferminaEmptyTableSessions() {
-  return Object.fromEntries(FERMINA_TABLES.map((t) => [t.id, { cart: {}, notes: "" }]));
+function ferminaEmptyTableSessions(tables) {
+  return Object.fromEntries(tables.map((t) => [t.id, { cart: {}, notes: "" }]));
 }
 
-function ferminaSeedTableSessions() {
-  const base = ferminaEmptyTableSessions();
+function ferminaSeedTableSessions(tables) {
+  const base = ferminaEmptyTableSessions(tables);
   base["terraza-3"] = {
     cart: { "bites-cheddar": 2, "chicken-bites": 1 },
     notes: "Sin picante en los bites"
@@ -307,8 +309,8 @@ function ferminaSeedTableSessions() {
   return base;
 }
 
-function ferminaTableLabel(tableId) {
-  return FERMINA_TABLES.find((t) => t.id === tableId)?.label || tableId;
+function ferminaTableLabel(tables, tableId) {
+  return tables.find((t) => t.id === tableId)?.label || tableId;
 }
 
 function ferminaTableCartLines(cart, channelId = "salon") {
@@ -443,8 +445,20 @@ const MOCK_FERMINA_INVOICE_GESTOR = {
   lines: MOCK_FERMINA_LINES
 };
 
-function PanelComandas() {
-  const [comandasView, setComandasView] = useState("mesas");
+const MOCK_ROLE_VIEWS = {
+  camarero: ["mesas", "tarifa", "pedido", "cobro"],
+  cocina: ["activas"],
+  admin: ["cierre", "facturas"]
+};
+
+function PanelComandas({ panelRole }) {
+  const { t } = useLocale();
+  const [comandasView, setComandasView] = useState(
+    panelRole === "cocina" ? "activas" : panelRole === "admin" ? "cierre" : "mesas"
+  );
+  const [floorTables, setFloorTables] = useState(() =>
+    DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((tbl) => ({ ...tbl }))
+  );
   const [orders, setOrders] = useState(ferminaSeedOrders);
   const [nextOrderNum, setNextOrderNum] = useState(1043);
   const [cart, setCart] = useState({});
@@ -455,7 +469,7 @@ function PanelComandas() {
   const [notes, setNotes] = useState("");
   const [printDoc, setPrintDoc] = useState(null);
   const [selectedTableId, setSelectedTableId] = useState("terraza-3");
-  const [tableSessions, setTableSessions] = useState(ferminaSeedTableSessions);
+  const [tableSessions, setTableSessions] = useState(() => ferminaSeedTableSessions(floorTables));
   const [mesaClosePayment, setMesaClosePayment] = useState("tarjeta");
 
   const cartLines = useMemo(() => {
@@ -526,10 +540,35 @@ function PanelComandas() {
   const mesaTotal = useMemo(() => ferminaLinesTotal(mesaLines), [mesaLines]);
   const mesaItemCount = useMemo(() => ferminaTableItemCount(mesaCart), [mesaCart]);
 
-  const occupiedTablesCount = useMemo(
-    () => FERMINA_TABLES.filter((t) => ferminaTableItemCount(tableSessions[t.id]?.cart) > 0).length,
-    [tableSessions]
+  const comandasViews = useMemo(
+    () => FERMINA_COMANDAS_VIEWS.filter((v) => (MOCK_ROLE_VIEWS[panelRole] || []).includes(v.id)),
+    [panelRole]
   );
+
+  const mockMenu = useMemo(
+    () =>
+      FERMINA_MOCK_MENU.map((m) => ({
+        id: m.id,
+        name: m.name,
+        nameEs: m.name,
+        priceEur: ferminaPriceForChannel(m, "salon")
+      })),
+    []
+  );
+
+  const kitchenOrders = useMemo(
+    () => openOrders.filter((o) => o.status === "nueva" || o.status === "cocina" || o.status === "lista"),
+    [openOrders]
+  );
+
+  const occupiedTablesCount = useMemo(
+    () => floorTables.filter((tbl) => dakinisTableItemCount(tableSessions[tbl.id]?.cart) > 0).length,
+    [floorTables, tableSessions]
+  );
+
+  useEffect(() => {
+    setComandasView(panelRole === "cocina" ? "activas" : panelRole === "admin" ? "cierre" : "mesas");
+  }, [panelRole]);
 
   function setTableCartQty(tableId, menuId, delta) {
     if (!tableId) return;
@@ -561,7 +600,7 @@ function PanelComandas() {
     if (!session) return;
     const lines = ferminaTableCartLines(session.cart, "salon");
     if (!lines.length) return;
-    const label = ferminaTableLabel(tableId);
+    const label = ferminaTableLabel(floorTables, tableId);
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
@@ -579,7 +618,7 @@ function PanelComandas() {
     setOrders((prev) => [order, ...prev]);
     setNextOrderNum((n) => n + 1);
     setPrintDoc({ kind: "comanda", doc: order });
-    setComandasView("activas");
+    if (panelRole === "cocina") setComandasView("activas");
   }
 
   function closeTable(tableId, payMethod) {
@@ -587,7 +626,7 @@ function PanelComandas() {
     if (!session) return;
     const lines = ferminaTableCartLines(session.cart, "salon");
     if (!lines.length) return;
-    const label = ferminaTableLabel(tableId);
+    const label = ferminaTableLabel(floorTables, tableId);
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
@@ -629,7 +668,8 @@ function PanelComandas() {
     setNextOrderNum((n) => n + 1);
     setCart({});
     setPrintDoc({ kind: "comanda", doc: order });
-    setComandasView("activas");
+    if (panelRole === "cocina") setComandasView("activas");
+    else setComandasView("mesas");
   }
 
   function patchOrderStatus(orderId, status) {
@@ -640,7 +680,7 @@ function PanelComandas() {
     setOrders(ferminaSeedOrders());
     setNextOrderNum(1043);
     setCart({});
-    setTableSessions(ferminaSeedTableSessions());
+    setTableSessions(ferminaSeedTableSessions(floorTables));
     setPrintDoc(null);
   }
 
@@ -662,224 +702,37 @@ function PanelComandas() {
         </div>
 
         <FerminaComandasSubnav
-          views={FERMINA_COMANDAS_VIEWS}
+          views={comandasViews}
           activeId={comandasView}
           onSelect={setComandasView}
           badges={{
             mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
             pedido: cartItemCount > 0 ? String(cartItemCount) : null,
-            activas: openOrders.length > 0 ? String(openOrders.length) : null
+            activas:
+              (panelRole === "cocina" ? kitchenOrders.length : openOrders.length) > 0
+                ? String(panelRole === "cocina" ? kitchenOrders.length : openOrders.length)
+                : null
           }}
         />
 
         {comandasView === "mesas" ? (
-          <div>
-            <h4 style={{ marginTop: 0 }}>Mesas en sala</h4>
-            <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
-              Elige una mesa, añade platos y consulta el saldo. Al cerrar, indica efectivo o tarjeta (entra en cierre del
-              día).
-            </p>
-            <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-              Interior (salón)
-            </p>
-            <div
-              className="fermina-table-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(5.5rem, 1fr))",
-                gap: "0.5rem",
-                marginBottom: "1rem"
-              }}
-            >
-              {FERMINA_TABLES.filter((t) => t.zone === "salon").map((t) => {
-                const busy = ferminaTableItemCount(tableSessions[t.id]?.cart) > 0;
-                const selected = selectedTableId === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={selected ? "btn" : busy ? "btn btn-outline" : "btn btn-outline"}
-                    style={
-                      selected
-                        ? { borderColor: "var(--brand)" }
-                        : busy
-                          ? { borderColor: "var(--brand)", opacity: 0.95 }
-                          : undefined
-                    }
-                    onClick={() => setSelectedTableId(t.id)}
-                  >
-                    {t.label}
-                    {busy ? (
-                      <span className="mockup-badge" style={{ display: "block", marginTop: "0.2rem", fontSize: "0.7rem" }}>
-                        {ferminaTableCartTotal(tableSessions[t.id]?.cart, "salon").toFixed(0)} €
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-              Terraza
-            </p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(5.5rem, 1fr))",
-                gap: "0.5rem",
-                marginBottom: "1.25rem"
-              }}
-            >
-              {FERMINA_TABLES.filter((t) => t.zone === "terraza").map((t) => {
-                const busy = ferminaTableItemCount(tableSessions[t.id]?.cart) > 0;
-                const selected = selectedTableId === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={selected ? "btn" : "btn btn-outline"}
-                    style={selected ? { borderColor: "var(--brand)" } : busy ? { borderColor: "var(--brand)" } : undefined}
-                    onClick={() => setSelectedTableId(t.id)}
-                  >
-                    {t.label}
-                    {busy ? (
-                      <span className="mockup-badge" style={{ display: "block", marginTop: "0.2rem", fontSize: "0.7rem" }}>
-                        {ferminaTableCartTotal(tableSessions[t.id]?.cart, "salon").toFixed(0)} €
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedTableId ? (
-              <>
-                <article
-                  className="card"
-                  style={{ marginBottom: "1rem", boxShadow: "none", border: "1px solid var(--line)" }}
-                >
-                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                    <h4 style={{ margin: 0 }}>{ferminaTableLabel(selectedTableId)}</h4>
-                    <span className="mockup-badge">Salón · tarifa local</span>
-                    <strong style={{ marginLeft: "auto", fontSize: "1.15rem" }}>
-                      Saldo: {mesaTotal.toFixed(2)} €
-                    </strong>
-                  </div>
-                  {mesaLines.length > 0 ? (
-                    <ul style={{ margin: "0 0 0.75rem", paddingLeft: "1.1rem" }}>
-                      {mesaLines.map((l) => (
-                        <li key={l.menuId}>
-                          {l.qty}× {l.name} — {(l.qty * l.unitPrice).toFixed(2)} €
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="muted small" style={{ margin: "0 0 0.75rem" }}>
-                      Mesa libre — añade platos abajo.
-                    </p>
-                  )}
-                  <label className="mockup-field" style={{ display: "block", marginBottom: 0 }}>
-                    <span>Notas cocina</span>
-                    <input
-                      type="text"
-                      value={mesaNotes}
-                      onChange={(e) => setTableNotes(selectedTableId, e.target.value)}
-                      placeholder="Ej. sin picante"
-                    />
-                  </label>
-                </article>
-
-                <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
-                  {FERMINA_MOCK_MENU.map((item) => {
-                    const unitPrice = ferminaPriceForChannel(item, "salon");
-                    return (
-                      <li key={item.id} className="fermina-menu-item">
-                        <span>
-                          <strong>{item.name}</strong>
-                          {item.hint ? (
-                            <span className="kpi-label" style={{ display: "block" }}>
-                              {item.hint}
-                            </span>
-                          ) : null}
-                        </span>
-                        <div className="fermina-menu-item__qty">
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={() => setTableCartQty(selectedTableId, item.id, -1)}
-                          >
-                            −
-                          </button>
-                          <span>{mesaCart[item.id] || 0}</span>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={() => setTableCartQty(selectedTableId, item.id, 1)}
-                          >
-                            +
-                          </button>
-                          <span className="kpi-label">
-                            <strong>{unitPrice.toFixed(2)} €</strong>
-                          </span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                <p className="allergen-panel__summary" style={{ marginBottom: "1rem" }}>
-                  <strong>Saldo mesa: {mesaTotal.toFixed(2)} €</strong>
-                  {mesaItemCount > 0 ? (
-                    <span className="kpi-label"> · {mesaItemCount} unidades</span>
-                  ) : null}
-                </p>
-
-                <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
-                  Cerrar mesa — ¿cómo cobra?
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
-                  {FERMINA_PAYMENTS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={mesaClosePayment === p.id ? "btn" : "btn btn-outline"}
-                      style={{ minWidth: "7rem" }}
-                      onClick={() => setMesaClosePayment(p.id)}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={!mesaLines.length}
-                    onClick={() => closeTable(selectedTableId, mesaClosePayment)}
-                  >
-                    Cerrar mesa y cobrar
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    disabled={!mesaLines.length}
-                    onClick={() => sendTableToKitchen(selectedTableId)}
-                  >
-                    Solo enviar a cocina
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    disabled={!mesaItemCount}
-                    onClick={() => clearTableSession(selectedTableId)}
-                  >
-                    Vaciar mesa
-                  </button>
-                </div>
-              </>
-            ) : (
-              <p className="lead">Selecciona una mesa.</p>
-            )}
-          </div>
+          <RestaurantMesasPanel
+            t={t}
+            menu={mockMenu}
+            tables={floorTables}
+            sessions={tableSessions}
+            selectedTableId={selectedTableId}
+            onSelectTable={setSelectedTableId}
+            onTablesChange={setFloorTables}
+            onSessionsChange={setTableSessions}
+            layoutEditable={panelRole === "admin"}
+            positionEditable={panelRole === "camarero" || panelRole === "admin"}
+            busy={false}
+            mesaClosePayment={mesaClosePayment}
+            onMesaClosePaymentChange={setMesaClosePayment}
+            onSendKitchen={(tableId) => sendTableToKitchen(tableId)}
+            onCloseTable={(tableId, payMethod) => closeTable(tableId, payMethod)}
+          />
         ) : null}
 
         {comandasView === "tarifa" ? (
@@ -1090,12 +943,14 @@ function PanelComandas() {
 
         {comandasView === "activas" ? (
           <div>
-            <h4 style={{ marginTop: 0 }}>Comandas activas</h4>
-            {openOrders.length === 0 ? (
+            <h4 style={{ marginTop: 0 }}>
+              {panelRole === "cocina" ? "Cola de cocina" : "Comandas activas"}
+            </h4>
+            {(panelRole === "cocina" ? kitchenOrders : openOrders).length === 0 ? (
               <p className="lead">No hay comandas abiertas.</p>
             ) : (
               <ul className="fermina-order-list">
-                {openOrders.map((o) => (
+                {(panelRole === "cocina" ? kitchenOrders : openOrders).map((o) => (
                   <li key={o.id} className={`fermina-order-card status-${o.status}`}>
                     <div className="fermina-order-card__head">
                       <strong>
@@ -1505,21 +1360,31 @@ const TOOLBAR = {
 };
 
 export default function RestaurantePanelMockup() {
-  const [tab, setTab] = useState("mapa");
-  const tb = TOOLBAR[tab];
+  const [tab, setTab] = useState("comandas");
+  const [panelRole, setPanelRole] = useState(dakinisReadRestaurantRole);
+  const visibleTabs = TABS.filter((item) => panelRole === "admin" || item.id !== "proveedores");
+  const tb = TOOLBAR[tab] || TOOLBAR.comandas;
 
   return (
     <div className="mockup-app">
       <aside className="mockup-sidebar">
         <div className="mockup-sidebar-brand">Dakinis · Sala</div>
-        <MockupSidebarNav tabs={TABS} activeId={tab} onSelect={setTab} />
+        <MockupSidebarNav tabs={visibleTabs} activeId={tab} onSelect={setTab} />
       </aside>
       <div className="mockup-main">
         <Toolbar title={tb.title} badge={tb.badge} user="Maître" extra={tb.extra} />
+        <RestaurantRoleNav
+          role={panelRole}
+          onRoleChange={(next) => {
+            setPanelRole(next);
+            dakinisWriteRestaurantRole(next);
+            if (next !== "admin" && tab === "proveedores") setTab("comandas");
+          }}
+        />
         {tab === "mapa" ? <PanelMapa /> : null}
         {tab === "reservas" ? <PanelReservas /> : null}
         {tab === "espera" ? <PanelEspera /> : null}
-        {tab === "comandas" ? <PanelComandas /> : null}
+        {tab === "comandas" ? <PanelComandas panelRole={panelRole} /> : null}
         {tab === "clientes" ? <PanelClientes /> : null}
         {tab === "alergenos" ? <PanelAlergenosCartel /> : null}
         {tab === "proveedores" ? <PanelProveedores /> : null}

@@ -5,7 +5,13 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
+import RestaurantMesasPanel from "./RestaurantMesasPanel.jsx";
 import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
+import {
+  dakinisDefaultFloorTables,
+  dakinisTableItemCount,
+  dakinisTableLabel
+} from "../utils/restaurantFloorPlan.js";
 import {
   dakinisRestaurantChannelLabel,
   dakinisRestaurantDayCloseSummary,
@@ -21,7 +27,18 @@ function dakinisEmptyCart() {
   return {};
 }
 
-export default function RestaurantComandasSection({ apiSession, tenantSlugForVertical, activeSystemKey }) {
+const ROLE_DEFAULT_VIEW = {
+  camarero: "mesas",
+  cocina: "activas",
+  admin: "cierre"
+};
+
+export default function RestaurantComandasSection({
+  apiSession,
+  tenantSlugForVertical,
+  activeSystemKey,
+  role = "camarero"
+}) {
   const { locale, t } = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
   const effectiveSlug = dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical);
@@ -41,21 +58,35 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
   const [taxId, setTaxId] = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [printDoc, setPrintDoc] = useState(null);
-  const [comandasView, setComandasView] = useState("tarifa");
+  const [comandasView, setComandasView] = useState(ROLE_DEFAULT_VIEW[role] || "mesas");
+  const [tables, setTables] = useState(dakinisDefaultFloorTables);
+  const [tableSessions, setTableSessions] = useState({});
+  const [selectedTableId, setSelectedTableId] = useState(null);
+  const [mesaClosePayment, setMesaClosePayment] = useState("tarjeta");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const comandasViews = useMemo(
-    () => [
-      { id: "tarifa", label: t("fermina.viewTarifa") },
-      { id: "pedido", label: t("fermina.viewPedido") },
-      { id: "cobro", label: t("fermina.viewCobro") },
-      { id: "activas", label: t("fermina.viewActivas") },
-      { id: "cierre", label: t("fermina.viewCierre") },
-      { id: "facturas", label: t("fermina.viewFacturas") }
-    ],
-    [t]
-  );
+  const comandasViews = useMemo(() => {
+    const all = {
+      mesas: { id: "mesas", label: t("fermina.viewMesas") },
+      tarifa: { id: "tarifa", label: t("fermina.viewTarifa") },
+      pedido: { id: "pedido", label: t("fermina.viewPedido") },
+      cobro: { id: "cobro", label: t("fermina.viewCobro") },
+      activas: { id: "activas", label: t("fermina.viewActivas") },
+      cierre: { id: "cierre", label: t("fermina.viewCierre") },
+      facturas: { id: "facturas", label: t("fermina.viewFacturas") }
+    };
+    const byRole = {
+      camarero: ["mesas", "tarifa", "pedido", "cobro"],
+      cocina: ["activas"],
+      admin: ["cierre", "facturas"]
+    };
+    return (byRole[role] || Object.keys(all)).map((id) => all[id]).filter(Boolean);
+  }, [role, t]);
+
+  useEffect(() => {
+    setComandasView(ROLE_DEFAULT_VIEW[role] || "mesas");
+  }, [role]);
 
   const cartItemCount = useMemo(
     () => Object.values(cart).reduce((sum, qty) => sum + (qty || 0), 0),
@@ -74,15 +105,21 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
     if (!apiSession?.token) return;
     setError("");
     try {
-      const [menuRes, ordersRes, invRes] = await Promise.all([
+      const [menuRes, ordersRes, invRes, floorRes] = await Promise.all([
         dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/restaurant/orders", apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", apiSession, fetchOpts)
+        dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", apiSession, fetchOpts),
+        dakinisTenantJsonFetch("/api/tenant/restaurant/floor", apiSession, fetchOpts)
       ]);
       setMenu(menuRes?.data?.menu ?? []);
       setBrand(menuRes?.data?.brand ?? null);
       setOrders(ordersRes?.data?.orders ?? []);
       setInvoices(invRes?.data?.invoices ?? []);
+      const loadedTables = floorRes?.data?.tables;
+      setTables(
+        Array.isArray(loadedTables) && loadedTables.length ? loadedTables : dakinisDefaultFloorTables()
+      );
+      setTableSessions(floorRes?.data?.sessions ?? {});
     } catch (e) {
       setError(e instanceof Error ? e.message : t("fermina.loadError"));
     }
@@ -118,6 +155,81 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
     [orders]
   );
 
+  const kitchenOrders = useMemo(
+    () =>
+      openOrders.filter((o) => o.status === "nueva" || o.status === "cocina" || o.status === "lista"),
+    [openOrders]
+  );
+
+  const occupiedTablesCount = useMemo(
+    () => tables.filter((tbl) => dakinisTableItemCount(tableSessions[tbl.id]?.cart) > 0).length,
+    [tables, tableSessions]
+  );
+
+  async function dakinisSaveFloor(nextTables) {
+    setTables(nextTables);
+    if (!apiSession?.token) return;
+    try {
+      await dakinisTenantJsonFetch("/api/tenant/restaurant/floor", apiSession, {
+        ...fetchOpts,
+        method: "PATCH",
+        body: { tables: nextTables }
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("restaurant.floorSaveError"));
+    }
+  }
+
+  async function dakinisPatchTableSession(tableId, session, opts = {}) {
+    setTableSessions((prev) => ({ ...prev, [tableId]: { cart: session.cart, notes: session.notes } }));
+    if (!apiSession?.token) return;
+    try {
+      await dakinisTenantJsonFetch(
+        `/api/tenant/restaurant/table-sessions/${encodeURIComponent(tableId)}`,
+        apiSession,
+        { ...fetchOpts, method: "PATCH", body: opts.clear ? { clear: true } : session }
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("fermina.orderError"));
+    }
+  }
+
+  async function dakinisSubmitTableOrder(tableId, lines, notes, status, payMethod) {
+    const label = dakinisTableLabel(tables, tableId);
+    setBusy(true);
+    setError("");
+    try {
+      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/orders", apiSession, {
+        ...fetchOpts,
+        method: "POST",
+        body: {
+          channel: "salon",
+          paymentMethod: payMethod || "tarjeta",
+          table: label,
+          customerName: label,
+          notes,
+          lines
+        }
+      });
+      const order = json?.data?.order;
+      if (order && status !== "nueva") {
+        await dakinisTenantJsonFetch(
+          `/api/tenant/restaurant/orders/${encodeURIComponent(order.id)}`,
+          apiSession,
+          { ...fetchOpts, method: "PATCH", body: { status } }
+        );
+      }
+      await dakinisPatchTableSession(tableId, { cart: {}, notes: "" }, { clear: true });
+      setPrintDoc({ kind: "comanda", data: order });
+      if (role === "cocina") setComandasView("activas");
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("fermina.orderError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function dakinisCartQty(menuId, delta) {
     setCart((prev) => {
       const next = { ...prev };
@@ -148,7 +260,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
       });
       setCart(dakinisEmptyCart());
       setPrintDoc({ kind: "comanda", data: json?.data?.order });
-      setComandasView("activas");
+      if (role === "cocina") setComandasView("activas");
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("fermina.orderError"));
@@ -238,9 +350,19 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
         </p>
       ) : null}
 
-      <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
-        {t("fermina.flowLead")}
-      </p>
+      {role === "camarero" ? (
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+          {t("restaurant.waiterLead")}
+        </p>
+      ) : role === "cocina" ? (
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+          {t("restaurant.kitchenLead")}
+        </p>
+      ) : (
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+          {t("restaurant.adminComandasLead")}
+        </p>
+      )}
 
       <article className="card" style={{ marginTop: "1rem" }}>
         <FerminaComandasSubnav
@@ -248,10 +370,40 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
           activeId={comandasView}
           onSelect={setComandasView}
           badges={{
+            mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
             pedido: cartItemCount > 0 ? String(cartItemCount) : null,
-            activas: openOrders.length > 0 ? String(openOrders.length) : null
+            activas:
+              (role === "cocina" ? kitchenOrders.length : openOrders.length) > 0
+                ? String(role === "cocina" ? kitchenOrders.length : openOrders.length)
+                : null
           }}
         />
+
+        {comandasView === "mesas" ? (
+          <RestaurantMesasPanel
+            t={t}
+            menu={menu}
+            tables={tables}
+            sessions={tableSessions}
+            selectedTableId={selectedTableId}
+            onSelectTable={setSelectedTableId}
+            onTablesChange={setTables}
+            onSessionsChange={setTableSessions}
+            onSessionPatch={dakinisPatchTableSession}
+            layoutEditable={false}
+            positionEditable
+            onFloorSave={dakinisSaveFloor}
+            busy={busy}
+            mesaClosePayment={mesaClosePayment}
+            onMesaClosePaymentChange={setMesaClosePayment}
+            onSendKitchen={(tableId, lines, notes) =>
+              dakinisSubmitTableOrder(tableId, lines, notes, "cocina", "tarjeta")
+            }
+            onCloseTable={(tableId, payMethod, lines, notes) =>
+              dakinisSubmitTableOrder(tableId, lines, notes, "entregada", payMethod)
+            }
+          />
+        ) : null}
 
         {comandasView === "tarifa" ? (
           <div>
@@ -438,12 +590,14 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
 
         {comandasView === "activas" ? (
           <div>
-            <h4 style={{ marginTop: 0 }}>{t("fermina.activeOrders")}</h4>
-            {openOrders.length === 0 ? (
+            <h4 style={{ marginTop: 0 }}>
+              {role === "cocina" ? t("restaurant.kitchenQueue") : t("fermina.activeOrders")}
+            </h4>
+            {(role === "cocina" ? kitchenOrders : openOrders).length === 0 ? (
               <p className="lead">{orders.length === 0 ? t("fermina.noOrders") : t("fermina.noOpenOrders")}</p>
             ) : (
               <ul className="fermina-order-list">
-                {openOrders.map((o) => (
+                {(role === "cocina" ? kitchenOrders : openOrders).map((o) => (
                   <li key={o.id} className={`fermina-order-card status-${o.status}`}>
                     <div className="fermina-order-card__head">
                       <strong>
@@ -474,10 +628,15 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
                       >
                         {t("fermina.print")}
                       </button>
-                      <button type="button" className="btn btn-outline" onClick={() => dakinisCreateInvoice(o)}>
-                        {t("fermina.invoice")}
-                      </button>
-                      {STATUS_FLOW.filter((s) => s !== o.status).map((s) => (
+                      {role !== "cocina" ? (
+                        <button type="button" className="btn btn-outline" onClick={() => dakinisCreateInvoice(o)}>
+                          {t("fermina.invoice")}
+                        </button>
+                      ) : null}
+                      {(role === "cocina"
+                        ? STATUS_FLOW.filter((s) => s !== o.status && s !== "cancelada")
+                        : STATUS_FLOW.filter((s) => s !== o.status)
+                      ).map((s) => (
                         <button
                           key={s}
                           type="button"
@@ -493,14 +652,16 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
                 ))}
               </ul>
             )}
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{ marginTop: "0.75rem" }}
-              onClick={() => setComandasView("pedido")}
-            >
-              {t("fermina.newOrderBtn")}
-            </button>
+            {role !== "cocina" ? (
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ marginTop: "0.75rem" }}
+                onClick={() => setComandasView(role === "camarero" ? "mesas" : "pedido")}
+              >
+                {t("fermina.newOrderBtn")}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </article>

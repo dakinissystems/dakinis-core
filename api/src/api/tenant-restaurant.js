@@ -12,6 +12,10 @@ import {
   dakinisSplitPublicAllergenDisplay
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import {
+  dakinisResolveStockItemSlug,
+  dakinisStockDemoBarcode
+} from "@dakinis/shared/catalog/stock-barcodes.js";
+import {
   DAKINIS_DUMPLING_DEFAULT_RECIPES,
   DAKINIS_DUMPLING_HOUSE_SLUG,
   DAKINIS_DUMPLING_STOCK_ITEMS,
@@ -63,6 +67,7 @@ function dakinisRowStockItem(r) {
     unit: r.unit,
     quantity: r.quantity,
     minQuantity: r.min_quantity,
+    barcode: dakinisStockDemoBarcode(r.slug),
     updatedAt: r.updated_at
   };
 }
@@ -293,6 +298,66 @@ export async function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
   }
 
   return dakinisHandleRestaurantKitchenGet(req);
+}
+
+export async function dakinisHandleRestaurantStockScanPost(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const scanCode = typeof body.barcode === "string" ? body.barcode.trim() : "";
+  const qty = Number(body.quantity);
+  if (!scanCode) return dakinisJsonError(400, "VALIDATION_ERROR", "barcode requerido");
+  if (!Number.isFinite(qty) || qty === 0) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "quantity distinto de cero");
+  }
+
+  const businessId = req.dakinisBusiness.id;
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
+
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+     FROM tenant_stock_items WHERE business_id = ?`,
+    [businessId]
+  );
+  const items = rows.map(dakinisRowStockItem);
+  const itemSlug = dakinisResolveStockItemSlug(scanCode, items);
+  if (!itemSlug) {
+    return dakinisJsonError(404, "NOT_FOUND", "Codigo no coincide con ningun insumo del inventario", {
+      barcode: scanCode
+    });
+  }
+
+  const row = rows.find((r) => r.slug === itemSlug);
+  const direction = body.direction === "out" ? "out" : "in";
+  const delta = direction === "out" ? -Math.abs(qty) : Math.abs(qty);
+  const label =
+    typeof body.label === "string" && body.label.trim()
+      ? body.label.trim()
+      : direction === "out"
+        ? "Salida escaneo"
+        : "Entrada escaneo";
+
+  await dakinisAdjustStock(businessId, row.id, delta, label, dakinisNewId("scan"));
+
+  const updated = await dakinisQueryOne(`SELECT id, slug, name, unit, quantity, min_quantity, updated_at FROM tenant_stock_items WHERE id = ?`, [
+    row.id
+  ]);
+
+  return dakinisJsonSuccess(
+    {
+      item: dakinisRowStockItem(updated),
+      itemSlug,
+      delta,
+      direction
+    },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
 }
 
 export async function dakinisHandleRestaurantProductionSimulatePost(req, rawBody) {

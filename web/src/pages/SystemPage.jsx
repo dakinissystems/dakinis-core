@@ -14,6 +14,11 @@ import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.j
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
 import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
 import RestaurantComandasSection from "../components/RestaurantComandasSection.jsx";
+import RestaurantAdminPanel from "../components/RestaurantAdminPanel.jsx";
+import RestaurantRoleNav, {
+  dakinisReadRestaurantRole,
+  dakinisWriteRestaurantRole
+} from "../components/RestaurantRoleNav.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
@@ -63,6 +68,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
   const [recordsError, setRecordsError] = useState("");
   const [recordsSynced, setRecordsSynced] = useState(false);
   const [mockFormValues, setMockFormValues] = useState(() => dakinisBuildDefaultFormValues(activeMockup));
+  const [restaurantRole, setRestaurantRole] = useState(dakinisReadRestaurantRole);
 
   useEffect(() => {
     setMockFormValues(dakinisBuildDefaultFormValues(activeMockup));
@@ -238,7 +244,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           </article>
         </div>
 
-        {systemPageContent.suppliersProducts ? (
+        {systemPageContent.suppliersProducts && activeSystemKey !== "restaurante" ? (
           <>
             <h3>{systemPageContent.suppliersProducts.sectionTitle}</h3>
             <p className="lead">{systemPageContent.suppliersProducts.sectionLead}</p>
@@ -310,16 +316,37 @@ export default function SystemPage({ activeSystemKey, navigate }) {
 
         {activeSystemKey === "restaurante" ? (
           <>
-            <RestaurantComandasSection
-              apiSession={apiSession}
-              tenantSlugForVertical={tenantSlugForVertical}
-              activeSystemKey={activeSystemKey}
+            <RestaurantRoleNav
+              role={restaurantRole}
+              onRoleChange={(next) => {
+                setRestaurantRole(next);
+                dakinisWriteRestaurantRole(next);
+              }}
             />
-            <RestaurantStockSection
-              apiSession={apiSession}
-              tenantSlugForVertical={tenantSlugForVertical}
-              activeSystemKey={activeSystemKey}
-            />
+            {restaurantRole === "admin" ? (
+              <RestaurantAdminPanel
+                apiSession={apiSession}
+                tenantSlugForVertical={tenantSlugForVertical}
+                activeSystemKey={activeSystemKey}
+                systemPageContent={systemPageContent}
+              />
+            ) : null}
+            {restaurantRole === "cocina" ? (
+              <RestaurantComandasSection
+                apiSession={apiSession}
+                tenantSlugForVertical={tenantSlugForVertical}
+                activeSystemKey={activeSystemKey}
+                role="cocina"
+              />
+            ) : null}
+            {restaurantRole === "camarero" ? (
+              <RestaurantComandasSection
+                apiSession={apiSession}
+                tenantSlugForVertical={tenantSlugForVertical}
+                activeSystemKey={activeSystemKey}
+                role="camarero"
+              />
+            ) : null}
           </>
         ) : null}
 

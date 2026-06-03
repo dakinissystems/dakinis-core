@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { dakinisResolveStockItemSlug, dakinisStockDemoBarcode } from "@dakinis/shared/catalog/stock-barcodes.js";
 import {
   DAKINIS_DUMPLING_DEMO_PRODUCTION,
   DAKINIS_DUMPLING_DEMO_PURCHASE,
@@ -13,6 +14,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
+import StockBarcodeScanner from "./StockBarcodeScanner.jsx";
 
 function dakinisFormatQty(value, unit) {
   const n = Number(value);
@@ -43,6 +45,9 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState(() => demoProduction.map((p) => ({ ...p })));
   const [simulation, setSimulation] = useState(null);
+  const [scanQty, setScanQty] = useState("1");
+  const [scanDirection, setScanDirection] = useState("in");
+  const [scanMessage, setScanMessage] = useState("");
 
   const fetchOpts = useMemo(
     () => ({
@@ -102,6 +107,45 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
     } catch (e) {
       setError(e instanceof Error ? e.message : t("kitchen.simulateError"));
       setSimulation(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function dakinisApplyStockScan(barcode) {
+    const slug = dakinisResolveStockItemSlug(barcode, kitchen?.items ?? []);
+    if (!slug) {
+      setScanMessage(t("kitchen.scanNotFound"));
+      return;
+    }
+    const qty = Number(scanQty);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setScanMessage(t("kitchen.scanQtyInvalid"));
+      return;
+    }
+    if (!apiSession?.token) {
+      setScanMessage(`${t("kitchen.scanMatched")}: ${slug}`);
+      return;
+    }
+    setBusy(true);
+    setScanMessage("");
+    setError("");
+    try {
+      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/scan", apiSession, {
+        ...fetchOpts,
+        method: "POST",
+        body: { barcode, quantity: qty, direction: scanDirection }
+      });
+      const item = json?.data?.item;
+      setScanMessage(
+        t("kitchen.scanOk", {
+          name: item?.name || slug,
+          qty: dakinisFormatQty(item?.quantity, item?.unit)
+        })
+      );
+      await reload(undefined);
+    } catch (e) {
+      setScanMessage(e instanceof Error ? e.message : t("kitchen.scanError"));
     } finally {
       setBusy(false);
     }
@@ -172,14 +216,57 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
         </p>
       ) : null}
 
-      <div className="module-grid" style={{ display: "grid", gap: "1rem" }}>
+      <article className="card stock-panel__scan" style={{ marginBottom: "1rem" }}>
+        <h4 style={{ marginTop: 0 }}>{t("kitchen.scanTitle")}</h4>
+        <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} />
+        <div className="stock-scan-actions">
+          <label className="mockup-field">
+            <span>{t("kitchen.scanQtyLabel")}</span>
+            <input
+              type="number"
+              min="0.01"
+              step="any"
+              inputMode="decimal"
+              value={scanQty}
+              onChange={(e) => setScanQty(e.target.value)}
+            />
+          </label>
+          <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
+            <button
+              type="button"
+              className={scanDirection === "in" ? "btn" : "btn btn-outline"}
+              onClick={() => setScanDirection("in")}
+            >
+              {t("kitchen.scanIn")}
+            </button>
+            <button
+              type="button"
+              className={scanDirection === "out" ? "btn" : "btn btn-outline"}
+              onClick={() => setScanDirection("out")}
+            >
+              {t("kitchen.scanOut")}
+            </button>
+          </div>
+        </div>
+        {scanMessage ? (
+          <p className="lead" style={{ fontSize: "0.9rem", margin: "0.5rem 0 0", color: "#86efac" }}>
+            {scanMessage}
+          </p>
+        ) : null}
+        <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
+          {t("kitchen.scanCodesHint")}
+        </p>
+      </article>
+
+      <div className="module-grid tenant-panel-grid">
         <article className="card">
           <h4>{t("kitchen.inventory")}</h4>
-          <div className="mockup-table-wrap">
-            <table className="mockup-table">
+          <div className="mockup-table-wrap tenant-table-scroll">
+            <table className="mockup-table tenant-stock-table">
               <thead>
                 <tr>
                   <th>{t("kitchen.ingredient")}</th>
+                  <th>{t("kitchen.scanCodeCol")}</th>
                   <th>{t("kitchen.stock")}</th>
                   <th>{t("kitchen.minimum")}</th>
                 </tr>
@@ -187,17 +274,23 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
               <tbody>
                 {kitchen.items.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.name}</td>
-                    <td style={item.quantity < item.minQuantity ? { color: "#fdba74" } : undefined}>
+                    <td data-label={t("kitchen.ingredient")}>{item.name}</td>
+                    <td data-label={t("kitchen.scanCodeCol")} className="kpi-label">
+                      {item.barcode || dakinisStockDemoBarcode(item.slug)}
+                    </td>
+                    <td
+                      data-label={t("kitchen.stock")}
+                      style={item.quantity < item.minQuantity ? { color: "#fdba74" } : undefined}
+                    >
                       {dakinisFormatQty(item.quantity, item.unit)}
                     </td>
-                    <td>{dakinisFormatQty(item.minQuantity, item.unit)}</td>
+                    <td data-label={t("kitchen.minimum")}>{dakinisFormatQty(item.minQuantity, item.unit)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <button type="button" className="btn btn-outline" disabled={busy} onClick={dakinisApplyDemoPurchase}>
+          <button type="button" className="btn btn-outline tenant-touch-btn" disabled={busy} onClick={dakinisApplyDemoPurchase}>
             {t("kitchen.demoPurchase")}
           </button>
         </article>
@@ -233,11 +326,16 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
               </label>
             </div>
           ))}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            <button type="button" className="btn btn-outline" disabled={busy} onClick={dakinisRunSimulate}>
+          <div className="tenant-action-row">
+            <button type="button" className="btn btn-outline tenant-touch-btn" disabled={busy} onClick={dakinisRunSimulate}>
               {t("kitchen.simulate")}
             </button>
-            <button type="button" className="btn" disabled={busy || !apiSession?.token} onClick={dakinisApplyProduction}>
+            <button
+              type="button"
+              className="btn tenant-touch-btn"
+              disabled={busy || !apiSession?.token}
+              onClick={dakinisApplyProduction}
+            >
               {t("kitchen.registerProduction")}
             </button>
           </div>
