@@ -3,6 +3,16 @@
   "provider": "node",
   "packages": { "node": "20" },
   "steps": {
+    "install": {
+      "commands": [
+        { "src": "package.json", "dest": "package.json" },
+        { "src": "package-lock.json", "dest": "package-lock.json" },
+        { "src": "api/package.json", "dest": "api/package.json" },
+        { "src": "web/package.json", "dest": "web/package.json" },
+        { "src": "shared/package.json", "dest": "shared/package.json" },
+        { "cmd": "npm ci", "customName": "Install dependencies (npm ci)" }
+      ]
+    },
     "build": {
       "inputs": ["...", { "local": true, "include": ["."] }],
       "commands": ["npm run build -w @dakinis/web"]
