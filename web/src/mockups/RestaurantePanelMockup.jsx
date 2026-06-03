@@ -968,6 +968,7 @@ function PanelComandas() {
       ) : null}
 
       {comandasView === "facturas" ? (
+      <>
       <article className="card" style={{ marginBottom: "1rem" }}>
         <h3 style={{ marginTop: 0 }}>Facturas emitidas</h3>
         <table className="mockup-table">
@@ -1034,6 +1035,7 @@ function PanelComandas() {
           />
         </div>
       </article>
+      </>
       ) : null}
     </>
   );
