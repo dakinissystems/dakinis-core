@@ -35,11 +35,19 @@ export function dakinisRestaurantIsAppChannel(channelId) {
   return id === "glovo" || id === "uber";
 }
 
-export const DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS = DAKINIS_RESTAURANT_CHANNEL_IDS.filter(
+const RESTAURANT_CHANNEL_IDS = DAKINIS_RESTAURANT_CHANNEL_IDS ?? [
+  "salon",
+  "takeaway",
+  "delivery",
+  "glovo",
+  "uber"
+];
+
+export const DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS = RESTAURANT_CHANNEL_IDS.filter(
   (id) => !dakinisRestaurantIsAppChannel(id)
 );
 
-export const DAKINIS_RESTAURANT_APP_CHANNEL_IDS = DAKINIS_RESTAURANT_CHANNEL_IDS.filter((id) =>
+export const DAKINIS_RESTAURANT_APP_CHANNEL_IDS = RESTAURANT_CHANNEL_IDS.filter((id) =>
   dakinisRestaurantIsAppChannel(id)
 );
 
@@ -53,7 +61,7 @@ export function dakinisRestaurantDayCloseSummary(orders, t) {
     ])
   );
   const byChannel = Object.fromEntries(
-    DAKINIS_RESTAURANT_CHANNEL_IDS.map((id) => [
+    RESTAURANT_CHANNEL_IDS.map((id) => [
       id,
       { id, label: dakinisRestaurantChannelLabel(id, t), total: 0, count: 0 }
     ])

@@ -265,6 +265,17 @@ function ferminaPriceTierLabel(channelId) {
     : "Tarifa local (salón / para llevar / delivery)";
 }
 
+const FERMINA_CHANNELS = [
+  { id: "salon", label: "Salón" },
+  { id: "takeaway", label: "Para llevar" },
+  { id: "delivery", label: "Delivery propio" },
+  { id: "glovo", label: "Glovo" },
+  { id: "uber", label: "Uber Eats" }
+];
+
+const FERMINA_LOCAL_CHANNELS = FERMINA_CHANNELS.filter((c) => !ferminaIsAppChannel(c.id));
+const FERMINA_APP_CHANNELS = FERMINA_CHANNELS.filter((c) => ferminaIsAppChannel(c.id));
+
 const FERMINA_COMANDAS_VIEWS = [
   { id: "tarifa", label: "Tarifa" },
   { id: "pedido", label: "Pedido" },
@@ -272,17 +283,6 @@ const FERMINA_COMANDAS_VIEWS = [
   { id: "activas", label: "Activas" },
   { id: "cierre", label: "Cierre día" },
   { id: "facturas", label: "Facturas" }
-];
-
-const FERMINA_LOCAL_CHANNELS = FERMINA_CHANNELS.filter((c) => !ferminaIsAppChannel(c.id));
-const FERMINA_APP_CHANNELS = FERMINA_CHANNELS.filter((c) => ferminaIsAppChannel(c.id));
-
-const FERMINA_CHANNELS = [
-  { id: "salon", label: "Salón" },
-  { id: "takeaway", label: "Para llevar" },
-  { id: "delivery", label: "Delivery propio" },
-  { id: "glovo", label: "Glovo" },
-  { id: "uber", label: "Uber Eats" }
 ];
 
 const FERMINA_PAYMENTS = [
