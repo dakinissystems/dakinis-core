@@ -1,0 +1,15 @@
+# Finales de línea: LF en el repositorio (evita avisos LF/CRLF en Windows).
+# Ver: https://git-scm.com/docs/gitattributes#_end_of_line_conversion
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.aab binary
+*.apk binary
