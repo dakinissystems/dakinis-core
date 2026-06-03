@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
-        "@dakinis/shared-brand": path.resolve(__dirname, "../../../packages/shared-brand/src")
+        "@dakinis/shared-brand": path.resolve(__dirname, "../packages/shared-brand/src")
       }
     },
     server: {
