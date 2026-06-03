@@ -3,6 +3,12 @@ import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-k
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
+import {
+  dakinisRestaurantChannelLabel,
+  dakinisRestaurantDayCloseSummary,
+  dakinisRestaurantPaymentLabel
+} from "../utils/restaurantOrderMeta.js";
+import { DAKINIS_RESTAURANT_CHANNEL_IDS, DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const STATUS_FLOW = ["nueva", "cocina", "lista", "entregada", "cancelada"];
 
@@ -24,6 +30,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
   const [table, setTable] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [channel, setChannel] = useState("salon");
+  const [paymentMethod, setPaymentMethod] = useState("tarjeta");
   const [notes, setNotes] = useState("");
   const [invoiceType, setInvoiceType] = useState("cliente");
   const [taxId, setTaxId] = useState("");
@@ -81,6 +88,13 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
     [cartLines]
   );
 
+  const dayClose = useMemo(() => dakinisRestaurantDayCloseSummary(orders, t), [orders, t]);
+
+  const openOrders = useMemo(
+    () => orders.filter((o) => o.status !== "entregada" && o.status !== "cancelada"),
+    [orders]
+  );
+
   function dakinisCartQty(menuId, delta) {
     setCart((prev) => {
       const next = { ...prev };
@@ -102,6 +116,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
         method: "POST",
         body: {
           channel,
+          paymentMethod,
           table,
           customerName,
           notes,
@@ -214,9 +229,21 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
             <label className="mockup-field">
               <span>{t("fermina.channel")}</span>
               <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-                <option value="salon">{t("fermina.channelSalon")}</option>
-                <option value="takeaway">{t("fermina.channelTakeaway")}</option>
-                <option value="delivery">{t("fermina.channelDelivery")}</option>
+                {DAKINIS_RESTAURANT_CHANNEL_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {dakinisRestaurantChannelLabel(id, t)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="mockup-field">
+              <span>{t("fermina.paymentMethod")}</span>
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {dakinisRestaurantPaymentLabel(id, t)}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
@@ -253,6 +280,10 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
 
           <p className="allergen-panel__summary">
             <strong>{cartTotal.toFixed(2)} €</strong>
+            <span className="kpi-label">
+              {" "}
+              · {dakinisRestaurantChannelLabel(channel, t)} · {dakinisRestaurantPaymentLabel(paymentMethod, t)}
+            </span>
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
@@ -272,11 +303,11 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
 
         <article className="card">
           <h4>{t("fermina.activeOrders")}</h4>
-          {orders.length === 0 ? (
-            <p className="lead">{t("fermina.noOrders")}</p>
+          {openOrders.length === 0 ? (
+            <p className="lead">{orders.length === 0 ? t("fermina.noOrders") : t("fermina.noOpenOrders")}</p>
           ) : (
             <ul className="fermina-order-list">
-              {orders.map((o) => (
+              {openOrders.map((o) => (
                 <li key={o.id} className={`fermina-order-card status-${o.status}`}>
                   <div className="fermina-order-card__head">
                     <strong>
@@ -285,7 +316,9 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
                     <span className="pill">{o.status}</span>
                   </div>
                   <p className="kpi-label">
-                    {o.table || "—"} · {o.channel} · {new Date(o.createdAt).toLocaleString(dateLocale)}
+                    {o.table || "—"} · {dakinisRestaurantChannelLabel(o.channel, t)} ·{" "}
+                    {dakinisRestaurantPaymentLabel(o.paymentMethod, t)} ·{" "}
+                    {new Date(o.createdAt).toLocaleString(dateLocale)}
                   </p>
                   <ul>
                     {o.lines?.map((l, i) => (
@@ -322,6 +355,103 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
           )}
         </article>
       </div>
+
+      <article className="card" style={{ marginTop: "1rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+          <h4 style={{ margin: 0 }}>{t("fermina.dayCloseTitle")}</h4>
+          <span className="mockup-badge">{t("fermina.dayCloseDelivered", { count: dayClose.closed.length })}</span>
+        </div>
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
+          {t("fermina.dayCloseLead")}
+        </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1rem",
+            marginBottom: "1rem"
+          }}
+        >
+          <div>
+            <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByPayment")}</h5>
+            <table className="mockup-table">
+              <thead>
+                <tr>
+                  <th>{t("fermina.colPayment")}</th>
+                  <th>{t("fermina.dayCloseOrdersCol")}</th>
+                  <th>{t("fermina.colTotal")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dayClose.byPayment.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>{row.count}</td>
+                    <td>{row.total.toFixed(2)} €</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colSpan={2}>{t("fermina.dayCloseCashTotal")}</th>
+                  <th>{dayClose.grandTotal.toFixed(2)} €</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div>
+            <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByChannel")}</h5>
+            <table className="mockup-table">
+              <thead>
+                <tr>
+                  <th>{t("fermina.colChannel")}</th>
+                  <th>{t("fermina.dayCloseOrdersCol")}</th>
+                  <th>{t("fermina.colTotal")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dayClose.byChannel.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>{row.count}</td>
+                    <td>{row.total.toFixed(2)} €</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <table className="mockup-table">
+          <thead>
+            <tr>
+              <th>{t("fermina.colNumber")}</th>
+              <th>{t("fermina.customer")}</th>
+              <th>{t("fermina.colChannel")}</th>
+              <th>{t("fermina.colPayment")}</th>
+              <th>{t("fermina.colTotal")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dayClose.closed.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="lead">
+                  {t("fermina.dayCloseEmpty")}
+                </td>
+              </tr>
+            ) : (
+              dayClose.closed.map((o) => (
+                <tr key={o.id}>
+                  <td>{o.orderNumber}</td>
+                  <td>{o.customerName}</td>
+                  <td>{dakinisRestaurantChannelLabel(o.channel, t)}</td>
+                  <td>{dakinisRestaurantPaymentLabel(o.paymentMethod, t)}</td>
+                  <td>{o.total?.toFixed(2)} €</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </article>
 
       <article className="card" style={{ marginTop: "1rem" }}>
         <h4>{t("fermina.invoicesTitle")}</h4>
@@ -408,6 +538,15 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
               <strong>{printDoc.data.customerName}</strong>
               {printDoc.data.table ? ` · ${printDoc.data.table}` : ""}
             </p>
+            {printDoc.kind === "comanda" && (printDoc.data.channel || printDoc.data.paymentMethod) ? (
+              <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+                {printDoc.data.channel ? dakinisRestaurantChannelLabel(printDoc.data.channel, t) : null}
+                {printDoc.data.channel && printDoc.data.paymentMethod ? " · " : null}
+                {printDoc.data.paymentMethod
+                  ? dakinisRestaurantPaymentLabel(printDoc.data.paymentMethod, t)
+                  : null}
+              </p>
+            ) : null}
             <table className="mockup-table">
               <thead>
                 <tr>

@@ -229,6 +229,22 @@ export const DAKINIS_FERMINA_DEMO_PRODUCTION = [
 
 export const DAKINIS_FERMINA_HOUSE_SLUG = "fermina-food";
 
+/** Canales de venta (salón, apps, etc.). */
+export const DAKINIS_RESTAURANT_CHANNEL_IDS = ["salon", "takeaway", "delivery", "glovo", "uber"];
+
+/** Formas de cobro al cerrar el pedido. */
+export const DAKINIS_RESTAURANT_PAYMENT_IDS = ["efectivo", "tarjeta"];
+
+export function dakinisNormalizeRestaurantChannel(value) {
+  const id = String(value || "salon").trim().toLowerCase();
+  return DAKINIS_RESTAURANT_CHANNEL_IDS.includes(id) ? id : "salon";
+}
+
+export function dakinisNormalizeRestaurantPayment(value) {
+  const id = String(value || "tarjeta").trim().toLowerCase();
+  return DAKINIS_RESTAURANT_PAYMENT_IDS.includes(id) ? id : "tarjeta";
+}
+
 /** Filas de carta para cartel QR (categoría Entrante → rejilla pública). */
 export const DAKINIS_FERMINA_DISH_ALLERGEN_ROWS = [
   {
