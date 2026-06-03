@@ -4,6 +4,8 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
+import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
+import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
 import {
   dakinisRestaurantChannelLabel,
   dakinisRestaurantDayCloseSummary,
@@ -205,7 +207,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
   }
 
   function dakinisPrint() {
-    window.print();
+    void dakinisFerminaPrint();
   }
 
   if (!apiSession?.token) return null;
@@ -665,64 +667,16 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
               {t("fermina.closePrint")}
             </button>
           </div>
-          <article className="fermina-print-sheet print-only">
-            {isFermina ? (
-              <img src="/assets/fermina-logo.png" alt="" className="fermina-print-sheet__logo" width={160} />
-            ) : null}
-            <h2>
-              {printDoc.kind === "comanda"
-                ? t("fermina.printComanda", { n: printDoc.data.orderNumber })
-                : t("fermina.printFactura", { n: printDoc.data.invoiceNumber })}
-            </h2>
-            <p className="kpi-label">
-              {printDoc.data.venueName || "Fermina Food"} · {new Date().toLocaleString(dateLocale)}
-            </p>
-            {printDoc.kind === "factura" ? (
-              <p>
-                <strong>
-                  {printDoc.data.type === "gestor" ? t("fermina.invoiceManager") : t("fermina.invoiceClient")}
-                </strong>
-                {printDoc.data.taxId ? ` · ${printDoc.data.taxId}` : ""}
-              </p>
-            ) : null}
-            <p>
-              <strong>{printDoc.data.customerName}</strong>
-              {printDoc.data.table ? ` · ${printDoc.data.table}` : ""}
-            </p>
-            {printDoc.kind === "comanda" && (printDoc.data.channel || printDoc.data.paymentMethod) ? (
-              <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-                {printDoc.data.channel ? dakinisRestaurantChannelLabel(printDoc.data.channel, t) : null}
-                {printDoc.data.channel && printDoc.data.paymentMethod ? " · " : null}
-                {printDoc.data.paymentMethod
-                  ? dakinisRestaurantPaymentLabel(printDoc.data.paymentMethod, t)
-                  : null}
-              </p>
-            ) : null}
-            <table className="mockup-table">
-              <thead>
-                <tr>
-                  <th>{t("fermina.colItem")}</th>
-                  <th>{t("fermina.colQty")}</th>
-                  <th>{t("fermina.colPrice")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(printDoc.data.lines || []).map((l, i) => (
-                  <tr key={i}>
-                    <td>{l.name}</td>
-                    <td>{l.qty}</td>
-                    <td>{(l.qty * l.unitPrice).toFixed(2)} €</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="fermina-print-sheet__total">
-              <strong>{(printDoc.data.total ?? 0).toFixed(2)} €</strong>
-            </p>
-            {printDoc.kind === "comanda" && printDoc.data.notes ? (
-              <p>{printDoc.data.notes}</p>
-            ) : null}
-          </article>
+          <FerminaPrintSheet
+            kind={printDoc.kind}
+            doc={printDoc.data}
+            businessName={brand?.name || "Fermina Food"}
+            dateLocale={dateLocale}
+            t={t}
+            showLogo={isFermina}
+            channelLabel={(ch) => dakinisRestaurantChannelLabel(ch, t)}
+            paymentLabel={(pm) => dakinisRestaurantPaymentLabel(pm, t)}
+          />
         </div>
       ) : null}
     </section>

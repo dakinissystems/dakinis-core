@@ -1709,6 +1709,65 @@ section {
 .fermina-print-sheet__logo {
   display: block;
   margin: 0 auto 0.75rem;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.fermina-print-sheet__title {
+  margin: 0 0 0.65rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.fermina-print-sheet__meta {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.fermina-print-sheet__meta-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 38%) 1fr;
+  gap: 0.15rem 0.5rem;
+  margin: 0;
+  padding: 0.2rem 0;
+  font-size: 0.88rem;
+}
+
+.fermina-print-sheet__meta dt {
+  margin: 0;
+  font-weight: 600;
+  color: #334155;
+}
+
+.fermina-print-sheet__meta dd {
+  margin: 0;
+  color: #111;
+}
+
+.fermina-print-sheet__line {
+  margin: 0 0 0.45rem;
+  font-size: 0.9rem;
+}
+
+.fermina-print-sheet__line--muted {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.fermina-print-sheet__notes {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.fermina-print-sheet__meta-note {
+  font-size: 0.75rem;
+  color: #555;
+  margin: 0.35rem 0 0;
+  text-align: right;
 }
 
 .fermina-print-sheet__total {
@@ -1756,20 +1815,38 @@ section {
 }
 
 @media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
   body * {
     visibility: hidden;
   }
 
   .fermina-print-host,
-  .fermina-print-host * {
+  .fermina-print-host *,
+  .fermina-print-sheet,
+  .fermina-print-sheet * {
     visibility: visible;
   }
 
-  .fermina-print-host {
+  .fermina-print-host,
+  .fermina-print-sheet {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .fermina-print-host .fermina-print-sheet {
+    position: static;
+    margin: 0 auto;
   }
 
   .no-print {
@@ -1779,6 +1856,34 @@ section {
   .fermina-print-sheet {
     border: none;
     max-width: 100%;
+    box-shadow: none;
+  }
+
+  .fermina-print-sheet__logo {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    max-width: 14rem;
+    height: auto !important;
+  }
+
+  .fermina-print-sheet .mockup-table th,
+  .fermina-print-sheet .mockup-table td {
+    color: #111 !important;
+    border-color: #ccc !important;
+  }
+
+  .fermina-print-sheet__meta {
+    background: #f8fafc !important;
+    border-color: #ccc !important;
+  }
+
+  .fermina-print-sheet__meta dt,
+  .fermina-print-sheet__meta dd {
+    color: #111 !important;
   }
 }
 

@@ -168,7 +168,7 @@ export async function dakinisHandleRestaurantOrdersPatch(req, orderId, rawBody) 
   if (jwtErr) return jwtErr;
 
   const row = await dakinisQueryOne(
-    `SELECT id, payload FROM tenant_records WHERE id = ? AND business_id = ? AND entity = ?`,
+    `SELECT id, payload, created_at FROM tenant_records WHERE id = ? AND business_id = ? AND entity = ?`,
     [orderId, req.dakinisBusiness.id, ENTITY_ORDER]
   );
   if (!row) return dakinisJsonError(404, "NOT_FOUND", "Comanda no encontrada");
@@ -194,7 +194,11 @@ export async function dakinisHandleRestaurantOrdersPatch(req, orderId, rawBody) 
     orderId
   ]);
 
-  return dakinisJsonSuccess({ order: { id: orderId, ...next } }, req.dakinisBusiness.type, dakinisMeta(req));
+  const updated = await dakinisQueryOne(
+    `SELECT id, payload, created_at FROM tenant_records WHERE id = ?`,
+    [orderId]
+  );
+  return dakinisJsonSuccess({ order: dakinisParsePayload(updated) }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantInvoicesList(req) {

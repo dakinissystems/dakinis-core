@@ -5,6 +5,8 @@ import {
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 import { FerminaComandasSubnav } from "../components/FerminaComandasSubnav.jsx";
+import FerminaPrintSheet from "../components/FerminaPrintSheet.jsx";
+import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -351,8 +353,12 @@ const MOCK_FERMINA_LINES = [
   { name: "Choripán", qty: 2, unitPrice: 7.5 }
 ];
 
+const FERMINA_VENUE_NAME = "Fermina Food";
+
 const MOCK_FERMINA_ORDER = {
   orderNumber: 1042,
+  venueName: FERMINA_VENUE_NAME,
+  createdAt: "2026-05-31T18:45:00.000Z",
   customerName: "Terraza 3",
   table: "Terraza 3",
   channel: "salon",
@@ -369,6 +375,8 @@ function ferminaSeedOrders() {
     {
       id: "o-1041",
       orderNumber: 1041,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: "2026-05-31T17:20:00.000Z",
       customerName: "Lucía — para llevar",
       table: "Mostrador",
       channel: "takeaway",
@@ -381,6 +389,8 @@ function ferminaSeedOrders() {
     {
       id: "o-1040",
       orderNumber: 1040,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: "2026-05-31T14:05:00.000Z",
       customerName: "Pedido Glovo #8821",
       table: "—",
       channel: "glovo",
@@ -396,6 +406,8 @@ function ferminaSeedOrders() {
     {
       id: "o-1039",
       orderNumber: 1039,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: "2026-05-31T12:30:00.000Z",
       customerName: "Uber Eats · Carlos",
       table: "—",
       channel: "uber",
@@ -430,74 +442,6 @@ const MOCK_FERMINA_INVOICE_GESTOR = {
   total: 50.22,
   lines: MOCK_FERMINA_LINES
 };
-
-function MockFerminaPrintSheet({ kind, doc, caption }) {
-  const isComanda = kind === "comanda";
-  const lineTotal = (l) => (l.qty * l.unitPrice).toFixed(2);
-
-  return (
-    <div className="mockup-print-grid__cell">
-      <p className="mockup-print-grid__label">{caption}</p>
-      <article className="fermina-print-sheet" aria-label={caption}>
-        <img src="/assets/fermina-logo.png" alt="" className="fermina-print-sheet__logo" width={140} />
-        <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>
-          {isComanda ? `Comanda #${doc.orderNumber}` : doc.invoiceNumber}
-        </h2>
-        <p className="kpi-label" style={{ color: "#444", margin: "0 0 0.5rem" }}>
-          Fermina Food · 31/5/2026, 20:45
-        </p>
-        {!isComanda ? (
-          <p style={{ margin: "0 0 0.35rem", fontSize: "0.9rem" }}>
-            <strong>
-              {doc.type === "gestor" ? "Gestor / contabilidad" : "Cliente (ticket)"}
-            </strong>
-            {doc.taxId ? ` · ${doc.taxId}` : ""}
-          </p>
-        ) : null}
-        <p style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
-          <strong>{doc.customerName}</strong>
-          {doc.table ? ` · ${doc.table}` : ""}
-        </p>
-        {isComanda && (doc.channel || doc.paymentMethod) ? (
-          <p style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", color: "#555" }}>
-            {doc.channel ? ferminaChannelLabel(doc.channel) : null}
-            {doc.channel && doc.paymentMethod ? " · " : null}
-            {doc.paymentMethod ? ferminaPaymentLabel(doc.paymentMethod) : null}
-          </p>
-        ) : null}
-        <table className="mockup-table">
-          <thead>
-            <tr>
-              <th>Plato</th>
-              <th>Cant.</th>
-              <th>Importe</th>
-            </tr>
-          </thead>
-          <tbody>
-            {doc.lines.map((l, i) => (
-              <tr key={i}>
-                <td>{l.name}</td>
-                <td>{l.qty}</td>
-                <td>{lineTotal(l)} €</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="fermina-print-sheet__total">
-          <strong>{doc.total.toFixed(2)} €</strong>
-        </p>
-        {!isComanda && doc.type === "gestor" && doc.subtotal != null ? (
-          <p style={{ fontSize: "0.75rem", color: "#555", margin: "0.35rem 0 0", textAlign: "right" }}>
-            Base {doc.subtotal.toFixed(2)} € · IVA 21% {doc.tax?.toFixed(2)} €
-          </p>
-        ) : null}
-        {isComanda && doc.notes ? (
-          <p style={{ fontSize: "0.8rem", marginTop: "0.5rem" }}>{doc.notes}</p>
-        ) : null}
-      </article>
-    </div>
-  );
-}
 
 function PanelComandas() {
   const [comandasView, setComandasView] = useState("mesas");
@@ -621,6 +565,8 @@ function PanelComandas() {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: new Date().toISOString(),
       customerName: label,
       table: label,
       channel: "salon",
@@ -645,6 +591,8 @@ function PanelComandas() {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: new Date().toISOString(),
       customerName: label,
       table: label,
       channel: "salon",
@@ -666,6 +614,8 @@ function PanelComandas() {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
+      venueName: FERMINA_VENUE_NAME,
+      createdAt: new Date().toISOString(),
       customerName: customerName.trim() || "Cliente",
       table: table.trim(),
       channel,
@@ -1295,17 +1245,27 @@ function PanelComandas() {
       ) : null}
 
       {printDoc?.kind === "comanda" ? (
-        <article className="card" style={{ marginBottom: "1rem" }}>
+        <div className="fermina-print-host" style={{ marginBottom: "1rem" }}>
           <div className="fermina-print-toolbar no-print" style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
-            <button type="button" className="btn" onClick={() => window.print()}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void dakinisFerminaPrint(document.querySelector(".fermina-print-host"))}
+            >
               Imprimir ahora
             </button>
             <button type="button" className="btn btn-outline" onClick={() => setPrintDoc(null)}>
               Cerrar vista
             </button>
           </div>
-          <MockFerminaPrintSheet kind="comanda" doc={printDoc.doc} caption="Vista impresión" />
-        </article>
+          <FerminaPrintSheet
+            kind="comanda"
+            doc={printDoc.doc}
+            businessName={FERMINA_VENUE_NAME}
+            channelLabel={ferminaChannelLabel}
+            paymentLabel={ferminaPaymentLabel}
+          />
+        </div>
       ) : null}
 
       {comandasView === "facturas" ? (
@@ -1359,19 +1319,24 @@ function PanelComandas() {
           líneas y total).
         </p>
         <div className="mockup-print-grid" style={{ marginTop: "1rem" }}>
-          <MockFerminaPrintSheet
+          <FerminaPrintSheet
             kind="comanda"
             doc={MOCK_FERMINA_ORDER}
+            businessName={FERMINA_VENUE_NAME}
+            channelLabel={ferminaChannelLabel}
+            paymentLabel={ferminaPaymentLabel}
             caption="Comanda cocina"
           />
-          <MockFerminaPrintSheet
+          <FerminaPrintSheet
             kind="factura"
             doc={MOCK_FERMINA_INVOICE_CLIENT}
+            businessName={FERMINA_VENUE_NAME}
             caption="Factura cliente"
           />
-          <MockFerminaPrintSheet
+          <FerminaPrintSheet
             kind="factura"
             doc={MOCK_FERMINA_INVOICE_GESTOR}
+            businessName={FERMINA_VENUE_NAME}
             caption="Factura gestor"
           />
         </div>
