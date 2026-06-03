@@ -1,0 +1,13 @@
+export { default as company, dakinisCompanyTagline } from "./company.js";
+export * from "./i18n.js";
+export * from "./product-urls.js";
+export * from "./products.js";
+export * from "./hub-modules.js";
+export * from "./colors.js";
+export * from "./typography.js";
+export * from "./social-links.js";
+export * from "./pricing-links.js";
+export * from "./analytics.js";
+export * from "./sso.js";
+export { default as productsCatalog } from "./products.json" with { type: "json" };
+export { default as hubModulesCatalog } from "./hub-modules.json" with { type: "json" };
