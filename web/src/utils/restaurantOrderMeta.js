@@ -30,6 +30,19 @@ export function dakinisRestaurantPaymentLabel(payment, t) {
   return key ? t(key) : id;
 }
 
+export function dakinisRestaurantIsAppChannel(channelId) {
+  const id = dakinisNormalizeRestaurantChannel(channelId);
+  return id === "glovo" || id === "uber";
+}
+
+export const DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS = DAKINIS_RESTAURANT_CHANNEL_IDS.filter(
+  (id) => !dakinisRestaurantIsAppChannel(id)
+);
+
+export const DAKINIS_RESTAURANT_APP_CHANNEL_IDS = DAKINIS_RESTAURANT_CHANNEL_IDS.filter((id) =>
+  dakinisRestaurantIsAppChannel(id)
+);
+
 /** Totales de cierre del día (solo pedidos entregados). */
 export function dakinisRestaurantDayCloseSummary(orders, t) {
   const closed = orders.filter((o) => o.status === "entregada");

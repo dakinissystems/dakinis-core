@@ -3,12 +3,15 @@ import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-k
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
+import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import {
   dakinisRestaurantChannelLabel,
   dakinisRestaurantDayCloseSummary,
-  dakinisRestaurantPaymentLabel
+  dakinisRestaurantPaymentLabel,
+  DAKINIS_RESTAURANT_APP_CHANNEL_IDS,
+  DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS
 } from "../utils/restaurantOrderMeta.js";
-import { DAKINIS_RESTAURANT_CHANNEL_IDS, DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const STATUS_FLOW = ["nueva", "cocina", "lista", "entregada", "cancelada"];
 
@@ -36,8 +39,26 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
   const [taxId, setTaxId] = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [printDoc, setPrintDoc] = useState(null);
+  const [comandasView, setComandasView] = useState("tarifa");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const comandasViews = useMemo(
+    () => [
+      { id: "tarifa", label: t("fermina.viewTarifa") },
+      { id: "pedido", label: t("fermina.viewPedido") },
+      { id: "cobro", label: t("fermina.viewCobro") },
+      { id: "activas", label: t("fermina.viewActivas") },
+      { id: "cierre", label: t("fermina.viewCierre") },
+      { id: "facturas", label: t("fermina.viewFacturas") }
+    ],
+    [t]
+  );
+
+  const cartItemCount = useMemo(
+    () => Object.values(cart).reduce((sum, qty) => sum + (qty || 0), 0),
+    [cart]
+  );
 
   const fetchOpts = useMemo(
     () => ({
@@ -125,6 +146,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
       });
       setCart(dakinisEmptyCart());
       setPrintDoc({ kind: "comanda", data: json?.data?.order });
+      setComandasView("activas");
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("fermina.orderError"));
@@ -214,148 +236,274 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
         </p>
       ) : null}
 
-      <div className="module-grid fermina-ops__grid">
-        <article className="card">
-          <h4>{t("fermina.newOrder")}</h4>
-          <div className="fermina-ops__fields">
-            <label className="mockup-field">
-              <span>{t("fermina.customer")}</span>
-              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ej. María" />
-            </label>
-            <label className="mockup-field">
-              <span>{t("fermina.table")}</span>
-              <input value={table} onChange={(e) => setTable(e.target.value)} placeholder="Mesa 3 / Barra" />
-            </label>
-            <label className="mockup-field">
-              <span>{t("fermina.channel")}</span>
-              <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-                {DAKINIS_RESTAURANT_CHANNEL_IDS.map((id) => (
-                  <option key={id} value={id}>
-                    {dakinisRestaurantChannelLabel(id, t)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="mockup-field">
-              <span>{t("fermina.paymentMethod")}</span>
-              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
-                  <option key={id} value={id}>
-                    {dakinisRestaurantPaymentLabel(id, t)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+      <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+        {t("fermina.flowLead")}
+      </p>
 
-          <ul className="fermina-menu-list">
-            {menu.map((item) => (
-              <li key={item.id} className="fermina-menu-item">
-                <div>
-                  <strong>{item.nameEs || item.name}</strong>
-                  <span className="kpi-label">
-                    {item.priceEur?.toFixed(2)} €
-                    {item.portionQty
-                      ? ` · ${t("fermina.portionHint", { qty: item.portionQty, pack: item.packSize })}`
-                      : ""}
-                  </span>
-                </div>
-                <div className="fermina-menu-item__qty">
-                  <button type="button" className="btn btn-outline" onClick={() => dakinisCartQty(item.id, -1)}>
-                    −
-                  </button>
-                  <span>{cart[item.id] || 0}</span>
-                  <button type="button" className="btn btn-outline" onClick={() => dakinisCartQty(item.id, 1)}>
-                    +
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+      <article className="card" style={{ marginTop: "1rem" }}>
+        <FerminaComandasSubnav
+          views={comandasViews}
+          activeId={comandasView}
+          onSelect={setComandasView}
+          badges={{
+            pedido: cartItemCount > 0 ? String(cartItemCount) : null,
+            activas: openOrders.length > 0 ? String(openOrders.length) : null
+          }}
+        />
 
-          <label className="mockup-field">
-            <span>{t("fermina.orderNotes")}</span>
-            <input value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </label>
-
-          <p className="allergen-panel__summary">
-            <strong>{cartTotal.toFixed(2)} €</strong>
-            <span className="kpi-label">
-              {" "}
-              · {dakinisRestaurantChannelLabel(channel, t)} · {dakinisRestaurantPaymentLabel(paymentMethod, t)}
-            </span>
-          </p>
-
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            <button type="button" className="btn" disabled={busy || !cartLines.length} onClick={dakinisSubmitOrder}>
-              {t("fermina.sendKitchen")}
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              disabled={busy || !cartLines.length}
-              onClick={() => dakinisCreateInvoice(null)}
-            >
-              {t("fermina.invoiceCart")}
+        {comandasView === "tarifa" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>{t("fermina.tarifaTitle")}</h4>
+            <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
+              {t("fermina.tarifaLead")}
+            </p>
+            <p className="kpi-label" style={{ margin: "0 0 0.35rem" }}>
+              {t("fermina.tarifaLocalGroup")}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+              {DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={channel === id ? "btn" : "btn btn-outline"}
+                  onClick={() => setChannel(id)}
+                >
+                  {dakinisRestaurantChannelLabel(id, t)}
+                </button>
+              ))}
+            </div>
+            <p className="kpi-label" style={{ margin: "0 0 0.35rem" }}>
+              {t("fermina.tarifaAppGroup")}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+              {DAKINIS_RESTAURANT_APP_CHANNEL_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={channel === id ? "btn" : "btn btn-outline"}
+                  onClick={() => setChannel(id)}
+                >
+                  {dakinisRestaurantChannelLabel(id, t)}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="btn" onClick={() => setComandasView("pedido")}>
+              {t("fermina.tarifaContinue")}
             </button>
           </div>
-        </article>
+        ) : null}
 
-        <article className="card">
-          <h4>{t("fermina.activeOrders")}</h4>
-          {openOrders.length === 0 ? (
-            <p className="lead">{orders.length === 0 ? t("fermina.noOrders") : t("fermina.noOpenOrders")}</p>
-          ) : (
-            <ul className="fermina-order-list">
-              {openOrders.map((o) => (
-                <li key={o.id} className={`fermina-order-card status-${o.status}`}>
-                  <div className="fermina-order-card__head">
-                    <strong>
-                      #{o.orderNumber} · {o.customerName}
-                    </strong>
-                    <span className="pill">{o.status}</span>
+        {comandasView === "pedido" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>{t("fermina.pedidoTitle")}</h4>
+            <p className="kpi-label" style={{ marginTop: 0 }}>
+              {t("fermina.pedidoTariff", { channel: dakinisRestaurantChannelLabel(channel, t) })}{" "}
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ padding: "0.1rem 0.5rem", fontSize: "0.8rem" }}
+                onClick={() => setComandasView("tarifa")}
+              >
+                {t("fermina.pedidoChangeTariff")}
+              </button>
+            </p>
+            <div className="fermina-ops__fields" style={{ marginTop: "0.75rem" }}>
+              <label className="mockup-field">
+                <span>{t("fermina.customer")}</span>
+                <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ej. María" />
+              </label>
+              <label className="mockup-field">
+                <span>{t("fermina.table")}</span>
+                <input value={table} onChange={(e) => setTable(e.target.value)} placeholder="Mesa 3 / Barra" />
+              </label>
+            </div>
+            <label className="mockup-field" style={{ display: "block", marginBottom: "0.75rem" }}>
+              <span>{t("fermina.orderNotes")}</span>
+              <input value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </label>
+            <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
+              {menu.map((item) => (
+                <li key={item.id} className="fermina-menu-item">
+                  <div>
+                    <strong>{item.nameEs || item.name}</strong>
+                    <span className="kpi-label">
+                      {item.priceEur?.toFixed(2)} €
+                      {item.portionQty
+                        ? ` · ${t("fermina.portionHint", { qty: item.portionQty, pack: item.packSize })}`
+                        : ""}
+                    </span>
                   </div>
-                  <p className="kpi-label">
-                    {o.table || "—"} · {dakinisRestaurantChannelLabel(o.channel, t)} ·{" "}
-                    {dakinisRestaurantPaymentLabel(o.paymentMethod, t)} ·{" "}
-                    {new Date(o.createdAt).toLocaleString(dateLocale)}
-                  </p>
-                  <ul>
-                    {o.lines?.map((l, i) => (
-                      <li key={i}>
-                        {l.qty}× {l.name} ({(l.qty * l.unitPrice).toFixed(2)} €)
-                      </li>
-                    ))}
-                  </ul>
-                  <p>
-                    <strong>{o.total?.toFixed(2)} €</strong>
-                  </p>
-                  <div className="fermina-order-card__actions">
-                    <button type="button" className="btn btn-outline" onClick={() => setPrintDoc({ kind: "comanda", data: o })}>
-                      {t("fermina.print")}
+                  <div className="fermina-menu-item__qty">
+                    <button type="button" className="btn btn-outline" onClick={() => dakinisCartQty(item.id, -1)}>
+                      −
                     </button>
-                    <button type="button" className="btn btn-outline" onClick={() => dakinisCreateInvoice(o)}>
-                      {t("fermina.invoice")}
+                    <span>{cart[item.id] || 0}</span>
+                    <button type="button" className="btn btn-outline" onClick={() => dakinisCartQty(item.id, 1)}>
+                      +
                     </button>
-                    {STATUS_FLOW.filter((s) => s !== o.status).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className="btn btn-outline"
-                        disabled={busy}
-                        onClick={() => dakinisPatchStatus(o.id, s)}
-                      >
-                        {s}
-                      </button>
-                    ))}
                   </div>
                 </li>
               ))}
             </ul>
-          )}
-        </article>
-      </div>
+            <p className="allergen-panel__summary">
+              <strong>{cartTotal.toFixed(2)} €</strong>
+              {cartItemCount > 0 ? (
+                <span className="kpi-label">{t("fermina.pedidoUnits", { count: cartItemCount })}</span>
+              ) : null}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              <button type="button" className="btn btn-outline" onClick={() => setComandasView("tarifa")}>
+                {t("fermina.pedidoBackTarifa")}
+              </button>
+              <button
+                type="button"
+                className="btn"
+                disabled={!cartLines.length}
+                onClick={() => setComandasView("cobro")}
+              >
+                {t("fermina.pedidoGoCobro")}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={!cartItemCount}
+                onClick={() => setCart(dakinisEmptyCart())}
+              >
+                {t("fermina.pedidoClear")}
+              </button>
+            </div>
+          </div>
+        ) : null}
 
+        {comandasView === "cobro" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>{t("fermina.cobroTitle")}</h4>
+            {cartLines.length === 0 ? (
+              <p className="lead">{t("fermina.cobroEmpty")}</p>
+            ) : (
+              <>
+                <article className="card" style={{ marginBottom: "1rem", boxShadow: "none", border: "1px solid var(--line)" }}>
+                  <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+                    {customerName || "—"} · {table || "—"} · {dakinisRestaurantChannelLabel(channel, t)}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+                    {cartLines.map((l) => (
+                      <li key={l.menuId}>
+                        {l.qty}× {l.name} — {(l.qty * l.unitPrice).toFixed(2)} €
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ margin: "0.75rem 0 0" }}>
+                    <strong>{t("fermina.cobroTotal", { total: cartTotal.toFixed(2) })}</strong>
+                  </p>
+                </article>
+                <p className="lead" style={{ fontSize: "0.9rem" }}>
+                  {t("fermina.cobroQuestion")}
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+                  {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={paymentMethod === id ? "btn" : "btn btn-outline"}
+                      style={{ minWidth: "7rem" }}
+                      onClick={() => setPaymentMethod(id)}
+                    >
+                      {dakinisRestaurantPaymentLabel(id, t)}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setComandasView("pedido")}>
+                    {t("fermina.cobroBackPedido")}
+                  </button>
+                  <button type="button" className="btn" disabled={busy || !cartLines.length} onClick={dakinisSubmitOrder}>
+                    {t("fermina.sendKitchen")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={busy || !cartLines.length}
+                    onClick={() => dakinisCreateInvoice(null)}
+                  >
+                    {t("fermina.invoiceCart")}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+
+        {comandasView === "activas" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>{t("fermina.activeOrders")}</h4>
+            {openOrders.length === 0 ? (
+              <p className="lead">{orders.length === 0 ? t("fermina.noOrders") : t("fermina.noOpenOrders")}</p>
+            ) : (
+              <ul className="fermina-order-list">
+                {openOrders.map((o) => (
+                  <li key={o.id} className={`fermina-order-card status-${o.status}`}>
+                    <div className="fermina-order-card__head">
+                      <strong>
+                        #{o.orderNumber} · {o.customerName}
+                      </strong>
+                      <span className="pill">{o.status}</span>
+                    </div>
+                    <p className="kpi-label">
+                      {o.table || "—"} · {dakinisRestaurantChannelLabel(o.channel, t)} ·{" "}
+                      {dakinisRestaurantPaymentLabel(o.paymentMethod, t)} ·{" "}
+                      {new Date(o.createdAt).toLocaleString(dateLocale)}
+                    </p>
+                    <ul>
+                      {o.lines?.map((l, i) => (
+                        <li key={i}>
+                          {l.qty}× {l.name} ({(l.qty * l.unitPrice).toFixed(2)} €)
+                        </li>
+                      ))}
+                    </ul>
+                    <p>
+                      <strong>{o.total?.toFixed(2)} €</strong>
+                    </p>
+                    <div className="fermina-order-card__actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => setPrintDoc({ kind: "comanda", data: o })}
+                      >
+                        {t("fermina.print")}
+                      </button>
+                      <button type="button" className="btn btn-outline" onClick={() => dakinisCreateInvoice(o)}>
+                        {t("fermina.invoice")}
+                      </button>
+                      {STATUS_FLOW.filter((s) => s !== o.status).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className="btn btn-outline"
+                          disabled={busy}
+                          onClick={() => dakinisPatchStatus(o.id, s)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ marginTop: "0.75rem" }}
+              onClick={() => setComandasView("pedido")}
+            >
+              {t("fermina.newOrderBtn")}
+            </button>
+          </div>
+        ) : null}
+      </article>
+
+      {comandasView === "cierre" ? (
       <article className="card" style={{ marginTop: "1rem" }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
           <h4 style={{ margin: 0 }}>{t("fermina.dayCloseTitle")}</h4>
@@ -452,7 +600,9 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
           </tbody>
         </table>
       </article>
+      ) : null}
 
+      {comandasView === "facturas" ? (
       <article className="card" style={{ marginTop: "1rem" }}>
         <h4>{t("fermina.invoicesTitle")}</h4>
         <div className="fermina-ops__fields" style={{ marginBottom: "0.75rem" }}>
@@ -503,6 +653,7 @@ export default function RestaurantComandasSection({ apiSession, tenantSlugForVer
           </table>
         )}
       </article>
+      ) : null}
 
       {printDoc ? (
         <div className="fermina-print-host">

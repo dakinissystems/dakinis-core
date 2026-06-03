@@ -4,6 +4,7 @@ import {
   DAKINIS_RESTAURANT_EXTRA_ALLERGENS
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
+import { FerminaComandasSubnav } from "../components/FerminaComandasSubnav.jsx";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -225,11 +226,56 @@ function PanelEspera() {
   );
 }
 
+/** Precios por canal: salón/para llevar/delivery vs Glovo/Uber (comisión apps). */
 const FERMINA_MOCK_MENU = [
-  { id: "bites-cheddar", name: "Bites cheddar y jalapeños", priceEur: 8.5, hint: "9 uds/porción" },
-  { id: "chicken-bites", name: "Chicken bites", priceEur: 9.5, hint: "11 uds/porción" },
-  { id: "choripan", name: "Choripán", priceEur: 7.5, hint: "" }
+  {
+    id: "bites-cheddar",
+    name: "Bites cheddar y jalapeños",
+    hint: "9 uds/porción",
+    prices: { salon: 8.5, takeaway: 8.0, delivery: 8.0, glovo: 9.99, uber: 10.49 }
+  },
+  {
+    id: "chicken-bites",
+    name: "Chicken bites",
+    hint: "11 uds/porción",
+    prices: { salon: 9.5, takeaway: 9.0, delivery: 9.0, glovo: 10.99, uber: 11.49 }
+  },
+  {
+    id: "choripan",
+    name: "Choripán",
+    hint: "",
+    prices: { salon: 7.5, takeaway: 7.0, delivery: 7.0, glovo: 8.99, uber: 9.49 }
+  }
 ];
+
+function ferminaPriceForChannel(item, channelId) {
+  const prices = item.prices || {};
+  const n = prices[channelId];
+  if (n != null && Number.isFinite(n)) return n;
+  return prices.salon ?? 0;
+}
+
+function ferminaIsAppChannel(channelId) {
+  return channelId === "glovo" || channelId === "uber";
+}
+
+function ferminaPriceTierLabel(channelId) {
+  return ferminaIsAppChannel(channelId)
+    ? "Tarifa apps (Glovo / Uber)"
+    : "Tarifa local (salón / para llevar / delivery)";
+}
+
+const FERMINA_COMANDAS_VIEWS = [
+  { id: "tarifa", label: "Tarifa" },
+  { id: "pedido", label: "Pedido" },
+  { id: "cobro", label: "Cobro" },
+  { id: "activas", label: "Activas" },
+  { id: "cierre", label: "Cierre día" },
+  { id: "facturas", label: "Facturas" }
+];
+
+const FERMINA_LOCAL_CHANNELS = FERMINA_CHANNELS.filter((c) => !ferminaIsAppChannel(c.id));
+const FERMINA_APP_CHANNELS = FERMINA_CHANNELS.filter((c) => ferminaIsAppChannel(c.id));
 
 const FERMINA_CHANNELS = [
   { id: "salon", label: "Salón" },
@@ -288,8 +334,8 @@ function ferminaSeedOrders() {
       paymentMethod: "efectivo",
       status: "nueva",
       notes: "",
-      lines: [{ name: "Chicken bites", qty: 1, unitPrice: 9.5 }],
-      total: 9.5
+      lines: [{ name: "Chicken bites", qty: 1, unitPrice: 9.0 }],
+      total: 9.0
     },
     {
       id: "o-1040",
@@ -301,10 +347,10 @@ function ferminaSeedOrders() {
       status: "entregada",
       notes: "Pagado en app",
       lines: [
-        { name: "Bites cheddar y jalapeños", qty: 1, unitPrice: 8.5 },
-        { name: "Choripán", qty: 1, unitPrice: 7.5 }
+        { name: "Bites cheddar y jalapeños", qty: 1, unitPrice: 9.99 },
+        { name: "Choripán", qty: 1, unitPrice: 8.99 }
       ],
-      total: 16
+      total: 18.98
     },
     {
       id: "o-1039",
@@ -315,8 +361,8 @@ function ferminaSeedOrders() {
       paymentMethod: "tarjeta",
       status: "entregada",
       notes: "",
-      lines: [{ name: "Choripán", qty: 2, unitPrice: 7.5 }],
-      total: 15
+      lines: [{ name: "Choripán", qty: 2, unitPrice: 9.49 }],
+      total: 18.98
     }
   ];
 }
@@ -413,6 +459,7 @@ function MockFerminaPrintSheet({ kind, doc, caption }) {
 }
 
 function PanelComandas() {
+  const [comandasView, setComandasView] = useState("tarifa");
   const [orders, setOrders] = useState(ferminaSeedOrders);
   const [nextOrderNum, setNextOrderNum] = useState(1043);
   const [cart, setCart] = useState({});
@@ -428,9 +475,9 @@ function PanelComandas() {
       menuId: m.id,
       name: m.name,
       qty: cart[m.id],
-      unitPrice: m.priceEur
+      unitPrice: ferminaPriceForChannel(m, channel)
     }));
-  }, [cart]);
+  }, [cart, channel]);
 
   const cartTotal = useMemo(() => ferminaLinesTotal(cartLines), [cartLines]);
 
@@ -474,6 +521,16 @@ function PanelComandas() {
     });
   }
 
+  const openOrders = useMemo(
+    () => orders.filter((o) => o.status !== "entregada" && o.status !== "cancelada"),
+    [orders]
+  );
+
+  const cartItemCount = useMemo(
+    () => Object.values(cart).reduce((n, q) => n + (q > 0 ? q : 0), 0),
+    [cart]
+  );
+
   function submitDemoOrder() {
     if (!cartLines.length) return;
     const lines = cartLines.map(({ name, qty, unitPrice }) => ({ name, qty, unitPrice }));
@@ -493,6 +550,7 @@ function PanelComandas() {
     setNextOrderNum((n) => n + 1);
     setCart({});
     setPrintDoc({ kind: "comanda", doc: order });
+    setComandasView("activas");
   }
 
   function patchOrderStatus(orderId, status) {
@@ -516,17 +574,96 @@ function PanelComandas() {
               Comida argentina · demo operativa
             </p>
             <p className="lead" style={{ margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
-              Crea comandas de prueba, marca cobro (efectivo/tarjeta) y canal (Glovo/Uber/salón). El cierre del día
-              suma solo pedidos <strong>entregados</strong>.
+              Flujo en pasos: <strong>tarifa</strong> → <strong>pedido</strong> → <strong>cobro</strong>. Operación y
+              cierre en pestañas aparte.
             </p>
           </div>
           <span className="mockup-badge">Demo interactivo</span>
         </div>
 
-        <div className="fermina-ops__grid">
+        <FerminaComandasSubnav
+          views={FERMINA_COMANDAS_VIEWS}
+          activeId={comandasView}
+          onSelect={setComandasView}
+          badges={{
+            pedido: cartItemCount > 0 ? String(cartItemCount) : null,
+            activas: openOrders.length > 0 ? String(openOrders.length) : null
+          }}
+        />
+
+        {comandasView === "tarifa" ? (
           <div>
-            <h4 style={{ marginTop: 0 }}>Nueva comanda (demo)</h4>
-            <div className="fermina-ops__fields">
+            <h4 style={{ marginTop: 0 }}>Canal y tarifa</h4>
+            <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
+              Elige dónde se vende el pedido. Los precios del menú cambian entre local y apps.
+            </p>
+            <p className="kpi-label" style={{ marginBottom: "0.75rem" }}>
+              {ferminaPriceTierLabel(channel)}
+            </p>
+            <p className="kpi-label" style={{ margin: "0 0 0.35rem" }}>
+              En restaurante / para llevar
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+              {FERMINA_LOCAL_CHANNELS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={channel === c.id ? "btn" : "btn btn-outline"}
+                  onClick={() => setChannel(c.id)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+            <p className="kpi-label" style={{ margin: "0 0 0.35rem" }}>
+              Apps (otra tarifa)
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+              {FERMINA_APP_CHANNELS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={channel === c.id ? "btn" : "btn btn-outline"}
+                  onClick={() => setChannel(c.id)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+            <table className="mockup-table">
+              <thead>
+                <tr>
+                  <th>Plato</th>
+                  <th>Precio ({ferminaChannelLabel(channel)})</th>
+                </tr>
+              </thead>
+              <tbody>
+                {FERMINA_MOCK_MENU.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{ferminaPriceForChannel(item, channel).toFixed(2)} €</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop: "1rem" }}>
+              <button type="button" className="btn" onClick={() => setComandasView("pedido")}>
+                Continuar al pedido →
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {comandasView === "pedido" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>Armar pedido</h4>
+            <p className="kpi-label" style={{ marginTop: 0 }}>
+              Tarifa: <strong>{ferminaChannelLabel(channel)}</strong> ·{" "}
+              <button type="button" className="btn btn-outline" style={{ padding: "0.1rem 0.5rem", fontSize: "0.8rem" }} onClick={() => setComandasView("tarifa")}>
+                Cambiar
+              </button>
+            </p>
+            <div className="fermina-ops__fields" style={{ marginTop: "0.75rem" }}>
               <label className="mockup-field">
                 <span>Cliente</span>
                 <input
@@ -545,26 +682,6 @@ function PanelComandas() {
                   placeholder="Mesa 3 / Mostrador"
                 />
               </label>
-              <label className="mockup-field">
-                <span>Canal / origen</span>
-                <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-                  {FERMINA_CHANNELS.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="mockup-field">
-                <span>Forma de cobro</span>
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                  {FERMINA_PAYMENTS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
             </div>
             <label className="mockup-field" style={{ display: "block", marginBottom: "0.75rem" }}>
               <span>Notas cocina</span>
@@ -576,62 +693,118 @@ function PanelComandas() {
               />
             </label>
             <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
-              {FERMINA_MOCK_MENU.map((item) => (
-                <li key={item.id} className="fermina-menu-item">
-                  <span>
-                    <strong>{item.name}</strong>
-                    {item.hint ? (
-                      <span className="kpi-label" style={{ display: "block" }}>
-                        {item.hint}
+              {FERMINA_MOCK_MENU.map((item) => {
+                const unitPrice = ferminaPriceForChannel(item, channel);
+                return (
+                  <li key={item.id} className="fermina-menu-item">
+                    <span>
+                      <strong>{item.name}</strong>
+                      {item.hint ? (
+                        <span className="kpi-label" style={{ display: "block" }}>
+                          {item.hint}
+                        </span>
+                      ) : null}
+                    </span>
+                    <div className="fermina-menu-item__qty">
+                      <button type="button" className="btn btn-outline" onClick={() => setCartQty(item.id, -1)}>
+                        −
+                      </button>
+                      <span>{cart[item.id] || 0}</span>
+                      <button type="button" className="btn btn-outline" onClick={() => setCartQty(item.id, 1)}>
+                        +
+                      </button>
+                      <span className="kpi-label">
+                        <strong>{unitPrice.toFixed(2)} €</strong>
                       </span>
-                    ) : null}
-                  </span>
-                  <div className="fermina-menu-item__qty">
-                    <button type="button" className="btn btn-outline" onClick={() => setCartQty(item.id, -1)}>
-                      −
-                    </button>
-                    <span>{cart[item.id] || 0}</span>
-                    <button type="button" className="btn btn-outline" onClick={() => setCartQty(item.id, 1)}>
-                      +
-                    </button>
-                    <span className="kpi-label">{item.priceEur.toFixed(2)} €</span>
-                  </div>
-                </li>
-              ))}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
-            <p className="allergen-panel__summary" style={{ marginBottom: "0.5rem" }}>
+            <p className="allergen-panel__summary">
               <strong>{cartTotal.toFixed(2)} €</strong>
-              <span className="kpi-label">
-                {" "}
-                · {ferminaChannelLabel(channel)} · {ferminaPaymentLabel(paymentMethod)}
-              </span>
+              {cartItemCount > 0 ? (
+                <span className="kpi-label"> · {cartItemCount} unidades</span>
+              ) : null}
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              <button type="button" className="btn" disabled={!cartLines.length} onClick={submitDemoOrder}>
-                Enviar a cocina
+              <button type="button" className="btn btn-outline" onClick={() => setComandasView("tarifa")}>
+                ← Tarifa
               </button>
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn"
                 disabled={!cartLines.length}
-                onClick={() => setCart({})}
+                onClick={() => setComandasView("cobro")}
               >
-                Vaciar carrito
+                Ir a cobro →
+              </button>
+              <button type="button" className="btn btn-outline" disabled={!cartItemCount} onClick={() => setCart({})}>
+                Vaciar
               </button>
             </div>
           </div>
+        ) : null}
 
+        {comandasView === "cobro" ? (
+          <div>
+            <h4 style={{ marginTop: 0 }}>Cobro</h4>
+            {cartLines.length === 0 ? (
+              <p className="lead">Primero arma el pedido en la pestaña <strong>Pedido</strong>.</p>
+            ) : (
+              <>
+                <article className="card" style={{ marginBottom: "1rem", boxShadow: "none", border: "1px solid var(--line)" }}>
+                  <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+                    {customerName} · {table || "—"} · {ferminaChannelLabel(channel)}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+                    {cartLines.map((l) => (
+                      <li key={l.menuId}>
+                        {l.qty}× {l.name} — {(l.qty * l.unitPrice).toFixed(2)} €
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ margin: "0.75rem 0 0" }}>
+                    <strong>Total: {cartTotal.toFixed(2)} €</strong>
+                  </p>
+                </article>
+                <p className="lead" style={{ fontSize: "0.9rem" }}>
+                  ¿Cómo cobra el cliente?
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+                  {FERMINA_PAYMENTS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={paymentMethod === p.id ? "btn" : "btn btn-outline"}
+                      style={{ minWidth: "7rem" }}
+                      onClick={() => setPaymentMethod(p.id)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setComandasView("pedido")}>
+                    ← Pedido
+                  </button>
+                  <button type="button" className="btn" onClick={submitDemoOrder}>
+                    Enviar a cocina
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+
+        {comandasView === "activas" ? (
           <div>
             <h4 style={{ marginTop: 0 }}>Comandas activas</h4>
-            <ul className="fermina-order-list">
-              {orders.filter((o) => o.status !== "entregada" && o.status !== "cancelada").length === 0 ? (
-                <li className="lead" style={{ listStyle: "none" }}>
-                  No hay comandas abiertas.
-                </li>
-              ) : null}
-              {orders
-                .filter((o) => o.status !== "entregada" && o.status !== "cancelada")
-                .map((o) => (
+            {openOrders.length === 0 ? (
+              <p className="lead">No hay comandas abiertas.</p>
+            ) : (
+              <ul className="fermina-order-list">
+                {openOrders.map((o) => (
                   <li key={o.id} className={`fermina-order-card status-${o.status}`}>
                     <div className="fermina-order-card__head">
                       <strong>
@@ -649,7 +822,11 @@ function PanelComandas() {
                       <strong>{o.total.toFixed(2)} €</strong>
                     </p>
                     <div className="fermina-order-card__actions">
-                      <button type="button" className="btn btn-outline" onClick={() => setPrintDoc({ kind: "comanda", doc: o })}>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => setPrintDoc({ kind: "comanda", doc: o })}
+                      >
                         Imprimir
                       </button>
                       {FERMINA_STATUS_FLOW.filter((s) => s !== o.status).map((s) => (
@@ -665,11 +842,16 @@ function PanelComandas() {
                     </div>
                   </li>
                 ))}
-            </ul>
+              </ul>
+            )}
+            <button type="button" className="btn btn-outline" style={{ marginTop: "0.75rem" }} onClick={() => setComandasView("pedido")}>
+              + Nuevo pedido
+            </button>
           </div>
-        </div>
+        ) : null}
       </article>
 
+      {comandasView === "cierre" ? (
       <article className="card" style={{ marginBottom: "1rem" }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
           <h3 style={{ margin: 0 }}>Cierre del día (control)</h3>
@@ -769,6 +951,7 @@ function PanelComandas() {
           </tbody>
         </table>
       </article>
+      ) : null}
 
       {printDoc?.kind === "comanda" ? (
         <article className="card" style={{ marginBottom: "1rem" }}>
@@ -784,6 +967,7 @@ function PanelComandas() {
         </article>
       ) : null}
 
+      {comandasView === "facturas" ? (
       <article className="card" style={{ marginBottom: "1rem" }}>
         <h3 style={{ marginTop: 0 }}>Facturas emitidas</h3>
         <table className="mockup-table">
@@ -850,6 +1034,7 @@ function PanelComandas() {
           />
         </div>
       </article>
+      ) : null}
     </>
   );
 }
