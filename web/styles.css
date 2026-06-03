@@ -839,6 +839,158 @@ section {
   letter-spacing: 0.04em;
 }
 
+.crm-journey {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  padding: 1rem 1.1rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.crm-journey__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.crm-journey__arrow {
+  color: var(--brand);
+  font-weight: 400;
+  margin: 0 0.15rem;
+}
+
+.crm-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.hub-dashboard {
+  margin: 1.25rem 0 1.75rem;
+  padding: 1.25rem 1.35rem;
+  text-align: left;
+}
+
+.hub-dashboard__greeting {
+  margin: 0 0 0.65rem;
+  font-size: 1.35rem;
+}
+
+.hub-dashboard__stats {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.hub-dashboard__actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.hub-dashboard__action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.comm-layout {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .comm-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.comm-panel {
+  padding: 1rem 1.1rem;
+}
+
+.comm-panel--muted {
+  opacity: 0.92;
+}
+
+.comm-channel-list,
+.comm-auto-list,
+.comm-soon-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comm-channel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.comm-channel:last-child {
+  border-bottom: none;
+}
+
+.comm-channel--active .comm-channel__status {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.comm-channel--soon {
+  color: var(--muted);
+}
+
+.comm-auto-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.comm-auto-preview-btn {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.comm-subtitle {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.comm-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.comm-soon-list li {
+  padding: 0.25rem 0;
+  color: var(--muted);
+}
+
+.comm-result-details summary {
+  cursor: pointer;
+  color: var(--brand);
+}
+
 .product-home .hero h1 {
   font-size: clamp(1.75rem, 5vw, 2.5rem);
 }
@@ -2777,6 +2929,78 @@ section {
   .restaurant-floor__table {
     min-width: 3.75rem;
     min-height: 2.75rem;
+  }
+}
+
+/* WhatsApp hub (Fase 4) */
+.wa-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.wa-conv-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.wa-thread-list {
+  padding: 1rem;
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.wa-thread-view {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 20rem;
+}
+
+.wa-message-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  flex: 1;
+  overflow: auto;
+  max-height: 16rem;
+}
+
+.wa-message {
+  margin-bottom: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  max-width: 85%;
+}
+
+.wa-message--in {
+  background: rgba(255, 255, 255, 0.06);
+  margin-right: auto;
+}
+
+.wa-message--out {
+  background: rgba(59, 130, 246, 0.2);
+  margin-left: auto;
+}
+
+.wa-message__body {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.wa-send-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  .wa-conv-layout {
+    grid-template-columns: 1fr;
   }
 }
 

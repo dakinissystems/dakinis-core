@@ -58,7 +58,7 @@ export default function DashboardPage({ navigate }) {
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/crm")}>
             {t("appNav.crm")}
           </button>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/app/messages")}>
+          <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
             {t("appNav.messages")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/settings")}>

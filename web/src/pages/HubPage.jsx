@@ -2,7 +2,9 @@ import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   dakinisHubCustomServicesTile,
-  dakinisHubProductTiles,
+  dakinisHubMarketplaceTiles,
+  dakinisHubModuleToTile,
+  dakinisSortHubModuleTiles,
   DAKINIS_ONE_MODULE_TILES
 } from "@dakinis/shared-brand";
 import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
@@ -14,6 +16,7 @@ import { useDakinisSession } from "../context/SessionContext.jsx";
 import { company } from "@dakinis/shared-brand";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { dakinisOpenEcosystemProduct } from "../utils/ecosystemSso.js";
+import HubDashboard from "../components/HubDashboard.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -42,7 +45,7 @@ function dakinisTileDisabled(tile, session) {
 
 export default function HubPage() {
   const navigate = useNavigate();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { session } = useDakinisSession();
 
   useEffect(() => {
@@ -56,14 +59,16 @@ export default function HubPage() {
 
   const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
 
-  const productTiles = useMemo(
-    () => dakinisHubProductTiles(session, returnUrl),
-    [session, returnUrl]
+  const marketplaceTiles = useMemo(
+    () => dakinisHubMarketplaceTiles(session, returnUrl, locale),
+    [session, returnUrl, locale]
   );
-  const servicesTile = useMemo(() => dakinisHubCustomServicesTile(), []);
+  const servicesTile = useMemo(() => dakinisHubCustomServicesTile(locale), [locale]);
 
   const oneModules = useMemo(() => {
-    let tiles = [...DAKINIS_ONE_MODULE_TILES];
+    let tiles = dakinisSortHubModuleTiles([...DAKINIS_ONE_MODULE_TILES]).map((mod) =>
+      dakinisHubModuleToTile(mod, locale)
+    );
     if (!session?.token || dakinisIsPlatformAdminSession(session)) {
       return tiles.filter((tile) => tile.id !== "my-business");
     }
@@ -75,7 +80,7 @@ export default function HubPage() {
       tiles = tiles.filter((tile) => tile.id !== "inventory");
     }
     return tiles;
-  }, [session]);
+  }, [session, locale]);
 
   function openProductTile(tile) {
     dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.HUB_TILE_CLICKED, {
@@ -130,43 +135,16 @@ export default function HubPage() {
             </a>
           </div>
         ) : (
-          <>
-            <p className="lead" style={{ marginBottom: "0.5rem" }}>
-              {t("hub.sessionHello", {
-                email: session.user.email,
-                business: session.business?.slug || session.business?.id || "—"
-              })}
-            </p>
-            <p className="kpi-label" style={{ marginBottom: "1rem" }}>
-              {t("hub.ssoHint")}
-            </p>
-          </>
+          <HubDashboard
+            session={session}
+            applicationTiles={oneModules}
+            marketplaceCount={marketplaceTiles.length}
+            navigate={(path) => navigate(path)}
+          />
         )}
 
-        <h3 className="hub-section-title">{t("hub.productsTitle")}</h3>
-        <div className="hub-tile-grid">
-          {productTiles.map((tile) => (
-            <button
-              key={tile.id}
-              type="button"
-              className="card hub-tile"
-              onClick={() => openProductTile(tile)}
-            >
-              <h4>{tile.label}</h4>
-              <p>{tile.description}</p>
-              {tile.ssoReady === false && session?.token ? (
-                <span className="hub-tile-badge hub-tile-badge--muted">{t("hub.ssoPending")}</span>
-              ) : null}
-            </button>
-          ))}
-          <button type="button" className="card hub-tile hub-tile--muted" onClick={() => openProductTile(servicesTile)}>
-            <h4>{servicesTile.label}</h4>
-            <p>{servicesTile.description}</p>
-          </button>
-        </div>
-
-        <h3 className="hub-section-title">{t("hub.oneModulesTitle")}</h3>
-        <p className="lead hub-section-lead">{t("hub.oneModulesLead")}</p>
+        <h3 className="hub-section-title">{t("hub.applicationsTitle")}</h3>
+        <p className="lead hub-section-lead">{t("hub.applicationsLead")}</p>
         <div className="hub-tile-grid">
           {oneModules.map((tile) => {
             const disabled = dakinisTileDisabled(tile, session);
@@ -190,6 +168,29 @@ export default function HubPage() {
               </button>
             );
           })}
+        </div>
+
+        <h3 className="hub-section-title">{t("hub.marketplaceTitle")}</h3>
+        <p className="lead hub-section-lead">{t("hub.marketplaceLead")}</p>
+        <div className="hub-tile-grid">
+          {marketplaceTiles.map((tile) => (
+            <button
+              key={tile.id}
+              type="button"
+              className="card hub-tile"
+              onClick={() => openProductTile(tile)}
+            >
+              <h4>{tile.label}</h4>
+              <p>{tile.description}</p>
+              {tile.ssoReady === false && session?.token ? (
+                <span className="hub-tile-badge hub-tile-badge--muted">{t("hub.ssoPending")}</span>
+              ) : null}
+            </button>
+          ))}
+          <button type="button" className="card hub-tile hub-tile--muted" onClick={() => openProductTile(servicesTile)}>
+            <h4>{servicesTile.label}</h4>
+            <p>{servicesTile.description}</p>
+          </button>
         </div>
 
         {session?.token && dakinisIsPlatformAdminSession(session) ? (

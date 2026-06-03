@@ -27,17 +27,22 @@ export default {
     whatsappPitch:
       "Reach your customers on WhatsApp from Dakinis One — part of the ecosystem, not a bolt-on.",
     whatsIncluded: "Product modules",
-    modules: ["CRM", "Appointments", "Inventory", "Restaurant", "WhatsApp", "Invoicing (roadmap)"],
+    modules: ["CRM", "Communications", "Inventory", "Restaurant", "Reservations", "Invoicing (roadmap)"],
     bullet1: "Multi-tenant with isolated data per business",
     bullet2: "Verticals: clinic, restaurant, real estate, salon",
     bullet3: "Enter via the Hub and open StreamAutomator or AkoeNet when you need them"
   },
   hub: {
     title: "Dakinis Hub",
-    lead: "One place to open Dakinis One, StreamAutomator, AkoeNet and custom solutions.",
+    lead: "Application center for Dakinis One and the ecosystem marketplace.",
     login: "Sign in",
     requestDemo: "Request a demo",
     sessionHello: "Signed in: {email} · business {business}",
+    applicationsTitle: "Applications",
+    applicationsLead:
+      "Dakinis One modules: CRM, communications, reservations and inventory. Some need Growth or Pro.",
+    marketplaceTitle: "Marketplace",
+    marketplaceLead: "Connected products with SSO: StreamAutomator, AkoeNet and custom development.",
     productsTitle: "Ecosystem products",
     oneModulesTitle: "Dakinis One — modules",
     oneModulesLead: "Daily operations. Some modules need a Growth or Pro plan.",
@@ -47,7 +52,24 @@ export default {
     ssoHint:
       "Signed in to Dakinis One. AkoeNet uses Dakinis account SSO (IdP) when VITE_DAKINIS_AUTH_URL is set.",
     ssoPending: "Manual sign-in",
-    roadmap: "Coming soon"
+    roadmap: "Coming soon",
+    dashboard: {
+      greeting: {
+        morning: "Good morning, {name}",
+        afternoon: "Good afternoon, {name}",
+        evening: "Good evening, {name}"
+      },
+      guestName: "team",
+      statApplications: "Applications: {count}",
+      statMarketplace: "Marketplace: {count}",
+      statTenant: "Tenant: {tenant}",
+      tenantUnknown: "—",
+      quickActions: "Quick actions",
+      actionNewClient: "New customer",
+      actionNewOrder: "New order",
+      actionSendWhatsApp: "Send WhatsApp",
+      actionOpenInventory: "Open inventory"
+    }
   },
   footer: {
     navAria: "Footer links",
@@ -298,6 +320,9 @@ export default {
     app: "App",
     crm: "CRM",
     messages: "Messages",
+    communications: "Communications",
+    whatsapp: "WhatsApp",
+    hub: "Hub",
     settings: "Settings"
   },
   allergens: {
@@ -638,11 +663,25 @@ export default {
     crm: {
       title: "CRM",
       heading: "CRM v1",
+      lead: "Business core: the customer links reservations, orders, billing and WhatsApp.",
       loginLead: "Sign in to use the real tenant via JWT.",
       client: "Client",
       segment: "Segment",
       timeline: "Timeline",
-      error: "CRM error"
+      error: "CRM error",
+      journeyAria: "Customer journey",
+      journeyHint: "Next: contacts, companies and deals stored in the database.",
+      linkReservations: "Reservations & schedule",
+      linkWhatsApp: "Communications",
+      linkCommunications: "Communications",
+      journey: {
+        client: "Customer",
+        booking: "Booking",
+        order: "Order",
+        invoice: "Invoice",
+        whatsapp: "WhatsApp",
+        followUp: "Follow-up"
+      }
     },
     messages: {
       title: "Messages",
@@ -657,6 +696,85 @@ export default {
       rulesLead: "Planned automations (real delivery needs WhatsApp Business API).",
       preview: "Preview",
       error: "Message error"
+    },
+    communications: {
+      title: "Communications",
+      kicker: "Dakinis Communications",
+      heading: "Conversations",
+      lead: "Channels, automations and WhatsApp in one place. More channels coming soon.",
+      loginLead: "Sign in to use communications for your tenant.",
+      channelsTitle: "Channels",
+      channels: {
+        whatsapp: "WhatsApp",
+        email: "Email",
+        telegram: "Telegram",
+        discord: "Discord",
+        sms: "SMS",
+        push: "Push"
+      },
+      automationsTitle: "Automations",
+      automationsLead: "Rules tied to business events (preview available).",
+      automations: {
+        lowStock: "Low stock",
+        bookingCreated: "Booking created",
+        orderReady: "Order ready"
+      },
+      rulesConfigured: "Configured rules",
+      ruleOn: "on",
+      ruleOff: "off",
+      whatsappToolsTitle: "WhatsApp",
+      whatsappToolsLead: "Templates and previews via API (demo).",
+      confirmation: "Appointment confirmation",
+      reminder: "Reminder",
+      reactivation: "Win-back",
+      comingSoonTitle: "Coming soon",
+      comingSoonItems: ["Omnichannel inbox", "Contextual AI", "Advanced templates"],
+      preview: "Preview",
+      previewResult: "Preview result",
+      lastPreview: "Last preview",
+      error: "Message error",
+      legalHint: "WhatsApp Business API and Meta Business Tools: see sections 10–12 of the",
+      legalLink: "privacy policy"
+    },
+    whatsapp: {
+      title: "WhatsApp",
+      kicker: "Hub · WhatsApp",
+      heading: "WhatsApp Business",
+      lead: "Conversations, contacts, templates, automations and AI in one module.",
+      loginLead: "Sign in to connect your tenant to WhatsApp Business API.",
+      navAria: "WhatsApp sections",
+      nav: {
+        conversations: "Conversations",
+        contacts: "Contacts",
+        templates: "Templates",
+        automations: "Automations",
+        ai: "AI"
+      },
+      conversationsLead: "Messages stored in PostgreSQL via webhook and API sends.",
+      contactsLead: "Contacts from inbound messages or manual registration.",
+      templatesLead: "Message previews; real sends use Meta-approved templates.",
+      automationsLead: "Business rules tied to events (booking, orders, CRM).",
+      aiLead: "Phase 5: OpenAI-assisted replies with CRM context (coming soon).",
+      aiItems: [
+        "Draft replies from thread history",
+        "Conversation summary for your team",
+        "CRM ticket from inbound message"
+      ],
+      threadList: "Conversations",
+      noThreads: "No conversations yet. Configure the webhook and send or receive a message.",
+      selectThread: "Select a conversation",
+      noContacts: "No contacts yet. They appear with the first inbound message.",
+      unnamed: "Unnamed",
+      noRules: "No rules loaded.",
+      autoSendHint: "Auto-send: DAKINIS_WHATSAPP_AUTO_SEND=true on the server (requires phone on the event).",
+      sendPhone: "Phone (E.164 without +)",
+      sendMessage: "Message",
+      send: "Send via WhatsApp",
+      sending: "Sending…",
+      sendError: "Could not send",
+      refresh: "Refresh",
+      loading: "Loading…",
+      error: "WhatsApp error"
     },
     settings: {
       title: "Settings",

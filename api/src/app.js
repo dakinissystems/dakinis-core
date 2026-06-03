@@ -51,6 +51,10 @@ import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
 import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
+import {
+  dakinisHandleWhatsappWebhookVerify,
+  dakinisHandleWhatsappWebhookPost
+} from "./api/whatsapp-routes.js";
 import { dakinisHandlePublicCatalog } from "./api/catalog-routes.js";
 import {
   dakinisHandlePlatformCatalogGet,
@@ -97,6 +101,19 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
   }
+
+  const dakinisWhatsappWebhook =
+    path === "/webhooks/whatsapp" ||
+    path === "/api/webhooks/whatsapp" ||
+    path === "/api/whatsapp/webhook";
+
+  if (dakinisWhatsappWebhook && req.method === "GET") {
+    return dakinisHandleWhatsappWebhookVerify(url);
+  }
+  if (dakinisWhatsappWebhook && req.method === "POST") {
+    return dakinisHandleWhatsappWebhookPost(rawBody, req);
+  }
+
   if (path === "/api/public/catalog" && req.method === "GET") {
     return await dakinisHandlePublicCatalog();
   }

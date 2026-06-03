@@ -1,10 +1,15 @@
 const PRIVACY = "privacy@dakinis-systems.com";
 const LEGAL = "legal@dakinis-systems.com";
 const CORPORATE = "https://dakinissystems.com/";
+const META_BUSINESS_TOOLS_TERMS = "https://www.facebook.com/legal/terms/businesstools";
+const META_DATA_PROCESSING_TERMS = "https://www.facebook.com/legal/terms/dataprocessing";
+const WHATSAPP_BUSINESS_TERMS = "https://www.whatsapp.com/legal/business-terms";
+const AD_CHOICES = "https://www.aboutads.info/choices";
+const EU_AD_CHOICES = "https://www.youronlinechoices.eu/";
 
 export const legalCoreEs = {
   back: "← Inicio",
-  updated: "Última actualización: 19 de mayo de 2026",
+  updated: "Última actualización: 3 de junio de 2026",
   corporateLink: "Política corporativa",
   faq: {
     title: "FAQ",
@@ -57,6 +62,18 @@ export const legalCoreEs = {
       {
         h: "9. Tus derechos",
         p: `Puedes solicitar acceso, rectificación o supresión en ${PRIVACY}. Reclamación ante la AEPD: www.aepd.es.`
+      },
+      {
+        h: "10. Comunicaciones y WhatsApp",
+        p: "El módulo Comunicaciones (ruta /app/messages) permite plantillas, reglas y vistas previa de mensajes. El envío real por WhatsApp Business API solo aplica cuando el tenant activa la integración y dispone de cuenta y permisos de Meta/WhatsApp."
+      },
+      {
+        h: "11. Condiciones de las herramientas empresariales de Meta",
+        p: `Si usas WhatsApp Business API, píxel de Meta, API de conversiones u otras herramientas empresariales de Meta a través de Dakinis One o tus propios canales vinculados al tenant, también se aplican las Condiciones de las herramientas empresariales de Meta (texto oficial: ${META_BUSINESS_TOOLS_TERMS}). Meta puede tratar «Datos de herramientas empresariales», incluida información de contacto (para coincidencias, con cifrado según su documentación) y datos de eventos (acciones en tu web, app o tienda). En la UE, pueden aplicarse las Condiciones del tratamiento de los datos de Meta (${META_DATA_PROCESSING_TERMS}) y, según el caso, tratamiento conjunto (art. 26 RGPD) entre tú y Meta Ireland para ciertos datos de eventos.`
+      },
+      {
+        h: "12. Obligaciones del tenant frente a Meta y a tus clientes",
+        p: `Como responsable del tratamiento frente a tus clientes finales debes, entre otras cosas: (a) tener base legal y, si procede, consentimiento para compartir datos con Meta y enviar mensajes comerciales; (b) no compartir datos de menores de 13 años ni categorías prohibidas por Meta; (c) cifrar la información de contacto según exija Meta; (d) mostrar en tu web y app un aviso claro sobre tecnologías de terceros (incl. Meta) para medición y publicidad, y enlaces de exclusión (p. ej. ${AD_CHOICES} y ${EU_AD_CHOICES}); (e) obtener consentimiento previo donde la ley lo exija antes de cookies o SDK de Meta en dispositivos de usuarios; (f) notificarnos sin demora reclamaciones relacionadas con herramientas Meta y colaborar en su respuesta. Meta puede conservar datos de eventos hasta dos años y usar datos para mensajes comerciales en Messenger/WhatsApp según sus condiciones. WhatsApp Business: ${WHATSAPP_BUSINESS_TERMS}. Dudas: ${PRIVACY}.`
       }
     ]
   },
@@ -86,6 +103,10 @@ export const legalCoreEs = {
       {
         h: "6. Contacto",
         p: `${LEGAL}`
+      },
+      {
+        h: "7. WhatsApp, Comunicaciones y Meta",
+        p: `El módulo Comunicaciones y cualquier integración con WhatsApp Business API están sujetos a las condiciones de WhatsApp y a las Condiciones de las herramientas empresariales de Meta (${META_BUSINESS_TOOLS_TERMS}), además de estos términos. Dakinis Systems no es Meta ni WhatsApp; no garantizamos la disponibilidad de APIs de terceros. El tenant es responsable del cumplimiento de las condiciones de Meta, de obtener los consentimientos necesarios y de las políticas de mensajería comercial aplicables.`
       }
     ]
   },
@@ -114,7 +135,7 @@ export const legalCoreEs = {
 
 export const legalCoreEn = {
   back: "← Home",
-  updated: "Last updated: May 19, 2026",
+  updated: "Last updated: June 3, 2026",
   corporateLink: "Corporate policy",
   faq: {
     title: "FAQ",
@@ -167,6 +188,18 @@ export const legalCoreEn = {
       {
         h: "9. Your rights",
         p: `You may request access, rectification, or erasure at ${PRIVACY}. Complaints to the Spanish DPA (AEPD): www.aepd.es.`
+      },
+      {
+        h: "10. Communications and WhatsApp",
+        p: "The Communications module (/app/messages) supports templates, rules, and message previews. Actual sending via WhatsApp Business API only applies when the tenant enables the integration and holds valid Meta/WhatsApp accounts and permissions."
+      },
+      {
+        h: "11. Meta Business Tools Terms",
+        p: `If you use WhatsApp Business API, Meta Pixel, Conversions API, or other Meta Business Tools through Dakinis One or your own channels linked to the tenant, Meta’s Business Tools Terms also apply (official text: ${META_BUSINESS_TOOLS_TERMS}). Meta may process “Business Tool Data”, including contact information (for matching, encrypted per Meta’s documentation) and event data (actions on your website, app, or store). In the EU/EEA, Meta’s Data Processing Terms (${META_DATA_PROCESSING_TERMS}) may apply, and in some cases joint controllership (GDPR Art. 26) between you and Meta Ireland for certain event data.`
+      },
+      {
+        h: "12. Tenant obligations regarding Meta and your customers",
+        p: `As controller for your end-customers you must, among other things: (a) have a lawful basis and, where required, consent to share data with Meta and send commercial messages; (b) not share data relating to children under 13 or prohibited categories under Meta’s terms; (c) encrypt contact information as required by Meta; (d) provide a clear notice on your website and app about third-party technologies (including Meta) for measurement and advertising, with opt-out links (e.g. ${AD_CHOICES} and ${EU_AD_CHOICES}); (e) obtain prior consent where the law requires it before Meta cookies or SDKs on end-users’ devices; (f) promptly notify us of claims related to Meta tools and cooperate in responses. Meta may retain event data for up to two years and use data for commercial messaging on Messenger/WhatsApp per its terms. WhatsApp Business: ${WHATSAPP_BUSINESS_TERMS}. Questions: ${PRIVACY}.`
       }
     ]
   },
@@ -196,6 +229,10 @@ export const legalCoreEn = {
       {
         h: "6. Contact",
         p: `${LEGAL}`
+      },
+      {
+        h: "7. WhatsApp, Communications, and Meta",
+        p: `The Communications module and any WhatsApp Business API integration are subject to WhatsApp’s terms and Meta Business Tools Terms (${META_BUSINESS_TOOLS_TERMS}), in addition to these terms. Dakinis Systems is not Meta or WhatsApp; we do not guarantee third-party API availability. The tenant is responsible for complying with Meta’s terms, obtaining required consents, and applicable commercial messaging rules.`
       }
     ]
   },

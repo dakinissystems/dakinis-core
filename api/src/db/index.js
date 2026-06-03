@@ -42,6 +42,10 @@ function dakinisMigratePlatformKv(db) {
   );
 }
 
+function dakinisMigrateWhatsappTables(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-whatsapp-migrate.sql"), "utf8"));
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 
@@ -60,6 +64,7 @@ function dakinisInitSqlite() {
   dakinisMigrateUsersTotp(db);
   dakinisMigratePlatformUserId(db);
   dakinisMigratePlatformKv(db);
+  dakinisMigrateWhatsappTables(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

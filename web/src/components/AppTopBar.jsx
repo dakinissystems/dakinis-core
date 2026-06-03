@@ -19,7 +19,12 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
     Boolean(session?.token) &&
     session.user?.role !== "platform_admin" &&
     session.business?.type !== "platform";
-  const isActive = (path) => currentPath === path;
+  const isActive = (path) => {
+    if (path === "/app/whatsapp") {
+      return currentPath.startsWith("/app/whatsapp") || currentPath.startsWith("/app/messages");
+    }
+    return currentPath === path;
+  };
 
   return (
     <header className="topbar">
@@ -82,10 +87,10 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                       </button>
                       <button
                         type="button"
-                        className={`btn btn-outline${isActive("/app/messages") ? " is-active" : ""}`}
-                        onClick={() => navigate("/app/messages")}
+                        className={`btn btn-outline${isActive("/app/whatsapp") ? " is-active" : ""}`}
+                        onClick={() => navigate("/app/whatsapp")}
                       >
-                        {t("appNav.messages")}
+                        {t("appNav.whatsapp")}
                       </button>
                       <button
                         type="button"

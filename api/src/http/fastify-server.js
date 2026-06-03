@@ -52,8 +52,7 @@ export async function dakinisCreateFastifyServer() {
     }
   });
 
-  app.all("/api/*", async (req, reply) => {
-    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  async function dakinisFastifyDispatch(req, reply, url) {
     const rateLimitError = dakinisEnforceRateLimit(req.raw, reply.raw, url);
     if (rateLimitError) {
       return reply.code(rateLimitError.status).send(rateLimitError.body);
@@ -61,7 +60,13 @@ export async function dakinisCreateFastifyServer() {
 
     const started = Date.now();
     try {
-      const result = await dakinisDispatch(req.raw, req.body ? JSON.stringify(req.body) : "", url);
+      const rawBody =
+        typeof req.body === "string"
+          ? req.body
+          : req.body !== undefined && req.body !== null
+            ? JSON.stringify(req.body)
+            : "";
+      const result = await dakinisDispatch(req.raw, rawBody, url);
       const ms = Date.now() - started;
       dakinisStructuredLog({
         level: result.status >= 500 ? "error" : "info",
@@ -76,6 +81,10 @@ export async function dakinisCreateFastifyServer() {
         reply.header("X-Auth-Method", req.dakinisAuth.method || "unknown");
         reply.header("X-Auth-Role", req.dakinisAuth.role);
       }
+      if (result.contentType) reply.type(result.contentType);
+      if (typeof result.body === "string") {
+        return reply.code(result.status).send(result.body);
+      }
       return reply.code(result.status).send(result.body);
     } catch (error) {
       dakinisCaptureException(error, { path: url.pathname, method: req.method });
@@ -84,6 +93,16 @@ export async function dakinisCreateFastifyServer() {
         error: { code: "INTERNAL_ERROR", message: error instanceof Error ? error.message : "Error interno" }
       });
     }
+  }
+
+  app.all("/api/*", async (req, reply) => {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    return dakinisFastifyDispatch(req, reply, url);
+  });
+
+  app.all("/webhooks/whatsapp", async (req, reply) => {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    return dakinisFastifyDispatch(req, reply, url);
   });
 
   app.get("/health", async () => ({

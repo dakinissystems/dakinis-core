@@ -1,1 +1,1 @@
-export { default as MessagesPage } from "./MessagesPage.jsx";
+export { WhatsappHubPage as MessagesPage } from "../whatsapp/index.js";

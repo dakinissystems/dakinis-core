@@ -22,7 +22,7 @@ import {
 } from "../pages/StaticInfoPages.jsx";
 import { DashboardPage } from "../app/dashboard/index.js";
 import { CrmPage } from "../app/crm/index.js";
-import { MessagesPage } from "../app/messages/index.js";
+import { WhatsappHubPage } from "../app/whatsapp/index.js";
 import { SettingsPage } from "../app/settings/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 
@@ -102,7 +102,13 @@ function AppRoutes() {
       />
       <Route path="/app/dashboard" element={<DashboardPage navigate={nav} />} />
       <Route path="/app/crm" element={<CrmPage navigate={nav} />} />
-      <Route path="/app/messages" element={<MessagesPage navigate={nav} />} />
+      <Route path="/app/messages" element={<Navigate to="/app/whatsapp/conversations" replace />} />
+      <Route path="/app/whatsapp" element={<Navigate to="/app/whatsapp/conversations" replace />} />
+      <Route path="/app/whatsapp/conversations" element={<WhatsappHubPage navigate={nav} />} />
+      <Route path="/app/whatsapp/contacts" element={<WhatsappHubPage navigate={nav} />} />
+      <Route path="/app/whatsapp/templates" element={<WhatsappHubPage navigate={nav} />} />
+      <Route path="/app/whatsapp/automations" element={<WhatsappHubPage navigate={nav} />} />
+      <Route path="/app/whatsapp/ai" element={<WhatsappHubPage navigate={nav} />} />
       <Route path="/app/settings" element={<SettingsPage navigate={nav} />} />
       <Route path="/hub" element={<HubPage />} />
       <Route path="/ecosystem/launch/:productId" element={<EcosystemLaunchPage />} />
