@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     resolve: {
       alias: {
-        "@dakinis/shared": path.resolve(__dirname, "../shared")
+        "@dakinis/shared": path.resolve(__dirname, "../shared"),
+        "@dakinis/shared-brand": path.resolve(__dirname, "../../../packages/shared-brand/src")
       }
     },
     server: {

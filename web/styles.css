@@ -758,6 +758,91 @@ section {
   font-size: 0.95rem;
 }
 
+.topbar-brand-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-left: 0.35rem;
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .topbar-brand-sub {
+    display: none;
+  }
+}
+
+.hub-page .hub-section-title {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.hub-page .hub-section-lead {
+  margin-bottom: 0.75rem;
+}
+
+.hub-tile-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+.hub-tile {
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.hub-tile:hover,
+.hub-tile:focus-visible {
+  border-color: var(--brand);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.hub-tile h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.hub-tile p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.hub-tile--muted {
+  opacity: 0.92;
+}
+
+.hub-tile--locked {
+  opacity: 0.65;
+}
+
+.hub-tile--highlight {
+  border-color: rgba(45, 212, 191, 0.55);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.2);
+}
+
+.hub-tile-badge--muted {
+  color: var(--muted);
+}
+
+.hub-tile-badge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.product-home .hero h1 {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+}
+
 .mockup-page-wrap {
   padding: 1rem 0 2rem;
 }

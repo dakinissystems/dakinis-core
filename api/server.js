@@ -5,8 +5,10 @@ import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisStructuredLog } from "./src/api/structured-logger.js";
 import { dakinisDispatch } from "./src/app.js";
 import { dakinisInitSentry, dakinisCaptureException } from "./src/lib/sentry.js";
+import { dakinisInitWhatsappEventHandlers } from "./src/lib/whatsapp-event-handlers.js";
 
 dakinisAssertProductionJwtSecret();
+dakinisInitWhatsappEventHandlers();
 
 const PORT = Number(process.env.PORT || 8787);
 const USE_FASTIFY = String(process.env.USE_FASTIFY || "").toLowerCase() === "true";

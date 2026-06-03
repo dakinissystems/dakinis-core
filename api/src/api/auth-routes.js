@@ -166,10 +166,27 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
 
-  const bizRef =
+  let payload;
+  try {
+    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+  } catch {
+    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
+  }
+
+  let bizRef =
     (typeof body.businessId === "string" && body.businessId.trim()) ||
     (typeof body.businessSlug === "string" && body.businessSlug.trim()) ||
     "";
+
+  if (!bizRef) {
+    const claimTenant =
+      (typeof payload.tenant === "string" && payload.tenant.trim()) ||
+      (typeof payload.tenant_slug === "string" && payload.tenant_slug.trim()) ||
+      (typeof payload.tenantSlug === "string" && payload.tenantSlug.trim()) ||
+      (typeof payload.business_slug === "string" && payload.business_slug.trim()) ||
+      "";
+    bizRef = claimTenant;
+  }
 
   if (!bizRef) {
     return dakinisJsonError(
@@ -182,13 +199,6 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
   const business = await dakinisResolveBusinessFromHeader(bizRef);
   if (!business) {
     return dakinisJsonError(404, "UNKNOWN_TENANT", "Negocio no encontrado", { tenantRef: bizRef });
-  }
-
-  let payload;
-  try {
-    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
-  } catch {
-    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
   }
 
   let user;

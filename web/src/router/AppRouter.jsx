@@ -6,7 +6,9 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import HomePage from "../pages/HomePage.jsx";
+import ProductHomePage from "../pages/ProductHomePage.jsx";
+import HubPage from "../pages/HubPage.jsx";
+import EcosystemLaunchPage from "../pages/EcosystemLaunchPage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import PlatformAdminPage from "../pages/PlatformAdminPage.jsx";
 import VistaMockupPage from "../pages/VistaMockupPage.jsx";
@@ -89,7 +91,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage navigate={nav} />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route
         path="/admin"
         element={
@@ -102,11 +104,13 @@ function AppRoutes() {
       <Route path="/app/crm" element={<CrmPage navigate={nav} />} />
       <Route path="/app/messages" element={<MessagesPage navigate={nav} />} />
       <Route path="/app/settings" element={<SettingsPage navigate={nav} />} />
+      <Route path="/hub" element={<HubPage />} />
+      <Route path="/ecosystem/launch/:productId" element={<EcosystemLaunchPage />} />
       <Route path="/faq" element={<FaqPage navigate={nav} />} />
       <Route path="/privacy" element={<PrivacyPage navigate={nav} />} />
       <Route path="/terms" element={<TermsPage navigate={nav} />} />
       <Route path="/legal" element={<LegalNoticePage navigate={nav} />} />
-      <Route path="/" element={<HomePage navigate={nav} dakinisSystemRegistry={dakinisSystemRegistry} />} />
+      <Route path="/" element={<ProductHomePage />} />
       <Route path="*" element={<LegacyPathRoutes navigate={nav} />} />
     </Routes>
   );

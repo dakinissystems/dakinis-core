@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@dakinis/shared": "*",
+    "@dakinis/shared-brand": "file:../../../packages/shared-brand",
     "@ericblade/quagga2": "^1.8.5",
     "@zxing/browser": "^0.1.5",
     "@sentry/react": "^9.30.0",

@@ -1,9 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import { dakinisPersistEcosystemSession, dakinisPersistIdpTokens } from "@dakinis/shared-brand/sso";
 import { dakinisPublicJsonFetch, DakinisApiError } from "../services/api.js";
+import {
+  isIdpAuthEnabled,
+  loginViaIdp,
+  dakinisResolveExchangeTenantRef,
+  setIdpRefreshToken
+} from "../services/idp-auth.js";
+import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 
-export default function LoginPage({ navigate }) {
+export default function LoginPage() {
+  const navigate = useNavigate();
   const { t } = useLocale();
   const { setSession } = useDakinisSession();
   const [email, setEmail] = useState("");
@@ -12,11 +22,71 @@ export default function LoginPage({ navigate }) {
   const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const idpEnabled = isIdpAuthEnabled();
+
+  function dakinisApplySession(payload, idpExtra) {
+    const { token, user, business } = payload;
+    if (!token || !business?.type) {
+      throw new Error(t("login.errors.incomplete"));
+    }
+    const nextSession = {
+      token,
+      user,
+      business,
+      ...(idpExtra ? { idp: idpExtra } : {})
+    };
+    setSession(nextSession);
+    dakinisPersistEcosystemSession(nextSession);
+    if (idpExtra?.accessToken) {
+      dakinisPersistIdpTokens(idpExtra);
+    }
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_SUCCESS, {
+      role: user?.role,
+      businessType: business?.type,
+      viaIdp: Boolean(idpExtra)
+    });
+    navigate("/hub", { replace: true });
+    setNeedsTotp(false);
+    setTotpCode("");
+  }
+
+  async function handleIdpSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { via: "idp" });
+    try {
+      const idp = await loginViaIdp(email.trim(), password);
+      if (idp.refreshToken) setIdpRefreshToken(idp.refreshToken);
+      const tenantRef = dakinisResolveExchangeTenantRef(email, idp);
+      if (!tenantRef) {
+        throw new Error(t("login.errors.idpTenant"));
+      }
+      const json = await dakinisPublicJsonFetch("/api/auth/exchange", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idp.token}` },
+        body: { businessSlug: tenantRef }
+      });
+      const payload = json?.data;
+      if (!payload || typeof payload !== "object") {
+        throw new Error(t("login.errors.noData"));
+      }
+      dakinisApplySession(payload, {
+        accessToken: idp.token,
+        refreshToken: idp.refreshToken || null
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("login.errors.generic"));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED);
     try {
       if (needsTotp && !totpCode.trim()) {
         setError(t("login.errors.totpRequired"));
@@ -37,23 +107,7 @@ export default function LoginPage({ navigate }) {
         throw new Error(t("login.errors.noData"));
       }
 
-      const { token, user, business } = payload;
-      if (!token || !business?.type) {
-        throw new Error(t("login.errors.incomplete"));
-      }
-      setSession({
-        token,
-        user,
-        business
-      });
-      const isPlatformAdmin = user?.role === "platform_admin" || business.type === "platform";
-      if (isPlatformAdmin) {
-        navigate("/admin");
-      } else {
-        navigate(`/sistema/${business.type}`);
-      }
-      setNeedsTotp(false);
-      setTotpCode("");
+      dakinisApplySession(payload);
     } catch (err) {
       if (err instanceof DakinisApiError && err.code === "TOTP_REQUIRED") {
         setNeedsTotp(true);
@@ -144,11 +198,22 @@ export default function LoginPage({ navigate }) {
             <button type="submit" className="btn login-form__submit" disabled={loading}>
               {loading ? t("login.submitting") : t("login.submit")}
             </button>
+            {idpEnabled ? (
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={loading}
+                onClick={handleIdpSubmit}
+              >
+                {loading ? t("login.submitting") : t("login.submitIdp")}
+              </button>
+            ) : null}
             <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
               {t("login.back")}
             </button>
           </div>
         </form>
+        {idpEnabled ? <p className="kpi-label login-idp-hint">{t("login.idpHint")}</p> : null}
       </div>
     </section>
   );

@@ -1,0 +1,205 @@
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  dakinisHubCustomServicesTile,
+  dakinisHubProductTiles,
+  DAKINIS_ONE_MODULE_TILES
+} from "@dakinis/shared-brand";
+import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
+import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import { dakinisPersistEcosystemSession } from "@dakinis/shared-brand/sso";
+import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
+import { useLocale } from "../context/LocaleContext.jsx";
+import { useDakinisSession } from "../context/SessionContext.jsx";
+import { company } from "@dakinis/shared-brand";
+import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
+import { dakinisOpenEcosystemProduct } from "../utils/ecosystemSso.js";
+
+const dakinisSystemRegistry = dakinisGetSystemRegistry();
+
+function dakinisIsPlatformAdminSession(session) {
+  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
+}
+
+function dakinisResolveTilePath(tile, session) {
+  if (tile.id === "my-business" && session?.business?.type) {
+    return `/sistema/${encodeURIComponent(session.business.type)}`;
+  }
+  if (tile.id === "inventory" && session?.business?.type === "restaurante") {
+    return `/sistema/${encodeURIComponent(session.business.type)}`;
+  }
+  return tile.path;
+}
+
+function dakinisTileDisabled(tile, session) {
+  if (tile.status === "roadmap") return true;
+  if (!tile.requiresAuth) return false;
+  if (!session?.token) return true;
+  if (!tile.moduleKey) return false;
+  const plan = dakinisNormalizeCommercialPlan(session.business?.plan);
+  return !dakinisPlanHasModule(plan, tile.moduleKey);
+}
+
+export default function HubPage() {
+  const navigate = useNavigate();
+  const { t } = useLocale();
+  const { session } = useDakinisSession();
+
+  useEffect(() => {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.HUB_OPENED, {
+      authenticated: Boolean(session?.token)
+    });
+    if (session?.token) {
+      dakinisPersistEcosystemSession(session);
+    }
+  }, [session?.token]);
+
+  const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
+
+  const productTiles = useMemo(
+    () => dakinisHubProductTiles(session, returnUrl),
+    [session, returnUrl]
+  );
+  const servicesTile = useMemo(() => dakinisHubCustomServicesTile(), []);
+
+  const oneModules = useMemo(() => {
+    let tiles = [...DAKINIS_ONE_MODULE_TILES];
+    if (!session?.token || dakinisIsPlatformAdminSession(session)) {
+      return tiles.filter((tile) => tile.id !== "my-business");
+    }
+    const vertical = session.business?.type;
+    if (!vertical || !dakinisSystemRegistry[vertical]) {
+      return tiles.filter((tile) => tile.id !== "my-business");
+    }
+    if (vertical !== "restaurante") {
+      tiles = tiles.filter((tile) => tile.id !== "inventory");
+    }
+    return tiles;
+  }, [session]);
+
+  function openProductTile(tile) {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.HUB_TILE_CLICKED, {
+      tileId: tile.id,
+      kind: tile.kind
+    });
+    if (tile.kind === "external") {
+      dakinisOpenEcosystemProduct(tile.id, { session, navigate, returnUrl });
+      return;
+    }
+    if (tile.kind === "corporate") {
+      window.location.href = tile.path;
+      return;
+    }
+    dakinisOpenEcosystemProduct(tile.id, { session, navigate, returnUrl });
+  }
+
+  function openModuleTile(tile) {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.HUB_TILE_CLICKED, {
+      tileId: tile.id,
+      kind: "module"
+    });
+    if (dakinisTileDisabled(tile, session)) {
+      navigate("/login");
+      return;
+    }
+    const path = dakinisResolveTilePath(tile, session);
+    navigate(path);
+  }
+
+  return (
+    <section className="modules hub-page">
+      <div className="container">
+        <p className="kicker">{company.tradingName}</p>
+        <h2>{t("hub.title")}</h2>
+        <p className="lead">{t("hub.lead")}</p>
+
+        {!session?.token ? (
+          <div className="system-page-actions" style={{ marginBottom: "1.5rem" }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { from: "hub" });
+                navigate("/login");
+              }}
+            >
+              {t("hub.login")}
+            </button>
+            <a href={DAKINIS_URL_CORPORATE} className="btn btn-outline" target="_blank" rel="noreferrer">
+              {t("hub.requestDemo")}
+            </a>
+          </div>
+        ) : (
+          <>
+            <p className="lead" style={{ marginBottom: "0.5rem" }}>
+              {t("hub.sessionHello", {
+                email: session.user.email,
+                business: session.business?.slug || session.business?.id || "—"
+              })}
+            </p>
+            <p className="kpi-label" style={{ marginBottom: "1rem" }}>
+              {t("hub.ssoHint")}
+            </p>
+          </>
+        )}
+
+        <h3 className="hub-section-title">{t("hub.productsTitle")}</h3>
+        <div className="hub-tile-grid">
+          {productTiles.map((tile) => (
+            <button
+              key={tile.id}
+              type="button"
+              className="card hub-tile"
+              onClick={() => openProductTile(tile)}
+            >
+              <h4>{tile.label}</h4>
+              <p>{tile.description}</p>
+              {tile.ssoReady === false && session?.token ? (
+                <span className="hub-tile-badge hub-tile-badge--muted">{t("hub.ssoPending")}</span>
+              ) : null}
+            </button>
+          ))}
+          <button type="button" className="card hub-tile hub-tile--muted" onClick={() => openProductTile(servicesTile)}>
+            <h4>{servicesTile.label}</h4>
+            <p>{servicesTile.description}</p>
+          </button>
+        </div>
+
+        <h3 className="hub-section-title">{t("hub.oneModulesTitle")}</h3>
+        <p className="lead hub-section-lead">{t("hub.oneModulesLead")}</p>
+        <div className="hub-tile-grid">
+          {oneModules.map((tile) => {
+            const disabled = dakinisTileDisabled(tile, session);
+            const highlighted = tile.highlight && !disabled;
+            return (
+              <button
+                key={tile.id}
+                type="button"
+                className={`card hub-tile${disabled ? " hub-tile--locked" : ""}${highlighted ? " hub-tile--highlight" : ""}`}
+                onClick={() => openModuleTile(tile)}
+                title={disabled ? t("hub.moduleLocked") : undefined}
+              >
+                <h4>{tile.label}</h4>
+                <p>{tile.description}</p>
+                {tile.status === "roadmap" ? (
+                  <span className="hub-tile-badge hub-tile-badge--muted">{t("hub.roadmap")}</span>
+                ) : null}
+                {disabled && tile.status !== "roadmap" ? (
+                  <span className="hub-tile-badge">{t("hub.requiresLogin")}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
+        {session?.token && dakinisIsPlatformAdminSession(session) ? (
+          <div className="system-page-actions" style={{ marginTop: "1.5rem" }}>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/admin")}>
+              {t("hub.platformAdmin")}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}

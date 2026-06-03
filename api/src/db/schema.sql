@@ -139,3 +139,9 @@ CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (business_id) REFERENCES business(id)
 );
+
+CREATE TABLE IF NOT EXISTS platform_kv (
+  key TEXT PRIMARY KEY,
+  value_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

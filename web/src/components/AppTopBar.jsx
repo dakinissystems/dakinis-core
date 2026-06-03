@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import { dakinisCorporatePricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 
 export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
@@ -35,21 +35,29 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
           <button type="button" className="brand-title-link" onClick={() => navigate("/")} aria-label={t("nav.homeApp")}>
             Dakinis One
           </button>
+          <span className="topbar-brand-sub" aria-hidden="true">
+            {t("nav.byCompany")}
+          </span>
         </div>
         <div className="topbar-actions">
           <LanguageSwitcher />
           <a
-            href="/#precios"
+            href={dakinisCorporatePricingUrl()}
             className="btn btn-outline"
-            onClick={(e) => {
-              e.preventDefault();
-              dakinisGoHomeAnchor(navigate, "precios");
-            }}
+            target="_blank"
+            rel="noreferrer"
           >
             {t("nav.packages")}
           </a>
           {session?.user?.email ? (
             <>
+              <button
+                type="button"
+                className={`btn btn-outline${isActive("/hub") ? " is-active" : ""}`}
+                onClick={() => navigate("/hub")}
+              >
+                {t("nav.hub")}
+              </button>
               {session.user.role === "platform_admin" || session.business?.type === "platform" ? (
                 <button type="button" className="btn btn-outline" onClick={() => navigate("/admin")}>
                   {t("nav.platformPanel")}
@@ -143,14 +151,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               >
                 {t("nav.login")}
               </a>
-              <a
-                href="/#contact"
-                className="btn btn-outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  dakinisGoHomeAnchor(navigate, "contact");
-                }}
-              >
+              <a href={dakinisCorporatePricingUrl()} className="btn btn-outline" target="_blank" rel="noreferrer">
                 {t("nav.quote")}
               </a>
             </>

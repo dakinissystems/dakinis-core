@@ -3,9 +3,10 @@ import { legalCoreEs } from "./legal-core.js";
 /** Textos por defecto (español). */
 export default {
   nav: {
-    packages: "Paquetes",
+    packages: "Paquetes y contacto",
     login: "Login",
     quote: "Solicitar presupuesto",
+    hub: "Hub",
     platformPanel: "Panel plataforma",
     myBusiness: "Mi negocio",
     panelMockup: "Vista mockup",
@@ -13,7 +14,40 @@ export default {
     logout: "Salir",
     language: "Idioma",
     corporateSite: "Dakinis Systems — sitio corporativo",
-    homeApp: "Ir al inicio de la aplicación"
+    homeApp: "Ir al inicio de Dakinis One",
+    byCompany: "by Dakinis Systems"
+  },
+  productHome: {
+    tagline: "Gestión empresarial modular.",
+    lead: "CRM, citas, inventario, restaurante y WhatsApp en un solo ecosistema.",
+    login: "Iniciar sesión",
+    openHub: "Abrir Hub",
+    requestDemo: "Solicitar demo",
+    corporateSite: "Sitio corporativo",
+    whatsappPitch:
+      "Comunícate con tus clientes por WhatsApp desde Dakinis One — parte del ecosistema, no un añadido suelto.",
+    whatsIncluded: "Módulos del producto",
+    modules: ["CRM", "Citas", "Inventario", "Restaurante", "WhatsApp", "Facturación (roadmap)"],
+    bullet1: "Multi-tenant con datos aislados por negocio",
+    bullet2: "Verticales: clínica, restaurante, inmobiliaria, peluquería",
+    bullet3: "Entra por el Hub y abre StreamAutomator o AkoeNet cuando los necesites"
+  },
+  hub: {
+    title: "Dakinis Hub",
+    lead: "Un solo lugar para entrar a Dakinis One, StreamAutomator, AkoeNet y soluciones a medida.",
+    login: "Iniciar sesión",
+    requestDemo: "Solicitar demo",
+    sessionHello: "Sesión: {email} · negocio {business}",
+    productsTitle: "Productos del ecosistema",
+    oneModulesTitle: "Dakinis One — módulos",
+    oneModulesLead: "Accede a la operativa diaria. Algunos módulos requieren plan Growth o Pro.",
+    moduleLocked: "No incluido en tu plan o sin sesión",
+    requiresLogin: "Requiere login",
+    platformAdmin: "Administración plataforma",
+    ssoHint:
+      "Sesión activa en Dakinis One. AkoeNet usa SSO vía cuenta Dakinis (IdP) cuando VITE_DAKINIS_AUTH_URL está configurado.",
+    ssoPending: "Requiere cuenta Dakinis (IdP)",
+    roadmap: "Próximamente"
   },
   footer: {
     navAria: "Enlaces pie de página",
@@ -223,8 +257,17 @@ export default {
       noData:
         "Login: respuesta sin datos. Comprueba la URL de la API (VITE_API_BASE_URL) y que el seed exista en la base de datos.",
       incomplete: "Login incompleto: falta token o tipo de negocio en la respuesta.",
-      generic: "Error de login"
-    }
+      generic: "Error de login",
+      idpTenant: "No se pudo resolver el negocio para SSO. Usa login local o configura tenant en el JWT IdP."
+    },
+    submitIdp: "Entrar con cuenta Dakinis (SSO)",
+    idpHint: "El SSO del ecosistema requiere IdP y enlaza AkoeNet sin volver a escribir contraseña allí."
+  },
+  ecosystemLaunch: {
+    title: "Abriendo producto",
+    redirecting: "Redirigiendo con sesión segura…",
+    invalidProduct: "Producto no válido.",
+    invalidTarget: "URL de destino no configurada."
   },
   legal: legalCoreEs,
   doc: {
@@ -238,6 +281,7 @@ export default {
     vista: "Vista previa · {label} · Dakinis One",
     sistema: "{label} · Dakinis One",
     app: "Dakinis App",
+    hub: "Dakinis Hub",
     allergies: "Cartel de alergias · Dakinis One"
   },
   vistaMockup: {
@@ -560,7 +604,22 @@ export default {
     saveError: "No se pudo guardar",
     typeCustomRequired:
       "Indica un identificador para el tipo nuevo (solo letras, números y guiones; ej. gimnasio-centro).",
-    typeCustomEditRequired: "Indica un identificador para el tipo personalizado."
+    typeCustomEditRequired: "Indica un identificador para el tipo personalizado.",
+    catalog: {
+      title: "Catálogo ecosistema (Hub / Landing)",
+      lead:
+        "Edita productos y módulos del Hub. Se guarda en base de datos y, si el servidor puede escribir en el repo, sincroniza packages/shared-brand.",
+      meta: "Fuente: {source} · actualizado: {updatedAt}",
+      jsonLabel: "JSON (products + hubModules)",
+      loading: "Cargando catálogo…",
+      loadError: "No se pudo cargar el catálogo",
+      saveError: "No se pudo guardar",
+      saved: "Catálogo guardado. Hub y Landing usarán esta versión tras recargar.",
+      save: "Guardar catálogo",
+      saving: "Guardando…",
+      reload: "Recargar desde servidor",
+      invalidShape: "El JSON debe incluir un array «products»."
+    }
   },
   app: {
     loginRequired: "Debes iniciar sesión para usar el flujo real con JWT.",
@@ -589,12 +648,17 @@ export default {
     },
     messages: {
       title: "Mensajes",
-      heading: "Messages v1",
+      heading: "WhatsApp (demo API)",
       loginLead: "Inicia sesión para usar endpoints privados del tenant.",
-      confirmation: "Confirmación",
+      confirmation: "Confirmación cita",
       reminder: "Recordatorio",
       reactivation: "Reactivación",
-      error: "Error messages"
+      orderReady: "Pedido listo",
+      lowStock: "Stock bajo",
+      rulesTitle: "Reglas evento → mensaje",
+      rulesLead: "Automatizaciones planificadas (envío real requiere WhatsApp Business API).",
+      preview: "Vista previa",
+      error: "Error al generar mensaje"
     },
     settings: {
       title: "Ajustes",

@@ -20,3 +20,14 @@ export function dakinisMessageReactivation(payload) {
     body: JSON.stringify(payload)
   });
 }
+
+export function dakinisWhatsappRules() {
+  return api("/api/v1/whatsapp/rules");
+}
+
+export function dakinisWhatsappPreview(payload) {
+  return api("/api/v1/whatsapp/preview", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}

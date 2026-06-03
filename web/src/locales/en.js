@@ -3,9 +3,10 @@ import { legalCoreEn } from "./legal-core.js";
 /** English UI strings. */
 export default {
   nav: {
-    packages: "Plans",
+    packages: "Plans & contact",
     login: "Log in",
     quote: "Request a quote",
+    hub: "Hub",
     platformPanel: "Platform admin",
     myBusiness: "My business",
     panelMockup: "Panel mockup",
@@ -13,7 +14,40 @@ export default {
     logout: "Log out",
     language: "Language",
     corporateSite: "Dakinis Systems — corporate site",
-    homeApp: "Go to app home"
+    homeApp: "Go to Dakinis One home",
+    byCompany: "by Dakinis Systems"
+  },
+  productHome: {
+    tagline: "Modular business management.",
+    lead: "CRM, appointments, inventory, restaurant ops and WhatsApp in one ecosystem.",
+    login: "Sign in",
+    openHub: "Open Hub",
+    requestDemo: "Request a demo",
+    corporateSite: "Corporate site",
+    whatsappPitch:
+      "Reach your customers on WhatsApp from Dakinis One — part of the ecosystem, not a bolt-on.",
+    whatsIncluded: "Product modules",
+    modules: ["CRM", "Appointments", "Inventory", "Restaurant", "WhatsApp", "Invoicing (roadmap)"],
+    bullet1: "Multi-tenant with isolated data per business",
+    bullet2: "Verticals: clinic, restaurant, real estate, salon",
+    bullet3: "Enter via the Hub and open StreamAutomator or AkoeNet when you need them"
+  },
+  hub: {
+    title: "Dakinis Hub",
+    lead: "One place to open Dakinis One, StreamAutomator, AkoeNet and custom solutions.",
+    login: "Sign in",
+    requestDemo: "Request a demo",
+    sessionHello: "Signed in: {email} · business {business}",
+    productsTitle: "Ecosystem products",
+    oneModulesTitle: "Dakinis One — modules",
+    oneModulesLead: "Daily operations. Some modules need a Growth or Pro plan.",
+    moduleLocked: "Not on your plan or not signed in",
+    requiresLogin: "Sign in required",
+    platformAdmin: "Platform administration",
+    ssoHint:
+      "Signed in to Dakinis One. AkoeNet uses Dakinis account SSO (IdP) when VITE_DAKINIS_AUTH_URL is set.",
+    ssoPending: "Manual sign-in",
+    roadmap: "Coming soon"
   },
   footer: {
     navAria: "Footer links",
@@ -222,8 +256,17 @@ export default {
       noData:
         "Login: empty response. Check VITE_API_BASE_URL and that the seed exists in the database.",
       incomplete: "Incomplete login: missing token or business type in the response.",
-      generic: "Login error"
-    }
+      generic: "Login error",
+      idpTenant: "Could not resolve business for SSO. Use local login or set tenant in the IdP JWT."
+    },
+    submitIdp: "Sign in with Dakinis account (SSO)",
+    idpHint: "Ecosystem SSO needs the IdP and links AkoeNet without re-entering your password there."
+  },
+  ecosystemLaunch: {
+    title: "Opening product",
+    redirecting: "Redirecting with a secure session…",
+    invalidProduct: "Invalid product.",
+    invalidTarget: "Destination URL is not configured."
   },
   legal: legalCoreEn,
   doc: {
@@ -237,6 +280,7 @@ export default {
     vista: "Preview · {label} · Dakinis One",
     sistema: "{label} · Dakinis One",
     app: "Dakinis App",
+    hub: "Dakinis Hub",
     allergies: "Allergy poster · Dakinis One"
   },
   vistaMockup: {
@@ -558,7 +602,22 @@ export default {
     saveError: "Could not save",
     typeCustomRequired:
       "Enter an identifier for the new type (letters, numbers and hyphens only; e.g. gym-central).",
-    typeCustomEditRequired: "Enter an identifier for the custom type."
+    typeCustomEditRequired: "Enter an identifier for the custom type.",
+    catalog: {
+      title: "Ecosystem catalog (Hub / Landing)",
+      lead:
+        "Edit Hub products and modules. Saved to the database and, when the server can write the repo, syncs packages/shared-brand.",
+      meta: "Source: {source} · updated: {updatedAt}",
+      jsonLabel: "JSON (products + hubModules)",
+      loading: "Loading catalog…",
+      loadError: "Could not load catalog",
+      saveError: "Could not save",
+      saved: "Catalog saved. Hub and Landing will use it after reload.",
+      save: "Save catalog",
+      saving: "Saving…",
+      reload: "Reload from server",
+      invalidShape: "JSON must include a «products» array."
+    }
   },
   app: {
     loginRequired: "You must sign in to use the real JWT flow.",
@@ -587,12 +646,17 @@ export default {
     },
     messages: {
       title: "Messages",
-      heading: "Messages v1",
+      heading: "WhatsApp (demo API)",
       loginLead: "Sign in to use private tenant endpoints.",
-      confirmation: "Confirmation",
+      confirmation: "Appointment confirmation",
       reminder: "Reminder",
-      reactivation: "Reactivation",
-      error: "Messages error"
+      reactivation: "Win-back",
+      orderReady: "Order ready",
+      lowStock: "Low stock",
+      rulesTitle: "Event → message rules",
+      rulesLead: "Planned automations (real delivery needs WhatsApp Business API).",
+      preview: "Preview",
+      error: "Message error"
     },
     settings: {
       title: "Settings",

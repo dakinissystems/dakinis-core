@@ -51,6 +51,11 @@ import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
 import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
+import { dakinisHandlePublicCatalog } from "./api/catalog-routes.js";
+import {
+  dakinisHandlePlatformCatalogGet,
+  dakinisHandlePlatformCatalogPut
+} from "./api/catalog-admin-routes.js";
 import { dakinisResolveTenant } from "./middleware/tenant.js";
 import { dakinisAuthenticateRequest } from "./middleware/auth.js";
 
@@ -78,9 +83,22 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (authErr) return authErr;
     return dakinisHandlePlatformUsers();
   }
+  if (path === "/api/platform/catalog" && req.method === "GET") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformCatalogGet();
+  }
+  if (path === "/api/platform/catalog" && req.method === "PUT") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformCatalogPut(rawBody);
+  }
 
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
+  }
+  if (path === "/api/public/catalog" && req.method === "GET") {
+    return await dakinisHandlePublicCatalog();
   }
 
   const publicAllergiesMatch = /^\/api\/public\/restaurant\/([^/]+)\/allergies$/.exec(path);

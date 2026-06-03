@@ -32,6 +32,16 @@ function dakinisMigratePlatformUserId(db) {
   }
 }
 
+function dakinisMigratePlatformKv(db) {
+  db.exec(
+    `CREATE TABLE IF NOT EXISTS platform_kv (
+      key TEXT PRIMARY KEY,
+      value_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`
+  );
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 
@@ -49,6 +59,7 @@ function dakinisInitSqlite() {
   db.exec(fs.readFileSync(schemaPath, "utf8"));
   dakinisMigrateUsersTotp(db);
   dakinisMigratePlatformUserId(db);
+  dakinisMigratePlatformKv(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

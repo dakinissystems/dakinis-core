@@ -292,6 +292,16 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
     return dakinisJsonSuccess({ rules }, adapterKey, metaBase);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/whatsapp/preview") {
+    const eventType =
+      typeof payload.eventType === "string" ? payload.eventType.trim() : "booking.created";
+    const message = modules.whatsapp.dakinisPreviewEventMessage({
+      eventType,
+      payload: payload.payload ?? payload
+    });
+    return dakinisJsonSuccess({ eventType, message, queued: false }, adapterKey, metaBase);
+  }
+
   if (req.method === "POST" && url.pathname === "/api/leads/move-stage") {
     const lead = modules.leads.dakinisUpdateLeadStage(payload.lead || {}, payload.nextStage);
     return dakinisJsonSuccess({ lead }, adapterKey, metaBase);

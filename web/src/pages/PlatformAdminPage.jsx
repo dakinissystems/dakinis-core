@@ -7,6 +7,7 @@ import {
   dakinisNormalizeBusinessTypeKey
 } from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisBearerJsonFetch } from "../services/api.js";
+import PlatformCatalogPanel from "../components/PlatformCatalogPanel.jsx";
 
 const DAKINIS_TYPE_OTHER = "__other__";
 
@@ -466,6 +467,8 @@ export default function PlatformAdminPage({ navigate }) {
             </tbody>
           </table>
         </article>
+
+        <PlatformCatalogPanel />
 
         <h3 style={{ marginTop: "1.5rem" }}>Usuarios</h3>
         <article className="card" style={{ overflow: "auto" }}>

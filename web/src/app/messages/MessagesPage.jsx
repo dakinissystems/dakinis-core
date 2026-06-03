@@ -1,17 +1,37 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import {
   dakinisMessageConfirmation,
+  dakinisMessageReminder,
   dakinisMessageReactivation,
-  dakinisMessageReminder
+  dakinisWhatsappPreview,
+  dakinisWhatsappRules
 } from "../../services/messages.js";
 
 export default function MessagesPage({ navigate }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
   const [result, setResult] = useState(null);
+  const [rules, setRules] = useState([]);
   const [error, setError] = useState("");
+
+  const businessName = session?.business?.name || "Dakinis";
+  const clientPayload = { clientName: "Ana", businessName };
+
+  const loadRules = useCallback(async () => {
+    if (!session?.token) return;
+    try {
+      const json = await dakinisWhatsappRules();
+      setRules(json?.data?.rules || []);
+    } catch {
+      setRules([]);
+    }
+  }, [session?.token]);
+
+  useEffect(() => {
+    loadRules();
+  }, [loadRules]);
 
   if (!session?.token) {
     return (
@@ -30,13 +50,31 @@ export default function MessagesPage({ navigate }) {
   async function run(kind) {
     setError("");
     try {
-      const payload = { clientName: "Ana", businessName: session.business?.name || "Dakinis" };
       const json =
         kind === "confirmation"
-          ? await dakinisMessageConfirmation(payload)
+          ? await dakinisMessageConfirmation(clientPayload)
           : kind === "reminder"
-            ? await dakinisMessageReminder(payload)
-            : await dakinisMessageReactivation(payload);
+            ? await dakinisMessageReminder(clientPayload)
+            : kind === "reactivation"
+              ? await dakinisMessageReactivation(clientPayload)
+              : await dakinisWhatsappPreview({
+                  eventType:
+                    kind === "orderReady"
+                      ? "order.ready"
+                      : kind === "lowStock"
+                        ? "inventory.low"
+                        : "booking.created",
+                  payload: {
+                    customerName: "Ana",
+                    businessName,
+                    orderRef: "Comanda #42",
+                    table: "12",
+                    itemName: "Harina 00",
+                    qty: 2,
+                    date: "2026-05-20",
+                    time: "19:30"
+                  }
+                });
       setResult(json);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("app.messages.error"));
@@ -47,7 +85,23 @@ export default function MessagesPage({ navigate }) {
     <section className="modules">
       <div className="container">
         <h2>{t("app.messages.heading")}</h2>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <p className="lead">{t("app.messages.rulesLead")}</p>
+
+        <h3 className="hub-section-title">{t("app.messages.rulesTitle")}</h3>
+        {rules.length ? (
+          <ul className="demo-tenant-list">
+            {rules.map((r) => (
+              <li key={r.key}>
+                <code className="config-box">{r.key}</code>
+                <span className="demo-tenant-label">
+                  {r.event} · {r.enabled ? "on" : "off"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
           <button type="button" className="btn" onClick={() => run("confirmation")}>
             {t("app.messages.confirmation")}
           </button>
@@ -56,6 +110,12 @@ export default function MessagesPage({ navigate }) {
           </button>
           <button type="button" className="btn btn-outline" onClick={() => run("reactivation")}>
             {t("app.messages.reactivation")}
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => run("orderReady")}>
+            {t("app.messages.orderReady")}
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => run("lowStock")}>
+            {t("app.messages.lowStock")}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
             {t("appNav.app")}

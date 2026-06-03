@@ -4,7 +4,7 @@ import { DAKINIS_SYSTEM_ROUTE_PREFIX, DAKINIS_VISTA_ROUTE_PREFIX } from "@dakini
 import VistaMockupPage from "../pages/VistaMockupPage.jsx";
 import SystemPage from "../pages/SystemPage.jsx";
 import PublicAllergiesPage from "../pages/PublicAllergiesPage.jsx";
-import HomePage from "../pages/HomePage.jsx";
+import ProductHomePage from "../pages/ProductHomePage.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -43,5 +43,5 @@ export default function LegacyPathRoutes({ navigate }) {
   if (systemKey) {
     return <SystemPage activeSystemKey={systemKey} navigate={navigate} />;
   }
-  return <HomePage navigate={navigate} dakinisSystemRegistry={dakinisSystemRegistry} />;
+  return <ProductHomePage />;
 }
