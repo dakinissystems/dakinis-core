@@ -76,48 +76,19 @@ function Toolbar({ title, badge, user, extra }) {
 function PanelMapa() {
   return (
     <>
-      <div className="two-col" style={{ marginBottom: "1rem" }}>
+      <div className="two-col mockup-panel-spaced">
         <article className="card">
           <h3 style={{ marginTop: 0 }}>Plan de sala (esquema)</h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "0.5rem",
-              fontSize: "0.85rem",
-              color: "var(--muted)"
-            }}
-          >
-            <div
-              style={{
-                border: "1px dashed var(--line)",
-                borderRadius: 8,
-                padding: "0.75rem",
-                textAlign: "center"
-              }}
-            >
+          <div className="mockup-zone-grid">
+            <div className="mockup-zone-cell">
               Terraza 1–5
               <div style={{ marginTop: "0.35rem", color: "var(--brand)" }}>Demo en Comandas → Mesas</div>
             </div>
-            <div
-              style={{
-                border: "1px dashed var(--line)",
-                borderRadius: 8,
-                padding: "0.75rem",
-                textAlign: "center"
-              }}
-            >
+            <div className="mockup-zone-cell">
               Salón 1–5
               <div style={{ marginTop: "0.35rem", color: "var(--brand)" }}>Cuenta y cierre por mesa</div>
             </div>
-            <div
-              style={{
-                border: "1px dashed var(--line)",
-                borderRadius: 8,
-                padding: "0.75rem",
-                textAlign: "center"
-              }}
-            >
+            <div className="mockup-zone-cell">
               Lista espera
               <div style={{ marginTop: "0.35rem" }}>3 grupos</div>
             </div>
@@ -125,7 +96,7 @@ function PanelMapa() {
         </article>
         <article className="card">
           <h3 style={{ marginTop: 0 }}>Resumen</h3>
-          <div className="system-kpis" style={{ gridTemplateColumns: "repeat(2, 1fr)", margin: 0 }}>
+          <div className="system-kpis system-kpis--pair">
             <div>
               <p className="kpi-label">Confirmadas WhatsApp</p>
               <p className="kpi-value" style={{ fontSize: "1.4rem" }}>
@@ -142,7 +113,7 @@ function PanelMapa() {
         </article>
       </div>
 
-      <article className="card" style={{ overflow: "auto" }}>
+      <article className="card mockup-table-card">
         <h3 style={{ marginTop: 0 }}>Próximas mesas</h3>
         <table className="mockup-table">
           <thead>
@@ -185,7 +156,7 @@ function PanelMapa() {
 
 function PanelReservas() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Todas las reservas — servicio noche</h3>
       <table className="mockup-table">
         <thead>
@@ -1298,7 +1269,7 @@ function PanelAlergenosCartel() {
 
 function PanelClientes() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Alergias por comensal (reserva)</h3>
       <p className="lead" style={{ fontSize: "0.85rem", marginTop: 0 }}>
         Notas de sala para esta noche — distinto del{" "}

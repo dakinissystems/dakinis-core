@@ -32,7 +32,7 @@ function Toolbar({ title, badge, user, action }) {
 function PanelHoy() {
   return (
     <>
-      <div className="module-grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))", marginBottom: "1rem" }}>
+      <div className="module-grid mockup-stylist-grid">
         {["Diana", "Sofía", "Lucía", "Marta"].map((name) => (
           <article key={name} className="card">
             <p className="kpi-label">{name}</p>
@@ -43,7 +43,7 @@ function PanelHoy() {
         ))}
       </div>
 
-      <div className="two-col" style={{ marginBottom: "1rem" }}>
+      <div className="two-col mockup-panel-spaced">
         <article className="card">
           <h3 style={{ marginTop: 0 }}>Próximos turnos</h3>
           <table className="mockup-table">
@@ -94,7 +94,7 @@ function PanelHoy() {
 
 function PanelEstilistas() {
   return (
-    <div className="module-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "1rem" }}>
+      <div className="module-grid">
       {[
         { name: "Diana", slots: ["10:30 Raquel · corte", "14:00 Carmen · mechas", "17:00 Walk-in"] },
         { name: "Sofía", slots: ["12:00 Alicia · keratina", "15:30 Paula · peinado"] },
@@ -116,7 +116,7 @@ function PanelEstilistas() {
 
 function PanelWeb() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Solicitudes desde la web pública</h3>
       <table className="mockup-table">
         <thead>
@@ -150,7 +150,7 @@ function PanelWeb() {
 
 function PanelClientes() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Fichas y visitas</h3>
       <table className="mockup-table">
         <thead>

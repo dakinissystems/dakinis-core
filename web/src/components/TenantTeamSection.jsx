@@ -118,7 +118,7 @@ export default function TenantTeamSection({
         </p>
       ) : null}
 
-      <form className="mockup-form card" onSubmit={handleCreateUser} style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <form className="mockup-form card tenant-team-form" onSubmit={handleCreateUser}>
         <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>
           Invitar o crear usuario
         </h4>
@@ -158,8 +158,8 @@ export default function TenantTeamSection({
       </form>
 
       <h4 style={{ marginTop: "1.25rem" }}>Usuarios del negocio</h4>
-      <article className="card" style={{ overflow: "auto" }}>
-        <table className="mockup-table">
+      <article className="card mockup-table-card">
+        <table className="mockup-table" data-stack="responsive">
           <thead>
             <tr>
               <th>Email</th>
@@ -170,9 +170,9 @@ export default function TenantTeamSection({
           <tbody>
             {teamUsers.map((u) => (
               <tr key={u.id}>
-                <td>{u.email}</td>
-                <td>{dakinisRoleLabel(u.role)}</td>
-                <td>
+                <td data-label="Email">{u.email}</td>
+                <td data-label="Rol">{dakinisRoleLabel(u.role)}</td>
+                <td data-label="Cambiar rol">
                   <select
                     aria-label={`Rol de ${u.email}`}
                     value={u.role}

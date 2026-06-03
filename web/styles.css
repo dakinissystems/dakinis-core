@@ -558,7 +558,7 @@ section {
 .price-grid {
   display: grid;
   gap: 0.9rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
 }
 
 .system-switcher {
@@ -597,9 +597,14 @@ section {
 
 .system-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
   gap: 0.9rem;
   margin: 1rem 0;
+}
+
+.system-kpis--pair {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  margin: 0;
 }
 
 .kpi-label {
@@ -641,8 +646,20 @@ section {
   align-self: end;
 }
 
+.tenant-team-form {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
 .mockup-table-wrap {
-  overflow: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.card.mockup-table-wrap,
+.mockup-table-card {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mockup-table {
@@ -759,12 +776,13 @@ section {
   border-radius: 12px;
   overflow: hidden;
   background: var(--card);
+  max-width: 100%;
 }
 
 .mockup-app {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  min-height: 560px;
+  grid-template-columns: minmax(0, 13.75rem) minmax(0, 1fr);
+  min-height: min(560px, 85vh);
 }
 
 .mockup-sidebar {
@@ -833,6 +851,17 @@ section {
   border-bottom: 1px solid var(--line);
 }
 
+.mockup-toolbar > div:first-child {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.mockup-toolbar strong {
+  display: block;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
 .mockup-badge {
   font-size: 0.75rem;
   padding: 0.2rem 0.5rem;
@@ -849,30 +878,97 @@ section {
   border: 1px solid var(--line);
 }
 
+.modules {
+  padding: clamp(1.25rem, 4vw, 2.2rem) 0;
+}
+
+.modules h2 {
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  line-height: 1.2;
+}
+
+.system-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.system-page-actions .btn {
+  flex: 1 1 auto;
+  min-width: min(100%, 10rem);
+  min-height: 2.75rem;
+}
+
+.system-suppliers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.mockup-zone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.mockup-zone-cell {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.mockup-pipeline-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.35rem;
+}
+
+.mockup-stylist-grid {
+  margin-bottom: 1rem;
+}
+
+.mockup-panel-spaced {
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
-  .module-grid,
   .price-grid,
   .pack-grid,
   .maint-grid,
   .two-col,
   .cta-card,
-  .system-kpis,
   .mockup-form {
     grid-template-columns: 1fr;
   }
 
   .cta-card {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 0.85rem;
   }
 
   .mockup-app {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   .mockup-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--line);
+  }
+
+  .mockup-pipeline-board {
+    grid-template-columns: repeat(5, minmax(7.25rem, 1fr));
   }
 }
 
@@ -2238,11 +2334,46 @@ section {
 
   .topbar-actions {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    gap: 0.45rem;
+  }
+
+  .topbar-app-nav {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 0.15rem;
+  }
+
+  .topbar-app-nav .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 2.5rem;
+  }
+
+  .topbar-actions > .btn,
+  .topbar-actions > .btn-outline {
+    min-height: 2.5rem;
+  }
+
+  .topbar-actions .lead {
+    width: 100%;
+    max-width: none;
+    order: 10;
+    font-size: 0.8rem;
   }
 
   .container {
     width: min(1100px, 94vw);
+  }
+
+  .mockup-page-wrap {
+    padding: 0.75rem 0 1.5rem;
+  }
+
+  .mockup-page-frame {
+    border-radius: 10px;
   }
 }
 
@@ -2398,6 +2529,62 @@ section {
 }
 
 @media (max-width: 768px) {
+  .modules .mockup-form .btn {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .system-page-actions .btn {
+    width: 100%;
+  }
+
+  .modules .mockup-table[data-stack="responsive"] thead,
+  .mockup-main .mockup-table[data-stack="responsive"] thead,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] thead {
+    display: none;
+  }
+
+  .modules .mockup-table[data-stack="responsive"] tbody tr,
+  .mockup-main .mockup-table[data-stack="responsive"] tbody tr,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] tbody tr {
+    display: block;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .modules .mockup-table[data-stack="responsive"] tbody td,
+  .mockup-main .mockup-table[data-stack="responsive"] tbody td,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] tbody td {
+    display: block;
+    border: none;
+    padding: 0.2rem 0;
+  }
+
+  .modules .mockup-table[data-stack="responsive"] tbody td::before,
+  .mockup-main .mockup-table[data-stack="responsive"] tbody td::before,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] tbody td::before {
+    content: attr(data-label) ": ";
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--brand);
+    font-weight: 600;
+  }
+
+  .modules .mockup-table[data-stack="responsive"] tbody td:first-child,
+  .mockup-main .mockup-table[data-stack="responsive"] tbody td:first-child,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] tbody td:first-child {
+    padding-top: 0.35rem;
+    font-weight: 600;
+  }
+
+  .modules .mockup-table[data-stack="responsive"] tbody td:first-child::before,
+  .mockup-main .mockup-table[data-stack="responsive"] tbody td:first-child::before,
+  .modules .mockup-table-card .mockup-table[data-stack="responsive"] tbody td:first-child::before {
+    display: none;
+  }
+
   .stock-scanner__controls {
     flex-direction: column;
   }

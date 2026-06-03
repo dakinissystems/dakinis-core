@@ -40,15 +40,7 @@ const COLUMNAS = [
 function PanelPipeline() {
   return (
     <>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-          gap: "0.65rem",
-          marginBottom: "1rem",
-          overflowX: "auto"
-        }}
-      >
+      <div className="mockup-pipeline-board">
         {COLUMNAS.map(({ name, n, c }) => (
           <article key={name} className="card" style={{ background: c, minHeight: "120px" }}>
             <p className="kpi-label">{name}</p>
@@ -63,7 +55,7 @@ function PanelPipeline() {
       </div>
 
       <div className="two-col">
-        <article className="card" style={{ overflow: "auto" }}>
+        <article className="card mockup-table-card">
           <h3 style={{ marginTop: 0 }}>Visitas programadas</h3>
           <table className="mockup-table">
             <thead>
@@ -105,7 +97,7 @@ function PanelPipeline() {
 
 function PanelVisitas() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Calendario de visitas (semana)</h3>
       <table className="mockup-table">
         <thead>
@@ -168,7 +160,7 @@ function PanelLeads() {
 
 function PanelPropiedades() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>Cartera destacada</h3>
       <table className="mockup-table">
         <thead>

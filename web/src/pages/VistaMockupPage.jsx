@@ -28,7 +28,7 @@ export default function VistaMockupPage({ verticalKey, navigate }) {
             {t("vistaMockup.lead")}
           </p>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+        <div className="system-page-actions">
           <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
             {t("vistaMockup.home")}
           </button>

@@ -171,7 +171,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           ))}
         </section>
         {!showDemoWelcome ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+          <div className="system-page-actions">
             <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
               {hideVerticalSwitcher ? t("system.home") : t("system.backToSystems")}
             </button>
@@ -248,15 +248,8 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           <>
             <h3>{systemPageContent.suppliersProducts.sectionTitle}</h3>
             <p className="lead">{systemPageContent.suppliersProducts.sectionLead}</p>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: "1rem",
-                marginBottom: "1.25rem"
-              }}
-            >
-              <article className="card" style={{ overflow: "auto" }}>
+            <div className="system-suppliers-grid">
+              <article className="card mockup-table-card">
                 <h4>{t("system.suppliers")}</h4>
                 <table className="mockup-table">
                   <thead>
@@ -277,7 +270,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
                   </tbody>
                 </table>
               </article>
-              <article className="card" style={{ overflow: "auto" }}>
+              <article className="card mockup-table-card">
                 <h4>{t("system.products")}</h4>
                 <table className="mockup-table">
                   <thead>
@@ -396,7 +389,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             <p className="lead">{t("system.noRecords")}</p>
           ) : (
             <div className="mockup-table-wrap">
-              <table className="mockup-table">
+              <table className="mockup-table" data-stack="responsive">
                 <thead>
                   <tr>
                     {activeMockup.tableColumns.map((column) => (
@@ -408,7 +401,9 @@ export default function SystemPage({ activeSystemKey, navigate }) {
                   {records.map((record) => (
                     <tr key={record.id}>
                       {activeMockup.tableColumns.map((column) => (
-                        <td key={`${record.id}-${column.key}`}>{record[column.key] || "-"}</td>
+                        <td key={`${record.id}-${column.key}`} data-label={column.label}>
+                          {record[column.key] || "-"}
+                        </td>
                       ))}
                     </tr>
                   ))}

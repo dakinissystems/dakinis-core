@@ -51,7 +51,7 @@ function PanelResumen() {
         </article>
       </div>
 
-      <div className="two-col" style={{ marginBottom: "1rem" }}>
+      <div className="two-col mockup-panel-spaced">
         <article className="card">
           <h3 style={{ marginTop: 0 }}>Agenda mañana (vista rápida)</h3>
           <div className="pill-grid">
@@ -70,7 +70,7 @@ function PanelResumen() {
         </article>
       </div>
 
-      <article className="card" style={{ overflow: "auto" }}>
+      <article className="card mockup-table-card">
         <h3 style={{ marginTop: 0 }}>Pacientes — próximas llegadas</h3>
         <table className="mockup-table">
           <thead>
@@ -149,7 +149,7 @@ function PanelAgenda() {
 
 function PanelPacientes() {
   return (
-    <article className="card" style={{ overflow: "auto" }}>
+    <article className="card mockup-table-card">
       <h3 style={{ marginTop: 0 }}>CRM — fichas recientes</h3>
       <table className="mockup-table">
         <thead>
@@ -188,7 +188,7 @@ function PanelPacientes() {
 function PanelProveedores() {
   return (
     <div className="two-col">
-      <article className="card" style={{ overflow: "auto" }}>
+      <article className="card mockup-table-card">
         <h3 style={{ marginTop: 0 }}>Stock crítico</h3>
         <table className="mockup-table">
           <thead>
