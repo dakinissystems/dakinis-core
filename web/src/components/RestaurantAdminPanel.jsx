@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
@@ -25,10 +25,13 @@ export default function RestaurantAdminPanel({
   const [error, setError] = useState("");
   const [selectedTableId, setSelectedTableId] = useState(null);
 
-  const fetchOpts = {
-    businessId: effectiveSlug,
-    businessTypeHeader: activeSystemKey
-  };
+  const fetchOpts = useMemo(
+    () => ({
+      businessId: effectiveSlug,
+      businessTypeHeader: activeSystemKey
+    }),
+    [effectiveSlug, activeSystemKey]
+  );
 
   const reload = useCallback(async () => {
     if (!apiSession?.token) return;

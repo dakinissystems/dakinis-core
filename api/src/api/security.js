@@ -4,7 +4,11 @@ const DAKINIS_RATE_STORE = new Map();
 
 const DAKINIS_API_KEY_HEADER = "x-api-key";
 const DAKINIS_RATE_LIMIT_WINDOW_MS = Number(process.env.DAKINIS_RATE_LIMIT_WINDOW_MS || 60000);
-const DAKINIS_RATE_LIMIT_MAX_REQUESTS = Number(process.env.DAKINIS_RATE_LIMIT_MAX_REQUESTS || 60);
+/** 0 = desactivado. Por defecto más alto: el panel restaurante dispara muchas peticiones en paralelo. */
+const DAKINIS_RATE_LIMIT_MAX_REQUESTS = Number(process.env.DAKINIS_RATE_LIMIT_MAX_REQUESTS || 120);
+const DAKINIS_RATE_LIMIT_AUTHED_MAX = Number(
+  process.env.DAKINIS_RATE_LIMIT_AUTHED_MAX || 500
+);
 const DAKINIS_AUTH_RATE_LIMIT_MAX = Number(process.env.DAKINIS_AUTH_RATE_LIMIT_MAX || 15);
 const DAKINIS_AUTH_RATE_WINDOW_MS = Number(process.env.DAKINIS_AUTH_RATE_WINDOW_MS || 60000);
 
@@ -12,6 +16,11 @@ const DAKINIS_AUTH_PATHS = new Set([
   "/api/auth/login",
   "/api/auth/exchange"
 ]);
+
+function dakinisHasBearerSession(req) {
+  const auth = req.headers.authorization || req.headers.Authorization;
+  return typeof auth === "string" && auth.trim().toLowerCase().startsWith("bearer ");
+}
 
 function dakinisGetClientKey(req) {
   const trustProxy = String(process.env.TRUST_PROXY || "").toLowerCase() === "true";
@@ -46,11 +55,21 @@ export function dakinisEnforceRateLimit(req, res, url) {
   if (!url.pathname.startsWith("/api/")) return null;
 
   const isAuthPath = DAKINIS_AUTH_PATHS.has(url.pathname);
-  const maxRequests = isAuthPath ? DAKINIS_AUTH_RATE_LIMIT_MAX : DAKINIS_RATE_LIMIT_MAX_REQUESTS;
+  const authed = dakinisHasBearerSession(req);
+  let maxRequests = DAKINIS_RATE_LIMIT_MAX_REQUESTS;
+  if (isAuthPath) {
+    maxRequests = DAKINIS_AUTH_RATE_LIMIT_MAX;
+  } else if (authed) {
+    maxRequests = DAKINIS_RATE_LIMIT_AUTHED_MAX;
+  }
+  if (maxRequests <= 0) return null;
+
   const windowMs = isAuthPath ? DAKINIS_AUTH_RATE_WINDOW_MS : DAKINIS_RATE_LIMIT_WINDOW_MS;
   const key = isAuthPath
     ? `auth:${dakinisGetClientKey(req)}:${url.pathname}`
-    : dakinisGetClientKey(req);
+    : authed
+      ? `authed:${dakinisGetClientKey(req)}`
+      : dakinisGetClientKey(req);
 
   const current = DAKINIS_RATE_STORE.get(key);
   const { record, now } = dakinisCheckRateLimit(key, current, maxRequests, windowMs);

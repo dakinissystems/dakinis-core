@@ -4,10 +4,7 @@
   "packages": { "node": "20" },
   "steps": {
     "install": {
-      "inputs": [{ "local": true, "include": ["."] }],
-      "commands": [
-        { "cmd": "npm install", "customName": "Install dependencies (npm install)" }
-      ]
+      "commands": ["npm install"]
     }
   },
   "deploy": {
