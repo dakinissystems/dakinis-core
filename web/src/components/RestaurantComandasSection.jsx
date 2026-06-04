@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { DakinisApiError, dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
@@ -105,28 +106,19 @@ export default function RestaurantComandasSection({
     if (!apiSession?.token) return;
     setError("");
     try {
-      const [menuRes, ordersRes, invRes, floorRes] = await Promise.all([
+      const [menuRes, ordersRes, invRes, floorState] = await Promise.all([
         dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/restaurant/orders", apiSession, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/floor", apiSession, fetchOpts)
+        dakinisFetchRestaurantFloor(apiSession, fetchOpts)
       ]);
       setMenu(menuRes?.data?.menu ?? []);
       setBrand(menuRes?.data?.brand ?? null);
       setOrders(ordersRes?.data?.orders ?? []);
       setInvoices(invRes?.data?.invoices ?? []);
-      const loadedTables = floorRes?.data?.tables;
-      setTables(
-        Array.isArray(loadedTables) && loadedTables.length ? loadedTables : dakinisDefaultFloorTables()
-      );
-      setTableSessions(floorRes?.data?.sessions ?? {});
+      setTables(floorState.tables);
+      setTableSessions(floorState.sessions);
     } catch (e) {
-      if (e instanceof DakinisApiError && e.status === 404) {
-        setTables(dakinisDefaultFloorTables());
-        setTableSessions({});
-        setError("");
-        return;
-      }
       setError(e instanceof Error ? e.message : t("fermina.loadError"));
     }
   }, [apiSession, fetchOpts, t]);

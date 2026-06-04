@@ -58,25 +58,30 @@ function dakinisParseSessionRow(row) {
   };
 }
 
-export async function dakinisHandleRestaurantFloorGet(req) {
-  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
-  if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
-  if (jwtErr) return jwtErr;
-
-  const config = await dakinisReadBusinessConfig(req.dakinisBusiness.id);
+/** Estado del plano de mesas (reutilizable desde GET /floor y GET /kitchen). */
+export async function dakinisLoadRestaurantFloorState(businessId) {
+  const config = await dakinisReadBusinessConfig(businessId);
   const tables = Array.isArray(config?.floor?.tables)
     ? config.floor.tables.map(dakinisNormalizeTable)
     : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES;
 
   const rows = await dakinisQueryAll(
     `SELECT id, payload FROM tenant_records WHERE business_id = ? AND entity = ?`,
-    [req.dakinisBusiness.id, ENTITY_SESSION]
+    [businessId, ENTITY_SESSION]
   );
 
   const sessions = Object.fromEntries(rows.map((r) => [r.id, dakinisParseSessionRow(r)]));
+  return { tables, sessions };
+}
 
-  return dakinisJsonSuccess({ tables, sessions }, req.dakinisBusiness.type, dakinisMeta(req));
+export async function dakinisHandleRestaurantFloorGet(req) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const floor = await dakinisLoadRestaurantFloorState(req.dakinisBusiness.id);
+  return dakinisJsonSuccess(floor, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {

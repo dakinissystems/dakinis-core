@@ -37,6 +37,7 @@ import {
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
+import { dakinisLoadRestaurantFloorState } from "./tenant-restaurant-floor.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -238,12 +239,15 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
     createdAt: b.created_at
   }));
 
+  const floor = await dakinisLoadRestaurantFloorState(businessId);
+
   return dakinisJsonSuccess(
     {
       items,
       recipes,
       maxPerRecipe,
       productionHistory: batches,
+      floor,
       profile: profile
         ? {
             publicToken: profile.public_token,
