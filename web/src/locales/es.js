@@ -427,8 +427,16 @@ export default {
     purchaseError: "Error al registrar compra",
     productionError: "Stock insuficiente o error al producir",
     scanTitle: "Escanear insumo (QR / barras)",
-    scanLead: "Como en proyecto-stock: cámara trasera o foto del código. Al leer, suma o resta stock del insumo.",
-    scanStart: "Iniciar escáner",
+    scanLead:
+      "Lector USB/Bluetooth (modo teclado), cámara del móvil o foto. Al leer, suma o resta stock del insumo.",
+    scanWedgeTitle: "Lector de código de barras (USB / pistola)",
+    scanWedgeHint:
+      "Conecta el lector, pulsa el campo y escanea. La mayoría envía Enter al final. Compatible con EAN-13, EAN-8, UPC-A/E, Code 128, Code 39, etc.",
+    scanWedgeInput: "Entrada lector código de barras",
+    scanWedgePlaceholder: "Clic aquí y escanea con el lector…",
+    scanWedgeFocus: "Activar campo para lector",
+    scanOrCamera: "O usa la cámara del dispositivo",
+    scanStart: "Iniciar cámara",
     scanStop: "Detener escáner",
     scanImage: "Cargar imagen",
     scanPlaceholder: "Vista previa cámara / foto",

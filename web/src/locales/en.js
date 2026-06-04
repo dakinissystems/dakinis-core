@@ -426,8 +426,16 @@ export default {
     purchaseError: "Failed to register purchase",
     productionError: "Insufficient stock or production error",
     scanTitle: "Scan item (QR / barcode)",
-    scanLead: "Like proyecto-stock: rear camera or photo. On read, add or remove stock for the matched item.",
-    scanStart: "Start scanner",
+    scanLead:
+      "USB/Bluetooth wedge scanner (keyboard mode), device camera or photo. On read, add or remove stock for the matched item.",
+    scanWedgeTitle: "Barcode scanner (USB / handheld)",
+    scanWedgeHint:
+      "Connect the scanner, click the field and scan. Most send Enter at the end. Supports EAN-13, EAN-8, UPC-A/E, Code 128, Code 39, etc.",
+    scanWedgeInput: "Barcode scanner input",
+    scanWedgePlaceholder: "Click here and scan with your reader…",
+    scanWedgeFocus: "Focus field for scanner",
+    scanOrCamera: "Or use the device camera",
+    scanStart: "Start camera",
     scanStop: "Stop scanner",
     scanImage: "Upload image",
     scanPlaceholder: "Camera / photo preview",

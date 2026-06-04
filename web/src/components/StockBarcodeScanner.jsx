@@ -1,16 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   dakinisDecodeBarcodeFromImage,
+  dakinisIsPlausibleBarcode,
   dakinisNormalizeScanReading,
   dakinisStartLiveBarcodeScanner
 } from "../utils/stockBarcodeDecode.js";
+import { dakinisAttachHidBarcodeWedge } from "../utils/hidBarcodeWedge.js";
 
 /**
- * Escáner QR / barras (Quagga live + imagen + ZXing).
- * En vivo: solo confirma tras lecturas estables repetidas (evita parpadeo de códigos).
+ * Escáner de stock:
+ * - Lectores USB/Bluetooth (modo teclado + Enter) — uso habitual en almacén
+ * - Cámara Quagga (opcional)
+ * - Foto / ZXing
  */
 export default function StockBarcodeScanner({ onScan, t, hint }) {
   const videoRef = useRef(null);
+  const wedgeInputRef = useRef(null);
+  const wedgeFlushRef = useRef(null);
   const stopRef = useRef(null);
   const confirmedRef = useRef("");
   const previewTimerRef = useRef(null);
@@ -23,7 +29,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
   const label = (key, fallback) => (t ? t(key) : fallback);
 
   const confirmCode = useCallback(
-    (code) => {
+    (code, { fromCamera = false } = {}) => {
       const trimmed = dakinisNormalizeScanReading(code);
       if (!trimmed) return;
       if (trimmed === confirmedRef.current) return;
@@ -32,6 +38,10 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
       setConfirmedCode(trimmed);
       setDecodeError("");
       onScan?.(trimmed);
+
+      if (!fromCamera) {
+        wedgeInputRef.current?.focus?.();
+      }
     },
     [onScan]
   );
@@ -58,18 +68,60 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
 
   useEffect(() => () => stopScanning(), [stopScanning]);
 
+  useEffect(() => {
+    const detach = dakinisAttachHidBarcodeWedge((code) => confirmCode(code, { fromCamera: false }));
+    return detach;
+  }, [confirmCode]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => wedgeInputRef.current?.focus?.(), 200);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  function dakinisFlushWedgeInput(el) {
+    const raw = el?.value?.trim();
+    if (!raw || !dakinisIsPlausibleBarcode(raw)) return;
+    confirmCode(raw, { fromCamera: false });
+    el.value = "";
+  }
+
+  function dakinisHandleWedgeInputKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (wedgeFlushRef.current) clearTimeout(wedgeFlushRef.current);
+      dakinisFlushWedgeInput(e.currentTarget);
+    }
+  }
+
+  function dakinisHandleWedgeInputChange(e) {
+    const el = e.currentTarget;
+    if (wedgeFlushRef.current) clearTimeout(wedgeFlushRef.current);
+    wedgeFlushRef.current = setTimeout(() => dakinisFlushWedgeInput(el), 220);
+  }
+
+  function dakinisHandleWedgePaste(e) {
+    const text = e.clipboardData?.getData("text")?.trim();
+    if (!text) return;
+    e.preventDefault();
+    confirmCode(text, { fromCamera: false });
+    if (wedgeInputRef.current) wedgeInputRef.current.value = "";
+  }
+
   async function startScanning() {
     setDecodeError("");
     setPreviewCode("");
     confirmedRef.current = "";
     if (!videoRef.current) return;
     try {
-      const stop = await dakinisStartLiveBarcodeScanner(videoRef.current, confirmCode, {
-        onPreview: handlePreview,
-        minHits: 4,
-        windowMs: 500,
-        cooldownMs: 3500
-      });
+      const stop = await dakinisStartLiveBarcodeScanner(
+        (code) => confirmCode(code, { fromCamera: true }),
+        {
+          onPreview: handlePreview,
+          minHits: 4,
+          windowMs: 500,
+          cooldownMs: 3500
+        }
+      );
       stopRef.current = stop;
       setIsScanning(true);
       setImageSrc("");
@@ -94,7 +146,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
       setPreviewCode("");
       try {
         const code = await dakinisDecodeBarcodeFromImage(dataUrl);
-        if (code) confirmCode(code);
+        if (code) confirmCode(code, { fromCamera: false });
         else {
           setDecodeError(
             label(
@@ -117,8 +169,52 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
   return (
     <div className="stock-scanner">
       <p className="kpi-label stock-scanner__intro">
-        {hint || label("kitchen.scanLead", "Escanea QR o código de barras del insumo (cámara o foto).")}
+        {hint ||
+          label(
+            "kitchen.scanLead",
+            "Lector USB/Bluetooth (como teclado), cámara o foto del código del insumo."
+          )}
       </p>
+
+      <div className="stock-scanner__wedge card">
+        <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+          {label("kitchen.scanWedgeTitle", "Lector de código de barras (USB / pistola)")}
+        </p>
+        <p className="kpi-label stock-scanner__wedge-hint">
+          {label(
+            "kitchen.scanWedgeHint",
+            "Conecta el lector, haz clic en el campo y escanea. Envía Enter al final (la mayoría lo hace solos). EAN-13, UPC, Code 128, etc."
+          )}
+        </p>
+        <label className="mockup-field stock-scanner__wedge-field">
+          <span className="sr-only">{label("kitchen.scanWedgeInput", "Entrada lector código de barras")}</span>
+          <input
+            ref={wedgeInputRef}
+            type="text"
+            data-dakinis-barcode-wedge="1"
+            className="stock-scanner__wedge-input"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            inputMode="numeric"
+            placeholder={label("kitchen.scanWedgePlaceholder", "Clic aquí y escanea con el lector…")}
+            onKeyDown={dakinisHandleWedgeInputKeyDown}
+            onChange={dakinisHandleWedgeInputChange}
+            onPaste={dakinisHandleWedgePaste}
+          />
+        </label>
+        <button
+          type="button"
+          className="btn btn-outline"
+          style={{ marginTop: "0.5rem" }}
+          onClick={() => wedgeInputRef.current?.focus?.()}
+        >
+          {label("kitchen.scanWedgeFocus", "Activar campo para lector")}
+        </button>
+      </div>
+
+      <p className="kpi-label stock-scanner__or">{label("kitchen.scanOrCamera", "O usa la cámara del dispositivo")}</p>
 
       <div className="stock-scanner__controls">
         <button
@@ -128,7 +224,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
         >
           {isScanning
             ? label("kitchen.scanStop", "Detener escáner")
-            : label("kitchen.scanStart", "Iniciar escáner")}
+            : label("kitchen.scanStart", "Iniciar cámara")}
         </button>
         <label className="btn btn-outline stock-scanner__file">
           {label("kitchen.scanImage", "Cargar imagen")}
@@ -142,12 +238,12 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
           <img src={imageSrc} alt="" className="stock-scanner__preview" />
         ) : null}
         {!isScanning && !imageSrc ? (
-          <p className="stock-scanner__placeholder">{label("kitchen.scanPlaceholder", "Vista previa")}</p>
+          <p className="stock-scanner__placeholder">{label("kitchen.scanPlaceholder", "Vista previa cámara")}</p>
         ) : null}
       </div>
 
       <label className="mockup-field stock-scanner__code-field">
-        <span>{label("kitchen.scanCode", "Código leído")}</span>
+        <span>{label("kitchen.scanCode", "Último código")}</span>
         <input
           type="text"
           readOnly

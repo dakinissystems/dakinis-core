@@ -22,7 +22,7 @@ export function dakinisIsPlausibleBarcode(code) {
   const s = dakinisNormalizeScanReading(code);
   if (s.length < 4) return false;
   if (/^\d+$/.test(s)) {
-    return s.length === 8 || s.length === 12 || s.length === 13 || s.length >= 6;
+    return [6, 7, 8, 12, 13, 14].includes(s.length) || s.length >= 6;
   }
   return s.length >= 4 && s.length <= 64;
 }
