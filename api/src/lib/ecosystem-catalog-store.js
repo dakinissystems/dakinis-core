@@ -1,14 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import productsCatalog from "../../../../../packages/shared-brand/src/products.json" with { type: "json" };
-import hubModulesCatalog from "../../../../../packages/shared-brand/src/hub-modules.json" with { type: "json" };
+import productsCatalog from "@dakinis/shared-brand/products.json" with { type: "json" };
+import hubModulesCatalog from "@dakinis/shared-brand/hub-modules.json" with { type: "json" };
 import { dakinisGetDbDriver } from "../db/index.js";
 import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 
 const CATALOG_KV_KEY = "ecosystem_catalog";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const brandDir = path.resolve(__dirname, "../../../../../packages/shared-brand/src");
+const brandDir = path.dirname(fileURLToPath(import.meta.resolve("@dakinis/shared-brand/products.json")));
 
 let tableReady = false;
 
