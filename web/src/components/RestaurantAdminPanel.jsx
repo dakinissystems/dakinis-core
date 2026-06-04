@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisTenantJsonFetch } from "../services/api.js";
+import { DakinisApiError, dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import SupplyDeliveriesAndAlerts from "./SupplyDeliveriesAndAlerts.jsx";
 import RestaurantStockSection from "./RestaurantStockSection.jsx";
@@ -48,6 +48,12 @@ export default function RestaurantAdminPanel({
       setMenu(items);
       setMenuDraft(Object.fromEntries(items.map((it) => [it.id, String(it.priceEur ?? "")])));
     } catch (e) {
+      if (e instanceof DakinisApiError && e.status === 404) {
+        setTables(dakinisDefaultFloorTables());
+        setSessions({});
+        setError("");
+        return;
+      }
       setError(e instanceof Error ? e.message : t("fermina.loadError"));
     }
   }, [apiSession, fetchOpts, t]);

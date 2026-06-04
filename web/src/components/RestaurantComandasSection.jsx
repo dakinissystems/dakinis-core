@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisTenantJsonFetch } from "../services/api.js";
+import { DakinisApiError, dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
@@ -121,6 +121,12 @@ export default function RestaurantComandasSection({
       );
       setTableSessions(floorRes?.data?.sessions ?? {});
     } catch (e) {
+      if (e instanceof DakinisApiError && e.status === 404) {
+        setTables(dakinisDefaultFloorTables());
+        setTableSessions({});
+        setError("");
+        return;
+      }
       setError(e instanceof Error ? e.message : t("fermina.loadError"));
     }
   }, [apiSession, fetchOpts, t]);

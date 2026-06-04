@@ -2685,6 +2685,11 @@ section {
   font-size: 0.9rem;
 }
 
+.stock-scanner__code-input--preview {
+  opacity: 0.7;
+  font-style: italic;
+}
+
 .stock-scanner__code-input {
   font-size: 1.05rem;
   font-weight: 700;

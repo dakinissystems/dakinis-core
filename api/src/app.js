@@ -19,6 +19,7 @@ import {
   dakinisHandleRestaurantProductionSimulatePost,
   dakinisHandleRestaurantProfilePatch,
   dakinisHandleRestaurantStockPurchasePost,
+  dakinisHandleRestaurantStockItemPost,
   dakinisHandleRestaurantStockScanPost
 } from "./api/tenant-restaurant.js";
 import {
@@ -153,6 +154,8 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/kitchen" && req.method === "GET") return dakinisHandleRestaurantKitchenGet(req);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
     return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
+  if (path === "/api/tenant/restaurant/stock/items" && req.method === "POST")
+    return dakinisHandleRestaurantStockItemPost(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/scan" && req.method === "POST")
     return dakinisHandleRestaurantStockScanPost(req, rawBody);
   if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")

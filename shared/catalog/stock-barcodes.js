@@ -14,6 +14,24 @@ export function dakinisNormalizeStockScanCode(code) {
     .replace(/\s+/g, "");
 }
 
+/** Slug estable para insumo creado desde un código escaneado. */
+export function dakinisSlugFromBarcode(code) {
+  const norm = dakinisNormalizeStockScanCode(code);
+  if (!norm) return null;
+  const body = norm.replace(/[^A-Z0-9]/g, "").toLowerCase().slice(0, 40);
+  return body ? `bc-${body}` : null;
+}
+
+export function dakinisSlugFromName(name) {
+  const s = String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  return s || null;
+}
+
 /** Resuelve código escaneado → itemSlug usando barcode, slug o alias DK-*. */
 export function dakinisResolveStockItemSlug(scanCode, items) {
   const norm = dakinisNormalizeStockScanCode(scanCode);

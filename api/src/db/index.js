@@ -51,6 +51,14 @@ function dakinisMigrateCrmTables(db) {
   dakinisMigrateWhatsappCrmColumns(db);
 }
 
+function dakinisMigrateStockBarcodeColumn(db) {
+  const cols = db.prepare("PRAGMA table_info(tenant_stock_items)").all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("barcode")) {
+    db.exec("ALTER TABLE tenant_stock_items ADD COLUMN barcode TEXT NOT NULL DEFAULT ''");
+  }
+}
+
 function dakinisMigrateWhatsappCrmColumns(db) {
   const cols = db.prepare("PRAGMA table_info(tenant_whatsapp_messages)").all();
   const names = new Set(cols.map((c) => c.name));
@@ -82,6 +90,7 @@ function dakinisInitSqlite() {
   dakinisMigratePlatformKv(db);
   dakinisMigrateWhatsappTables(db);
   dakinisMigrateCrmTables(db);
+  dakinisMigrateStockBarcodeColumn(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

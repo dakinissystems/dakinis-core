@@ -1,59 +1,82 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { dakinisDecodeBarcodeFromImage, dakinisStartLiveBarcodeScanner } from "../utils/stockBarcodeDecode.js";
+import {
+  dakinisDecodeBarcodeFromImage,
+  dakinisNormalizeScanReading,
+  dakinisStartLiveBarcodeScanner
+} from "../utils/stockBarcodeDecode.js";
 
 /**
- * Escáner QR / barras (patrón proyecto-stock: Quagga live + imagen + ZXing).
- * @param {object} props
- * @param {function} props.onScan — (code: string) => void
- * @param {function} props.t
- * @param {string} [props.hint]
+ * Escáner QR / barras (Quagga live + imagen + ZXing).
+ * En vivo: solo confirma tras lecturas estables repetidas (evita parpadeo de códigos).
  */
 export default function StockBarcodeScanner({ onScan, t, hint }) {
   const videoRef = useRef(null);
   const stopRef = useRef(null);
-  const lastCodeRef = useRef("");
+  const confirmedRef = useRef("");
+  const previewTimerRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
   const [imageSrc, setImageSrc] = useState("");
-  const [scannedCode, setScannedCode] = useState("");
+  const [previewCode, setPreviewCode] = useState("");
+  const [confirmedCode, setConfirmedCode] = useState("");
   const [decodeError, setDecodeError] = useState("");
 
   const label = (key, fallback) => (t ? t(key) : fallback);
 
-  const emitCode = useCallback(
+  const confirmCode = useCallback(
     (code) => {
-      const trimmed = String(code || "").trim();
-      if (!trimmed || trimmed === lastCodeRef.current) return;
-      lastCodeRef.current = trimmed;
-      setScannedCode(trimmed);
+      const trimmed = dakinisNormalizeScanReading(code);
+      if (!trimmed) return;
+      if (trimmed === confirmedRef.current) return;
+      confirmedRef.current = trimmed;
+      setPreviewCode("");
+      setConfirmedCode(trimmed);
       setDecodeError("");
       onScan?.(trimmed);
-      setTimeout(() => {
-        lastCodeRef.current = "";
-      }, 1200);
     },
     [onScan]
   );
 
+  const handlePreview = useCallback((code) => {
+    const trimmed = dakinisNormalizeScanReading(code);
+    if (!trimmed || trimmed === confirmedRef.current) return;
+    setPreviewCode(trimmed);
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(() => {
+      setPreviewCode((current) => (current === trimmed ? "" : current));
+    }, 700);
+  }, []);
+
   const stopScanning = useCallback(() => {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     if (stopRef.current) {
       stopRef.current();
       stopRef.current = null;
     }
     setIsScanning(false);
+    setPreviewCode("");
   }, []);
 
   useEffect(() => () => stopScanning(), [stopScanning]);
 
   async function startScanning() {
     setDecodeError("");
+    setPreviewCode("");
+    confirmedRef.current = "";
     if (!videoRef.current) return;
     try {
-      const stop = await dakinisStartLiveBarcodeScanner(videoRef.current, emitCode);
+      const stop = await dakinisStartLiveBarcodeScanner(videoRef.current, confirmCode, {
+        onPreview: handlePreview,
+        minHits: 4,
+        windowMs: 500,
+        cooldownMs: 3500
+      });
       stopRef.current = stop;
       setIsScanning(true);
       setImageSrc("");
     } catch (e) {
-      setDecodeError(e instanceof Error ? e.message : label("kitchen.scanCameraError", "No se pudo usar la cámara"));
+      setDecodeError(
+        e instanceof Error ? e.message : label("kitchen.scanCameraError", "No se pudo usar la cámara")
+      );
     }
   }
 
@@ -68,9 +91,10 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
       if (typeof dataUrl !== "string") return;
       setImageSrc(dataUrl);
       setDecodeError("");
+      setPreviewCode("");
       try {
         const code = await dakinisDecodeBarcodeFromImage(dataUrl);
-        if (code) emitCode(code);
+        if (code) confirmCode(code);
         else {
           setDecodeError(
             label(
@@ -86,6 +110,9 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     reader.readAsDataURL(file);
     e.target.value = "";
   }
+
+  const displayCode = confirmedCode || previewCode;
+  const isStabilizing = isScanning && previewCode && previewCode !== confirmedCode;
 
   return (
     <div className="stock-scanner">
@@ -124,11 +151,17 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
         <input
           type="text"
           readOnly
-          value={scannedCode}
+          value={displayCode}
           placeholder={label("kitchen.scanCodePlaceholder", "—")}
-          className="stock-scanner__code-input"
+          className={`stock-scanner__code-input${isStabilizing ? " stock-scanner__code-input--preview" : ""}`}
         />
       </label>
+
+      {isStabilizing ? (
+        <p className="kpi-label" style={{ marginTop: "0.35rem" }}>
+          {label("kitchen.scanStabilizing", "Enfocando código… mantén el móvil quieto un instante.")}
+        </p>
+      ) : null}
 
       {decodeError ? (
         <p className="lead" style={{ color: "#fdba74", fontSize: "0.9rem", margin: "0.5rem 0 0" }}>

@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS tenant_stock_items (
   unit TEXT NOT NULL DEFAULT 'u',
   quantity REAL NOT NULL DEFAULT 0,
   min_quantity REAL NOT NULL DEFAULT 0,
+  barcode TEXT NOT NULL DEFAULT '',
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (business_id, slug),
   FOREIGN KEY (business_id) REFERENCES business(id)

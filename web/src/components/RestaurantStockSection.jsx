@@ -11,7 +11,7 @@ import {
   DAKINIS_RESTAURANT_DEMO_PURCHASE
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisTenantJsonFetch } from "../services/api.js";
+import { DakinisApiError, dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
 import StockBarcodeScanner from "./StockBarcodeScanner.jsx";
@@ -48,6 +48,10 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
   const [scanQty, setScanQty] = useState("1");
   const [scanDirection, setScanDirection] = useState("in");
   const [scanMessage, setScanMessage] = useState("");
+  const [unknownBarcode, setUnknownBarcode] = useState("");
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductUnit, setNewProductUnit] = useState("u");
+  const [newProductMin, setNewProductMin] = useState("0");
 
   const fetchOpts = useMemo(
     () => ({
@@ -112,40 +116,103 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
     }
   }
 
-  async function dakinisApplyStockScan(barcode) {
-    const slug = dakinisResolveStockItemSlug(barcode, kitchen?.items ?? []);
-    if (!slug) {
-      setScanMessage(t("kitchen.scanNotFound"));
-      return;
-    }
+  async function dakinisPostStockScan(barcode) {
     const qty = Number(scanQty);
     if (!Number.isFinite(qty) || qty <= 0) {
       setScanMessage(t("kitchen.scanQtyInvalid"));
+      return false;
+    }
+    const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/scan", apiSession, {
+      ...fetchOpts,
+      method: "POST",
+      body: { barcode, quantity: qty, direction: scanDirection }
+    });
+    const item = json?.data?.item;
+    setScanMessage(
+      t("kitchen.scanOk", {
+        name: item?.name || item?.slug,
+        qty: dakinisFormatQty(item?.quantity, item?.unit)
+      })
+    );
+    setUnknownBarcode("");
+    await reload(undefined);
+    return true;
+  }
+
+  async function dakinisApplyStockScan(barcode) {
+    const code = String(barcode || "").trim();
+    if (!code) return;
+
+    const slug = dakinisResolveStockItemSlug(code, kitchen?.items ?? []);
+    if (!slug && !apiSession?.token) {
+      setUnknownBarcode(code);
+      setScanMessage(t("kitchen.scanNotFound"));
+      return;
+    }
+    if (!slug && apiSession?.token) {
+      setUnknownBarcode(code);
+      setNewProductName("");
+      setScanMessage(t("kitchen.scanUnknownPrompt"));
       return;
     }
     if (!apiSession?.token) {
       setScanMessage(`${t("kitchen.scanMatched")}: ${slug}`);
       return;
     }
+
     setBusy(true);
     setScanMessage("");
     setError("");
     try {
-      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/scan", apiSession, {
+      await dakinisPostStockScan(code);
+    } catch (e) {
+      if (e instanceof DakinisApiError && (e.code === "BARCODE_UNKNOWN" || e.status === 404)) {
+        setUnknownBarcode(code);
+        setScanMessage(t("kitchen.scanUnknownPrompt"));
+        return;
+      }
+      setScanMessage(e instanceof Error ? e.message : t("kitchen.scanError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function dakinisCreateProductFromScan(e) {
+    e.preventDefault();
+    if (!unknownBarcode.trim() || !newProductName.trim()) return;
+    if (!apiSession?.token) return;
+
+    const qty = Number(scanQty);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setScanMessage(t("kitchen.scanQtyInvalid"));
+      return;
+    }
+
+    setBusy(true);
+    setScanMessage("");
+    setError("");
+    try {
+      await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/items", apiSession, {
         ...fetchOpts,
         method: "POST",
-        body: { barcode, quantity: qty, direction: scanDirection }
+        body: {
+          barcode: unknownBarcode.trim(),
+          name: newProductName.trim(),
+          unit: newProductUnit.trim() || "u",
+          minQuantity: Number(newProductMin) || 0,
+          initialQuantity: scanDirection === "in" ? qty : 0
+        }
       });
-      const item = json?.data?.item;
-      setScanMessage(
-        t("kitchen.scanOk", {
-          name: item?.name || slug,
-          qty: dakinisFormatQty(item?.quantity, item?.unit)
-        })
-      );
       await reload(undefined);
-    } catch (e) {
-      setScanMessage(e instanceof Error ? e.message : t("kitchen.scanError"));
+      if (scanDirection === "out") {
+        await dakinisPostStockScan(unknownBarcode.trim());
+      } else {
+        setScanMessage(t("kitchen.scanProductCreated"));
+        setUnknownBarcode("");
+        setNewProductName("");
+      }
+    } catch (err) {
+      setScanMessage(err instanceof Error ? err.message : t("kitchen.scanCreateError"));
     } finally {
       setBusy(false);
     }
@@ -249,10 +316,73 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
           </div>
         </div>
         {scanMessage ? (
-          <p className="lead" style={{ fontSize: "0.9rem", margin: "0.5rem 0 0", color: "#86efac" }}>
+          <p
+            className="lead"
+            style={{
+              fontSize: "0.9rem",
+              margin: "0.5rem 0 0",
+              color: unknownBarcode ? "#fdba74" : "#86efac"
+            }}
+          >
             {scanMessage}
           </p>
         ) : null}
+
+        {unknownBarcode ? (
+          <form className="mockup-form card" style={{ marginTop: "1rem" }} onSubmit={dakinisCreateProductFromScan}>
+            <p className="kpi-label">{t("kitchen.scanAddProductLead")}</p>
+            <p className="kpi-label">
+              {t("kitchen.scanCode")}: <strong>{unknownBarcode}</strong>
+            </p>
+            <label className="mockup-field">
+              <span>{t("kitchen.scanProductName")}</span>
+              <input
+                value={newProductName}
+                onChange={(ev) => setNewProductName(ev.target.value)}
+                required
+                placeholder={t("kitchen.scanProductNamePlaceholder")}
+              />
+            </label>
+            <label className="mockup-field">
+              <span>{t("kitchen.scanProductUnit")}</span>
+              <select value={newProductUnit} onChange={(ev) => setNewProductUnit(ev.target.value)}>
+                <option value="u">u</option>
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+                <option value="kg">kg</option>
+                <option value="L">L</option>
+              </select>
+            </label>
+            <label className="mockup-field">
+              <span>{t("kitchen.minimum")}</span>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newProductMin}
+                onChange={(ev) => setNewProductMin(ev.target.value)}
+              />
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              <button type="submit" className="btn" disabled={busy || !newProductName.trim()}>
+                {t("kitchen.scanAddProduct")}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => {
+                  setUnknownBarcode("");
+                  setNewProductName("");
+                  setScanMessage("");
+                }}
+              >
+                {t("kitchen.scanAddProductCancel")}
+              </button>
+            </div>
+          </form>
+        ) : null}
+
         <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
           {t("kitchen.scanCodesHint")}
         </p>
