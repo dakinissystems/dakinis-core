@@ -11,6 +11,7 @@ import {
   setIdpRefreshToken
 } from "../services/idp-auth.js";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
+import PasswordInput from "../components/PasswordInput.jsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -170,8 +171,7 @@ export default function LoginPage() {
           </label>
           <label className="mockup-field">
             <span>{t("login.password")}</span>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(ev) => setPassword(ev.target.value)}
               autoComplete="current-password"

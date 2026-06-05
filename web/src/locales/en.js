@@ -2,6 +2,10 @@ import { legalCoreEn } from "./legal-core.js";
 
 /** English UI strings. */
 export default {
+  common: {
+    showPassword: "Show password",
+    hidePassword: "Hide password"
+  },
   nav: {
     packages: "Plans & contact",
     login: "Log in",

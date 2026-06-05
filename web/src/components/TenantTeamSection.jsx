@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import PasswordInput from "./PasswordInput.jsx";
 
 function dakinisRoleLabel(role) {
   if (role === "admin") return "Administrador";
@@ -134,8 +135,7 @@ export default function TenantTeamSection({
         </label>
         <label className="mockup-field">
           <span>Contraseña inicial (mín. 8 caracteres)</span>
-          <input
-            type="password"
+          <PasswordInput
             value={newPassword}
             onChange={(ev) => setNewPassword(ev.target.value)}
             autoComplete="new-password"

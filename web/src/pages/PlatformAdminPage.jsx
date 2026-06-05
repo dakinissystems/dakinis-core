@@ -8,6 +8,7 @@ import {
 } from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 import PlatformCatalogPanel from "../components/PlatformCatalogPanel.jsx";
+import PasswordInput from "../components/PasswordInput.jsx";
 
 const DAKINIS_TYPE_OTHER = "__other__";
 
@@ -326,8 +327,7 @@ export default function PlatformAdminPage({ navigate }) {
           </label>
           <label className="mockup-field">
             <span>Contraseña inicial</span>
-            <input
-              type="password"
+            <PasswordInput
               value={createForm.ownerPassword}
               onChange={(ev) => setCreateForm((p) => ({ ...p, ownerPassword: ev.target.value }))}
               autoComplete="new-password"

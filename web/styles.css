@@ -642,6 +642,49 @@ section {
   padding: 0.55rem 0.65rem;
 }
 
+.password-input {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.password-input input {
+  width: 100%;
+  padding-right: 2.75rem;
+}
+
+.password-input__toggle {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.password-input__toggle:hover:not(:disabled),
+.password-input__toggle:focus-visible {
+  color: var(--brand);
+  outline: none;
+  background: rgba(45, 212, 191, 0.1);
+}
+
+.password-input__toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .mockup-form .btn {
   align-self: end;
 }

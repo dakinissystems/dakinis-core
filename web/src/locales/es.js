@@ -2,6 +2,10 @@ import { legalCoreEs } from "./legal-core.js";
 
 /** Textos por defecto (español). */
 export default {
+  common: {
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña"
+  },
   nav: {
     packages: "Paquetes y contacto",
     login: "Login",

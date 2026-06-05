@@ -20,6 +20,7 @@ import RestaurantRoleNav, {
   dakinisWriteRestaurantRole
 } from "../components/RestaurantRoleNav.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
+import PasswordInput from "../components/PasswordInput.jsx";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
@@ -367,6 +368,14 @@ export default function SystemPage({ activeSystemKey, navigate }) {
                     </option>
                   ))}
                 </select>
+              ) : field.type === "password" ? (
+                <PasswordInput
+                  value={mockFormValues[field.key] || ""}
+                  onChange={(event) => dakinisHandleMockFieldChange(field.key, event.target.value)}
+                  placeholder={field.placeholder || ""}
+                  autoComplete="new-password"
+                  required
+                />
               ) : (
                 <input
                   type={field.type}
