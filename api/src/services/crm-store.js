@@ -15,8 +15,9 @@ export const DAKINIS_CRM_ACTIVITY_TYPES = Object.freeze([
 
 async function dakinisCrmTablesReady() {
   try {
-    const row = await dakinisQueryOne("SELECT 1 AS ok FROM tenant_crm_contacts LIMIT 1");
-    return Boolean(row);
+    // Tabla vacía tras migración: COUNT(*) devuelve fila; LIMIT 1 sin filas fallaba el check.
+    await dakinisQueryOne("SELECT COUNT(*) AS n FROM tenant_crm_contacts");
+    return true;
   } catch {
     return false;
   }

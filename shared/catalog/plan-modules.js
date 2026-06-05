@@ -19,7 +19,7 @@ export function dakinisNormalizeCommercialPlan(plan) {
   const p = String(plan ?? "starter")
     .trim()
     .toLowerCase();
-  if (p === "advanced" || p === "enterprise") return "pro";
+  if (p === "platform" || p === "advanced" || p === "enterprise") return "pro";
   if (p === "growth") return "growth";
   if (p === "pro") return "pro";
   return "starter";
