@@ -29,6 +29,9 @@ import {
   dakinisHandleWhatsappContactUpsert
 } from "./whatsapp-routes.js";
 import { dakinisIsWhatsappConfigured } from "../services/whatsapp-config.js";
+import { dakinisGetIndustryTemplate } from "@dakinis/shared/catalog/business-templates.js";
+import { dakinisParseBusinessConfig } from "@dakinis/shared/catalog/business-settings.js";
+import { dakinisResolveTenantModules } from "@dakinis/shared/catalog/tenant-modules.js";
 
 function dakinisParseJsonSafely(rawBody) {
   if (!rawBody || !String(rawBody).trim()) return {};
@@ -229,12 +232,20 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/config") {
     const planTier = dakinisNormalizeCommercialPlan(business.plan);
     const modulesEnabled = dakinisListModulesForPlan(planTier);
+    const template = dakinisGetIndustryTemplate(business.type);
+    const { settings } = dakinisParseBusinessConfig(business.config_json);
+    const tenantModules = dakinisResolveTenantModules(business, business._moduleOverrides || {});
     return dakinisJsonSuccess(
       {
         config: modules.config,
         plan: business.plan,
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        industry: template
+          ? { key: template.key, label: template.label, entity: template.entity }
+          : null,
+        settings,
+        tenantModules: tenantModules.marketplace.filter((m) => m.enabled).map((m) => m.key)
       },
       adapterKey,
       metaBase

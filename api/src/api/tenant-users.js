@@ -3,8 +3,21 @@ import bcrypt from "bcryptjs";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import {
+  dakinisIsValidTenantRole,
+  dakinisRoleCanManageUsers
+} from "@dakinis/shared/catalog/tenant-roles.js";
 
-const TENANT_USER_ROLES = new Set(["admin", "member"]);
+const TENANT_USER_ROLES = new Set([
+  "admin",
+  "member",
+  "owner",
+  "manager",
+  "employee",
+  "accountant",
+  "marketing",
+  "support"
+]);
 
 function dakinisParseJson(rawBody) {
   try {
@@ -24,8 +37,8 @@ export function dakinisRequireTenantJwtAdmin(req) {
       "La gestion de usuarios del negocio requiere iniciar sesion como administrador (JWT), no API key"
     );
   }
-  if (auth.role !== "admin") {
-    return dakinisJsonError(403, "FORBIDDEN", "Solo el administrador del negocio puede gestionar usuarios");
+  if (!dakinisRoleCanManageUsers(auth.role)) {
+    return dakinisJsonError(403, "FORBIDDEN", "Solo propietario o gerente puede gestionar usuarios");
   }
   return null;
 }
@@ -43,7 +56,7 @@ function dakinisTenantUsersForbiddenIfPlatform(business) {
 
 async function dakinisCountAdminsInBusiness(businessId) {
   const row = await dakinisQueryOne(
-    `SELECT COUNT(*) AS n FROM users WHERE business_id = ? AND role = 'admin'`,
+    `SELECT COUNT(*) AS n FROM users WHERE business_id = ? AND role IN ('admin', 'owner', 'manager')`,
     [businessId]
   );
   const n = row?.n;
@@ -89,8 +102,8 @@ export async function dakinisHandleTenantUsersPost(req, rawBody) {
   if (password.length < 8) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "password: minimo 8 caracteres");
   }
-  if (!TENANT_USER_ROLES.has(role)) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "role debe ser admin o member");
+  if (!dakinisIsValidTenantRole(role)) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "role no valido (owner, manager, employee, accountant, marketing, support o legacy admin/member)");
   }
 
   const exists = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?)", [email]);
@@ -153,10 +166,14 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "password: minimo 8 caracteres");
   }
 
-  if (roleIn !== undefined && roleIn !== target.role && target.role === "admin") {
+  if (
+    roleIn !== undefined &&
+    roleIn !== target.role &&
+    ["admin", "owner", "manager"].includes(target.role)
+  ) {
     const admins = await dakinisCountAdminsInBusiness(req.dakinisBusiness.id);
-    if (admins <= 1 && roleIn !== "admin") {
-      return dakinisJsonError(400, "LAST_ADMIN", "Debe existir al menos un administrador en el negocio");
+    if (admins <= 1 && !["admin", "owner", "manager"].includes(roleIn)) {
+      return dakinisJsonError(400, "LAST_ADMIN", "Debe existir al menos un propietario o gerente en el negocio");
     }
   }
 

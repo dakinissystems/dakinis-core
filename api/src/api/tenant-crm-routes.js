@@ -10,7 +10,11 @@ import {
   dakinisCrmListActivities,
   dakinisCrmCreateActivity,
   dakinisCrmGetContactTimeline,
-  DAKINIS_CRM_ACTIVITY_TYPES
+  DAKINIS_CRM_ACTIVITY_TYPES,
+  DAKINIS_CRM_DEAL_STAGES,
+  dakinisCrmListDeals,
+  dakinisCrmCreateDeal,
+  dakinisCrmUpdateDeal
 } from "../services/crm-store.js";
 
 function dakinisParseJson(rawBody) {
@@ -135,9 +139,41 @@ export async function dakinisHandleCrmCompaniesPost(req, rawBody) {
   }
 }
 
+export async function dakinisHandleCrmDealsList(req, url) {
+  if (!(await dakinisCrmIsReady())) return dakinisCrmNotReady();
+  const stage = url.searchParams.get("stage") || "";
+  const deals = await dakinisCrmListDeals(req.dakinisBusiness.id, { stage });
+  return dakinisJsonSuccess({ deals }, req.dakinisBusiness.type, dakinisMeta(req));
+}
+
+export async function dakinisHandleCrmDealsPost(req, rawBody) {
+  if (!(await dakinisCrmIsReady())) return dakinisCrmNotReady();
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON inválido");
+  try {
+    const deal = await dakinisCrmCreateDeal(req.dakinisBusiness.id, body);
+    return dakinisJsonSuccess({ deal }, req.dakinisBusiness.type, dakinisMeta(req));
+  } catch (err) {
+    return dakinisJsonError(400, err?.code || "CRM_ERROR", err instanceof Error ? err.message : "Error");
+  }
+}
+
+export async function dakinisHandleCrmDealPatch(req, dealId, rawBody) {
+  if (!(await dakinisCrmIsReady())) return dakinisCrmNotReady();
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON inválido");
+  const deal = await dakinisCrmUpdateDeal(req.dakinisBusiness.id, dealId, body);
+  if (!deal) return dakinisJsonError(404, "NOT_FOUND", "Deal no encontrado");
+  return dakinisJsonSuccess({ deal }, req.dakinisBusiness.type, dakinisMeta(req));
+}
+
 export async function dakinisHandleCrmMeta(req) {
   return dakinisJsonSuccess(
-    { activityTypes: [...DAKINIS_CRM_ACTIVITY_TYPES], crmReady: await dakinisCrmIsReady() },
+    {
+      activityTypes: [...DAKINIS_CRM_ACTIVITY_TYPES],
+      dealStages: [...DAKINIS_CRM_DEAL_STAGES],
+      crmReady: await dakinisCrmIsReady()
+    },
     req.dakinisBusiness.type,
     dakinisMeta(req)
   );

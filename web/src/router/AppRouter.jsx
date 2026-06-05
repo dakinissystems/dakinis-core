@@ -5,6 +5,7 @@ import AppFooter from "../components/AppFooter.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
+import { useDakinisFeatureTelemetry } from "../hooks/useDakinisFeatureTelemetry.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import ProductHomePage from "../pages/ProductHomePage.jsx";
 import HubPage from "../pages/HubPage.jsx";
@@ -25,6 +26,7 @@ import { CrmPage } from "../app/crm/index.js";
 import { WhatsappHubPage } from "../app/whatsapp/index.js";
 import { SettingsPage } from "../app/settings/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
+import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -87,11 +89,14 @@ function AppRoutes() {
     }
   }, [session, location.pathname, navigate]);
 
+  useDakinisFeatureTelemetry(session, location.pathname);
+
   const nav = (pathname) => navigate(pathname);
 
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/portal/:slug" element={<ClientPortalPage />} />
       <Route
         path="/admin"
         element={

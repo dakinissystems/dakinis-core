@@ -2,6 +2,10 @@ import { DAKINIS_BUSINESS_ID_HEADER } from "../api/contracts.js";
 import { dakinisResolveBusinessFromHeader } from "../api/business-context.js";
 import { dakinisJsonError } from "../api/responses.js";
 import { dakinisDecodeTenantFromJwt } from "./auth.js";
+import {
+  dakinisLoadModuleOverrides,
+  dakinisSeedDefaultBranchAsync
+} from "../services/tenant-intelligence-store.js";
 
 export async function dakinisResolveTenant(req) {
   const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
@@ -25,6 +29,10 @@ export async function dakinisResolveTenant(req) {
     };
   }
 
-  req.dakinisBusiness = business;
-  return { business };
+  const overrides = await dakinisLoadModuleOverrides(business.id).catch(() => ({}));
+  if (String(business.type).toLowerCase() !== "platform") {
+    await dakinisSeedDefaultBranchAsync(business.id, business.name, "principal").catch(() => {});
+  }
+  req.dakinisBusiness = { ...business, _moduleOverrides: overrides };
+  return { business: req.dakinisBusiness };
 }

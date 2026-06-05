@@ -58,6 +58,11 @@ import {
 } from "./api/whatsapp-routes.js";
 import { dakinisHandlePublicCatalog } from "./api/catalog-routes.js";
 import {
+  dakinisHandlePublicIndustryTemplatesGet,
+  dakinisHandleTenantIntelligenceRoute
+} from "./api/tenant-intelligence-routes.js";
+import { dakinisHandlePublicPortalGet } from "./api/bos-routes.js";
+import {
   dakinisHandlePlatformCatalogGet,
   dakinisHandlePlatformCatalogPut
 } from "./api/catalog-admin-routes.js";
@@ -117,6 +122,13 @@ export async function dakinisDispatch(req, rawBody, url) {
 
   if (path === "/api/public/catalog" && req.method === "GET") {
     return await dakinisHandlePublicCatalog();
+  }
+  if (path === "/api/public/industry-templates" && req.method === "GET") {
+    return dakinisHandlePublicIndustryTemplatesGet();
+  }
+  const publicPortalMatch = /^\/api\/public\/portal\/([^/]+)$/.exec(path);
+  if (publicPortalMatch && req.method === "GET") {
+    return dakinisHandlePublicPortalGet(decodeURIComponent(publicPortalMatch[1]));
   }
 
   const publicAllergiesMatch = /^\/api\/public\/restaurant\/([^/]+)\/allergies$/.exec(path);
@@ -184,6 +196,7 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandleRestaurantInvoicesPost(req, rawBody);
 
   const moduleResult =
+    dakinisHandleTenantIntelligenceRoute(req, rawBody, url) ||
     dakinisHandleUsersRoute(req, rawBody, path) ||
     dakinisHandleTenantsRoute(req, path) ||
     dakinisHandleCrmRoute(req, rawBody, url) ||

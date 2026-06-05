@@ -9,6 +9,12 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } 
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
+import {
+  dakinisBuildInitialBusinessConfig,
+  dakinisSeedDefaultBranchAsync,
+  dakinisSeedIndustryModuleOverrides
+} from "../services/tenant-intelligence-store.js";
+import { dakinisGetIndustryTemplate } from "@dakinis/shared/catalog/business-templates.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -40,7 +46,7 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "slug: solo minusculas, numeros y guiones");
   }
   if (!dakinisIsValidBusinessTypeKey(type, { allowPlatform: false })) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa clinica, peluqueria, restaurante, inmobiliaria o una clave personalizada (minusculas, numeros, guiones, 2-48 caracteres). No uses platform al crear.");
+    return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa un perfil de industria (clinica, restaurante, gimnasio, retail…) o clave personalizada 2-48 caracteres. No uses platform al crear.");
   }
 
   const exists = await dakinisQueryOne("SELECT id FROM business WHERE lower(slug) = lower(?)", [slug]);
@@ -74,17 +80,19 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     ownerEmail && ownerPassword ? `usr_${randomUUID().replace(/-/g, "").slice(0, 16)}` : null;
   const passwordHash =
     ownerEmail && ownerPassword ? bcrypt.hashSync(ownerPassword, 10) : null;
+  const configJson = await dakinisBuildInitialBusinessConfig(type);
+  const industryTemplate = dakinisGetIndustryTemplate(type);
 
   await dakinisWithTransaction(async (tx) => {
     await tx.run(
       `INSERT INTO business (id, slug, name, type, plan, config_json)
-       VALUES (?, ?, ?, ?, ?, NULL)`,
-      [id, slug, name, type, planParsed]
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, slug, name, type, planParsed, configJson]
     );
     if (uid && passwordHash) {
       await tx.run(
         `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
-         VALUES (?, ?, ?, ?, 'admin', NULL, ?)`,
+         VALUES (?, ?, ?, ?, 'owner', NULL, ?)`,
         [uid, id, ownerEmail, passwordHash, 0]
       );
     }
@@ -103,16 +111,32 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     [id]
   );
 
+  await dakinisSeedDefaultBranchAsync(id, name, slug);
+  await dakinisSeedIndustryModuleOverrides(id, type, planParsed);
+
   await dakinisPublishEvent("tenant.created", {
     tenantId: id,
     slug,
     name,
     type,
     plan: planParsed,
-    ownerUserId: uid ?? null
+    ownerUserId: uid ?? null,
+    industryTemplate: industryTemplate?.key || type
   });
 
-  return dakinisJsonSuccess({ business: row, initialUser }, "platform", {});
+  return dakinisJsonSuccess(
+    {
+      business: row,
+      initialUser,
+      onboarding: {
+        title: industryTemplate?.onboardingTitle || "Configura tu negocio",
+        steps: industryTemplate?.onboardingSteps || [],
+        autoModules: industryTemplate?.autoModules || []
+      }
+    },
+    "platform",
+    {}
+  );
 }
 
 export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {

@@ -1,5 +1,11 @@
 import { dakinisSubscribeEvent, dakinisPublishEvent } from "./event-bus.js";
-import { dakinisCrmFindContactByPhone, dakinisCrmIsReady } from "../services/crm-store.js";
+import {
+  dakinisCrmCreateActivity,
+  dakinisCrmFindContactByPhone,
+  dakinisCrmGetOrCreateConversation,
+  dakinisCrmIsReady,
+  dakinisCrmTouchConversation
+} from "../services/crm-store.js";
 
 /** Enlaza eventos WhatsApp entrantes con el bus CRM (contacto persistido). */
 export function dakinisInitWhatsappCrmBridge() {
@@ -12,6 +18,18 @@ export function dakinisInitWhatsappCrmBridge() {
     if (await dakinisCrmIsReady()) {
       const contact = await dakinisCrmFindContactByPhone(tenantId, String(from));
       contactId = contact?.id || null;
+      if (contactId) {
+        const preview =
+          typeof event.payload?.text === "string"
+            ? event.payload.text.slice(0, 200)
+            : "Mensaje WhatsApp entrante";
+        await dakinisCrmCreateActivity(tenantId, contactId, {
+          type: "whatsapp",
+          notes: preview
+        });
+        const conv = await dakinisCrmGetOrCreateConversation(tenantId, contactId, String(from));
+        if (conv?.id) await dakinisCrmTouchConversation(conv.id);
+      }
     }
 
     await dakinisPublishEvent("crm.whatsapp.inbound", {

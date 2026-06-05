@@ -6,6 +6,10 @@ import {
   dakinisFormatBusinessTypeLabel,
   dakinisNormalizeBusinessTypeKey
 } from "@dakinis/shared/catalog/business-type-display.js";
+import {
+  dakinisGetIndustryTemplate,
+  dakinisGetIndustryTemplateCatalog
+} from "@dakinis/shared/catalog/business-templates.js";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 import PlatformCatalogPanel from "../components/PlatformCatalogPanel.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
@@ -23,14 +27,41 @@ export default function PlatformAdminPage({ navigate }) {
   const { session } = useDakinisSession();
 
   const typeSelectOptions = useMemo(() => {
+    const catalog = dakinisGetIndustryTemplateCatalog();
+    return catalog.map((item) => ({
+      value: item.key,
+      label: item.label,
+      market: item.market,
+      featureLabels: item.featureLabels
+    }));
+  }, []);
+
+  const verticalKeys = useMemo(() => typeSelectOptions.map((o) => o.value), [typeSelectOptions]);
+
+  const [createForm, setCreateForm] = useState(() => ({
+    name: "",
+    slug: "",
+    typeSelect: "clinica",
+    typeCustom: "",
+    plan: "starter",
+    ownerEmail: "",
+    ownerPassword: ""
+  }));
+
+  const createOnboardingPreview = useMemo(() => {
+    const key =
+      createForm.typeSelect === DAKINIS_TYPE_OTHER
+        ? dakinisNormalizeBusinessTypeKey(createForm.typeCustom)
+        : createForm.typeSelect;
+    return key ? dakinisGetIndustryTemplate(key) : null;
+  }, [createForm.typeSelect, createForm.typeCustom]);
+  const vistaMockupOptions = useMemo(() => {
     const reg = dakinisGetSystemRegistry();
     return Object.keys(reg).map((k) => ({
       value: k,
       label: dakinisFormatBusinessTypeLabel(k)
     }));
   }, []);
-
-  const verticalKeys = useMemo(() => typeSelectOptions.map((o) => o.value), [typeSelectOptions]);
 
   const typeSelectOptionsCreate = useMemo(
     () => [...typeSelectOptions, { value: DAKINIS_TYPE_OTHER, label: t("admin.other") }],
@@ -51,16 +82,6 @@ export default function PlatformAdminPage({ navigate }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [createForm, setCreateForm] = useState(() => ({
-    name: "",
-    slug: "",
-    typeSelect: verticalKeys[0] || "clinica",
-    typeCustom: "",
-    plan: "starter",
-    ownerEmail: "",
-    ownerPassword: ""
-  }));
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -231,7 +252,7 @@ export default function PlatformAdminPage({ navigate }) {
         <h3 style={{ marginTop: "0.25rem" }}>{t("admin.mockupsTitle")}</h3>
         <p className="lead">{t("admin.mockupsLead")}</p>
         <div className="system-switcher" style={{ marginBottom: "1.25rem" }}>
-          {typeSelectOptions.map((o) => (
+          {vistaMockupOptions.map((o) => (
             <button
               key={`vista-${o.value}`}
               type="button"
@@ -310,6 +331,19 @@ export default function PlatformAdminPage({ navigate }) {
                 autoComplete="off"
               />
             </label>
+          ) : null}
+          {createOnboardingPreview ? (
+            <div className="card" style={{ gridColumn: "1 / -1", marginTop: "0.5rem" }}>
+              <h4 style={{ marginTop: 0 }}>Onboarding: {createOnboardingPreview.onboardingTitle}</h4>
+              <p className="lead" style={{ marginBottom: "0.5rem" }}>
+                {createOnboardingPreview.market} — se activará automáticamente:
+              </p>
+              <ul>
+                {createOnboardingPreview.featureLabels.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </div>
           ) : null}
           <p className="lead" style={{ gridColumn: "1 / -1", margin: 0 }}>
             Opcional: crear ya el <strong>primer administrador</strong> del negocio (luego podrá añadir miembros desde el

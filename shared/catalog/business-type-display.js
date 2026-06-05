@@ -1,13 +1,20 @@
 /** Etiquetas para tipos predefinidos del catálogo (clave API en minúsculas). */
+import { DAKINIS_CORE_INDUSTRY_KEYS, DAKINIS_INDUSTRY_TEMPLATES } from "./business-templates.js";
+
 const DAKINIS_KNOWN_TYPE_LABELS = {
   clinica: "Clínica",
   peluqueria: "Peluquería",
   restaurante: "Restaurante",
   inmobiliaria: "Inmobiliaria",
-  platform: "Plataforma"
+  platform: "Plataforma",
+  ...Object.fromEntries(
+    DAKINIS_CORE_INDUSTRY_KEYS.filter((k) => !["clinica", "peluqueria", "restaurante", "inmobiliaria"].includes(k)).map(
+      (k) => [k, DAKINIS_INDUSTRY_TEMPLATES[k]?.label || k]
+    )
+  )
 };
 
-const PRESET_TYPES = new Set(["clinica", "peluqueria", "restaurante", "inmobiliaria"]);
+const PRESET_TYPES = new Set([...DAKINIS_CORE_INDUSTRY_KEYS]);
 
 /**
  * Texto para UI: tipos conocidos con nombre legible; otros → cada palabra con mayúscula inicial.

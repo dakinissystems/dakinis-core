@@ -9,7 +9,10 @@ import {
   dakinisHandleCrmActivitiesPost,
   dakinisHandleCrmCompaniesList,
   dakinisHandleCrmCompaniesPost,
-  dakinisHandleCrmMeta
+  dakinisHandleCrmMeta,
+  dakinisHandleCrmDealsList,
+  dakinisHandleCrmDealsPost,
+  dakinisHandleCrmDealPatch
 } from "../../api/tenant-crm-routes.js";
 import { dakinisHandleApiRequest } from "../../api/router.js";
 
@@ -85,6 +88,25 @@ export function dakinisHandleCrmRoute(req, rawBody, url) {
     const denied = dakinisCrmPlanGate(business);
     if (denied) return denied;
     return dakinisHandleCrmCompaniesPost(req, rawBody);
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/v1/crm/deals") {
+    const denied = dakinisCrmPlanGate(business);
+    if (denied) return denied;
+    return dakinisHandleCrmDealsList(req, url);
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/v1/crm/deals") {
+    const denied = dakinisCrmPlanGate(business);
+    if (denied) return denied;
+    return dakinisHandleCrmDealsPost(req, rawBody);
+  }
+
+  const dealPatchMatch = /^\/api\/v1\/crm\/deals\/([^/]+)$/.exec(url.pathname);
+  if (dealPatchMatch && req.method === "PATCH") {
+    const denied = dakinisCrmPlanGate(business);
+    if (denied) return denied;
+    return dakinisHandleCrmDealPatch(req, decodeURIComponent(dealPatchMatch[1]), rawBody);
   }
 
   const legacyUrl = new URL(url.toString());

@@ -7,10 +7,12 @@ import { dakinisDispatch } from "./src/app.js";
 import { dakinisInitSentry, dakinisCaptureException } from "./src/lib/sentry.js";
 import { dakinisInitWhatsappEventHandlers } from "./src/lib/whatsapp-event-handlers.js";
 import { dakinisInitWhatsappCrmBridge } from "./src/lib/whatsapp-crm-bridge.js";
+import { dakinisInitAutomationEngine } from "./src/lib/automation-engine.js";
 
 dakinisAssertProductionJwtSecret();
 dakinisInitWhatsappEventHandlers();
 dakinisInitWhatsappCrmBridge();
+dakinisInitAutomationEngine();
 
 const PORT = Number(process.env.PORT || 8787);
 const USE_FASTIFY = String(process.env.USE_FASTIFY || "").toLowerCase() === "true";

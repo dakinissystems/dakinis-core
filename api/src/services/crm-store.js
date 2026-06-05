@@ -374,3 +374,122 @@ export async function dakinisCrmGetContactTimeline(businessId, contactId) {
 
   return { contact, activities, messages, timeline };
 }
+
+export const DAKINIS_CRM_DEAL_STAGES = Object.freeze([
+  "lead",
+  "qualified",
+  "proposal",
+  "negotiation",
+  "won",
+  "lost"
+]);
+
+function dakinisRowDeal(r) {
+  return {
+    id: r.id,
+    contactId: r.contact_id || null,
+    companyId: r.company_id || null,
+    title: r.title,
+    stage: r.stage,
+    valueAmount: r.value_amount,
+    currency: r.currency,
+    expectedClose: r.expected_close,
+    notes: r.notes,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  };
+}
+
+async function dakinisDealsTableReady() {
+  try {
+    await dakinisQueryOne("SELECT COUNT(*) AS n FROM tenant_crm_deals");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function dakinisCrmListDeals(businessId, opts = {}) {
+  if (!(await dakinisDealsTableReady())) return [];
+  const stage = opts.stage ? String(opts.stage).trim() : "";
+  let sql = `SELECT * FROM tenant_crm_deals WHERE business_id = ?`;
+  const params = [businessId];
+  if (stage) {
+    sql += ` AND stage = ?`;
+    params.push(stage);
+  }
+  sql += ` ORDER BY ${dakinisSqlOrderCreatedAtDesc("updated_at")}`;
+  const rows = await dakinisQueryAll(sql, params);
+  return rows.map(dakinisRowDeal);
+}
+
+export async function dakinisCrmCreateDeal(businessId, input) {
+  if (!(await dakinisDealsTableReady())) {
+    throw Object.assign(new Error("CRM deals no inicializado"), { code: "CRM_NOT_READY" });
+  }
+  const title = String(input.title || "").trim();
+  if (!title) throw Object.assign(new Error("title requerido"), { code: "VALIDATION_ERROR" });
+  const stage = String(input.stage || "lead").trim().toLowerCase();
+  if (!DAKINIS_CRM_DEAL_STAGES.includes(stage)) {
+    throw Object.assign(new Error(`stage inválido: ${stage}`), { code: "VALIDATION_ERROR" });
+  }
+
+  const id = `deal_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+  const now = new Date().toISOString();
+  await dakinisRun(
+    `INSERT INTO tenant_crm_deals (id, business_id, contact_id, company_id, title, stage, value_amount, currency, expected_close, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      businessId,
+      input.contactId || null,
+      input.companyId || null,
+      title,
+      stage,
+      Number(input.valueAmount) || 0,
+      String(input.currency || "EUR").trim(),
+      input.expectedClose || null,
+      String(input.notes || "").trim(),
+      now,
+      now
+    ]
+  );
+  const row = await dakinisQueryOne("SELECT * FROM tenant_crm_deals WHERE id = ?", [id]);
+  return dakinisRowDeal(row);
+}
+
+export async function dakinisCrmUpdateDeal(businessId, dealId, input) {
+  if (!(await dakinisDealsTableReady())) return null;
+  const existing = await dakinisQueryOne(
+    "SELECT * FROM tenant_crm_deals WHERE business_id = ? AND id = ?",
+    [businessId, dealId]
+  );
+  if (!existing) return null;
+
+  const stage =
+    input.stage !== undefined ? String(input.stage).trim().toLowerCase() : existing.stage;
+  if (!DAKINIS_CRM_DEAL_STAGES.includes(stage)) return null;
+
+  const now = new Date().toISOString();
+  await dakinisRun(
+    `UPDATE tenant_crm_deals SET
+      contact_id = ?, company_id = ?, title = ?, stage = ?, value_amount = ?,
+      currency = ?, expected_close = ?, notes = ?, updated_at = ?
+     WHERE business_id = ? AND id = ?`,
+    [
+      input.contactId !== undefined ? input.contactId : existing.contact_id,
+      input.companyId !== undefined ? input.companyId : existing.company_id,
+      input.title !== undefined ? String(input.title).trim() : existing.title,
+      stage,
+      input.valueAmount !== undefined ? Number(input.valueAmount) : existing.value_amount,
+      input.currency !== undefined ? String(input.currency).trim() : existing.currency,
+      input.expectedClose !== undefined ? input.expectedClose : existing.expected_close,
+      input.notes !== undefined ? String(input.notes).trim() : existing.notes,
+      now,
+      businessId,
+      dealId
+    ]
+  );
+  const row = await dakinisQueryOne("SELECT * FROM tenant_crm_deals WHERE id = ?", [dealId]);
+  return dakinisRowDeal(row);
+}

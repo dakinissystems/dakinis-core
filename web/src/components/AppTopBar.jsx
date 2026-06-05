@@ -5,6 +5,7 @@ import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
 
 export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
   const { t } = useLocale();
@@ -45,6 +46,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
           </span>
         </div>
         <div className="topbar-actions">
+          <DakinisCopilotBar />
           <LanguageSwitcher />
           <a
             href={dakinisCorporatePricingUrl()}

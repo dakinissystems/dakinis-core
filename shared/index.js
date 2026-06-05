@@ -11,3 +11,4 @@ export { dakinisClinicEstheticAdapter } from "./adapters/clinic-esthetic.js";
 export { dakinisBarbershopPremiumAdapter } from "./adapters/barbershop-premium.js";
 export { dakinisRealEstateAdapter } from "./adapters/real-estate.js";
 export { dakinisRestauranteAdapter } from "./adapters/restaurante.js";
+export { dakinisGenericServiceAdapter } from "./adapters/generic-service.js";

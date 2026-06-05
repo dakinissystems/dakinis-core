@@ -51,6 +51,22 @@ function dakinisMigrateCrmTables(db) {
   dakinisMigrateWhatsappCrmColumns(db);
 }
 
+function dakinisMigrateTenantIntelligence(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-tenant-intelligence-migrate.sql"), "utf8"));
+}
+
+function dakinisMigrateIntelligenceV2(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-intelligence-v2-migrate.sql"), "utf8"));
+}
+
+function dakinisMigrateBos(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-bos-migrate.sql"), "utf8"));
+}
+
+function dakinisMigrateTelemetry(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-telemetry-migrate.sql"), "utf8"));
+}
+
 function dakinisMigrateStockBarcodeColumn(db) {
   const cols = db.prepare("PRAGMA table_info(tenant_stock_items)").all();
   const names = new Set(cols.map((c) => c.name));
@@ -91,6 +107,10 @@ function dakinisInitSqlite() {
   dakinisMigrateWhatsappTables(db);
   dakinisMigrateCrmTables(db);
   dakinisMigrateStockBarcodeColumn(db);
+  dakinisMigrateTenantIntelligence(db);
+  dakinisMigrateIntelligenceV2(db);
+  dakinisMigrateBos(db);
+  dakinisMigrateTelemetry(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 
