@@ -21,6 +21,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
   const confirmedRef = useRef("");
   const previewTimerRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
   const [imageSrc, setImageSrc] = useState("");
   const [previewCode, setPreviewCode] = useState("");
   const [confirmedCode, setConfirmedCode] = useState("");
@@ -56,7 +57,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     }, 700);
   }, []);
 
-  const stopScanning = useCallback(() => {
+  const stopCameraStream = useCallback(() => {
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
     if (stopRef.current) {
       stopRef.current();
@@ -66,7 +67,13 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     setPreviewCode("");
   }, []);
 
-  useEffect(() => () => stopScanning(), [stopScanning]);
+  const stopScanning = useCallback(() => {
+    stopCameraStream();
+    confirmedRef.current = "";
+    setConfirmedCode("");
+  }, [stopCameraStream]);
+
+  useEffect(() => () => stopCameraStream(), [stopCameraStream]);
 
   useEffect(() => {
     const detach = dakinisAttachHidBarcodeWedge((code) => confirmCode(code, { fromCamera: false }));
@@ -107,15 +114,21 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     if (wedgeInputRef.current) wedgeInputRef.current.value = "";
   }
 
-  async function startScanning() {
+  async function beginCamera(face, { resetReading = true } = {}) {
     setDecodeError("");
-    setPreviewCode("");
-    confirmedRef.current = "";
+    if (resetReading) {
+      setPreviewCode("");
+      confirmedRef.current = "";
+      setConfirmedCode("");
+    }
+    stopCameraStream();
     if (!videoRef.current) return;
     try {
       const stop = await dakinisStartLiveBarcodeScanner(
+        videoRef.current,
         (code) => confirmCode(code, { fromCamera: true }),
         {
+          facingMode: face,
           onPreview: handlePreview,
           minHits: 4,
           windowMs: 500,
@@ -123,12 +136,26 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
         }
       );
       stopRef.current = stop;
+      setFacingMode(face);
       setIsScanning(true);
       setImageSrc("");
     } catch (e) {
       setDecodeError(
         e instanceof Error ? e.message : label("kitchen.scanCameraError", "No se pudo usar la cámara")
       );
+    }
+  }
+
+  async function startScanning() {
+    await beginCamera(facingMode, { resetReading: true });
+  }
+
+  async function flipCamera() {
+    const next = facingMode === "environment" ? "user" : "environment";
+    if (isScanning) {
+      await beginCamera(next, { resetReading: false });
+    } else {
+      setFacingMode(next);
     }
   }
 
@@ -226,9 +253,32 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
             ? label("kitchen.scanStop", "Detener escáner")
             : label("kitchen.scanStart", "Iniciar cámara")}
         </button>
+        <button
+          type="button"
+          className="btn btn-outline stock-scanner__flip"
+          onClick={() => flipCamera()}
+          title={
+            facingMode === "environment"
+              ? label("kitchen.scanCameraRear", "Cámara trasera")
+              : label("kitchen.scanCameraFront", "Cámara frontal")
+          }
+        >
+          {label("kitchen.scanFlipCamera", "Cambiar cámara")}
+          <span className="stock-scanner__flip-label">
+            {facingMode === "environment"
+              ? label("kitchen.scanCameraRear", "Trasera")
+              : label("kitchen.scanCameraFront", "Frontal")}
+          </span>
+        </button>
         <label className="btn btn-outline stock-scanner__file">
           {label("kitchen.scanImage", "Cargar imagen")}
-          <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} hidden />
+          <input
+            type="file"
+            accept="image/*"
+            capture={facingMode === "user" ? "user" : "environment"}
+            onChange={handleImageChange}
+            hidden
+          />
         </label>
       </div>
 

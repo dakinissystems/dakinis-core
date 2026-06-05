@@ -2710,6 +2710,19 @@ section {
   border-color: #dc3545;
 }
 
+.stock-scanner__flip {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.stock-scanner__flip-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .stock-scanner__file {
   cursor: pointer;
   margin: 0;

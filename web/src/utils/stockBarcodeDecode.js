@@ -157,9 +157,14 @@ export async function dakinisDecodeBarcodeFromImage(dataUrl) {
   return dakinisTryDecodeWithZXing(scaled800 || dataUrl);
 }
 
+/** @typedef {"environment"|"user"} DakinisCameraFacing */
+
 /**
- * Inicia escáner en vivo (1D). onCode(code) en cada detección.
- * Devuelve función stop().
+ * Inicia escáner en vivo (1D).
+ * @param {HTMLVideoElement} videoEl
+ * @param {(code: string) => void} onCode
+ * @param {{ onPreview?: (code: string) => void, minHits?: number, windowMs?: number, cooldownMs?: number, facingMode?: DakinisCameraFacing }} [opts]
+ * @returns {Promise<() => void>}
  */
 export async function dakinisStartLiveBarcodeScanner(videoEl, onCode, opts = {}) {
   const Quagga = (await import("@ericblade/quagga2")).default;
@@ -170,9 +175,11 @@ export async function dakinisStartLiveBarcodeScanner(videoEl, onCode, opts = {})
     cooldownMs: opts.cooldownMs ?? 3000
   });
 
+  const facingMode = opts.facingMode === "user" ? "user" : "environment";
+
   const stream = await navigator.mediaDevices.getUserMedia({
     video: {
-      facingMode: "environment",
+      facingMode: { ideal: facingMode },
       width: { min: 640, ideal: 1280, max: 1920 },
       height: { min: 480, ideal: 720, max: 1080 }
     }
