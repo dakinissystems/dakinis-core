@@ -4,11 +4,7 @@
   "packages": { "node": "20" },
   "steps": {
     "install": {
-      "commands": ["npm install"]
-    },
-    "build": {
-      "inputs": [{ "step": "install" }],
-      "commands": ["npm run build -w @dakinis/web"]
+      "commands": ["npm install", "npm run build -w @dakinis/web"]
     }
   },
   "deploy": {
