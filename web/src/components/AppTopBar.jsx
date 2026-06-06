@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import { dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
+import { dakinisCorporatePricingUrl, dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
