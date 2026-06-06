@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import { dakinisCorporatePricingUrl, dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
 
@@ -48,7 +48,14 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
         <div className="topbar-actions">
           <DakinisCopilotBar />
           <LanguageSwitcher />
-          <a href={dakinisProductPricingUrl()} className="btn btn-outline">
+          <a
+            href="/#precios"
+            className="btn btn-outline"
+            onClick={(e) => {
+              e.preventDefault();
+              dakinisGoHomeAnchor(navigate, "precios");
+            }}
+          >
             {t("nav.packages")}
           </a>
           {session?.user?.email ? (
@@ -153,7 +160,14 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               >
                 {t("nav.login")}
               </a>
-              <a href={dakinisCorporatePricingUrl()} className="btn btn-outline" target="_blank" rel="noreferrer">
+              <a
+                href="/#precios"
+                className="btn btn-outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  dakinisGoHomeAnchor(navigate, "precios");
+                }}
+              >
                 {t("nav.quote")}
               </a>
             </>

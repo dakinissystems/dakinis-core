@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { company } from "@dakinis/shared-brand";
-import { dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
+import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
@@ -63,9 +63,13 @@ export default function ProductHomePage() {
             </div>
             <p className="hero-actions-secondary">
               <a
-                href={dakinisProductPricingUrl()}
+                href="/#precios"
                 className="link-btn"
-                onClick={() => dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home" })}
+                onClick={(e) => {
+                  e.preventDefault();
+                  dakinisGoHomeAnchor(navigate, "precios");
+                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home" });
+                }}
               >
                 {t("productHome.requestDemo")}
               </a>

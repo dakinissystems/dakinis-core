@@ -8,8 +8,7 @@ import {
   dakinisProfessionalServices,
   dakinisPackMvp,
   dakinisPackPro,
-  dakinisPackAdvanced,
-  dakinisMaintenanceTiers
+  dakinisPackAdvanced
 } from "../data/pricingCatalog.js";
 
 const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
@@ -71,9 +70,10 @@ export default function PricingHybridSection({
 
   const maintenanceTiers = useMemo(
     () =>
-      dakinisMaintenanceTiers.map((tier) => ({
-        ...tier,
+      dakinisProfessionalServices.maintenance.map((tier) => ({
+        key: tier.key,
         name: t(`pricing.maintenance.${tier.key}.name`),
+        price: t("pricing.maintenance.priceFormat", { amount: tier.priceEur }),
         description: t(`pricing.maintenance.${tier.key}.description`)
       })),
     [t]
@@ -125,7 +125,7 @@ export default function PricingHybridSection({
         <div className="maint-grid implementation-grid">
           {dakinisImplementationTiers.map((tier) => (
             <div key={tier.key} className="card price-card">
-              <h3>{tier.label}</h3>
+              <h3>{t(`pricing.implementation.${tier.key}.label`)}</h3>
               <p className="price">{tier.range}</p>
             </div>
           ))}

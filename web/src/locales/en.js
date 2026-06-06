@@ -4,7 +4,9 @@ import { legalCoreEn } from "./legal-core.js";
 export default {
   common: {
     showPassword: "Show password",
-    hidePassword: "Hide password"
+    hidePassword: "Hide password",
+    unexpectedError: "Unexpected error",
+    unexpectedErrorHint: "Reload the page. If it persists, contact support."
   },
   nav: {
     packages: "Plans & contact",
@@ -303,6 +305,7 @@ export default {
     maintenancePitch:
       "After launch you can maintain and improve it step by step — no surprises.",
     maintenance: {
+      priceFormat: "€{amount}/month",
       basic: {
         name: "Basic support",
         description: "Incidents, small tweaks and keeping the system healthy in production."
@@ -311,12 +314,19 @@ export default {
         name: "Support + improvements",
         description: "Priority support and monthly capacity for small, guided improvements."
       }
+    },
+    implementation: {
+      light: { label: "Light setup" },
+      standard: { label: "Standard implementation" },
+      advanced: { label: "Advanced implementation" },
+      enterprise: { label: "Bespoke project" }
     }
   },
   login: {
     kicker: "Multi-tenant SaaS access",
     title: "Sign in",
     demoPassword: "Demo password for all tenants:",
+    demoAccounts: "Demo accounts",
     tenants: {
       clinic: "Aesthetic clinic",
       barber: "Premium barbershop",

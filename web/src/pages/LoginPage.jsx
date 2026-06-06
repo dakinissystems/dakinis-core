@@ -137,7 +137,7 @@ export default function LoginPage() {
           {t("login.demoPassword")} <code className="config-box">demo123</code>
         </p>
         <details className="login-demo-details card">
-          <summary>Cuentas demo</summary>
+          <summary>{t("login.demoAccounts")}</summary>
           <ul className="demo-tenant-list">
           <li>
             <code className="config-box">admin@dakinis-platform.local</code>

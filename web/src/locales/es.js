@@ -4,11 +4,13 @@ import { legalCoreEs } from "./legal-core.js";
 export default {
   common: {
     showPassword: "Mostrar contraseña",
-    hidePassword: "Ocultar contraseña"
+    hidePassword: "Ocultar contraseña",
+    unexpectedError: "Error inesperado",
+    unexpectedErrorHint: "Recarga la página. Si persiste, contacta soporte."
   },
   nav: {
     packages: "Paquetes y contacto",
-    login: "Login",
+    login: "Iniciar sesión",
     quote: "Solicitar presupuesto",
     hub: "Hub",
     platformPanel: "Panel plataforma",
@@ -303,6 +305,7 @@ export default {
     maintenancePitch:
       "Después del desarrollo puedes mantenerlo y mejorarlo poco a poco — sin sorpresas.",
     maintenance: {
+      priceFormat: "{amount} €/mes",
       basic: {
         name: "Soporte básico",
         description: "Incidencias, pequeños ajustes y que el sistema siga vivo en producción."
@@ -312,12 +315,19 @@ export default {
         description:
           "Prioridad en soporte y hueco mensual para mejoras pequeñas encaminadas."
       }
+    },
+    implementation: {
+      light: { label: "Configuración ligera" },
+      standard: { label: "Implantación estándar" },
+      advanced: { label: "Implantación avanzada" },
+      enterprise: { label: "Proyecto a medida" }
     }
   },
   login: {
     kicker: "Acceso SaaS multi-tenant",
     title: "Iniciar sesión",
     demoPassword: "Contraseña demo para todos los tenants:",
+    demoAccounts: "Cuentas demo",
     tenants: {
       clinic: "Clínica estética",
       barber: "Peluquería premium",
