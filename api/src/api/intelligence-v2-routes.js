@@ -95,14 +95,14 @@ export async function dakinisHandleRecommendationsGet(req) {
 }
 
 export async function dakinisHandleIntelligenceAskPost(req, rawBody) {
-  const denied = dakinisPlanModuleDenialOrNull(req.dakinisBusiness, "/api/dashboard/metrics");
-  if (denied) return denied;
   const body = dakinisParseJson(rawBody) || {};
   const base = await dakinisGatherTenantSignals(req.dakinisBusiness);
   const signals = await dakinisGatherGrowthSignals(req.dakinisBusiness.id, base);
   await dakinisTrackModuleUsage(req.dakinisBusiness.id, "ia");
   const result = await dakinisIntelligenceAskWithAgents(req.dakinisBusiness, signals, {
-    question: body.question
+    question: body.question,
+    telemetrySource: "intelligence",
+    userId: req.dakinisAuth?.userId || req.user?.id || null
   });
   return dakinisJsonSuccess(
     { ...result, llmEnabled: dakinisIntelligenceIsLlmEnabled() },

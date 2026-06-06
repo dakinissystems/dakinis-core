@@ -362,6 +362,22 @@ a.link-btn {
   margin-bottom: 0.35rem;
 }
 
+.bos-plan-grid .bos-plan-card.featured {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(56, 189, 198, 0.35);
+}
+
+.bos-overage-note {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+.implementation-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .maint-heading {
   margin-top: 2.25rem;
   margin-bottom: 0.35rem;
@@ -1224,6 +1240,7 @@ section {
   .hero-grid,
   .price-grid,
   .pack-grid,
+  .implementation-grid,
   .maint-grid,
   .two-col,
   .cta-card,

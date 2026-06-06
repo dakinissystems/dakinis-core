@@ -3,11 +3,14 @@ import { dakinisQueryOne } from "../src/db/query.js";
 
 process.env.DB_DRIVER = process.env.DB_DRIVER || "sqlite";
 await dakinisInitDb();
-const row = await dakinisQueryOne(
-  "SELECT name FROM sqlite_master WHERE type='table' AND name='tenant_feature_usage'"
-);
-if (!row?.name) {
-  console.error("FAIL: tenant_feature_usage missing");
-  process.exit(1);
+for (const table of ["tenant_feature_usage", "tenant_feature_events"]) {
+  const row = await dakinisQueryOne(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
+    [table]
+  );
+  if (!row?.name) {
+    console.error(`FAIL: ${table} missing`);
+    process.exit(1);
+  }
+  console.log(`OK: ${table}`);
 }
-console.log("OK: tenant_feature_usage");

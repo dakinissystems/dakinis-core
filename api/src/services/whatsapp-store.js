@@ -4,6 +4,7 @@ import {
   dakinisCrmEnsureWhatsappContext,
   dakinisCrmLinkWhatsappMessage
 } from "./crm-whatsapp-link.js";
+import { dakinisEmitFeatureEvent } from "./telemetry-store.js";
 
 const DAKINIS_WHATSAPP_ENTITY = "whatsapp.message";
 
@@ -79,6 +80,9 @@ export async function dakinisStoreWhatsappMessage(businessId, record) {
         wa_profile_name: record.profileName,
         display_name: record.displayName
       });
+    }
+    if (record.direction === "outbound") {
+      dakinisEmitFeatureEvent(businessId, null, "whatsapp.message.sent", { messageId: id });
     }
     return id;
   }

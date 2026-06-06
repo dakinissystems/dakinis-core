@@ -6,8 +6,15 @@ import { dakinisGetIndustryTemplate } from "@dakinis/shared/catalog/business-tem
 import { dakinisCompareToSector } from "@dakinis/shared/catalog/sector-benchmarks.js";
 import { dakinisComputeGrowthScore } from "@dakinis/shared/catalog/tenant-growth-score.js";
 import { dakinisBuildModuleRecommendations } from "@dakinis/shared/catalog/module-recommendations.js";
-import { dakinisEstimateAiCostEur } from "@dakinis/shared/catalog/bos-pricing.js";
+import {
+  dakinisComputeCommercialMonthlyInvoice,
+  dakinisEstimateAiCostEur
+} from "@dakinis/shared/catalog/bos-pricing.js";
 import { dakinisPathToTelemetryFeature } from "@dakinis/shared/catalog/telemetry-features.js";
+import {
+  dakinisComputeAdoptionScores,
+  dakinisComputeBusinessValueScores
+} from "@dakinis/shared/catalog/telemetry-scores.js";
 
 describe("tenant intelligence catalog", () => {
   it("resuelve plantilla restaurante con KPIs", () => {
@@ -70,11 +77,52 @@ describe("tenant intelligence catalog", () => {
     assert.ok(cost > 0);
   });
 
+  it("factura comercial hibrida plan + exceso consumo", () => {
+    const within = dakinisComputeCommercialMonthlyInvoice("growth", {
+      aiQueries: 0,
+      whatsappMessages: 200
+    });
+    assert.equal(within.totalEur, 79);
+    assert.equal(within.overage.whatsappEur, 0);
+
+    const over = dakinisComputeCommercialMonthlyInvoice("pro", {
+      aiQueries: 2500,
+      whatsappMessages: 2200
+    });
+    assert.equal(over.baseEur, 149);
+    assert.ok(over.overage.aiEur >= 5);
+    assert.ok(over.overage.whatsappEur >= 5);
+    assert.ok(over.totalEur > 149);
+  });
+
   it("mapea rutas /app a claves de telemetria", () => {
     assert.equal(dakinisPathToTelemetryFeature("/app/dashboard"), "dashboard");
     assert.equal(dakinisPathToTelemetryFeature("/app/crm"), "crm");
     assert.equal(dakinisPathToTelemetryFeature("/app/whatsapp/conversations"), "whatsapp.inbox");
     assert.equal(dakinisPathToTelemetryFeature("/app/settings"), "settings");
     assert.equal(dakinisPathToTelemetryFeature("/login"), null);
+  });
+
+  it("calcula adoption y business value scores", () => {
+    const adoption = dakinisComputeAdoptionScores(
+      [
+        { feature: "crm", sessions: 20, totalMinutes: 45, bounceRatePct: 5 },
+        { feature: "dashboard", sessions: 30, totalMinutes: 60, bounceRatePct: 2 }
+      ],
+      30
+    );
+    const crm = adoption.find((a) => a.module === "crm");
+    assert.ok(crm.scorePct > 50);
+
+    const value = dakinisComputeBusinessValueScores(
+      {
+        "crm.contact.created": 8,
+        "crm.deal.won": 1,
+        "whatsapp.message.sent": 25
+      },
+      30
+    );
+    const wa = value.find((v) => v.module === "whatsapp");
+    assert.ok(wa.scorePct > 0);
   });
 });

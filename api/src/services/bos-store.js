@@ -2,13 +2,17 @@ import { createHash, randomUUID } from "node:crypto";
 import { dakinisResolveDbDriver, dakinisSqlTimestampNow } from "../db/dialect.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import {
+  dakinisComputeCommercialMonthlyInvoice,
   dakinisEstimateAiCostEur,
   dakinisEstimateHeuristicQueryCostEur,
-  DAKINIS_PLAN_BASE_EUR,
+  DAKINIS_IMPLEMENTATION_TIERS_EUR,
+  DAKINIS_PROFESSIONAL_SERVICES,
+  DAKINIS_PROJECT_PACKS,
   DAKINIS_WHATSAPP_COST_PER_MESSAGE_EUR
 } from "@dakinis/shared/catalog/bos-pricing.js";
 import { dakinisNormalizeCommercialPlan } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisUpsertModuleOverrides } from "./tenant-intelligence-store.js";
+import { dakinisEmitFeatureEvent } from "./telemetry-store.js";
 
 function dakinisSqlSinceDays(days) {
   return dakinisResolveDbDriver() === "postgres"
@@ -114,12 +118,16 @@ export async function dakinisGetBillingSummary(business) {
     waMessages = 0;
   }
 
-  const baseEur = DAKINIS_PLAN_BASE_EUR[plan] ?? DAKINIS_PLAN_BASE_EUR.starter;
-  const waCost = Math.round(waMessages * DAKINIS_WHATSAPP_COST_PER_MESSAGE_EUR * 100) / 100;
-  const estimatedTotal = Math.round((baseEur + ai.costEur + waCost) * 100) / 100;
+  const operatorWaCost =
+    Math.round(waMessages * DAKINIS_WHATSAPP_COST_PER_MESSAGE_EUR * 100) / 100;
+  const commercial = dakinisComputeCommercialMonthlyInvoice(plan, {
+    aiQueries: ai.queries,
+    whatsappMessages: waMessages
+  });
 
   return {
     stripeConnected: Boolean(sub?.stripe_customer_id),
+    commercialModel: "hybrid",
     subscription: sub
       ? {
           plan: sub.plan,
@@ -130,13 +138,25 @@ export async function dakinisGetBillingSummary(business) {
       : { plan, status: "active" },
     usage: {
       ai,
-      whatsapp: { messages30d: waMessages, estimatedCostEur: waCost },
-      planBaseEur: baseEur
+      whatsapp: {
+        messages30d: waMessages,
+        operatorCostEur: operatorWaCost
+      },
+      commercial
+    },
+    professionalServices: {
+      implementationTiers: DAKINIS_IMPLEMENTATION_TIERS_EUR,
+      projectPacks: DAKINIS_PROJECT_PACKS,
+      services: DAKINIS_PROFESSIONAL_SERVICES
     },
     nextInvoiceEstimate: {
       currency: "EUR",
-      amount: estimatedTotal,
-      note: "Estimación interna; Stripe no conectado"
+      amount: commercial.totalEur,
+      lineItems: commercial.lineItems,
+      note: commercial.overage.aiEur || commercial.overage.whatsappEur
+        ? "Plan base + exceso consumo (IA/WhatsApp)"
+        : "Solo plan base (dentro de cuotas incluidas)",
+      stripeConnected: false
     }
   };
 }
@@ -197,6 +217,7 @@ export async function dakinisExecutePendingAction(business, actionRow) {
 export async function dakinisMarketplaceInstallModule(businessId, moduleKey) {
   const overrides = await dakinisUpsertModuleOverrides(businessId, { [moduleKey]: true });
   await dakinisRecordUsage(businessId, "marketplace_install", 1);
+  dakinisEmitFeatureEvent(businessId, null, "marketplace.module.installed", { moduleKey });
   return overrides;
 }
 

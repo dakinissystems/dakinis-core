@@ -14,7 +14,9 @@ export default function TenantTeamSection({
   tenantSlugForVertical,
   activeSystemKey
 }) {
-  const canManage = Boolean(apiSession?.token) && session?.user?.role === "admin";
+  const canManage =
+    Boolean(apiSession?.token) &&
+    ["admin", "owner", "manager"].includes(String(session?.user?.role || ""));
 
   const [teamUsers, setTeamUsers] = useState([]);
   const [teamError, setTeamError] = useState("");
@@ -23,6 +25,9 @@ export default function TenantTeamSection({
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("member");
   const [saving, setSaving] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editEmail, setEditEmail] = useState("");
+  const [teamMsg, setTeamMsg] = useState("");
 
   const loadTeam = useCallback(
     async (signal) => {
@@ -118,6 +123,11 @@ export default function TenantTeamSection({
           {teamError}
         </p>
       ) : null}
+      {teamMsg ? (
+        <p className="lead" style={{ color: "#5eead4" }}>
+          {teamMsg}
+        </p>
+      ) : null}
 
       <form className="mockup-form card tenant-team-form" onSubmit={handleCreateUser}>
         <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>
@@ -165,12 +175,23 @@ export default function TenantTeamSection({
               <th>Email</th>
               <th>Rol</th>
               <th>Cambiar rol</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {teamUsers.map((u) => (
               <tr key={u.id}>
-                <td data-label="Email">{u.email}</td>
+                <td data-label="Email">
+                  {editingUserId === u.id ? (
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(ev) => setEditEmail(ev.target.value)}
+                    />
+                  ) : (
+                    u.email
+                  )}
+                </td>
                 <td data-label="Rol">{dakinisRoleLabel(u.role)}</td>
                 <td data-label="Cambiar rol">
                   <select
@@ -187,6 +208,92 @@ export default function TenantTeamSection({
                     <option value="admin">Administrador</option>
                     <option value="member">Miembro</option>
                   </select>
+                </td>
+                <td data-label="Acciones">
+                  {editingUserId === u.id ? (
+                    <>
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={saving}
+                        onClick={async () => {
+                          setSaving(true);
+                          setTeamError("");
+                          try {
+                            await dakinisTenantJsonFetch(
+                              `/api/tenant/users/${encodeURIComponent(u.id)}`,
+                              apiSession,
+                              {
+                                method: "PATCH",
+                                businessId: tenantSlugForVertical,
+                                businessTypeHeader: activeSystemKey,
+                                body: { email: editEmail.trim().toLowerCase() }
+                              }
+                            );
+                            setEditingUserId(null);
+                            setTeamMsg("Email actualizado.");
+                            await loadTeam();
+                          } catch (err) {
+                            setTeamError(err instanceof Error ? err.message : "No se pudo actualizar el email");
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                      >
+                        Guardar email
+                      </button>
+                      <button type="button" className="btn btn-outline" onClick={() => setEditingUserId(null)}>
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => {
+                          setEditingUserId(u.id);
+                          setEditEmail(u.email);
+                        }}
+                      >
+                        Editar email
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={saving}
+                        onClick={async () => {
+                          setSaving(true);
+                          setTeamError("");
+                          setTeamMsg("");
+                          try {
+                            const res = await dakinisTenantJsonFetch(
+                              `/api/tenant/users/${encodeURIComponent(u.id)}/resend-password-reset`,
+                              apiSession,
+                              {
+                                method: "POST",
+                                businessId: tenantSlugForVertical,
+                                businessTypeHeader: activeSystemKey
+                              }
+                            );
+                            if (res?.data?.emailSent) {
+                              setTeamMsg(`Enlace de restablecimiento enviado a ${res.data.email}.`);
+                            } else {
+                              setTeamMsg(
+                                `Email no enviado (configura RESEND). Enlace: ${res?.data?.resetUrl || "—"}`
+                              );
+                            }
+                          } catch (err) {
+                            setTeamError(err instanceof Error ? err.message : "No se pudo reenviar el correo");
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                      >
+                        Reenviar reset
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

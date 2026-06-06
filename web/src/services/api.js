@@ -100,7 +100,11 @@ export async function dakinisTenantJsonFetch(path, session, options = {}) {
   } else {
     const keyFromSession =
       dakinisTrimOr(session?.apiKey, "") || dakinisTrimOr(import.meta.env.VITE_API_KEY, "");
-    mergedHeaders["x-api-key"] = keyFromSession || DAKINIS_PUBLIC_DEFAULT_API_KEY;
+    const devFallback = import.meta.env.DEV ? DAKINIS_PUBLIC_DEFAULT_API_KEY : "";
+    const apiKey = keyFromSession || devFallback;
+    if (apiKey) {
+      mergedHeaders["x-api-key"] = apiKey;
+    }
   }
 
   let bodyPayload = options.body;

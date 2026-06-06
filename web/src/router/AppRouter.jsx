@@ -11,6 +11,8 @@ import ProductHomePage from "../pages/ProductHomePage.jsx";
 import HubPage from "../pages/HubPage.jsx";
 import EcosystemLaunchPage from "../pages/EcosystemLaunchPage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "../pages/ResetPasswordPage.jsx";
 import PlatformAdminPage from "../pages/PlatformAdminPage.jsx";
 import VistaMockupPage from "../pages/VistaMockupPage.jsx";
 import SystemPage from "../pages/SystemPage.jsx";
@@ -27,6 +29,7 @@ import { WhatsappHubPage } from "../app/whatsapp/index.js";
 import { SettingsPage } from "../app/settings/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
+import AppGuard from "../components/AppGuard.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -96,6 +99,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/portal/:slug" element={<ClientPortalPage />} />
       <Route
         path="/admin"
@@ -105,16 +110,72 @@ function AppRoutes() {
           </AdminGuard>
         }
       />
-      <Route path="/app/dashboard" element={<DashboardPage navigate={nav} />} />
-      <Route path="/app/crm" element={<CrmPage navigate={nav} />} />
+      <Route
+        path="/app/dashboard"
+        element={
+          <AppGuard>
+            <DashboardPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/crm"
+        element={
+          <AppGuard>
+            <CrmPage navigate={nav} />
+          </AppGuard>
+        }
+      />
       <Route path="/app/messages" element={<Navigate to="/app/whatsapp/conversations" replace />} />
       <Route path="/app/whatsapp" element={<Navigate to="/app/whatsapp/conversations" replace />} />
-      <Route path="/app/whatsapp/conversations" element={<WhatsappHubPage navigate={nav} />} />
-      <Route path="/app/whatsapp/contacts" element={<WhatsappHubPage navigate={nav} />} />
-      <Route path="/app/whatsapp/templates" element={<WhatsappHubPage navigate={nav} />} />
-      <Route path="/app/whatsapp/automations" element={<WhatsappHubPage navigate={nav} />} />
-      <Route path="/app/whatsapp/ai" element={<WhatsappHubPage navigate={nav} />} />
-      <Route path="/app/settings" element={<SettingsPage navigate={nav} />} />
+      <Route
+        path="/app/whatsapp/conversations"
+        element={
+          <AppGuard>
+            <WhatsappHubPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/whatsapp/contacts"
+        element={
+          <AppGuard>
+            <WhatsappHubPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/whatsapp/templates"
+        element={
+          <AppGuard>
+            <WhatsappHubPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/whatsapp/automations"
+        element={
+          <AppGuard>
+            <WhatsappHubPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/whatsapp/ai"
+        element={
+          <AppGuard>
+            <WhatsappHubPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/settings"
+        element={
+          <AppGuard>
+            <SettingsPage navigate={nav} />
+          </AppGuard>
+        }
+      />
       <Route path="/hub" element={<HubPage />} />
       <Route path="/ecosystem/launch/:productId" element={<EcosystemLaunchPage />} />
       <Route path="/faq" element={<FaqPage navigate={nav} />} />

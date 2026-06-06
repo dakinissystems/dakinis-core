@@ -4,6 +4,8 @@ import {
   dakinisHandlePlatformBusinessCreate,
   dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
+  dakinisHandlePlatformUserPatch,
+  dakinisHandlePlatformUserResendReset,
   dakinisHandlePlatformUsers
 } from "./api/platform-routes.js";
 import {
@@ -93,6 +95,25 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (authErr) return authErr;
     return dakinisHandlePlatformUsers();
   }
+  const platformUserPatchMatch = /^\/api\/platform\/users\/([^/]+)$/.exec(path);
+  if (platformUserPatchMatch && req.method === "PATCH") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformUserPatch(platformUserPatchMatch[1], rawBody);
+  }
+  const platformUserResendMatch = /^\/api\/platform\/users\/([^/]+)\/resend-password-reset$/.exec(path);
+  if (platformUserResendMatch && req.method === "POST") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformUserResendReset(platformUserResendMatch[1]);
+  }
+  if (path === "/api/platform/telemetry/summary" && req.method === "GET") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    const { dakinisHandlePlatformTelemetrySummaryGet } = await import("./api/telemetry-routes.js");
+    const days = Number(url.searchParams.get("days") || 30);
+    return dakinisHandlePlatformTelemetrySummaryGet(days);
+  }
   if (path === "/api/platform/catalog" && req.method === "GET") {
     const authErr = dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
@@ -137,6 +158,14 @@ export async function dakinisDispatch(req, rawBody, url) {
   }
   if (path === "/api/auth/login" && req.method === "POST") {
     return dakinisHandleAuthLoginRequest(rawBody);
+  }
+  if (path === "/api/auth/forgot-password" && req.method === "POST") {
+    const { dakinisHandleAuthForgotPassword } = await import("./api/auth-routes.js");
+    return dakinisHandleAuthForgotPassword(rawBody);
+  }
+  if (path === "/api/auth/reset-password" && req.method === "POST") {
+    const { dakinisHandleAuthResetPassword } = await import("./api/auth-routes.js");
+    return dakinisHandleAuthResetPassword(rawBody);
   }
   if (path === "/api/auth/exchange" && req.method === "POST") {
     return dakinisHandleAuthExchangeRequest(req, rawBody);

@@ -13,6 +13,7 @@ import { dakinisComputeTenantHealthScore } from "@dakinis/shared/catalog/tenant-
 import { dakinisGetTenantRoleCatalog } from "@dakinis/shared/catalog/tenant-roles.js";
 import { dakinisRoleCanManageUsers } from "@dakinis/shared/catalog/tenant-roles.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
+import { dakinisCommercialRoutePlanDenialOrNull } from "./route-plan-access.js";
 import {
   dakinisGatherTenantSignals,
   dakinisListBranches,
@@ -342,6 +343,15 @@ export async function dakinisHandleTenantRolesCatalogGet(req) {
 
 export function dakinisHandleTenantIntelligenceRoute(req, rawBody, url) {
   const path = url.pathname;
+
+  if (path.startsWith("/api/v1/tenant/") && req.dakinisBusiness) {
+    const commercialDenied = dakinisCommercialRoutePlanDenialOrNull(
+      req.dakinisBusiness,
+      req.method,
+      path
+    );
+    if (commercialDenied) return commercialDenied;
+  }
 
   const telemetry = dakinisHandleTelemetryRoute(req, rawBody, url);
   if (telemetry) return telemetry;

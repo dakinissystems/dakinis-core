@@ -67,6 +67,27 @@ function dakinisMigrateTelemetry(db) {
   db.exec(fs.readFileSync(path.join(__dirname, "schema-telemetry-migrate.sql"), "utf8"));
 }
 
+function dakinisMigrateFeatureEvents(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-feature-events-migrate.sql"), "utf8"));
+}
+
+function dakinisMigrateUserCredentials(db) {
+  const cols = db.prepare("PRAGMA table_info(users)").all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("must_change_password")) {
+    db.exec("ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0");
+  }
+  if (!names.has("password_reset_token_hash")) {
+    db.exec("ALTER TABLE users ADD COLUMN password_reset_token_hash TEXT");
+  }
+  if (!names.has("password_reset_expires_at")) {
+    db.exec("ALTER TABLE users ADD COLUMN password_reset_expires_at TEXT");
+  }
+  if (!names.has("confirmed_at")) {
+    db.exec("ALTER TABLE users ADD COLUMN confirmed_at TEXT");
+  }
+}
+
 function dakinisMigrateStockBarcodeColumn(db) {
   const cols = db.prepare("PRAGMA table_info(tenant_stock_items)").all();
   const names = new Set(cols.map((c) => c.name));
@@ -111,6 +132,8 @@ function dakinisInitSqlite() {
   dakinisMigrateIntelligenceV2(db);
   dakinisMigrateBos(db);
   dakinisMigrateTelemetry(db);
+  dakinisMigrateFeatureEvents(db);
+  dakinisMigrateUserCredentials(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
-import { dakinisCorporatePricingUrl } from "@dakinis/shared-brand/pricing-links";
+import { dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -48,12 +48,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
         <div className="topbar-actions">
           <DakinisCopilotBar />
           <LanguageSwitcher />
-          <a
-            href={dakinisCorporatePricingUrl()}
-            className="btn btn-outline"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={dakinisProductPricingUrl()} className="btn btn-outline">
             {t("nav.packages")}
           </a>
           {session?.user?.email ? (

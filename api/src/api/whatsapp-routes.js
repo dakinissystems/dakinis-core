@@ -24,7 +24,9 @@ function dakinisParseJsonSafely(rawBody) {
 
 function dakinisVerifyMetaWebhookSignature(rawBody, signatureHeader) {
   const { appSecret } = dakinisWhatsappConfig();
-  if (!appSecret) return true;
+  if (!appSecret) {
+    return process.env.NODE_ENV !== "production";
+  }
   if (!signatureHeader || typeof signatureHeader !== "string") return false;
   const expected = crypto
     .createHmac("sha256", appSecret)

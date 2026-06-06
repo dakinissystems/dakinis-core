@@ -1,5 +1,6 @@
 import http from "node:http";
 import { dakinisAssertProductionJwtSecret } from "./src/api/jwt-config.js";
+import { dakinisAssertProductionMasterApiKey } from "./src/api/master-key-config.js";
 import { dakinisInitDb } from "./src/db/index.js";
 import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisStructuredLog } from "./src/api/structured-logger.js";
@@ -10,6 +11,7 @@ import { dakinisInitWhatsappCrmBridge } from "./src/lib/whatsapp-crm-bridge.js";
 import { dakinisInitAutomationEngine } from "./src/lib/automation-engine.js";
 
 dakinisAssertProductionJwtSecret();
+dakinisAssertProductionMasterApiKey();
 dakinisInitWhatsappEventHandlers();
 dakinisInitWhatsappCrmBridge();
 dakinisInitAutomationEngine();

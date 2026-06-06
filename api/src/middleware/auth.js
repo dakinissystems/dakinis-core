@@ -1,6 +1,7 @@
-import { dakinisQueryOne } from "../db/query.js";
 import { dakinisJsonError } from "../api/responses.js";
 import { dakinisGetJwtSecret } from "../api/auth-tenant.js";
+import { dakinisResolveMasterApiKey } from "../api/master-key-config.js";
+import { dakinisFindTenantApiKeyRow } from "../api/api-key-utils.js";
 import { dakinisVerifyTenantAccessToken } from "../api/jwt-verify.js";
 import {
   dakinisIsPlatformIdpPayload,
@@ -8,7 +9,7 @@ import {
   dakinisResolvePlatformTenantClaimToBusinessId
 } from "../api/platform-user-bridge.js";
 
-const DAKINIS_MASTER_API_KEY = String(process.env.DAKINIS_MASTER_API_KEY ?? "dakinis-dev-key").trim();
+const DAKINIS_MASTER_API_KEY = dakinisResolveMasterApiKey();
 const DAKINIS_WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DAKINIS_KEY_ROLE_FULL = "full-access";
 const DAKINIS_KEY_ROLE_READ_ONLY = "read-only";
@@ -83,10 +84,7 @@ export async function dakinisAuthenticateRequest(req, business) {
         source: "DAKINIS_MASTER_API_KEY"
       };
     } else {
-      const row = await dakinisQueryOne(
-        "SELECT * FROM tenant_api_keys WHERE key_value = ? AND business_id = ?",
-        [keyString, business.id]
-      );
+      const row = await dakinisFindTenantApiKeyRow(business.id, keyString);
       if (!row) {
         return dakinisJsonError(401, "UNAUTHORIZED", "API key invalida para este tenant");
       }

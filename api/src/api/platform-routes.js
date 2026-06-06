@@ -15,6 +15,13 @@ import {
   dakinisSeedIndustryModuleOverrides
 } from "../services/tenant-intelligence-store.js";
 import { dakinisGetIndustryTemplate } from "@dakinis/shared/catalog/business-templates.js";
+import { dakinisResolveDbDriver } from "../db/dialect.js";
+import {
+  dakinisGenerateTempPassword,
+  dakinisIssuePasswordResetForUser,
+  dakinisResendPasswordResetForUserId,
+  dakinisSendOnboardingEmail
+} from "../services/password-reset.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -56,17 +63,18 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
 
   const ownerEmail =
     typeof body.ownerEmail === "string" ? body.ownerEmail.trim().toLowerCase() : "";
-  const ownerPassword = typeof body.ownerPassword === "string" ? body.ownerPassword : "";
+  const ownerPasswordRaw = typeof body.ownerPassword === "string" ? body.ownerPassword : "";
+  const sendCredentials = body.sendCredentials !== false;
 
-  if (ownerEmail || ownerPassword) {
-    if (!ownerEmail || !ownerPassword) {
-      return dakinisJsonError(
-        400,
-        "VALIDATION_ERROR",
-        "Para crear el primer administrador incluye ownerEmail y ownerPassword"
-      );
-    }
-    if (ownerPassword.length < 8) {
+  if (ownerPasswordRaw && !ownerEmail) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "ownerEmail es obligatorio si indicas contraseña");
+  }
+
+  let ownerPassword = ownerPasswordRaw;
+  if (ownerEmail) {
+    if (!ownerPassword) {
+      ownerPassword = dakinisGenerateTempPassword();
+    } else if (ownerPassword.length < 8) {
       return dakinisJsonError(400, "VALIDATION_ERROR", "ownerPassword: minimo 8 caracteres");
     }
     const emailTaken = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?)", [ownerEmail]);
@@ -76,10 +84,9 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
   }
 
   const id = `biz_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  const uid =
-    ownerEmail && ownerPassword ? `usr_${randomUUID().replace(/-/g, "").slice(0, 16)}` : null;
-  const passwordHash =
-    ownerEmail && ownerPassword ? bcrypt.hashSync(ownerPassword, 10) : null;
+  const uid = ownerEmail ? `usr_${randomUUID().replace(/-/g, "").slice(0, 16)}` : null;
+  const passwordHash = ownerEmail ? bcrypt.hashSync(ownerPassword, 10) : null;
+  const mustChangePassword = dakinisResolveDbDriver() === "postgres" ? true : 1;
   const configJson = await dakinisBuildInitialBusinessConfig(type);
   const industryTemplate = dakinisGetIndustryTemplate(type);
 
@@ -91,9 +98,9 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     );
     if (uid && passwordHash) {
       await tx.run(
-        `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled)
-         VALUES (?, ?, ?, ?, 'owner', NULL, ?)`,
-        [uid, id, ownerEmail, passwordHash, 0]
+        `INSERT INTO users (id, business_id, email, password_hash, role, totp_secret, totp_enabled, must_change_password)
+         VALUES (?, ?, ?, ?, 'owner', NULL, ?, ?)`,
+        [uid, id, ownerEmail, passwordHash, 0, mustChangePassword]
       );
     }
   });
@@ -124,10 +131,30 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     industryTemplate: industryTemplate?.key || type
   });
 
+  let credentialsDelivery = null;
+  if (uid && ownerEmail && sendCredentials) {
+    const userRow = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [uid]);
+    const { resetUrl } = await dakinisIssuePasswordResetForUser(uid);
+    const mail = await dakinisSendOnboardingEmail({
+      user: userRow,
+      business: row,
+      tempPassword: ownerPassword,
+      resetUrl
+    });
+    credentialsDelivery = {
+      email: ownerEmail,
+      emailSent: mail.ok,
+      mailError: mail.ok ? undefined : mail.error,
+      resetUrl: mail.ok ? undefined : resetUrl,
+      tempPassword: mail.ok ? undefined : ownerPassword
+    };
+  }
+
   return dakinisJsonSuccess(
     {
       business: row,
       initialUser,
+      credentialsDelivery,
       onboarding: {
         title: industryTemplate?.onboardingTitle || "Configura tu negocio",
         steps: industryTemplate?.onboardingSteps || [],
@@ -234,11 +261,88 @@ export async function dakinisHandlePlatformUsers() {
   const orderBiz = dakinisSqlOrderEmail("b.name");
   const orderEmail = dakinisSqlOrderEmail("u.email");
   const rows = await dakinisQueryAll(
-    `SELECT u.id, u.email, u.role, u.created_at,
-              b.slug AS business_slug, b.name AS business_name, b.type AS business_type, b.plan AS business_plan
+    `SELECT u.id, u.email, u.role, u.created_at, u.must_change_password, u.confirmed_at,
+              b.id AS business_id, b.slug AS business_slug, b.name AS business_name, b.type AS business_type, b.plan AS business_plan
        FROM users u
        JOIN business b ON b.id = u.business_id
        ORDER BY ${orderBiz}, ${orderEmail}`
   );
   return dakinisJsonSuccess({ users: rows }, "platform", {});
+}
+
+export async function dakinisHandlePlatformUserPatch(userId, rawBody) {
+  const id = typeof userId === "string" ? userId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de usuario invalido");
+  }
+  const body = dakinisParseJson(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+
+  const target = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [id]);
+  if (!target) {
+    return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado");
+  }
+  if (target.role === "platform_admin") {
+    return dakinisJsonError(403, "FORBIDDEN", "No se puede editar platform_admin desde esta ruta");
+  }
+
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : undefined;
+  if (email !== undefined) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", "email invalido");
+    }
+    if (email !== target.email) {
+      const clash = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?) AND id != ?", [
+        email,
+        id
+      ]);
+      if (clash) {
+        return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ese email");
+      }
+      await dakinisRun("UPDATE users SET email = ? WHERE id = ?", [email, id]);
+    }
+  }
+
+  const row = await dakinisQueryOne(
+    `SELECT u.id, u.email, u.role, u.created_at, u.must_change_password, u.confirmed_at,
+            b.slug AS business_slug, b.name AS business_name
+     FROM users u
+     JOIN business b ON b.id = u.business_id
+     WHERE u.id = ?`,
+    [id]
+  );
+  return dakinisJsonSuccess({ user: row }, "platform", {});
+}
+
+export async function dakinisHandlePlatformUserResendReset(userId) {
+  const id = typeof userId === "string" ? userId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de usuario invalido");
+  }
+  const target = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [id]);
+  if (!target) {
+    return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado");
+  }
+  if (target.role === "platform_admin") {
+    return dakinisJsonError(403, "FORBIDDEN", "No aplica a platform_admin");
+  }
+
+  const result = await dakinisResendPasswordResetForUserId(id);
+  if (!result.ok) {
+    return dakinisJsonError(404, result.code || "NOT_FOUND", result.message || "Usuario no encontrado");
+  }
+  return dakinisJsonSuccess(
+    {
+      email: target.email,
+      emailSent: result.emailSent,
+      mailError: result.mailError,
+      resetUrl: result.resetUrl,
+      devToken: result.devToken
+    },
+    "platform",
+    {}
+  );
 }

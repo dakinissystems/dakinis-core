@@ -91,6 +91,10 @@ export default function PlatformAdminPage({ navigate }) {
   });
   const [editTypeSelect, setEditTypeSelect] = useState("clinica");
   const [editTypeCustom, setEditTypeCustom] = useState("");
+  const [pilotTelemetry, setPilotTelemetry] = useState([]);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [userActionMsg, setUserActionMsg] = useState("");
 
   const tenantUsersOnly = useMemo(
     () => users.filter((u) => u.role !== "platform_admin"),
@@ -101,12 +105,16 @@ export default function PlatformAdminPage({ navigate }) {
     if (!session?.token || session.user?.role !== "platform_admin") return;
     setError("");
     try {
-      const [bJson, uJson] = await Promise.all([
+      const [bJson, uJson, telJson] = await Promise.all([
         dakinisBearerJsonFetch("/api/platform/businesses", session.token, { signal }),
-        dakinisBearerJsonFetch("/api/platform/users", session.token, { signal })
+        dakinisBearerJsonFetch("/api/platform/users", session.token, { signal }),
+        dakinisBearerJsonFetch("/api/platform/telemetry/summary?days=30", session.token, { signal }).catch(
+          () => ({ data: { telemetry: { tenants: [] } } })
+        )
       ]);
       setBusinesses(bJson?.data?.businesses || []);
       setUsers(uJson?.data?.users || []);
+      setPilotTelemetry(telJson?.data?.telemetry?.tenants || []);
     } catch (e) {
       if (e?.name === "AbortError") return;
       setError(e instanceof Error ? e.message : t("admin.loadError"));
@@ -170,14 +178,28 @@ export default function PlatformAdminPage({ navigate }) {
         type,
         plan: createForm.plan.trim() || "starter"
       };
-      if (ownerEmail || ownerPassword) {
+      if (ownerEmail) {
         body.ownerEmail = ownerEmail;
-        body.ownerPassword = ownerPassword;
+        if (ownerPassword) body.ownerPassword = ownerPassword;
       }
-      await dakinisBearerJsonFetch("/api/platform/businesses", session.token, {
+      const created = await dakinisBearerJsonFetch("/api/platform/businesses", session.token, {
         method: "POST",
         body
       });
+      const delivery = created?.data?.credentialsDelivery;
+      if (delivery) {
+        if (delivery.emailSent) {
+          setUserActionMsg(t("admin.credentialsEmailed", { email: delivery.email }));
+        } else if (delivery.tempPassword) {
+          setUserActionMsg(
+            t("admin.credentialsManual", {
+              email: delivery.email,
+              password: delivery.tempPassword,
+              url: delivery.resetUrl || ""
+            })
+          );
+        }
+      }
       setCreateForm((prev) => ({
         ...prev,
         name: "",
@@ -346,26 +368,25 @@ export default function PlatformAdminPage({ navigate }) {
             </div>
           ) : null}
           <p className="lead" style={{ gridColumn: "1 / -1", margin: 0 }}>
-            Opcional: crear ya el <strong>primer administrador</strong> del negocio (luego podrá añadir miembros desde el
-            panel del sistema).
+            {t("admin.ownerHint")}
           </p>
           <label className="mockup-field">
-            <span>Email administrador</span>
+            <span>{t("admin.ownerEmail")}</span>
             <input
               type="email"
               value={createForm.ownerEmail}
               onChange={(ev) => setCreateForm((p) => ({ ...p, ownerEmail: ev.target.value }))}
               autoComplete="off"
-              placeholder="vacío si ya gestionas usuarios después"
+              placeholder={t("admin.ownerEmailPlaceholder")}
             />
           </label>
           <label className="mockup-field">
-            <span>Contraseña inicial</span>
+            <span>{t("admin.ownerPasswordOptional")}</span>
             <PasswordInput
               value={createForm.ownerPassword}
               onChange={(ev) => setCreateForm((p) => ({ ...p, ownerPassword: ev.target.value }))}
               autoComplete="new-password"
-              placeholder="mín. 8 caracteres si indicas email"
+              placeholder={t("admin.ownerPasswordPlaceholder")}
             />
           </label>
           <button type="submit" className="btn" disabled={saving} style={{ gridColumn: "1 / -1" }}>
@@ -504,26 +525,174 @@ export default function PlatformAdminPage({ navigate }) {
 
         <PlatformCatalogPanel />
 
-        <h3 style={{ marginTop: "1.5rem" }}>Usuarios</h3>
+        <h3 style={{ marginTop: "1.5rem" }}>Pilotos — telemetría (30 días)</h3>
+        <article className="card" style={{ overflow: "auto" }}>
+          {pilotTelemetry.length === 0 ? (
+            <p className="lead">Sin datos de adopción aún. Los tenants generan telemetría al usar /app/*.</p>
+          ) : (
+            <table className="mockup-table">
+              <thead>
+                <tr>
+                  <th>Negocio</th>
+                  <th>Tipo</th>
+                  <th>Sesiones</th>
+                  <th>Minutos</th>
+                  <th>Eventos valor</th>
+                  <th>Top adopción</th>
+                  <th>Top valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pilotTelemetry.map((row) => (
+                  <tr key={row.businessId}>
+                    <td>
+                      {row.name} <code>{row.slug}</code>
+                    </td>
+                    <td>{dakinisFormatBusinessTypeLabel(row.type)}</td>
+                    <td>{row.sessions}</td>
+                    <td>{row.totalMinutes}</td>
+                    <td>{row.valueEvents}</td>
+                    <td>
+                      {(row.topAdoption || [])
+                        .map((a) => `${a.label} ${a.scorePct}%`)
+                        .join(" · ") || "—"}
+                    </td>
+                    <td>
+                      {(row.topValue || [])
+                        .map((v) => `${v.label} ${v.scorePct}%`)
+                        .join(" · ") || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </article>
+
+        {userActionMsg ? (
+          <p className="lead" style={{ color: "#5eead4", marginTop: "1rem" }}>
+            {userActionMsg}
+          </p>
+        ) : null}
+
+        <h3 style={{ marginTop: "1.5rem" }}>{t("admin.usersTitle")}</h3>
         <article className="card" style={{ overflow: "auto" }}>
           <table className="mockup-table">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Negocio</th>
-                <th>Tipo negocio</th>
+                <th>{t("admin.userEmail")}</th>
+                <th>{t("admin.userRole")}</th>
+                <th>{t("admin.userBusiness")}</th>
+                <th>{t("admin.userType")}</th>
+                <th />
               </tr>
             </thead>
             <tbody>
               {tenantUsersOnly.map((u) => (
                 <tr key={u.id}>
-                  <td>{u.email}</td>
+                  <td>
+                    {editingUserId === u.id ? (
+                      <input
+                        type="email"
+                        value={editUserEmail}
+                        onChange={(ev) => setEditUserEmail(ev.target.value)}
+                        style={{ minWidth: "12rem" }}
+                      />
+                    ) : (
+                      u.email
+                    )}
+                  </td>
                   <td>{u.role}</td>
                   <td>
                     {u.business_name} <code>({u.business_slug})</code>
                   </td>
                   <td>{dakinisFormatBusinessTypeLabel(u.business_type)}</td>
+                  <td>
+                    <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                      {editingUserId === u.id ? (
+                        <>
+                          <button
+                            type="button"
+                            className="btn"
+                            disabled={saving}
+                            onClick={async () => {
+                              setSaving(true);
+                              setUserActionMsg("");
+                              try {
+                                await dakinisBearerJsonFetch(
+                                  `/api/platform/users/${encodeURIComponent(u.id)}`,
+                                  session.token,
+                                  { method: "PATCH", body: { email: editUserEmail.trim().toLowerCase() } }
+                                );
+                                setEditingUserId(null);
+                                setUserActionMsg(t("admin.userEmailSaved"));
+                                await load();
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : t("admin.saveError"));
+                              } finally {
+                                setSaving(false);
+                              }
+                            }}
+                          >
+                            {t("admin.saveEmail")}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => setEditingUserId(null)}
+                          >
+                            {t("admin.cancel")}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => {
+                              setEditingUserId(u.id);
+                              setEditUserEmail(u.email);
+                            }}
+                          >
+                            {t("admin.editEmail")}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            disabled={saving}
+                            onClick={async () => {
+                              setSaving(true);
+                              setUserActionMsg("");
+                              try {
+                                const res = await dakinisBearerJsonFetch(
+                                  `/api/platform/users/${encodeURIComponent(u.id)}/resend-password-reset`,
+                                  session.token,
+                                  { method: "POST" }
+                                );
+                                const d = res?.data;
+                                if (d?.emailSent) {
+                                  setUserActionMsg(t("admin.resetEmailed", { email: d.email }));
+                                } else {
+                                  setUserActionMsg(
+                                    t("admin.resetManual", {
+                                      email: d?.email || u.email,
+                                      url: d?.resetUrl || ""
+                                    })
+                                  );
+                                }
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : t("admin.resetError"));
+                              } finally {
+                                setSaving(false);
+                              }
+                            }}
+                          >
+                            {t("admin.resendReset")}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

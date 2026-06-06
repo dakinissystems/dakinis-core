@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dakinisResolveDbDriver } from "../db/dialect.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
+import { dakinisEmitFeatureEvent } from "./telemetry-store.js";
 
 function dakinisSqlSinceDays(days) {
   return dakinisResolveDbDriver() === "postgres"
@@ -121,6 +122,7 @@ function dakinisRowGoal(r) {
 }
 
 export async function dakinisUpsertGoal(businessId, input) {
+  const isNew = !input.id;
   const id = input.id || `goal_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
   const now = new Date().toISOString();
   await dakinisRun(
@@ -150,6 +152,9 @@ export async function dakinisUpsertGoal(businessId, input) {
     ]
   );
   const row = await dakinisQueryOne("SELECT * FROM tenant_goals WHERE id = ?", [id]);
+  if (isNew) {
+    dakinisEmitFeatureEvent(businessId, null, "goals.goal.created", { goalId: id, goalKey: row?.goal_key });
+  }
   return dakinisRowGoal(row);
 }
 
@@ -216,6 +221,7 @@ export async function dakinisCreateFinanceEntry(businessId, input) {
       input.occurredAt || new Date().toISOString()
     ]
   );
+  dakinisEmitFeatureEvent(businessId, null, "finance.entry.created", { entryId: id, entryType: type });
   return (await dakinisListFinanceEntries(businessId, 1))[0];
 }
 
@@ -268,6 +274,7 @@ export async function dakinisGetKnowledgeDoc(businessId, docId) {
 }
 
 export async function dakinisUpsertKnowledgeDoc(businessId, input) {
+  const isNew = !input.id;
   const id = input.id || `kb_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
   const now = new Date().toISOString();
   const contentText = String(input.contentText || input.extractedText || "").trim();
@@ -294,6 +301,9 @@ export async function dakinisUpsertKnowledgeDoc(businessId, input) {
   );
   const { dakinisIndexKnowledgeDoc } = await import("./bos-store.js");
   if (contentText) await dakinisIndexKnowledgeDoc(businessId, id, contentText);
+  if (isNew) {
+    dakinisEmitFeatureEvent(businessId, null, "knowledge.doc.created", { docId: id, docKind });
+  }
   return dakinisGetKnowledgeDoc(businessId, id);
 }
 

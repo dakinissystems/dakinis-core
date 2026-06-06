@@ -22,8 +22,8 @@ export default {
     byCompany: "by Dakinis Systems"
   },
   productHome: {
-    tagline: "Modular business management.",
-    lead: "CRM, appointments, inventory, restaurant ops and WhatsApp in one ecosystem.",
+    tagline: "Business Operating System for your business.",
+    lead: "Plans from €29/month: CRM, scheduling, inventory and WhatsApp with included quotas and predictable overage.",
     login: "Sign in",
     openHub: "Open Hub",
     requestDemo: "Request a demo",
@@ -51,6 +51,9 @@ export default {
     oneModulesTitle: "Dakinis One — modules",
     oneModulesLead: "Daily operations. Some modules need a Growth or Pro plan.",
     moduleLocked: "Not on your plan or not signed in",
+    requiresPlanUpgrade: "Requires Growth or Pro plan",
+    upgradePlanCta: "View plans",
+    currentPlan: "Current plan: {plan}",
     requiresLogin: "Sign in required",
     platformAdmin: "Platform administration",
     ssoHint:
@@ -119,7 +122,7 @@ export default {
       sessionNoteEnd: ")."
     },
     pricing: {
-      kicker: "Pricing and next step",
+      kicker: "Custom projects",
       maintenanceHeading: "Monthly maintenance",
       contactTitle: "Let’s talk",
       contactLead:
@@ -191,6 +194,58 @@ export default {
     }
   },
   pricing: {
+    bos: {
+      kicker: "BOS subscription",
+      title: "Dakinis One monthly plans",
+      subtitle:
+        "The main product: daily operations at a fixed price, included AI and WhatsApp quotas, and transparent overage.",
+      perMonth: "/month",
+      recommended: "recommended",
+      overageLead:
+        "Overage: €{aiRate} / 1,000 extra AI queries (Pro plan) · €{waRate} / 500 extra WhatsApp messages.",
+      implementationTitle: "Initial implementation (one-time)",
+      implementationLead: "Setup, migration and go-live scoped to your business complexity.",
+      projectsHint:
+        "Need bespoke development or special integrations? See project packages on the corporate site or contact us.",
+      servicesTitle: "Professional services",
+      servicesLead: "Indicative rate: €{hourly}/h for customization, integrations and automations.",
+      bundlesLead: "Typical fixed bundles: €{bundles} depending on scope.",
+      examples: [
+        "Data migration",
+        "Vertical customization",
+        "Integrations (WhatsApp, APIs)",
+        "Custom automations"
+      ],
+      plans: {
+        starter: {
+          name: "Starter",
+          audience: "Businesses starting with scheduling and basic CRM",
+          includes: ["Basic CRM", "Schedule", "Reservations", "Client portal"]
+        },
+        growth: {
+          name: "Growth",
+          audience: "Full operations with inventory and communications",
+          includes: [
+            "Inventory",
+            "Full CRM",
+            "Analytics and benchmark",
+            "250 WhatsApp messages/month included"
+          ]
+        },
+        pro: {
+          name: "Pro",
+          audience: "AI, automations and the full ecosystem",
+          includes: [
+            "WhatsApp",
+            "AI + Copilot",
+            "Automations",
+            "Dakinis Network",
+            "2,000 AI queries/month included",
+            "2,000 WhatsApp messages/month included"
+          ]
+        }
+      }
+    },
     intro: {
       title: "Clear packages",
       subtitle:
@@ -286,7 +341,40 @@ export default {
       idpTenant: "Could not resolve business for SSO. Use local login or set tenant in the IdP JWT."
     },
     submitIdp: "Sign in with Dakinis account (SSO)",
-    idpHint: "Ecosystem SSO needs the IdP and links AkoeNet without re-entering your password there."
+    idpHint: "Ecosystem SSO needs the IdP and links AkoeNet without re-entering your password there.",
+    forgotPassword: "Forgot your password?"
+  },
+  forgotPassword: {
+    kicker: "Account recovery",
+    title: "Reset password",
+    lead: "Enter your email and we will send a link valid for 24 hours.",
+    mustChangeLead:
+      "You must confirm your business and choose a new password. Request a link to your account email.",
+    email: "Email",
+    submitting: "Sending…",
+    submit: "Send link",
+    back: "Back to sign in",
+    success: "If the email exists, you will receive a link within a few minutes.",
+    errors: {
+      generic: "Could not process the request"
+    }
+  },
+  resetPassword: {
+    kicker: "New password",
+    title: "Confirm access",
+    lead: "Choose a new password (minimum 8 characters).",
+    newPassword: "New password",
+    confirmPassword: "Repeat password",
+    submitting: "Saving…",
+    submit: "Save password",
+    goLogin: "Go to sign in",
+    success: "Password updated. You can sign in now.",
+    errors: {
+      noToken: "Missing link token. Use forgot password or your welcome email.",
+      short: "Password must be at least 8 characters.",
+      mismatch: "Passwords do not match.",
+      generic: "Could not reset password"
+    }
   },
   ecosystemLaunch: {
     title: "Opening product",
@@ -653,6 +741,28 @@ export default {
     typeCustomRequired:
       "Enter an identifier for the new type (letters, numbers and hyphens only; e.g. gym-central).",
     typeCustomEditRequired: "Enter an identifier for the custom type.",
+    ownerHint:
+      "Optional: first business owner. Email only generates a temporary password and sends it with a confirmation link.",
+    ownerEmail: "Owner email",
+    ownerEmailPlaceholder: "leave empty to add users later",
+    ownerPasswordOptional: "Temporary password (optional)",
+    ownerPasswordPlaceholder: "empty = generate and email",
+    credentialsEmailed: "Credentials sent to {email}.",
+    credentialsManual:
+      "Email not sent (configure RESEND). Email: {email} · Temp password: {password} · Link: {url}",
+    usersTitle: "Users",
+    userEmail: "Email",
+    userRole: "Role",
+    userBusiness: "Business",
+    userType: "Business type",
+    editEmail: "Edit email",
+    saveEmail: "Save",
+    cancel: "Cancel",
+    resendReset: "Resend reset",
+    userEmailSaved: "Email updated.",
+    resetEmailed: "Reset link sent to {email}.",
+    resetManual: "Email not sent. Share manually with {email}: {url}",
+    resetError: "Could not resend email",
     catalog: {
       title: "Ecosystem catalog (Hub / Landing)",
       lead:
@@ -838,6 +948,16 @@ export default {
       role: "Role:",
       tenant: "Tenant:",
       type: "Type:",
+      billingTitle: "Billing (hybrid BOS model)",
+      billingPlan: "Plan {plan} · Base €{base}/month",
+      billingAi: "AI: {queries} queries ({days} days)",
+      billingAiIncluded: "included {count}",
+      billingAiOverage: "overage +€{amount}",
+      billingWhatsapp: "WhatsApp: {messages} msg (30d)",
+      billingWhatsappIncluded: "included {count}",
+      billingWhatsappOverage: "overage +€{amount}",
+      billingEstimate: "Estimated next invoice:",
+      billingStripePending: "(Stripe not connected)",
       restaurantBlock: "Restaurant — allergies and stock",
       restaurantLead: "Edit allergies and QR in",
       restaurantLink: "Restaurant system",

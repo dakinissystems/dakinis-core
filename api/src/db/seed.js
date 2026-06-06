@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { dakinisHashTenantApiKey } from "../api/api-key-utils.js";
 import { dakinisEnsureRestaurantKitchenSeed } from "./restaurant-kitchen-seed.js";
 import {
   DAKINIS_RESTAURANT_DEMO_PRODUCTION,
@@ -100,7 +101,9 @@ export function dakinisSeed(db) {
     db.prepare(`UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = 'usr_platform_1'`).run();
   }
 
-  const apiKeys = [{ key_value: "dakinis-read-key", business_id: businesses[2].id, role: "read-only" }];
+  const apiKeys = [
+    { key_value: dakinisHashTenantApiKey("dakinis-read-key"), business_id: businesses[2].id, role: "read-only" }
+  ];
 
   const insertKey = db.prepare(`
     INSERT OR IGNORE INTO tenant_api_keys (key_value, business_id, role)

@@ -1,6 +1,5 @@
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisCompareToSector } from "@dakinis/shared/catalog/sector-benchmarks.js";
-import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
 import { dakinisGatherTenantSignals } from "../services/tenant-intelligence-store.js";
 import { dakinisGatherGrowthSignals } from "../services/intelligence-data-store.js";
 import { dakinisLoadModuleOverrides } from "../services/tenant-intelligence-store.js";
@@ -192,13 +191,13 @@ export async function dakinisHandleNetworkOrdersPost(req, rawBody) {
 }
 
 export async function dakinisHandleCopilotPost(req, rawBody) {
-  const denied = dakinisPlanModuleDenialOrNull(req.dakinisBusiness, "/api/dashboard/metrics");
-  if (denied) return denied;
   const body = dakinisParseJson(rawBody) || {};
   const base = await dakinisGatherTenantSignals(req.dakinisBusiness);
   const signals = await dakinisGatherGrowthSignals(req.dakinisBusiness.id, base);
   const result = await dakinisIntelligenceAskWithAgents(req.dakinisBusiness, signals, {
-    question: body.question || body.prompt
+    question: body.question || body.prompt,
+    telemetrySource: "copilot",
+    userId: req.dakinisAuth?.userId || req.user?.id || null
   });
   return dakinisJsonSuccess({ copilot: result }, req.dakinisBusiness.type, dakinisMeta(req.dakinisBusiness));
 }

@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS users (
   totp_secret TEXT,
   totp_enabled INTEGER NOT NULL DEFAULT 0,
   platform_user_id TEXT UNIQUE,
+  must_change_password INTEGER NOT NULL DEFAULT 0,
+  password_reset_token_hash TEXT,
+  password_reset_expires_at TEXT,
+  confirmed_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (email),
   FOREIGN KEY (business_id) REFERENCES business(id)

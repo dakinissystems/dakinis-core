@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { company } from "@dakinis/shared-brand";
-import { dakinisCorporatePricingUrl } from "@dakinis/shared-brand/pricing-links";
+import { dakinisProductPricingUrl } from "@dakinis/shared-brand/pricing-links";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import PricingHybridSection from "../components/PricingHybridSection.jsx";
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
@@ -62,10 +63,8 @@ export default function ProductHomePage() {
             </div>
             <p className="hero-actions-secondary">
               <a
-                href={dakinisCorporatePricingUrl()}
+                href={dakinisProductPricingUrl()}
                 className="link-btn"
-                target="_blank"
-                rel="noreferrer"
                 onClick={() => dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home" })}
               >
                 {t("productHome.requestDemo")}
@@ -107,6 +106,8 @@ export default function ProductHomePage() {
           </p>
         </div>
       </section>
+
+      <PricingHybridSection variant="saas" showContact />
     </>
   );
 }

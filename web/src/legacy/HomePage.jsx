@@ -2,18 +2,9 @@ import { useMemo } from "react";
 import { dakinisFormatBusinessTypeLabel } from "@dakinis/shared/catalog/business-type-display.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import {
-  dakinisPackMvp,
-  dakinisPackPro,
-  dakinisPackAdvanced,
-  dakinisMaintenanceTiers
-} from "../data/pricingCatalog.js";
+import PricingHybridSection from "../components/PricingHybridSection.jsx";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
-import { DAKINIS_CONTACT_EMAIL, DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
-
-const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
-const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
@@ -40,48 +31,6 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
     if (tenantType) return all.filter(([key]) => key === tenantType);
     return all;
   }, [session, dakinisSystemRegistry]);
-
-  const localizedPacks = useMemo(
-    () =>
-      DAKINIS_PACK_KEYS.map((key, i) => {
-        const base = DAKINIS_PACK_BASE[i];
-        const includes = t(`pricing.pack.${key}.includes`);
-        return {
-          ...base,
-          badge: t(`pricing.pack.${key}.badge`),
-          name: t(`pricing.pack.${key}.name`),
-          audience: t(`pricing.pack.${key}.audience`),
-          delivery: t(`pricing.pack.${key}.delivery`),
-          pitch: t(`pricing.pack.${key}.pitch`),
-          includes: Array.isArray(includes) ? includes : base.includes
-        };
-      }),
-    [t]
-  );
-
-  const pricingIntro = useMemo(
-    () => ({
-      title: t("pricing.intro.title"),
-      subtitle: t("pricing.intro.subtitle"),
-      portfolioNote: t("pricing.intro.portfolioNote"),
-      valuePoints: t("pricing.intro.valuePoints")
-    }),
-    [t]
-  );
-
-  const maintenanceTiers = useMemo(
-    () =>
-      dakinisMaintenanceTiers.map((tier) => ({
-        ...tier,
-        name: t(`pricing.maintenance.${tier.key}.name`),
-        description: t(`pricing.maintenance.${tier.key}.description`)
-      })),
-    [t]
-  );
-
-  const valuePoints = Array.isArray(pricingIntro.valuePoints)
-    ? pricingIntro.valuePoints
-    : [];
 
   return (
     <>
@@ -226,70 +175,7 @@ export default function HomePage({ navigate, dakinisSystemRegistry }) {
         </div>
       </section>
 
-      <section id="precios" className="modules pricing-section pricing-contact-unified">
-        <div className="container">
-          <p className="kicker">{t("home.pricing.kicker")}</p>
-          <h2>{pricingIntro.title}</h2>
-          <p className="lead">{pricingIntro.subtitle}</p>
-          <p className="lead portfolio-lead">{pricingIntro.portfolioNote}</p>
-          <ul className="pricing-value-points">
-            {valuePoints.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-
-          <div className="pack-grid">
-            {localizedPacks.map((pack) => (
-              <article
-                key={pack.key}
-                className={`card pack-card${pack.featured ? " featured" : ""}`}
-              >
-                <p className="pack-badge">
-                  {pack.badge} — {pack.name}
-                </p>
-                <p className="pack-audience">{pack.audience}</p>
-                <p className="price pack-price">{pack.priceRange}</p>
-                <p className="pack-delivery">
-                  <strong>{t("pricing.deliveryLabel")}</strong> {pack.delivery}
-                </p>
-                <p className="pack-pitch">&ldquo;{pack.pitch}&rdquo;</p>
-                <ul className="pack-includes">
-                  {pack.includes.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-
-          <h3 className="maint-heading" id="mantenimiento">
-            {t("home.pricing.maintenanceHeading")}
-          </h3>
-          <p className="lead maint-sub">{t("pricing.maintenancePitch")}</p>
-          <div className="maint-grid">
-            {maintenanceTiers.map((tier) => (
-              <div key={tier.key} className="card price-card">
-                <h3>{tier.name}</h3>
-                <p className="price">{tier.price}</p>
-                <p className="setup">{tier.description}</p>
-              </div>
-            ))}
-          </div>
-
-          <div id="contact" className="contact-unified">
-            <h2>{t("home.pricing.contactTitle")}</h2>
-            <p className="lead contact-lead">{t("home.pricing.contactLead")}</p>
-            <div className="contact-actions">
-              <a href={`mailto:${DAKINIS_CONTACT_EMAIL}`} className="btn">
-                {t("home.pricing.emailCta")}
-              </a>
-              <a href={DAKINIS_CONTACT_WHATSAPP_URL} className="btn btn-outline" target="_blank" rel="noreferrer">
-                {t("home.pricing.whatsappCta")}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingHybridSection variant="full" />
 
       <section id="demo" className="cta">
         <div className="container cta-card">

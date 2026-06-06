@@ -30,6 +30,8 @@ export default function SettingsPage({ navigate }) {
   const [aiUsage, setAiUsage] = useState(null);
   const [portal, setPortal] = useState(null);
   const [adoption, setAdoption] = useState(null);
+  const [adoptionScores, setAdoptionScores] = useState([]);
+  const [businessValueScores, setBusinessValueScores] = useState([]);
 
   useEffect(() => {
     if (!session?.token) return;
@@ -43,7 +45,11 @@ export default function SettingsPage({ navigate }) {
     dakinisTenantBillingSummary(session).then((j) => setBilling(j?.data?.billing || null)).catch(() => {});
     dakinisTenantAiUsage(session).then((j) => setAiUsage(j?.data?.usage || null)).catch(() => {});
     dakinisTenantTelemetryAdoption(session)
-      .then((j) => setAdoption(j?.data?.adoption || null))
+      .then((j) => {
+        setAdoption(j?.data?.adoption || null);
+        setAdoptionScores(j?.data?.adoptionScores || []);
+        setBusinessValueScores(j?.data?.businessValueScores || []);
+      })
       .catch(() => {});
     dakinisTenantPortalSettings(session)
       .then((j) =>
@@ -195,37 +201,111 @@ export default function SettingsPage({ navigate }) {
 
         {billing ? (
           <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>Facturación (estimación)</h3>
+            <h3>{t("app.settings.billingTitle")}</h3>
             <p className="lead">
-              Plan {billing.subscription?.plan} · Base {billing.usage?.planBaseEur} €/mes
+              {t("app.settings.billingPlan", {
+                plan: billing.subscription?.plan,
+                base: billing.usage?.commercial?.baseEur ?? billing.usage?.planBaseEur
+              })}
             </p>
+            {billing.usage?.commercial?.includes?.length ? (
+              <p>{billing.usage.commercial.includes.join(" · ")}</p>
+            ) : null}
             {aiUsage ? (
               <p>
-                IA: {aiUsage.queries} consultas · {aiUsage.costEur} € estimado ({aiUsage.periodDays} días)
+                {t("app.settings.billingAi", {
+                  queries: aiUsage.queries,
+                  days: aiUsage.periodDays
+                })}
+                {billing.usage?.commercial?.included?.aiQueries
+                  ? ` · ${t("app.settings.billingAiIncluded", {
+                      count: billing.usage.commercial.included.aiQueries
+                    })}`
+                  : ""}
+                {billing.usage?.commercial?.overage?.aiEur > 0
+                  ? ` · ${t("app.settings.billingAiOverage", {
+                      amount: billing.usage.commercial.overage.aiEur
+                    })}`
+                  : ""}
+              </p>
+            ) : null}
+            {billing.usage?.whatsapp?.messages30d != null ? (
+              <p>
+                {t("app.settings.billingWhatsapp", {
+                  messages: billing.usage.whatsapp.messages30d
+                })}
+                {billing.usage?.commercial?.included?.whatsappMessages
+                  ? ` · ${t("app.settings.billingWhatsappIncluded", {
+                      count: billing.usage.commercial.included.whatsappMessages
+                    })}`
+                  : ""}
+                {billing.usage?.commercial?.overage?.whatsappEur > 0
+                  ? ` · ${t("app.settings.billingWhatsappOverage", {
+                      amount: billing.usage.commercial.overage.whatsappEur
+                    })}`
+                  : ""}
               </p>
             ) : null}
             <p>
-              Próxima factura estimada: <strong>{billing.nextInvoiceEstimate?.amount} €</strong>
-              {billing.stripeConnected ? "" : " (Stripe no conectado)"}
+              {t("app.settings.billingEstimate")}{" "}
+              <strong>{billing.nextInvoiceEstimate?.amount} €</strong>
+              {billing.nextInvoiceEstimate?.note ? ` — ${billing.nextInvoiceEstimate.note}` : ""}
+              {billing.stripeConnected ? "" : ` ${t("app.settings.billingStripePending")}`}
             </p>
           </div>
         ) : null}
 
-        {adoption?.totals?.sessions > 0 ? (
+        {adoption?.totals?.sessions > 0 || adoptionScores.length > 0 || businessValueScores.length > 0 ? (
           <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>Adopción (30 días)</h3>
-            <p className="lead">
-              {adoption.totals.sessions} sesiones · {adoption.totals.featuresUsed} pantallas ·{" "}
-              {adoption.totals.totalMinutes} min totales
-            </p>
-            <ul>
-              {(adoption.byFeature || []).slice(0, 6).map((row) => (
-                <li key={row.feature}>
-                  <strong>{row.feature}</strong>: {row.sessions} visitas, ~{row.avgSeconds}s media
-                  {row.bounceRatePct > 0 ? ` · ${row.bounceRatePct}% abandono rápido` : ""}
-                </li>
-              ))}
-            </ul>
+            <h3>Adopción y valor (30 días)</h3>
+            {adoption?.totals ? (
+              <p className="lead">
+                {adoption.totals.sessions} sesiones · {adoption.totals.featuresUsed} pantallas ·{" "}
+                {adoption.totals.totalMinutes} min totales
+              </p>
+            ) : null}
+            {adoptionScores.filter((r) => r.scorePct > 0).length > 0 ? (
+              <>
+                <h4>Adoption Score</h4>
+                <p className="lead">Tiempo en pantalla — qué abren y cuánto permanecen.</p>
+                <ul>
+                  {adoptionScores
+                    .filter((r) => r.scorePct > 0)
+                    .slice(0, 6)
+                    .map((row) => (
+                      <li key={row.module}>
+                        <strong>{row.label}</strong>: {row.scorePct}%
+                        {row.sessions > 0 ? ` · ${row.sessions} visitas` : ""}
+                      </li>
+                    ))}
+                </ul>
+              </>
+            ) : null}
+            {businessValueScores.filter((r) => r.scorePct > 0).length > 0 ? (
+              <>
+                <h4>Business Value Score</h4>
+                <p className="lead">Acciones reales — contactos, mensajes, deals, IA.</p>
+                <ul>
+                  {businessValueScores
+                    .filter((r) => r.scorePct > 0)
+                    .slice(0, 6)
+                    .map((row) => (
+                      <li key={row.module}>
+                        <strong>{row.label}</strong>: {row.scorePct}%
+                      </li>
+                    ))}
+                </ul>
+              </>
+            ) : null}
+            {(adoption?.byFeature || []).length > 0 ? (
+              <ul>
+                {(adoption.byFeature || []).slice(0, 4).map((row) => (
+                  <li key={row.feature}>
+                    {row.feature}: {row.sessions} visitas, ~{row.avgSeconds}s
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ) : null}
 

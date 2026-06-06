@@ -7,6 +7,7 @@ import {
   dakinisIsValidTenantRole,
   dakinisRoleCanManageUsers
 } from "@dakinis/shared/catalog/tenant-roles.js";
+import { dakinisResendPasswordResetForUserId } from "../services/password-reset.js";
 
 const TENANT_USER_ROLES = new Set([
   "admin",
@@ -158,6 +159,10 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
       ? body.role.trim().toLowerCase()
       : undefined;
   const newPassword = typeof body.password === "string" ? body.password : undefined;
+  const emailIn =
+    body.email !== undefined && typeof body.email === "string"
+      ? body.email.trim().toLowerCase()
+      : undefined;
 
   if (roleIn !== undefined && !TENANT_USER_ROLES.has(roleIn)) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "role debe ser admin o member");
@@ -177,22 +182,72 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
     }
   }
 
+  if (emailIn !== undefined) {
+    if (!emailIn || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailIn)) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", "email invalido");
+    }
+    if (emailIn !== target.email) {
+      const clash = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?) AND id != ?", [
+        emailIn,
+        id
+      ]);
+      if (clash) {
+        return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ese email");
+      }
+    }
+  }
+
   const nextRole = roleIn !== undefined ? roleIn : target.role;
+  const nextEmail = emailIn !== undefined ? emailIn : target.email;
   let nextHash = target.password_hash;
   if (newPassword !== undefined && newPassword.length > 0) {
     nextHash = bcrypt.hashSync(newPassword, 10);
   }
 
-  await dakinisRun(`UPDATE users SET role = ?, password_hash = ? WHERE id = ? AND business_id = ?`, [
-    nextRole,
-    nextHash,
-    id,
-    req.dakinisBusiness.id
-  ]);
+  await dakinisRun(
+    `UPDATE users SET role = ?, email = ?, password_hash = ? WHERE id = ? AND business_id = ?`,
+    [nextRole, nextEmail, nextHash, id, req.dakinisBusiness.id]
+  );
 
   const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {
     businessId: req.dakinisBusiness.id,
     businessSlug: req.dakinisBusiness.slug
   });
+}
+
+export async function dakinisHandleTenantUsersResendReset(req, userId) {
+  const bizErr = dakinisTenantUsersForbiddenIfPlatform(req.dakinisBusiness);
+  if (bizErr) return bizErr;
+  const authErr = dakinisRequireTenantJwtAdmin(req);
+  if (authErr) return authErr;
+
+  const id = typeof userId === "string" ? userId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de usuario invalido");
+  }
+
+  const target = await dakinisQueryOne("SELECT * FROM users WHERE id = ? AND business_id = ?", [
+    id,
+    req.dakinisBusiness.id
+  ]);
+  if (!target) {
+    return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado en este negocio");
+  }
+
+  const result = await dakinisResendPasswordResetForUserId(id);
+  return dakinisJsonSuccess(
+    {
+      email: target.email,
+      emailSent: result.emailSent,
+      mailError: result.mailError,
+      resetUrl: result.resetUrl,
+      devToken: result.devToken
+    },
+    req.dakinisBusiness.type,
+    {
+      businessId: req.dakinisBusiness.id,
+      businessSlug: req.dakinisBusiness.slug
+    }
+  );
 }

@@ -1,5 +1,6 @@
 import { dakinisSubscribeEvent } from "./event-bus.js";
 import { dakinisCreatePendingAction } from "../services/bos-store.js";
+import { dakinisEmitFeatureEvent } from "../services/telemetry-store.js";
 import { dakinisQueryAll } from "../db/query.js";
 
 /** Automatizaciones IA: evento → decisión → acción pendiente. */
@@ -15,6 +16,10 @@ export function dakinisInitAutomationEngine() {
 
     const item = event.payload?.itemName || event.payload?.itemSlug || "insumo";
     const qty = Number(event.payload?.suggestedQty) || 15;
+    dakinisEmitFeatureEvent(tenantId, null, "inventory.low_stock.alert", {
+      itemSlug: event.payload?.itemSlug,
+      suggestedQty: qty
+    });
 
     if (rules.length === 0) {
       await dakinisCreatePendingAction(tenantId, {

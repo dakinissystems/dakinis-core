@@ -34,13 +34,18 @@ function dakinisResolveTilePath(tile, session) {
   return tile.path;
 }
 
-function dakinisTileDisabled(tile, session) {
-  if (tile.status === "roadmap") return true;
-  if (!tile.requiresAuth) return false;
-  if (!session?.token) return true;
-  if (!tile.moduleKey) return false;
+function dakinisTileLockReason(tile, session) {
+  if (tile.status === "roadmap") return "roadmap";
+  if (!tile.requiresAuth) return null;
+  if (!session?.token) return "login";
+  if (!tile.moduleKey) return null;
   const plan = dakinisNormalizeCommercialPlan(session.business?.plan);
-  return !dakinisPlanHasModule(plan, tile.moduleKey);
+  if (!dakinisPlanHasModule(plan, tile.moduleKey)) return "plan";
+  return null;
+}
+
+function dakinisTileDisabled(tile, session) {
+  return dakinisTileLockReason(tile, session) != null;
 }
 
 export default function HubPage() {
@@ -135,19 +140,30 @@ export default function HubPage() {
             </a>
           </div>
         ) : (
-          <HubDashboard
-            session={session}
-            applicationTiles={oneModules}
-            marketplaceCount={marketplaceTiles.length}
-            navigate={(path) => navigate(path)}
-          />
+          <>
+            <HubDashboard
+              session={session}
+              applicationTiles={oneModules}
+              marketplaceCount={marketplaceTiles.length}
+              navigate={(path) => navigate(path)}
+            />
+            {session.business?.plan ? (
+              <p className="lead" style={{ marginBottom: "1rem" }}>
+                {t("hub.currentPlan", { plan: session.business.plan })}{" "}
+                <a href="/#precios" className="link-btn">
+                  {t("hub.upgradePlanCta")}
+                </a>
+              </p>
+            ) : null}
+          </>
         )}
 
         <h3 className="hub-section-title">{t("hub.applicationsTitle")}</h3>
         <p className="lead hub-section-lead">{t("hub.applicationsLead")}</p>
         <div className="hub-tile-grid">
           {oneModules.map((tile) => {
-            const disabled = dakinisTileDisabled(tile, session);
+            const lockReason = dakinisTileLockReason(tile, session);
+            const disabled = lockReason != null;
             const highlighted = tile.highlight && !disabled;
             return (
               <button
@@ -155,15 +171,24 @@ export default function HubPage() {
                 type="button"
                 className={`card hub-tile${disabled ? " hub-tile--locked" : ""}${highlighted ? " hub-tile--highlight" : ""}`}
                 onClick={() => openModuleTile(tile)}
-                title={disabled ? t("hub.moduleLocked") : undefined}
+                title={
+                  lockReason === "plan"
+                    ? t("hub.requiresPlanUpgrade")
+                    : disabled
+                      ? t("hub.moduleLocked")
+                      : undefined
+                }
               >
                 <h4>{tile.label}</h4>
                 <p>{tile.description}</p>
-                {tile.status === "roadmap" ? (
+                {lockReason === "roadmap" ? (
                   <span className="hub-tile-badge hub-tile-badge--muted">{t("hub.roadmap")}</span>
                 ) : null}
-                {disabled && tile.status !== "roadmap" ? (
+                {lockReason === "login" ? (
                   <span className="hub-tile-badge">{t("hub.requiresLogin")}</span>
+                ) : null}
+                {lockReason === "plan" ? (
+                  <span className="hub-tile-badge">{t("hub.requiresPlanUpgrade")}</span>
                 ) : null}
               </button>
             );

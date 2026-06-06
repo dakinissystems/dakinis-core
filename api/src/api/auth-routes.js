@@ -13,6 +13,10 @@ import {
   dakinisResolveCoreUserFromPlatformToken
 } from "./platform-user-bridge.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
+import {
+  dakinisConsumePasswordReset,
+  dakinisRequestPasswordResetByEmail
+} from "../services/password-reset.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -78,13 +82,17 @@ export async function dakinisHandleAuthLogin(rawBody) {
     source: "core_local"
   });
 
+  const mustChangePassword =
+    Number(user.must_change_password) === 1 || user.must_change_password === true;
+
   return dakinisJsonSuccess(
     {
       token,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        mustChangePassword
       },
       business: {
         id: business.id,
@@ -231,13 +239,17 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     source: "platform_idp"
   });
 
+  const mustChangePassword =
+    Number(user.must_change_password) === 1 || user.must_change_password === true;
+
   return dakinisJsonSuccess(
     {
       token: coreJwt,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        mustChangePassword
       },
       business: {
         id: business.id,
@@ -251,5 +263,50 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     },
     business.type,
     { businessId: business.id, businessSlug: business.slug, planTier }
+  );
+}
+
+export async function dakinisHandleAuthForgotPassword(rawBody) {
+  const body = dakinisParseLoginBody(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  if (!email) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "email es obligatorio");
+  }
+
+  await dakinisRequestPasswordResetByEmail(email);
+
+  return dakinisJsonSuccess(
+    {
+      message:
+        "Si el email existe en el sistema, recibirás un enlace para restablecer la contraseña en unos minutos."
+    },
+    "platform",
+    {}
+  );
+}
+
+export async function dakinisHandleAuthResetPassword(rawBody) {
+  const body = dakinisParseLoginBody(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+  const token = typeof body.token === "string" ? body.token.trim() : "";
+  const password = typeof body.password === "string" ? body.password : "";
+  if (!token || !password) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "token y password son obligatorios");
+  }
+
+  const result = await dakinisConsumePasswordReset(token, password);
+  if (!result.ok) {
+    return dakinisJsonError(400, result.code || "INVALID_TOKEN", result.message || "Token invalido");
+  }
+
+  return dakinisJsonSuccess(
+    { message: "Contraseña actualizada. Ya puedes iniciar sesión." },
+    "platform",
+    {}
   );
 }

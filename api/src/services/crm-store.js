@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import { dakinisNormalizeWhatsappPhone } from "./whatsapp-cloud.js";
+import { dakinisEmitFeatureEvent } from "./telemetry-store.js";
 
 export const DAKINIS_CRM_ACTIVITY_TYPES = Object.freeze([
   "call",
@@ -153,6 +154,10 @@ export async function dakinisCrmCreateContact(businessId, input) {
       now
     ]
   );
+  dakinisEmitFeatureEvent(businessId, null, "crm.contact.created", {
+    source: String(input.source || "manual").trim(),
+    contactId: id
+  });
   return dakinisCrmGetContact(businessId, id);
 }
 
@@ -455,6 +460,7 @@ export async function dakinisCrmCreateDeal(businessId, input) {
     ]
   );
   const row = await dakinisQueryOne("SELECT * FROM tenant_crm_deals WHERE id = ?", [id]);
+  dakinisEmitFeatureEvent(businessId, null, "crm.deal.created", { dealId: id, stage });
   return dakinisRowDeal(row);
 }
 
@@ -491,5 +497,8 @@ export async function dakinisCrmUpdateDeal(businessId, dealId, input) {
     ]
   );
   const row = await dakinisQueryOne("SELECT * FROM tenant_crm_deals WHERE id = ?", [dealId]);
+  if (stage === "won" && existing.stage !== "won") {
+    dakinisEmitFeatureEvent(businessId, null, "crm.deal.won", { dealId });
+  }
   return dakinisRowDeal(row);
 }

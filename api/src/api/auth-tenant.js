@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
-import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError } from "./responses.js";
 import { dakinisVerifyTenantAccessToken } from "./jwt-verify.js";
 
 import { DAKINIS_JWT_INSECURE_PLACEHOLDER } from "./jwt-config.js";
+import { dakinisResolveMasterApiKey } from "./master-key-config.js";
+import { dakinisFindTenantApiKeyRow } from "./api-key-utils.js";
 
 const DAKINIS_JWT_SECRET = process.env.JWT_SECRET || DAKINIS_JWT_INSECURE_PLACEHOLDER;
-const DAKINIS_MASTER_API_KEY = String(process.env.DAKINIS_MASTER_API_KEY ?? "dakinis-dev-key").trim();
+const DAKINIS_MASTER_API_KEY = dakinisResolveMasterApiKey();
 const DAKINIS_WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DAKINIS_KEY_ROLE_FULL = "full-access";
 const DAKINIS_KEY_ROLE_READ_ONLY = "read-only";
@@ -36,7 +37,7 @@ export function dakinisSignUserToken(userRow) {
   );
 }
 
-export function dakinisAuthenticateTenant(req, business) {
+export async function dakinisAuthenticateTenant(req, business) {
   const authHeader = req.headers.authorization;
   if (typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")) {
     const token = authHeader.slice(7).trim();
@@ -79,7 +80,7 @@ export function dakinisAuthenticateTenant(req, business) {
     const keyString = typeof candidate === "string" ? candidate.trim() : "";
     if (!keyString) {
       return dakinisJsonError(401, "UNAUTHORIZED", "API key o Bearer token ausente", {
-        hint: "Incluye header x-api-key (maestra dakinis-dev-key en dev) o Authorization Bearer tras POST /api/auth/login"
+        hint: "Incluye header x-api-key o Authorization Bearer tras POST /api/auth/login"
       });
     }
 
@@ -91,10 +92,7 @@ export function dakinisAuthenticateTenant(req, business) {
         source: "DAKINIS_MASTER_API_KEY"
       };
     } else {
-      const db = dakinisGetDb();
-      const row = db
-        .prepare("SELECT * FROM tenant_api_keys WHERE key_value = ? AND business_id = ?")
-        .get(keyString, business.id);
+      const row = await dakinisFindTenantApiKeyRow(business.id, keyString);
 
       if (!row) {
         return dakinisJsonError(401, "UNAUTHORIZED", "API key invalida para este negocio", {

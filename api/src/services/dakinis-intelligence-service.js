@@ -2,6 +2,7 @@ import { dakinisRunIndustryAiHeuristics } from "@dakinis/shared/catalog/industry
 import { dakinisSearchKnowledgeChunks } from "./bos-store.js";
 import { dakinisLogAiUsage } from "./bos-store.js";
 import { dakinisDeriveIntelligenceActions } from "./intelligence-agents.js";
+import { dakinisEmitFeatureEvent } from "./telemetry-store.js";
 
 const DAKINIS_OPENAI_MODEL = process.env.DAKINIS_OPENAI_MODEL || "gpt-4o-mini";
 
@@ -62,6 +63,11 @@ async function dakinisCallOpenAi(systemPrompt, userPrompt) {
  * @param {Record<string, unknown>} signals
  * @param {{ question?: string, withActions?: boolean }} [opts]
  */
+function dakinisEmitIntelligenceQuestionEvent(businessId, opts, mode) {
+  const eventKey = opts.telemetrySource === "copilot" ? "copilot.question" : "intelligence.question";
+  dakinisEmitFeatureEvent(businessId, opts.userId || null, eventKey, { mode });
+}
+
 export async function dakinisIntelligenceAsk(business, signals, opts = {}) {
   const question = String(opts.question || "").trim();
   const heuristics = dakinisRunIndustryAiHeuristics(business, signals);
@@ -87,6 +93,7 @@ export async function dakinisIntelligenceAsk(business, signals, opts = {}) {
       heuristics[0]?.answer ||
       "Sin datos suficientes.";
     await dakinisLogAiUsage(business.id, { mode: "heuristic", question });
+    if (question) dakinisEmitIntelligenceQuestionEvent(business.id, opts, "heuristic");
     return {
       mode: "heuristic",
       question: question || null,
@@ -112,6 +119,7 @@ export async function dakinisIntelligenceAsk(business, signals, opts = {}) {
       tokensIn,
       tokensOut
     });
+    if (question) dakinisEmitIntelligenceQuestionEvent(business.id, opts, "llm");
     return {
       mode: "llm",
       model: DAKINIS_OPENAI_MODEL,
@@ -124,6 +132,7 @@ export async function dakinisIntelligenceAsk(business, signals, opts = {}) {
     };
   } catch (err) {
     await dakinisLogAiUsage(business.id, { mode: "heuristic_fallback", question });
+    if (question) dakinisEmitIntelligenceQuestionEvent(business.id, opts, "heuristic_fallback");
     return {
       mode: "heuristic_fallback",
       error: err instanceof Error ? err.message : "LLM error",

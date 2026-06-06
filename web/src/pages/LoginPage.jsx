@@ -46,6 +46,13 @@ export default function LoginPage() {
       businessType: business?.type,
       viaIdp: Boolean(idpExtra)
     });
+    if (user?.mustChangePassword) {
+      navigate("/forgot-password", {
+        replace: true,
+        state: { email: user?.email || "", mustChange: true }
+      });
+      return;
+    }
     navigate("/hub", { replace: true });
     setNeedsTotp(false);
     setTotpCode("");
@@ -194,6 +201,11 @@ export default function LoginPage() {
             </label>
           ) : null}
           {error ? <p className="login-form__error">{error}</p> : null}
+          <p className="kpi-label" style={{ margin: 0 }}>
+            <button type="button" className="btn btn-outline" style={{ padding: "0.25rem 0.5rem" }} onClick={() => navigate("/forgot-password")}>
+              {t("login.forgotPassword")}
+            </button>
+          </p>
           <div className="login-form__actions">
             <button type="submit" className="btn login-form__submit" disabled={loading}>
               {loading ? t("login.submitting") : t("login.submit")}
