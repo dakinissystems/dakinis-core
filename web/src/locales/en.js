@@ -196,11 +196,20 @@ export default {
     }
   },
   pricing: {
+    clientIntro:
+      "One clear monthly price for daily operations. No paying module by module — pick the plan that fits your business today and grow when you need to.",
+    includesTitle: "What's included",
+    planCta: "I want this plan",
+    recommendedBadge: "Most popular",
+    quotaWa: "{count} WhatsApp/month included",
+    quotaAi: "{count} AI queries/month included",
+    overageTitle: "If you exceed your quota",
+    contactHint: "We reply with a concrete proposal: plan, setup and timeline — no fine print.",
     bos: {
       kicker: "BOS subscription",
       title: "Dakinis One monthly plans",
       subtitle:
-        "The main product: daily operations at a fixed price, included AI and WhatsApp quotas, and transparent overage.",
+        "CRM, scheduling, inventory and WhatsApp in one place. One fixed monthly fee with clear included quotas before you start.",
       perMonth: "/month",
       recommended: "recommended",
       overageLead:
@@ -221,29 +230,43 @@ export default {
       plans: {
         starter: {
           name: "Starter",
-          audience: "Businesses starting with scheduling and basic CRM",
-          includes: ["Basic CRM", "Schedule", "Reservations", "Client portal"]
+          tagline: "Your first digital step",
+          audience: "For businesses starting to organise clients and bookings",
+          outcome:
+            "Ideal if you juggle WhatsApp, paper and spreadsheets today: centralise schedule, clients and reservations without paying for features you don't need yet.",
+          includes: [
+            "CRM with client history",
+            "Team calendar and scheduling",
+            "Bookings and reminders",
+            "Client self-service booking portal"
+          ]
         },
         growth: {
           name: "Growth",
-          audience: "Full operations with inventory and communications",
+          tagline: "Full daily operations",
+          audience: "For businesses with stock, a team and active communication",
+          outcome:
+            "When scheduling alone isn't enough: control inventory, see business metrics and reach customers on WhatsApp with a monthly quota included.",
           includes: [
-            "Inventory",
-            "Full CRM",
-            "Analytics and benchmark",
-            "250 WhatsApp messages/month included"
+            "Everything in Starter",
+            "Inventory and stock alerts",
+            "Advanced CRM and sales pipeline",
+            "Analytics and sector benchmarks",
+            "Integrated WhatsApp (monthly quota included)"
           ]
         },
         pro: {
           name: "Pro",
-          audience: "AI, automations and the full ecosystem",
+          tagline: "Scale with AI and automation",
+          audience: "For businesses that want to save time with technology",
+          outcome:
+            "Automate repetitive work, use AI day to day and connect the Dakinis ecosystem when you want to grow without hiring more admin staff.",
           includes: [
-            "WhatsApp",
-            "AI + Copilot",
-            "Automations",
-            "Dakinis Network",
-            "2,000 AI queries/month included",
-            "2,000 WhatsApp messages/month included"
+            "Everything in Growth",
+            "Copilot and AI with a generous included quota",
+            "Automations and custom workflows",
+            "Advanced WhatsApp with higher quota",
+            "Access to the Dakinis Network ecosystem"
           ]
         }
       }
@@ -316,10 +339,22 @@ export default {
       }
     },
     implementation: {
-      light: { label: "Light setup" },
-      standard: { label: "Standard implementation" },
-      advanced: { label: "Advanced implementation" },
-      enterprise: { label: "Bespoke project" }
+      light: {
+        label: "Light setup",
+        description: "New account, basic catalogue or menu and one team training session."
+      },
+      standard: {
+        label: "Standard implementation",
+        description: "Client and appointment migration, vertical tweaks and guided go-live."
+      },
+      advanced: {
+        label: "Advanced implementation",
+        description: "Multiple active modules, business rules and connections for your real operations."
+      },
+      enterprise: {
+        label: "Bespoke project",
+        description: "Custom scope when your case needs integrations or special logic."
+      }
     }
   },
   login: {

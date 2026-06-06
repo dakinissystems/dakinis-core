@@ -196,11 +196,20 @@ export default {
     }
   },
   pricing: {
+    clientIntro:
+      "Un precio mensual claro para tu operación diaria. Sin pagar módulo a módulo: eliges el plan que encaja con tu negocio hoy y creces cuando lo necesites.",
+    includesTitle: "Qué incluye",
+    planCta: "Quiero este plan",
+    recommendedBadge: "Más elegido",
+    quotaWa: "{count} WhatsApp/mes incluidos",
+    quotaAi: "{count} consultas IA/mes incluidas",
+    overageTitle: "Si te pasas de la cuota",
+    contactHint: "Te respondemos con propuesta concreta: plan, implantación y plazo — sin letra pequeña.",
     bos: {
       kicker: "Suscripción BOS",
       title: "Planes mensuales Dakinis One",
       subtitle:
-        "El producto principal: operación diaria con precio fijo, cuotas de IA y WhatsApp incluidas y exceso transparente.",
+        "CRM, agenda, inventario y WhatsApp en un solo sitio. Pagas un fijo al mes y sabes qué tienes incluido antes de empezar.",
       perMonth: "/mes",
       recommended: "recomendado",
       overageLead:
@@ -221,29 +230,43 @@ export default {
       plans: {
         starter: {
           name: "Starter",
-          audience: "Negocios que empiezan con agenda y CRM básico",
-          includes: ["CRM básico", "Agenda", "Reservas", "Portal cliente"]
+          tagline: "Tu primer paso digital",
+          audience: "Para negocios que empiezan a ordenar clientes y citas",
+          outcome:
+            "Ideal si hoy vives entre WhatsApp, papel y Excel: centralizas agenda, clientes y reservas sin pagar por funciones que aún no necesitas.",
+          includes: [
+            "CRM con historial de clientes",
+            "Agenda y calendario del equipo",
+            "Reservas y recordatorios",
+            "Portal para que el cliente reserve solo"
+          ]
         },
         growth: {
           name: "Growth",
-          audience: "Operación completa con inventario y comunicaciones",
+          tagline: "Operación completa del día a día",
+          audience: "Para negocios con stock, equipo y comunicación activa",
+          outcome:
+            "Cuando ya no basta con la agenda: controlas inventario, ves métricas del negocio y respondes clientes por WhatsApp con cuota mensual incluida.",
           includes: [
-            "Inventario",
-            "CRM completo",
-            "Analytics y benchmark",
-            "250 mensajes WhatsApp/mes incluidos"
+            "Todo lo del Starter",
+            "Inventario y alertas de stock",
+            "CRM avanzado y pipeline comercial",
+            "Analytics y comparativa con tu sector",
+            "WhatsApp integrado (cuota mensual incluida)"
           ]
         },
         pro: {
           name: "Pro",
-          audience: "IA, automatizaciones y ecosistema completo",
+          tagline: "Escala con IA y automatización",
+          audience: "Para negocios que quieren ahorrar tiempo con tecnología",
+          outcome:
+            "Automatizas tareas repetitivas, usas IA en el día a día y conectas el ecosistema Dakinis cuando quieres crecer sin contratar más administrativos.",
           includes: [
-            "WhatsApp",
-            "IA + Copilot",
-            "Automatizaciones",
-            "Dakinis Network",
-            "2.000 consultas IA/mes incluidas",
-            "2.000 mensajes WhatsApp/mes incluidos"
+            "Todo lo del Growth",
+            "Copilot e IA con cuota generosa incluida",
+            "Automatizaciones y flujos personalizados",
+            "WhatsApp avanzado con mayor cuota",
+            "Acceso al ecosistema Dakinis Network"
           ]
         }
       }
@@ -317,10 +340,22 @@ export default {
       }
     },
     implementation: {
-      light: { label: "Configuración ligera" },
-      standard: { label: "Implantación estándar" },
-      advanced: { label: "Implantación avanzada" },
-      enterprise: { label: "Proyecto a medida" }
+      light: {
+        label: "Configuración ligera",
+        description: "Cuenta nueva, catálogo o menú básico y formación del equipo en una sesión."
+      },
+      standard: {
+        label: "Implantación estándar",
+        description: "Migración de clientes y citas, ajustes de tu vertical y puesta en marcha acompañada."
+      },
+      advanced: {
+        label: "Implantación avanzada",
+        description: "Varios módulos activos, reglas de negocio y conexiones según tu operativa real."
+      },
+      enterprise: {
+        label: "Proyecto a medida",
+        description: "Alcance personalizado cuando tu caso necesita integraciones o lógica especial."
+      }
     }
   },
   login: {
