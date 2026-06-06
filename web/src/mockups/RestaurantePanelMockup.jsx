@@ -6,6 +6,7 @@ import {
 import AllergenPublicTable from "../components/AllergenPublicTable.jsx";
 import { FerminaComandasSubnav } from "../components/FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "../components/FerminaPrintSheet.jsx";
+import FerminaKitchenOrderTime from "../components/FerminaKitchenOrderTime.jsx";
 import RestaurantMesasPanel from "../components/RestaurantMesasPanel.jsx";
 import RestaurantRoleNav, {
   dakinisReadRestaurantRole,
@@ -342,14 +343,18 @@ const MOCK_FERMINA_ORDER = {
   lines: MOCK_FERMINA_LINES
 };
 
+function ferminaMinutesAgo(minutes) {
+  return new Date(Date.now() - minutes * 60_000).toISOString();
+}
+
 function ferminaSeedOrders() {
   return [
-    { ...MOCK_FERMINA_ORDER, id: "o-1042" },
+    { ...MOCK_FERMINA_ORDER, id: "o-1042", createdAt: ferminaMinutesAgo(11) },
     {
       id: "o-1041",
       orderNumber: 1041,
       venueName: FERMINA_VENUE_NAME,
-      createdAt: "2026-05-31T17:20:00.000Z",
+      createdAt: ferminaMinutesAgo(3),
       customerName: "Lucía — para llevar",
       table: "Mostrador",
       channel: "takeaway",
@@ -423,7 +428,7 @@ const MOCK_ROLE_VIEWS = {
 };
 
 function PanelComandas({ panelRole }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const [comandasView, setComandasView] = useState(
     panelRole === "cocina" ? "activas" : panelRole === "admin" ? "cierre" : "mesas"
   );
@@ -439,7 +444,7 @@ function PanelComandas({ panelRole }) {
   const [paymentMethod, setPaymentMethod] = useState("tarjeta");
   const [notes, setNotes] = useState("");
   const [printDoc, setPrintDoc] = useState(null);
-  const [selectedTableId, setSelectedTableId] = useState("terraza-3");
+  const [selectedTableId, setSelectedTableId] = useState(null);
   const [tableSessions, setTableSessions] = useState(() => ferminaSeedTableSessions(floorTables));
   const [mesaClosePayment, setMesaClosePayment] = useState("tarjeta");
 
@@ -696,7 +701,7 @@ function PanelComandas({ panelRole }) {
             onSelectTable={setSelectedTableId}
             onTablesChange={setFloorTables}
             onSessionsChange={setTableSessions}
-            layoutEditable={panelRole === "admin"}
+            layoutEditable={panelRole === "camarero" || panelRole === "admin"}
             positionEditable={panelRole === "camarero" || panelRole === "admin"}
             busy={false}
             mesaClosePayment={mesaClosePayment}
@@ -929,8 +934,14 @@ function PanelComandas({ panelRole }) {
                       </strong>
                       <span className="mockup-badge">{o.status}</span>
                     </div>
+                    {panelRole === "cocina" ? (
+                      <FerminaKitchenOrderTime createdAt={o.createdAt} t={t} locale={locale} />
+                    ) : null}
                     <p className="kpi-label" style={{ margin: "0.25rem 0" }}>
                       {o.table || "—"} · {ferminaChannelLabel(o.channel)} · {ferminaPaymentLabel(o.paymentMethod)}
+                      {panelRole !== "cocina" && o.createdAt
+                        ? ` · ${new Date(o.createdAt).toLocaleString(locale === "en" ? "en-US" : "es-ES")}`
+                        : null}
                     </p>
                     <p className="kpi-label" style={{ margin: "0.25rem 0" }}>
                       {o.lines.map((l) => `${l.qty}× ${l.name}`).join(" · ")}

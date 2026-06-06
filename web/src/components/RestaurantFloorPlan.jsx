@@ -46,7 +46,7 @@ export default function RestaurantFloorPlan({
   }, [tables, draggingId]);
 
   const canMove = Boolean(positionEditable && onTablesChange);
-  const canAdd = Boolean(positionEditable && onAddTable);
+  const canAdd = Boolean((layoutEditable || positionEditable) && onAddTable);
   const canRemove = Boolean(layoutEditable && onTablesChange);
 
   const commitTables = useCallback(
@@ -69,7 +69,7 @@ export default function RestaurantFloorPlan({
   }, []);
 
   const handlePointerDown = (tableId, e) => {
-    if (!canMove || e.button !== 0) return;
+    if (e.button !== 0) return;
     const tbl = liveTables.find((t) => t.id === tableId);
     if (!tbl) return;
 
@@ -84,9 +84,11 @@ export default function RestaurantFloorPlan({
       posX: tbl.x,
       posY: tbl.y
     };
-    setDraggingId(tableId);
-    onSelectTable(tableId);
-    e.currentTarget.setPointerCapture(e.pointerId);
+
+    if (canMove) {
+      setDraggingId(tableId);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
   };
 
   const handlePointerMove = (e) => {
@@ -132,14 +134,23 @@ export default function RestaurantFloorPlan({
   };
 
   const handlePointerUp = (tableId, e) => {
-    if (dragRef.current?.tableId !== tableId) return;
-    finishPointer(e, true);
-    if (!hasMovedRef.current) onSelectTable(tableId);
+    const start = dragRef.current;
+    if (!start || start.tableId !== tableId || start.pointerId !== e.pointerId) return;
+
+    const tapped = !hasMovedRef.current;
+
+    if (canMove) {
+      finishPointer(e, true);
+      if (tapped) onSelectTable(tableId);
+    } else {
+      dragRef.current = null;
+      if (tapped) onSelectTable(tableId);
+    }
   };
 
   const handlePointerCancel = (tableId, e) => {
     if (dragRef.current?.tableId !== tableId) return;
-    if (hasMovedRef.current) {
+    if (canMove && hasMovedRef.current) {
       const start = dragRef.current;
       setLiveTables((prev) =>
         prev.map((tbl) =>
@@ -149,7 +160,8 @@ export default function RestaurantFloorPlan({
         )
       );
     }
-    finishPointer(e, false);
+    if (canMove) finishPointer(e, false);
+    else dragRef.current = null;
   };
 
   function removeSelected() {
@@ -179,12 +191,14 @@ export default function RestaurantFloorPlan({
             {label("restaurant.floorRemove", "Quitar mesa seleccionada")}
           </button>
         ) : null}
-        {positionEditable ? (
+        {canMove || canAdd ? (
           <p className="kpi-label restaurant-floor__hint">
-            {label(
-              "restaurant.floorDragHint",
-              "Mantén pulsado y arrastra cada mesa; al soltar se guarda la posición (como en la tienda StreamAutomator)."
-            )}
+            {canMove
+              ? label(
+                  "restaurant.floorDragHint",
+                  "Mantén pulsado y arrastra cada mesa; al soltar se guarda la posición (como en la tienda StreamAutomator)."
+                )
+              : label("restaurant.floorTapHint", "Toca una mesa para abrir el pedido.")}
           </p>
         ) : null}
       </div>

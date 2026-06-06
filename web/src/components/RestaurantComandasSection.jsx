@@ -5,6 +5,7 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
+import FerminaKitchenOrderTime from "./FerminaKitchenOrderTime.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
 import RestaurantMesasPanel from "./RestaurantMesasPanel.jsx";
 import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
@@ -388,8 +389,8 @@ export default function RestaurantComandasSection({
             onTablesChange={setTables}
             onSessionsChange={setTableSessions}
             onSessionPatch={dakinisPatchTableSession}
-            layoutEditable={false}
-            positionEditable
+            layoutEditable={role === "camarero"}
+            positionEditable={role === "camarero"}
             onFloorSave={dakinisSaveFloor}
             busy={busy}
             mesaClosePayment={mesaClosePayment}
@@ -603,10 +604,13 @@ export default function RestaurantComandasSection({
                       </strong>
                       <span className="pill">{o.status}</span>
                     </div>
+                    {role === "cocina" ? (
+                      <FerminaKitchenOrderTime createdAt={o.createdAt} t={t} locale={locale} />
+                    ) : null}
                     <p className="kpi-label">
                       {o.table || "—"} · {dakinisRestaurantChannelLabel(o.channel, t)} ·{" "}
-                      {dakinisRestaurantPaymentLabel(o.paymentMethod, t)} ·{" "}
-                      {new Date(o.createdAt).toLocaleString(dateLocale)}
+                      {dakinisRestaurantPaymentLabel(o.paymentMethod, t)}
+                      {role !== "cocina" ? ` · ${new Date(o.createdAt).toLocaleString(dateLocale)}` : null}
                     </p>
                     <ul>
                       {o.lines?.map((l, i) => (

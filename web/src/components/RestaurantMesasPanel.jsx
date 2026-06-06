@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import {
   dakinisTableCartLines,
@@ -8,6 +8,129 @@ import {
 } from "../utils/restaurantFloorPlan.js";
 import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisRestaurantPaymentLabel } from "../utils/restaurantOrderMeta.js";
+
+function RestaurantMesaModal({
+  tableLabel,
+  mesaNotes,
+  mesaCart,
+  mesaLines,
+  mesaTotal,
+  mesaItemCount,
+  menu,
+  busy,
+  mesaClosePayment,
+  t,
+  onClose,
+  onNotesChange,
+  onCartQtyChange,
+  onSendKitchen,
+  onPay,
+  onClear
+}) {
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <div className="restaurant-mesa-modal" role="dialog" aria-modal="true" aria-labelledby="restaurant-mesa-modal-title">
+      <button
+        type="button"
+        className="restaurant-mesa-modal__backdrop"
+        aria-label={t("restaurant.mesaModalClose")}
+        onClick={onClose}
+      />
+      <div className="restaurant-mesa-modal__panel">
+        <button type="button" className="allergen-modal__close" aria-label={t("restaurant.mesaModalClose")} onClick={onClose}>
+          ×
+        </button>
+        <p className="kicker" style={{ margin: "0 2rem 0.25rem 0" }}>
+          {t("restaurant.mesaModalKicker")}
+        </p>
+        <h3 id="restaurant-mesa-modal-title" className="restaurant-mesa-modal__title">
+          {tableLabel}
+        </h3>
+
+        <label className="mockup-field restaurant-mesa-modal__notes">
+          <span>{t("fermina.orderNotes")}</span>
+          <input
+            value={mesaNotes}
+            onChange={(e) => onNotesChange(e.target.value)}
+            placeholder={t("restaurant.mesaNotesPlaceholder")}
+          />
+        </label>
+
+        <ul className="fermina-menu-list restaurant-mesa-modal__menu">
+          {menu.map((item) => (
+            <li key={item.id} className="fermina-menu-item">
+              <div>
+                <strong>{item.nameEs || item.name}</strong>
+                <span className="kpi-label">{item.priceEur?.toFixed(2)} €</span>
+              </div>
+              <div className="fermina-menu-item__qty">
+                <button type="button" className="btn btn-outline" onClick={() => onCartQtyChange(item.id, -1)}>
+                  −
+                </button>
+                <span>{mesaCart[item.id] || 0}</span>
+                <button type="button" className="btn btn-outline" onClick={() => onCartQtyChange(item.id, 1)}>
+                  +
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className="allergen-panel__summary restaurant-mesa-modal__total">
+          <strong>{mesaTotal.toFixed(2)} €</strong>
+          {mesaItemCount > 0 ? (
+            <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })}</span>
+          ) : null}
+        </p>
+
+        <div className="restaurant-mesa-modal__actions">
+          <button
+            type="button"
+            className="btn"
+            disabled={busy || !mesaLines.length}
+            onClick={onSendKitchen}
+          >
+            {t("fermina.sendKitchen")}
+          </button>
+          <button type="button" className="btn btn-outline" disabled={!mesaItemCount || busy} onClick={onClear}>
+            {t("restaurant.mesaClear")}
+          </button>
+        </div>
+
+        <div className="restaurant-mesa-modal__pay">
+          <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+            {t("restaurant.mesaPayLabel")}
+          </p>
+          <div className="restaurant-mesa-modal__pay-buttons">
+            {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={mesaClosePayment === id ? "btn" : "btn btn-outline"}
+                disabled={busy || !mesaLines.length}
+                onClick={() => onPay(id)}
+              >
+                {dakinisRestaurantPaymentLabel(id, t)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RestaurantMesasPanel({
   t,
@@ -35,6 +158,11 @@ export default function RestaurantMesasPanel({
   const mesaLines = useMemo(() => dakinisTableCartLines(mesaCart, menu, "salon"), [mesaCart, menu]);
   const mesaTotal = useMemo(() => dakinisTableCartTotal(mesaCart, menu), [mesaCart, menu]);
   const mesaItemCount = useMemo(() => dakinisTableItemCount(mesaCart), [mesaCart]);
+
+  const selectedTableLabel = useMemo(() => {
+    if (!selectedTableId) return "";
+    return tables.find((tbl) => tbl.id === selectedTableId)?.label || selectedTableId;
+  }, [selectedTableId, tables]);
 
   const occupiedCount = useMemo(
     () => tables.filter((tbl) => dakinisTableItemCount(sessions[tbl.id]?.cart) > 0).length,
@@ -72,6 +200,17 @@ export default function RestaurantMesasPanel({
     return dakinisTableCartTotal(sessions[tableId]?.cart, menu);
   }
 
+  function closeModal() {
+    onSelectTable(null);
+  }
+
+  function handlePay(paymentId) {
+    if (!selectedTableId || !mesaLines.length) return;
+    onMesaClosePaymentChange(paymentId);
+    onCloseTable(selectedTableId, paymentId, mesaLines, mesaNotes);
+    onSelectTable(null);
+  }
+
   return (
     <div className="restaurant-mesas">
       <div className="restaurant-mesas__head">
@@ -100,94 +239,35 @@ export default function RestaurantMesasPanel({
         t={t}
       />
 
-      {selectedTableId ? (
-        <article className="card restaurant-mesas__detail" style={{ marginTop: "1rem", boxShadow: "none", border: "1px solid var(--line)" }}>
-          <h5 style={{ marginTop: 0 }}>
-            {tables.find((tbl) => tbl.id === selectedTableId)?.label || selectedTableId}
-          </h5>
-          <label className="mockup-field" style={{ display: "block", marginBottom: "0.75rem" }}>
-            <span>{t("fermina.orderNotes")}</span>
-            <input
-              value={mesaNotes}
-              onChange={(e) => setTableNotes(selectedTableId, e.target.value)}
-              placeholder={t("restaurant.mesaNotesPlaceholder")}
-            />
-          </label>
-          <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
-            {menu.map((item) => (
-              <li key={item.id} className="fermina-menu-item">
-                <div>
-                  <strong>{item.nameEs || item.name}</strong>
-                  <span className="kpi-label">{item.priceEur?.toFixed(2)} €</span>
-                </div>
-                <div className="fermina-menu-item__qty">
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setTableCartQty(selectedTableId, item.id, -1)}
-                  >
-                    −
-                  </button>
-                  <span>{mesaCart[item.id] || 0}</span>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setTableCartQty(selectedTableId, item.id, 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="allergen-panel__summary">
-            <strong>{mesaTotal.toFixed(2)} €</strong>
-            {mesaItemCount > 0 ? (
-              <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })}</span>
-            ) : null}
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-            <button
-              type="button"
-              className="btn"
-              disabled={busy || !mesaLines.length}
-              onClick={() => onSendKitchen(selectedTableId, mesaLines, mesaNotes)}
-            >
-              {t("fermina.sendKitchen")}
-            </button>
-            <span className="kpi-label">{t("restaurant.mesaCloseLabel")}</span>
-            {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className={mesaClosePayment === id ? "btn" : "btn btn-outline"}
-                disabled={busy || !mesaLines.length}
-                onClick={() => {
-                  onMesaClosePaymentChange(id);
-                  onCloseTable(selectedTableId, id, mesaLines, mesaNotes);
-                }}
-              >
-                {dakinisRestaurantPaymentLabel(id, t)}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="btn btn-outline"
-              disabled={!mesaItemCount}
-              onClick={() => {
-                onSessionsChange({ ...sessions, [selectedTableId]: { cart: {}, notes: "" } });
-                onSessionPatch?.(selectedTableId, { cart: {}, notes: "" }, { clear: true });
-              }}
-            >
-              {t("restaurant.mesaClear")}
-            </button>
-          </div>
-        </article>
-      ) : (
+      {!selectedTableId ? (
         <p className="kpi-label" style={{ marginTop: "1rem" }}>
           {t("restaurant.mesaSelectHint")}
         </p>
-      )}
+      ) : null}
+
+      {selectedTableId ? (
+        <RestaurantMesaModal
+          tableLabel={selectedTableLabel}
+          mesaNotes={mesaNotes}
+          mesaCart={mesaCart}
+          mesaLines={mesaLines}
+          mesaTotal={mesaTotal}
+          mesaItemCount={mesaItemCount}
+          menu={menu}
+          busy={busy}
+          mesaClosePayment={mesaClosePayment}
+          t={t}
+          onClose={closeModal}
+          onNotesChange={(value) => setTableNotes(selectedTableId, value)}
+          onCartQtyChange={(menuId, delta) => setTableCartQty(selectedTableId, menuId, delta)}
+          onSendKitchen={() => onSendKitchen(selectedTableId, mesaLines, mesaNotes)}
+          onPay={handlePay}
+          onClear={() => {
+            onSessionsChange({ ...sessions, [selectedTableId]: { cart: {}, notes: "" } });
+            onSessionPatch?.(selectedTableId, { cart: {}, notes: "" }, { clear: true });
+          }}
+        />
+      ) : null}
     </div>
   );
 }
