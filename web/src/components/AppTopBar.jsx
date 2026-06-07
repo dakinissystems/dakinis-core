@@ -27,8 +27,11 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
     return currentPath === path;
   };
 
+  const isSystemDemoView =
+    currentPath.startsWith("/sistema/") || currentPath.startsWith("/vista/");
+
   return (
-    <header className="topbar">
+    <header className={`topbar${isSystemDemoView ? " topbar--demo-view" : ""}`}>
       <div className="container topbar-content">
         <div className="brand">
           <a
@@ -48,16 +51,18 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
         <div className="topbar-actions">
           <DakinisCopilotBar />
           <LanguageSwitcher />
-          <a
-            href="/#precios"
-            className="btn btn-outline"
-            onClick={(e) => {
-              e.preventDefault();
-              dakinisGoHomeAnchor(navigate, "precios");
-            }}
-          >
-            {t("nav.packages")}
-          </a>
+          {!isSystemDemoView ? (
+            <a
+              href="/#precios"
+              className="btn btn-outline"
+              onClick={(e) => {
+                e.preventDefault();
+                dakinisGoHomeAnchor(navigate, "precios");
+              }}
+            >
+              {t("nav.packages")}
+            </a>
+          ) : null}
           {session?.user?.email ? (
             <>
               <button
@@ -73,7 +78,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                 </button>
               ) : session.business?.slug ? (
                 <>
-                  {tenantCanOpenApp ? (
+                  {tenantCanOpenApp && !isSystemDemoView ? (
                     <div className="topbar-app-nav" aria-label={t("appNav.aria")}>
                       <button
                         type="button"

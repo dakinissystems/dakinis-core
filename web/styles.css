@@ -19,6 +19,7 @@ body {
   background: linear-gradient(160deg, var(--bg), #091a2c 40%, #0a2237);
   color: var(--text);
   line-height: 1.45;
+  overflow-x: hidden;
 }
 
 #precios,
@@ -3037,44 +3038,85 @@ section {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .topbar {
+    position: static;
+  }
+
   .topbar-content {
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    padding: 0.55rem 0;
+  }
+
+  .topbar-brand-sub {
+    display: none;
   }
 
   .topbar-actions {
     width: 100%;
-    justify-content: flex-start;
-    gap: 0.45rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    align-items: stretch;
   }
 
   .topbar-app-nav {
+    grid-column: 1 / -1;
     width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    padding-bottom: 0.15rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    overflow: visible;
+    flex-wrap: wrap;
+    padding-bottom: 0;
   }
 
-  .topbar-app-nav .btn {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    min-height: 2.5rem;
-  }
-
+  .topbar-app-nav .btn,
   .topbar-actions > .btn,
-  .topbar-actions > .btn-outline {
+  .topbar-actions > .btn-outline,
+  .topbar-actions > a.btn {
+    width: 100%;
     min-height: 2.5rem;
+    white-space: normal;
+    text-align: center;
   }
 
   .topbar-actions .lead {
+    grid-column: 1 / -1;
     width: 100%;
     max-width: none;
-    order: 10;
+    order: unset;
     font-size: 0.8rem;
+    text-align: center;
   }
 
+  .modules .mockup-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modules .mockup-form .mockup-field,
+  .modules .mockup-form .btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .app-main {
+    overflow-x: clip;
+  }
+
+  .topbar--demo-view .topbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-actions .lang-switch {
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 600px) {
   .container {
     width: min(1100px, 94vw);
   }
