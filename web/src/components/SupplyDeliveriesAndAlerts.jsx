@@ -240,8 +240,8 @@ export default function SupplyDeliveriesAndAlerts({
         </p>
       ) : null}
 
-      <article className="card" style={{ overflow: "auto", marginBottom: "1rem" }}>
-        <table className="mockup-table">
+      <article className="card mockup-table-card" style={{ marginBottom: "1rem" }}>
+        <table className="mockup-table" data-stack="responsive">
           <thead>
             <tr>
               <th>Proveedor</th>
@@ -261,10 +261,10 @@ export default function SupplyDeliveriesAndAlerts({
             ) : (
               deliveries.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.supplier}</td>
-                  <td>{row.arrivalWindow}</td>
-                  <td>{row.contents || "—"}</td>
-                  <td>{row.status}</td>
+                  <td data-label="Proveedor">{row.supplier}</td>
+                  <td data-label="Fecha o ventana">{row.arrivalWindow}</td>
+                  <td data-label="Qué traen">{row.contents || "—"}</td>
+                  <td data-label="Estado">{row.status}</td>
                   {canMutate ? (
                     <td>
                       {!String(row.id).startsWith("fb-") ? (
@@ -286,7 +286,7 @@ export default function SupplyDeliveriesAndAlerts({
         </table>
       </article>
 
-      <form className="mockup-form card" onSubmit={handleAddDelivery} style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <form className="mockup-form card" onSubmit={handleAddDelivery}>
         <h5 style={{ gridColumn: "1 / -1", margin: 0 }}>Añadir recepción o reparto</h5>
         <label className="mockup-field">
           <span>Proveedor</span>
@@ -351,8 +351,8 @@ export default function SupplyDeliveriesAndAlerts({
         Avisos persistentes por stock, caducidad o pedidos pendientes.
       </p>
 
-      <article className="card" style={{ overflow: "auto", marginBottom: "1rem" }}>
-        <table className="mockup-table">
+      <article className="card mockup-table-card" style={{ marginBottom: "1rem" }}>
+        <table className="mockup-table" data-stack="responsive">
           <thead>
             <tr>
               <th>Alerta</th>
@@ -372,12 +372,14 @@ export default function SupplyDeliveriesAndAlerts({
             ) : (
               alerts.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.title}</td>
-                  <td>
+                  <td data-label="Alerta">{row.title}</td>
+                  <td data-label="Ref.">
                     <code>{row.productRef || "—"}</code>
                   </td>
-                  <td>{row.condition}</td>
-                  <td style={dakinisSeverityStyle(row.severity)}>{dakinisSeverityLabel(row.severity)}</td>
+                  <td data-label="Condición">{row.condition}</td>
+                  <td data-label="Nivel" style={dakinisSeverityStyle(row.severity)}>
+                    {dakinisSeverityLabel(row.severity)}
+                  </td>
                   {canMutate ? (
                     <td>
                       {!String(row.id).startsWith("fb-") ? (
@@ -399,7 +401,7 @@ export default function SupplyDeliveriesAndAlerts({
         </table>
       </article>
 
-      <form className="mockup-form card" onSubmit={handleAddAlert} style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <form className="mockup-form card" onSubmit={handleAddAlert}>
         <h5 style={{ gridColumn: "1 / -1", margin: 0 }}>Nueva alerta</h5>
         <label className="mockup-field">
           <span>Nombre de la alerta</span>
@@ -448,11 +450,14 @@ export default function SupplyDeliveriesAndAlerts({
             <option value="critical">Urgente</option>
           </select>
         </label>
-        <div style={{ display: "flex", alignItems: "flex-end" }}>
-          <button type="submit" className="btn" disabled={!canMutate || saving}>
-            {saving ? "Guardando…" : "Crear alerta"}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="btn"
+          style={{ gridColumn: "1 / -1" }}
+          disabled={!canMutate || saving}
+        >
+          {saving ? "Guardando…" : "Crear alerta"}
+        </button>
       </form>
     </>
   );

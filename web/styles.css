@@ -928,6 +928,9 @@ section {
 
 .mockup-field input,
 .mockup-field select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: rgba(7, 17, 29, 0.85);
   color: var(--text);
   border: 1px solid var(--line);
