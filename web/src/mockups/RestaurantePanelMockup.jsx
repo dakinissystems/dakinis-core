@@ -16,6 +16,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisFerminaPrint } from "../utils/ferminaPrint.js";
 import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
 import { dakinisTableItemCount } from "../utils/restaurantFloorPlan.js";
+import { dakinisPlayKitchenBell } from "../utils/kitchenBell.js";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
 
 const TABS = [
@@ -427,7 +428,7 @@ const MOCK_ROLE_VIEWS = {
   admin: ["cierre", "facturas"]
 };
 
-function PanelComandas({ panelRole }) {
+function PanelComandas({ panelRole, mesasOnly = false }) {
   const { locale, t } = useLocale();
   const [comandasView, setComandasView] = useState(
     panelRole === "cocina" ? "activas" : panelRole === "admin" ? "cierre" : "mesas"
@@ -543,8 +544,12 @@ function PanelComandas({ panelRole }) {
   );
 
   useEffect(() => {
+    if (mesasOnly) {
+      setComandasView("mesas");
+      return;
+    }
     setComandasView(panelRole === "cocina" ? "activas" : panelRole === "admin" ? "cierre" : "mesas");
-  }, [panelRole]);
+  }, [panelRole, mesasOnly]);
 
   function setTableCartQty(tableId, menuId, delta) {
     if (!tableId) return;
@@ -594,6 +599,7 @@ function PanelComandas({ panelRole }) {
     setOrders((prev) => [order, ...prev]);
     setNextOrderNum((n) => n + 1);
     setPrintDoc({ kind: "comanda", doc: order });
+    dakinisPlayKitchenBell();
     if (panelRole === "cocina") setComandasView("activas");
   }
 
@@ -635,7 +641,7 @@ function PanelComandas({ panelRole }) {
       table: table.trim(),
       channel,
       paymentMethod,
-      status: "nueva",
+      status: "cocina",
       notes: notes.trim(),
       lines,
       total: ferminaLinesTotal(lines)
@@ -644,6 +650,7 @@ function PanelComandas({ panelRole }) {
     setNextOrderNum((n) => n + 1);
     setCart({});
     setPrintDoc({ kind: "comanda", doc: order });
+    dakinisPlayKitchenBell();
     if (panelRole === "cocina") setComandasView("activas");
     else setComandasView("mesas");
   }
@@ -677,21 +684,28 @@ function PanelComandas({ panelRole }) {
           <span className="mockup-badge">Demo interactivo</span>
         </div>
 
-        <FerminaComandasSubnav
-          views={comandasViews}
-          activeId={comandasView}
-          onSelect={setComandasView}
-          badges={{
-            mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
-            pedido: cartItemCount > 0 ? String(cartItemCount) : null,
-            activas:
-              (panelRole === "cocina" ? kitchenOrders.length : openOrders.length) > 0
-                ? String(panelRole === "cocina" ? kitchenOrders.length : openOrders.length)
-                : null
-          }}
-        />
+        {mesasOnly ? (
+          <p className="lead" style={{ fontSize: "0.9rem", margin: "0 0 0.75rem" }}>
+            Toca una mesa en el plano, añade platos y envía a cocina. El stock y el dashboard se actualizan al cerrar la
+            cuenta.
+          </p>
+        ) : (
+          <FerminaComandasSubnav
+            views={comandasViews}
+            activeId={comandasView}
+            onSelect={setComandasView}
+            badges={{
+              mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
+              pedido: cartItemCount > 0 ? String(cartItemCount) : null,
+              activas:
+                (panelRole === "cocina" ? kitchenOrders.length : openOrders.length) > 0
+                  ? String(panelRole === "cocina" ? kitchenOrders.length : openOrders.length)
+                  : null
+            }}
+          />
+        )}
 
-        {comandasView === "mesas" ? (
+        {comandasView === "mesas" || mesasOnly ? (
           <RestaurantMesasPanel
             t={t}
             menu={mockMenu}
@@ -1342,7 +1356,7 @@ const TOOLBAR = {
 };
 
 export default function RestaurantePanelMockup() {
-  const [tab, setTab] = useState("comandas");
+  const [tab, setTab] = useState("mapa");
   const [panelRole, setPanelRole] = useState(dakinisReadRestaurantRole);
   const visibleTabs = TABS.filter((item) => panelRole === "admin" || item.id !== "proveedores");
   const tb = TOOLBAR[tab] || TOOLBAR.comandas;
@@ -1363,7 +1377,7 @@ export default function RestaurantePanelMockup() {
             if (next !== "admin" && tab === "proveedores") setTab("comandas");
           }}
         />
-        {tab === "mapa" ? <PanelMapa /> : null}
+        {tab === "mapa" ? <PanelComandas panelRole={panelRole === "cocina" ? "camarero" : panelRole} mesasOnly /> : null}
         {tab === "reservas" ? <PanelReservas /> : null}
         {tab === "espera" ? <PanelEspera /> : null}
         {tab === "comandas" ? <PanelComandas panelRole={panelRole} /> : null}

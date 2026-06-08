@@ -39,6 +39,13 @@ export default function VistaMockupPage({ verticalKey, navigate }) {
           ) : null}
           <button
             type="button"
+            className="btn btn-outline"
+            onClick={() => navigate(`/demo/${encodeURIComponent(verticalKey)}`)}
+          >
+            {t("commercial.tryDemo")}
+          </button>
+          <button
+            type="button"
             className="btn"
             onClick={() => navigate(`/sistema/${encodeURIComponent(verticalKey)}`)}
           >

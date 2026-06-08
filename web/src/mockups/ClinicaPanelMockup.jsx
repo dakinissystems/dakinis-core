@@ -1,5 +1,6 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
 
 const TABS = [
   { id: "resumen", label: "Resumen" },
@@ -32,6 +33,9 @@ function Toolbar({ title, badge, user, extra }) {
 function PanelResumen() {
   return (
     <>
+      <div className="mockup-executive-strip">
+        <ExecutiveDashboardPanel verticalKey="clinica" compact />
+      </div>
       <div className="system-kpis" style={{ marginBottom: "1rem" }}>
         <article className="card">
           <p className="kpi-label">Citas confirmadas</p>

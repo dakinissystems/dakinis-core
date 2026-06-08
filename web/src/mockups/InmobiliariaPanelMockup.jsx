@@ -1,5 +1,6 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
 
 const TABS = [
   { id: "pipeline", label: "Pipeline" },
@@ -40,6 +41,9 @@ const COLUMNAS = [
 function PanelPipeline() {
   return (
     <>
+      <div className="mockup-executive-strip">
+        <ExecutiveDashboardPanel verticalKey="inmobiliaria" compact />
+      </div>
       <div className="mockup-pipeline-board">
         {COLUMNAS.map(({ name, n, c }) => (
           <article key={name} className="card" style={{ background: c, minHeight: "120px" }}>

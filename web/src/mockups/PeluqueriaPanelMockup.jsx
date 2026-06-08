@@ -1,5 +1,6 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
 
 const TABS = [
   { id: "hoy", label: "Hoy" },
@@ -32,6 +33,9 @@ function Toolbar({ title, badge, user, action }) {
 function PanelHoy() {
   return (
     <>
+      <div className="mockup-executive-strip">
+        <ExecutiveDashboardPanel verticalKey="peluqueria" compact />
+      </div>
       <div className="module-grid mockup-stylist-grid">
         {["Diana", "Sofía", "Lucía", "Marta"].map((name) => (
           <article key={name} className="card">

@@ -8,6 +8,10 @@ import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import PricingHybridSection from "../components/PricingHybridSection.jsx";
+import DemoVerticalCards from "../components/commercial/DemoVerticalCards.jsx";
+import ExcelVsDakinisTable from "../components/commercial/ExcelVsDakinisTable.jsx";
+import ExcelCostSimulator from "../components/commercial/ExcelCostSimulator.jsx";
+import ModuleMarketplaceVisual from "../components/commercial/ModuleMarketplaceVisual.jsx";
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
@@ -40,6 +44,16 @@ export default function ProductHomePage() {
             <p className="lead hero-benefit">{t("productHome.tagline")}</p>
             <p className="lead">{t("productHome.lead")}</p>
             <div className="hero-actions">
+              <button
+                type="button"
+                className="btn btn-lg product-home__demo-cta"
+                onClick={() => {
+                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home_hero" });
+                  navigate("/demo/restaurante");
+                }}
+              >
+                {t("commercial.tryDemo")}
+              </button>
               <button
                 type="button"
                 className="btn"
@@ -92,6 +106,36 @@ export default function ProductHomePage() {
               <li>{t("productHome.bullet1")}</li>
               <li>{t("productHome.bullet2")}</li>
               <li>{t("productHome.bullet3")}</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="modules commercial-section">
+        <div className="container">
+          <h2>{t("productHome.demosTitle")}</h2>
+          <p className="lead">{t("productHome.demosLead")}</p>
+          <DemoVerticalCards navigate={navigate} />
+        </div>
+      </section>
+
+      <section className="commercial-section commercial-section--alt">
+        <div className="container commercial-two-col">
+          <ModuleMarketplaceVisual />
+          <ExcelVsDakinisTable />
+        </div>
+      </section>
+
+      <section className="commercial-section">
+        <div className="container commercial-two-col">
+          <ExcelCostSimulator />
+          <div className="card commercial-value-card">
+            <p className="kicker">{t("productHome.valueKicker")}</p>
+            <h3 style={{ margin: "0.25rem 0 0.5rem" }}>{t("productHome.valueTitle")}</h3>
+            <ul className="commercial-roi-list">
+              {(t("productHome.valueBullets") || []).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
         </div>
