@@ -36,7 +36,257 @@ export default {
     modules: ["CRM", "Comunicaciones", "Inventario", "Restaurante", "Reservas", "Facturación (roadmap)"],
     bullet1: "Multi-tenant con datos aislados por negocio",
     bullet2: "Verticales: clínica, restaurante, inmobiliaria, peluquería",
-    bullet3: "Entra por el Hub y abre StreamAutomator o AkoeNet cuando los necesites"
+    bullet3: "Entra por el Hub y abre StreamAutomator o AkoeNet cuando los necesites",
+    demosTitle: "Prueba tu sector en vivo",
+    demosLead: "Demos interactivas con flujo completo: reserva, venta, inventario y dashboard ejecutivo.",
+    valueKicker: "Por qué no Excel",
+    valueTitle: "Menos horas perdidas, más ventas cerradas",
+    valueBullets: [
+      "Todo conectado en un solo panel — sin copiar datos entre hojas",
+      "ROI visible desde el primer día: ahorro de tiempo y menos errores",
+      "Escala módulo a módulo cuando lo necesites"
+    ]
+  },
+  commercial: {
+    tryDemo: "Probar demo",
+    executive: {
+      kicker: "Vista del dueño",
+      title: "Resumen del negocio",
+      lead: "Lo primero que mira el responsable antes de inventario o CRM.",
+      demoBadge: "Datos demo",
+      monthSales: "Ventas del mes",
+      newClients: "Clientes nuevos",
+      topProduct: "Producto más vendido",
+      estimatedProfit: "Beneficio estimado",
+      alertsTitle: "Alertas importantes"
+    },
+    simulator: {
+      kicker: "Calculadora",
+      title: "¿Cuánto te cuesta seguir usando Excel?",
+      lead: "Estima el tiempo que pierdes en tareas manuales cada mes.",
+      employees: "Número de empleados",
+      salesPerDay: "Ventas o citas al día",
+      resultHours: "Pierdes aproximadamente {hours} horas al mes en tareas manuales",
+      resultMoney: "Eso son unos {amount} €/mes en tiempo de equipo (a 18 €/h)"
+    },
+    excelCompare: {
+      kicker: "Comparativa",
+      title: "Excel vs Dakinis One",
+      lead: "Lo que las pymes españolas necesitan ver antes de decidir.",
+      colExcel: "Excel / WhatsApp suelto",
+      colDakinis: "Dakinis One",
+      rows: [
+        { excel: "Datos dispersos en hojas", dakinis: "Todo integrado en un panel" },
+        { excel: "Inventario manual", dakinis: "Stock automatizado con alertas" },
+        { excel: "Sin CRM", dakinis: "CRM incluido con seguimiento" },
+        { excel: "Sin reservas online", dakinis: "Reservas online y recordatorios" },
+        { excel: "WhatsApp sin historial", dakinis: "WhatsApp integrado al negocio" }
+      ]
+    },
+    marketplace: {
+      kicker: "Escala cuando quieras",
+      title: "Añade funciones cuando las necesites",
+      lead: "Empieza con lo esencial y activa módulos sin cambiar de plataforma.",
+      modules: {
+        crm: { name: "CRM", defaultOn: true, roi: "Cierra más ventas con seguimiento automático" },
+        whatsapp: { name: "WhatsApp", defaultOn: true, roi: "Menos no-show y respuestas más rápidas" },
+        inventory: { name: "Inventario", defaultOn: true, roi: "Reduce pérdidas por caducidad y faltantes" },
+        reservations: { name: "Reservas", defaultOn: true, roi: "Más ocupación sin llamadas manuales" },
+        ai: { name: "IA", defaultOn: false, roi: "Respuestas útiles para el dueño, no para programadores" },
+        portal: { name: "Portal Cliente", defaultOn: false, roi: "Autoservicio y menos carga en recepción" }
+      }
+    },
+    ai: {
+      kicker: "IA para negocio",
+      title: "Preguntas que un dueño sí haría",
+      lead: "Sin jerga técnica: respuestas accionables sobre tu operación.",
+      answerLabel: "Respuesta demo",
+      hint: "Pulsa una pregunta para ver un ejemplo de respuesta.",
+      questions: {
+        restock: {
+          prompt: "¿Qué productos debo reponer?",
+          answer:
+            "Jalapeños (caduca en 3 días, 2 porciones restantes), harina 00 (bajo mínimo) y aceite fritura. Pedido sugerido a proveedor habitual: 4 kg jalapeños, 10 kg harina."
+        },
+        inactive: {
+          prompt: "¿Qué clientes llevan 30 días sin comprar?",
+          answer:
+            "12 clientes sin visita en 30+ días. Top 3 por ticket: García (€84), Ortega (€62), Vega (€58). Campaña WhatsApp de reactivación lista con 8 % descuento."
+        },
+        cancellations: {
+          prompt: "¿Qué citas podrían cancelarse?",
+          answer:
+            "4 reservas de viernes sin confirmar WA. Riesgo alto: mesa T4 20:00 y terraza T2 21:30. Envía recordatorio automático antes de las 18:00."
+        },
+        noShow: {
+          prompt: "¿Quién tiene riesgo de no-show?",
+          answer:
+            "6 citas mañana sin confirmar. Prioridad: Botox 10:30 (VIP) y color 16:00 (nuevo cliente). Recordatorio WA programado 24 h y 2 h antes."
+        },
+        upsell: {
+          prompt: "¿Dónde puedo vender más?",
+          answer:
+            "18 pacientes con tratamiento facial sin upsell de peeling. 4 presupuestos abiertos > €400. Sugerencia: pack post-tratamiento con 12 % margen extra."
+        },
+        followUp: {
+          prompt: "¿Qué leads necesitan seguimiento?",
+          answer:
+            "3 leads sin contacto > 48 h: piso centro (Martínez), ático norte (López), local comercial (Ruiz). Plantilla WA de seguimiento lista para cada uno."
+        },
+        visits: {
+          prompt: "¿Qué visitas están en riesgo?",
+          answer:
+            "2 visitas sin confirmar mañana. Piso 3 hab. — lead caliente, sin respuesta desde ayer. Reenvía confirmación por WhatsApp."
+        }
+      }
+    },
+    flow: {
+      kicker: "Proceso completo"
+    },
+    flows: {
+      restaurante: {
+        title: "De la reserva a la venta en un solo flujo",
+        lead: "No son pantallas sueltas: todo conectado como en operación real.",
+        steps: [
+          "Cliente reserva mesa (web o WhatsApp)",
+          "Camarero recibe pedido en el plano de mesas",
+          "Cocina recibe comanda en tiempo real",
+          "Stock disminuye al cerrar la venta",
+          "La venta aparece en el dashboard ejecutivo"
+        ]
+      },
+      clinica: {
+        title: "De la cita al cobro sin fricción",
+        lead: "Agenda, paciente y facturación en el mismo circuito.",
+        steps: [
+          "Paciente reserva cita online",
+          "Recordatorio automático reduce ausencias",
+          "Tratamiento registrado en ficha CRM",
+          "Consumibles descontados del stock",
+          "Facturación y KPIs en resumen del negocio"
+        ]
+      },
+      peluqueria: {
+        title: "De la reserva web al ticket medio",
+        lead: "Menos huecos vacíos y más clientes que repiten.",
+        steps: [
+          "Cliente reserva por web o Instagram",
+          "Estilista ve agenda por silla",
+          "Productos consumidos bajan stock",
+          "WhatsApp pide reseña y próxima cita",
+          "Dashboard muestra ocupación y ticket medio"
+        ]
+      },
+      inmobiliaria: {
+        title: "Del lead al cierre con seguimiento",
+        lead: "Ningún contacto se pierde entre Excel y WhatsApp.",
+        steps: [
+          "Lead entra desde web o portal",
+          "CRM asigna agente y siguiente paso",
+          "Visita confirmada por WhatsApp",
+          "Propuesta y negociación en pipeline",
+          "Cierre reflejado en informe ejecutivo"
+        ]
+      }
+    },
+    roi: {
+      restaurante: [
+        "Reduce pérdidas por caducidad y faltantes de stock",
+        "Menos errores en comandas y más rotación de mesas",
+        "Reservas con recordatorio: menos mesas vacías"
+      ],
+      clinica: [
+        "Menos ausencias con recordatorios automáticos",
+        "Seguimiento post-tratamiento que aumenta repetición",
+        "Visión comercial del paciente sin hojas sueltas"
+      ],
+      peluqueria: [
+        "Reduce ausencias y aumenta reservas automáticas",
+        "Agenda por estilista: más ocupación sin caos",
+        "Campañas de retorno que suben recurrencia"
+      ],
+      inmobiliaria: [
+        "Seguimiento automático para cerrar más ventas",
+        "Pipeline visible: ningún lead olvidado",
+        "Visitas coordinadas sin doble llamada"
+      ]
+    }
+  },
+  inventoryLots: {
+    kicker: "Inventario · lotes",
+    title: "Control de lotes y caducidades",
+    lead: "Recepción con QR interno, FIFO automático y mapa de neveras. Ideal para mercado, restaurante y clínica.",
+    demoMode: "Modo demo (sin login)",
+    loadError: "No se pudieron cargar los lotes",
+    receiveError: "Error al registrar la recepción",
+    scanError: "Lote no encontrado",
+    demoNotFound: "Lote demo no encontrado",
+    tabSummary: "Resumen",
+    tabReceive: "Recepción",
+    tabFridges: "Mapa neveras",
+    tabLots: "Todos los lotes",
+    tabScan: "Escanear QR",
+    tabGuide: "Guía y costes",
+    expire3d: "Vencen en 3 días",
+    expire7d: "Vencen en 7 días",
+    stockOk: "Stock correcto",
+    fifoNote: "Al vender, el sistema descuenta primero el lote que vence antes (FIFO/FEFO).",
+    receiveLead: "Escanea el EAN del fabricante, introduce lote y vencimiento, y genera la etiqueta QR interna.",
+    productBarcode: "Código producto (EAN)",
+    productName: "Nombre producto",
+    productNamePlaceholder: "Leche entera 1L",
+    supplierLot: "Lote proveedor",
+    expiry: "Vencimiento",
+    quantity: "Cantidad",
+    location: "Ubicación",
+    supplier: "Proveedor",
+    receiveCta: "Registrar y generar QR",
+    labelPreview: "Etiqueta interna",
+    printLabel: "Imprimir etiqueta",
+    noLots: "Sin lotes activos en ubicaciones.",
+    colCode: "Código QR",
+    colProduct: "Producto",
+    colLot: "Lote",
+    colExpiry: "Vence",
+    colQty: "Ud.",
+    colLocation: "Ubicación",
+    colStatus: "Estado",
+    scanLead: "Escanea el QR de la etiqueta (LOT-2026-000123) o el EAN para recepción.",
+    scanHint: "QR de lote o código de barras del producto",
+    severity: {
+      critical: "Urgente",
+      warning: "Próximo",
+      ok: "OK",
+      expired: "Caducado",
+      unknown: "—"
+    },
+    guideQrTitle: "Etiqueta QR propia (recomendado)",
+    guideQrLead: "El QR solo guarda el código interno; producto, lote y vencimiento viven en la base de datos.",
+    guideQrBullets: [
+      "Formato: LOT-2026-000123 — pequeño, rápido de leer y escalable",
+      "Puedes cambiar datos sin reimprimir si corriges en el sistema",
+      "No sustituye el EAN del fabricante: es etiqueta interna de lote"
+    ],
+    guideCostTitle: "Coste de etiquetas térmicas",
+    guideCostLead: "Muy bajo para pymes — sin tinta, impresora 60–120 €.",
+    guideCostBullets: [
+      "Etiqueta 40×30 mm: ~0,005–0,02 € (5.000–20 € por 10.000 uds)",
+      "Papel resistente frío/humedad (nevera): ~0,01–0,03 € por etiqueta",
+      "Mercado pequeño (~1.000 etiquetas/mes): ~10–30 €/mes"
+    ],
+    guideFridgeTitle: "Neveras y cámaras",
+    guideFridgeLead:
+      "Pega una etiqueta por caja o bandeja. El empleado escanea al guardar y ve producto, lote, vencimiento y días restantes.",
+    guideFifoTitle: "Sin etiqueta (opción 0 €)",
+    guideFifoLead:
+      "Registra lote al entrar mercancía y deja que FIFO descuente el más antiguo al vender. Menos control físico en nevera."
+  },
+  demoCommercial: {
+    kicker: "Demo comercial · {label}",
+    title: "Así gestionarías tu {label} con Dakinis One",
+    lead: "Explora el panel interactivo y comprueba el retorno antes de contratar.",
+    panelKicker: "Panel interactivo",
+    panelTitle: "Operativa diaria — {label}"
   },
   hub: {
     title: "Dakinis Hub",
@@ -158,39 +408,39 @@ export default {
       "Más abajo: formularios y listados con persistencia real por tenant (SQLite). El mockup es solo maquetación interactiva.",
     verticals: {
       clinica: {
-        headline: "Clínica demo: agenda y pacientes sin líos",
-        lead: "Este entorno aísla tus datos de otros negocios. Combina el mockup visual con el flujo funcional de abajo.",
+        headline: "Clínica demo: menos no-show, más repetición",
+        lead: "Agenda, CRM y stock con ROI visible para el responsable del centro.",
         benefits: [
-          "Mockup: navega por el panel como si fuera la app final (sin API).",
-          "Panel funcional: registros que se guardan en base de datos por tenant.",
-          "Automatizaciones de ejemplo para recordatorios y seguimiento comercial."
+          "Menos ausencias con recordatorios automáticos 24 h y 2 h.",
+          "Seguimiento post-tratamiento que fideliza pacientes.",
+          "Resumen ejecutivo: citas, facturación y alertas de stock."
         ]
       },
       peluqueria: {
-        headline: "Peluquería demo: agenda por estilista y reservas",
-        lead: "Prueba cómo se organizan turnos y proveedores en un solo lugar.",
+        headline: "Peluquería demo: más reservas, menos ausencias",
+        lead: "Agenda online, recordatorios y dashboard del dueño en un solo sitio.",
         benefits: [
-          "Mockup: vista previa del salón con secciones típicas.",
-          "Datos demo persistidos para citas y stock orientativo.",
-          "Enlaces rápidos a reservas y fidelización en el contenido de la página."
+          "Reduce ausencias y aumenta reservas automáticas.",
+          "Agenda por estilista sin solapamientos.",
+          "Campañas WhatsApp para clientes que no vuelven."
         ]
       },
       restaurante: {
-        headline: "Restaurante demo: sala y operación diaria",
-        lead: "Ideal para ver cómo encajan comandas, turnos y alertas en el mismo panel.",
+        headline: "Restaurante demo: de la mesa al dashboard",
+        lead: "Toca una mesa, añade platos y sigue el flujo hasta cocina y cierre de caja.",
         benefits: [
-          "Mockup: maquetación de sala y back-of-house.",
-          "Formularios con persistencia para simular carga operativa.",
-          "KPIs y textos orientados a ticket medio y ocupación."
+          "Reduce pérdidas por caducidad y faltantes de stock.",
+          "Plano de mesas: pedido, cocina y cobro conectados.",
+          "Dashboard ejecutivo con ventas y alertas del mes."
         ]
       },
       inmobiliaria: {
-        headline: "Inmobiliaria demo: visitas y embudo comercial",
-        lead: "Une leads, visitas y proveedores en una demo coherente con tu tipo de negocio.",
+        headline: "Inmobiliaria demo: cierra más ventas",
+        lead: "CRM, visitas y seguimiento automático sin perder leads en Excel.",
         benefits: [
-          "Mockup: embudo y tablero visual para presentar a equipo comercial.",
-          "Registros por tenant para leads y seguimiento.",
-          "Proveedores y alertas como en operación real."
+          "Seguimiento automático para cerrar más operaciones.",
+          "Pipeline visual: de lead nuevo a cierre.",
+          "Alertas de leads sin contacto y visitas en riesgo."
         ]
       }
     }
@@ -627,7 +877,7 @@ export default {
     invoiceCart: "Facturar carrito",
     activeOrders: "Comandas activas",
     kitchenSentAt: "Enviada {time}",
-    kitchenElapsed: "{minutes} min en cocina",
+    kitchenElapsed: "{time} en cocina",
     noOrders: "Sin comandas aún.",
     print: "Imprimir",
     invoice: "Factura",

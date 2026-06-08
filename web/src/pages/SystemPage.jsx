@@ -11,6 +11,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import DemoTenantSystemWelcome from "../components/DemoTenantSystemWelcome.jsx";
 import SupplyDeliveriesAndAlerts from "../components/SupplyDeliveriesAndAlerts.jsx";
+import InventoryLotsPanel from "../components/InventoryLotsPanel.jsx";
 import TenantTeamSection from "../components/TenantTeamSection.jsx";
 import RestaurantStockSection from "../components/RestaurantStockSection.jsx";
 import RestaurantComandasSection from "../components/RestaurantComandasSection.jsx";
@@ -304,6 +305,12 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               productRefs={systemPageContent.suppliersProducts.productRows.map((r) => r.reference)}
               fallbackDeliveries={systemPageContent.suppliersProducts.incomingDeliveries ?? []}
               fallbackAlerts={systemPageContent.suppliersProducts.merchandiseAlerts ?? []}
+            />
+
+            <InventoryLotsPanel
+              apiSession={apiSession}
+              tenantSlugForVertical={tenantSlugForVertical}
+              activeSystemKey={activeSystemKey}
             />
           </>
         ) : null}

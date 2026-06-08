@@ -96,6 +96,15 @@ function dakinisMigrateStockBarcodeColumn(db) {
   }
 }
 
+function dakinisMigrateInventoryLots(db) {
+  db.exec(fs.readFileSync(path.join(__dirname, "schema-inventory-lots-migrate.sql"), "utf8"));
+  const movCols = db.prepare("PRAGMA table_info(tenant_stock_movements)").all();
+  const movNames = new Set(movCols.map((c) => c.name));
+  if (!movNames.has("lot_id")) {
+    db.exec("ALTER TABLE tenant_stock_movements ADD COLUMN lot_id TEXT");
+  }
+}
+
 function dakinisMigrateWhatsappCrmColumns(db) {
   const cols = db.prepare("PRAGMA table_info(tenant_whatsapp_messages)").all();
   const names = new Set(cols.map((c) => c.name));
@@ -128,6 +137,7 @@ function dakinisInitSqlite() {
   dakinisMigrateWhatsappTables(db);
   dakinisMigrateCrmTables(db);
   dakinisMigrateStockBarcodeColumn(db);
+  dakinisMigrateInventoryLots(db);
   dakinisMigrateTenantIntelligence(db);
   dakinisMigrateIntelligenceV2(db);
   dakinisMigrateBos(db);

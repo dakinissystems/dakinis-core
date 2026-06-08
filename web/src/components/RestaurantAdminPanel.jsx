@@ -7,6 +7,7 @@ import SupplyDeliveriesAndAlerts from "./SupplyDeliveriesAndAlerts.jsx";
 import RestaurantStockSection from "./RestaurantStockSection.jsx";
 import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import RestaurantComandasSection from "./RestaurantComandasSection.jsx";
+import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
 import { dakinisDefaultFloorTables, dakinisNewTableAtZone } from "../utils/restaurantFloorPlan.js";
 
 export default function RestaurantAdminPanel({
@@ -197,6 +198,12 @@ export default function RestaurantAdminPanel({
       ) : null}
 
       <RestaurantStockSection
+        apiSession={apiSession}
+        tenantSlugForVertical={tenantSlugForVertical}
+        activeSystemKey={activeSystemKey}
+      />
+
+      <InventoryLotsPanel
         apiSession={apiSession}
         tenantSlugForVertical={tenantSlugForVertical}
         activeSystemKey={activeSystemKey}

@@ -27,6 +27,7 @@
     "./catalog/restaurant-kitchen.js": "./catalog/restaurant-kitchen.js",
     "./catalog/restaurant-floor.js": "./catalog/restaurant-floor.js",
     "./catalog/stock-barcodes.js": "./catalog/stock-barcodes.js",
+    "./catalog/inventory-lots.js": "./catalog/inventory-lots.js",
     "./catalog/restaurant-allergens.js": "./catalog/restaurant-allergens.js",
     "./catalog/restaurant-mushrooms.js": "./catalog/restaurant-mushrooms.js",
     "./catalog/dumpling-pdf-aliases.js": "./catalog/dumpling-pdf-aliases.js",

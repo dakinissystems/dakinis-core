@@ -4,9 +4,9 @@ export default {
     pageDescription:
       "Centralize medical scheduling, patient follow-up, and confirmation automation to reduce no-shows.",
     highlights: [
-      "Fewer no-shows on treatments",
-      "Automated post-session follow-up",
-      "Commercial view of the patient"
+      "Fewer no-shows with automatic reminders",
+      "Post-treatment follow-up that drives repeat visits",
+      "Commercial patient view without spreadsheets"
     ],
     ctaLabel: "Request demo for clinic",
     kpis: [
@@ -106,9 +106,9 @@ export default {
     pageDescription:
       "Manage stylists, online bookings, and loyalty programs to increase repeat visits and average ticket.",
     highlights: [
-      "Schedule by chair and professional",
-      "Frictionless online booking",
-      "Automatic return campaigns"
+      "Fewer no-shows and more automatic bookings",
+      "Stylist schedule without overlaps",
+      "Return campaigns that boost recurrence"
     ],
     ctaLabel: "Request demo for hair salon",
     kpis: [
@@ -204,10 +204,10 @@ export default {
     pageDescription:
       "Coordinate reservations by table and service, manage returning diners, and automate WhatsApp confirmations.",
     highlights: [
-      "Floor plan by service shifts",
-      "Stock and recipes (pizzas / empanadas)",
-      "Updatable allergy QR",
-      "Fewer no-shows at peak hours"
+      "Cut losses from expiry and stock-outs",
+      "Floor plan: order, kitchen and payment connected",
+      "Executive dashboard with sales and alerts",
+      "Fewer no-shows at peak hours with WA reminders"
     ],
     ctaLabel: "Request demo for premium restaurant",
     kpis: [
@@ -299,9 +299,9 @@ export default {
     pageDescription:
       "Manage viewings, sales pipeline, and lead follow-up to close more deals.",
     highlights: [
-      "Viewing schedule by property",
-      "Clear funnel by sales stage",
-      "Conversion metrics by agent"
+      "Automatic follow-up to close more deals",
+      "Clear funnel: no forgotten leads",
+      "Conversion metrics and at-risk viewings by agent"
     ],
     ctaLabel: "Request demo for real estate",
     kpis: [

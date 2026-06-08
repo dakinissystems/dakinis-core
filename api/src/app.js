@@ -48,6 +48,14 @@ import {
   dakinisHandleSupplyDeliveriesPatch,
   dakinisHandleSupplyDeliveriesPost
 } from "./api/tenant-supply.js";
+import {
+  dakinisHandleInventoryConsumePost,
+  dakinisHandleInventoryLocationsGet,
+  dakinisHandleInventoryLotResolveGet,
+  dakinisHandleInventoryLotsList,
+  dakinisHandleInventoryReceivePost,
+  dakinisHandleInventorySummaryGet
+} from "./api/tenant-inventory-lots.js";
 import { dakinisHandleUsersRoute } from "./modules/users/routes.js";
 import { dakinisHandleTenantsRoute } from "./modules/tenants/routes.js";
 import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
@@ -223,6 +231,19 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/invoices" && req.method === "GET") return dakinisHandleRestaurantInvoicesList(req);
   if (path === "/api/tenant/restaurant/invoices" && req.method === "POST")
     return dakinisHandleRestaurantInvoicesPost(req, rawBody);
+
+  if (path === "/api/tenant/inventory/locations" && req.method === "GET")
+    return dakinisHandleInventoryLocationsGet(req);
+  if (path === "/api/tenant/inventory/summary" && req.method === "GET")
+    return dakinisHandleInventorySummaryGet(req);
+  if (path === "/api/tenant/inventory/lots" && req.method === "GET") return dakinisHandleInventoryLotsList(req);
+  if (path === "/api/tenant/inventory/receive" && req.method === "POST")
+    return dakinisHandleInventoryReceivePost(req, rawBody);
+  if (path === "/api/tenant/inventory/consume" && req.method === "POST")
+    return dakinisHandleInventoryConsumePost(req, rawBody);
+  const inventoryLotResolve = /^\/api\/tenant\/inventory\/lots\/resolve\/([^/]+)$/.exec(path);
+  if (inventoryLotResolve && req.method === "GET")
+    return dakinisHandleInventoryLotResolveGet(req, decodeURIComponent(inventoryLotResolve[1]));
 
   const moduleResult =
     dakinisHandleTenantIntelligenceRoute(req, rawBody, url) ||

@@ -4,9 +4,9 @@ export default {
     pageDescription:
       "Centraliza agenda medica, seguimiento de pacientes y automatizacion de confirmaciones para reducir ausencias.",
     highlights: [
-      "Menos no-show en tratamientos",
-      "Seguimiento post-sesion automatizado",
-      "Vision comercial del paciente"
+      "Menos ausencias con recordatorios automáticos",
+      "Seguimiento post-tratamiento que aumenta repetición",
+      "Visión comercial del paciente sin hojas sueltas"
     ],
     ctaLabel: "Solicitar demo para clinica",
     kpis: [
@@ -106,9 +106,9 @@ export default {
     pageDescription:
       "Controla estilistas, reservas online y fidelizacion para aumentar recurrencia y ticket medio.",
     highlights: [
-      "Agenda por silla y profesional",
-      "Reserva online sin friccion",
-      "Campanas de retorno automaticas"
+      "Reduce ausencias y aumenta reservas automáticas",
+      "Agenda por estilista sin solapamientos",
+      "Campañas de retorno que suben recurrencia"
     ],
     ctaLabel: "Solicitar demo para peluqueria",
     kpis: [
@@ -204,10 +204,10 @@ export default {
     pageDescription:
       "Coordina reservas por mesa y turno, gestiona comensales recurrentes y automatiza confirmaciones por WhatsApp.",
     highlights: [
-      "Plan de sala por turnos",
-      "Stock y recetas (pizzas / empanadas)",
-      "QR de alergias actualizable",
-      "Menos no-show en horas punta"
+      "Reduce pérdidas por caducidad y faltantes de stock",
+      "Plano de mesas: pedido, cocina y cobro conectados",
+      "Dashboard ejecutivo con ventas y alertas",
+      "Menos no-show en horas punta con recordatorio WA"
     ],
     ctaLabel: "Solicitar demo para restaurante premium",
     kpis: [
@@ -299,9 +299,9 @@ export default {
     pageDescription:
       "Gestiona visitas, pipeline comercial y seguimiento de leads para cerrar mas operaciones.",
     highlights: [
-      "Agenda de visitas por propiedad",
-      "Embudo claro por etapa comercial",
-      "Metricas de conversion por agente"
+      "Seguimiento automático para cerrar más ventas",
+      "Embudo claro: ningún lead olvidado",
+      "Métricas de conversión y visitas en riesgo por agente"
     ],
     ctaLabel: "Solicitar demo para inmobiliaria",
     kpis: [
