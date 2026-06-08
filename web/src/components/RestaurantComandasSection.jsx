@@ -22,6 +22,7 @@ import {
   DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS
 } from "../utils/restaurantOrderMeta.js";
 import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { dakinisPlayKitchenBell } from "../utils/kitchenBell.js";
 
 const STATUS_FLOW = ["nueva", "cocina", "lista", "entregada", "cancelada"];
 
@@ -220,6 +221,7 @@ export default function RestaurantComandasSection({
       }
       await dakinisPatchTableSession(tableId, { cart: {}, notes: "" }, { clear: true });
       setPrintDoc({ kind: "comanda", data: order });
+      if (status === "cocina") dakinisPlayKitchenBell();
       if (role === "cocina") setComandasView("activas");
       await reload();
     } catch (e) {
@@ -259,6 +261,7 @@ export default function RestaurantComandasSection({
       });
       setCart(dakinisEmptyCart());
       setPrintDoc({ kind: "comanda", data: json?.data?.order });
+      dakinisPlayKitchenBell();
       if (role === "cocina") setComandasView("activas");
       await reload();
     } catch (e) {

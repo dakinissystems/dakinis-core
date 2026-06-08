@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  dakinisFormatKitchenElapsed,
   dakinisFormatOrderSentTime,
   dakinisKitchenElapsedMinutes,
   dakinisKitchenElapsedTone
 } from "../utils/restaurantOrderTime.js";
 
-const TICK_MS = 30_000;
+const TICK_MS = 1_000;
 
-/** Hora de envío y tiempo en cocina (se actualiza cada 30 s). */
+/** Hora de envío y tiempo en cocina (se actualiza cada segundo). */
 export default function FerminaKitchenOrderTime({ createdAt, t, locale = "es" }) {
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -17,6 +18,10 @@ export default function FerminaKitchenOrderTime({ createdAt, t, locale = "es" })
   }, []);
 
   const sentLabel = useMemo(() => dakinisFormatOrderSentTime(createdAt, locale), [createdAt, locale]);
+  const elapsedLabel = useMemo(
+    () => dakinisFormatKitchenElapsed(createdAt, nowMs, locale),
+    [createdAt, nowMs, locale]
+  );
   const elapsedMin = useMemo(
     () => dakinisKitchenElapsedMinutes(createdAt, nowMs),
     [createdAt, nowMs]
@@ -29,7 +34,7 @@ export default function FerminaKitchenOrderTime({ createdAt, t, locale = "es" })
         {t("fermina.kitchenSentAt", { time: sentLabel })}
       </span>
       <span className={`fermina-kitchen-time__elapsed fermina-kitchen-time__elapsed--${tone}`}>
-        {t("fermina.kitchenElapsed", { minutes: elapsedMin })}
+        {t("fermina.kitchenElapsed", { time: elapsedLabel })}
       </span>
     </div>
   );
