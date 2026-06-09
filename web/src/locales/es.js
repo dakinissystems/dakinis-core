@@ -464,6 +464,7 @@ export default {
     quotaAi: "{count} consultas IA/mes incluidas",
     overageTitle: "Si te pasas de la cuota",
     contactHint: "Te respondemos con propuesta concreta: plan, implantación y plazo — sin letra pequeña.",
+    whatsappFabHint: "También puedes escribirnos por WhatsApp con el botón flotante verde.",
     bos: {
       kicker: "Suscripción BOS",
       title: "Planes mensuales Dakinis One",

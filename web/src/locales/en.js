@@ -463,6 +463,7 @@ export default {
     quotaAi: "{count} AI queries/month included",
     overageTitle: "If you exceed your quota",
     contactHint: "We reply with a concrete proposal: plan, setup and timeline — no fine print.",
+    whatsappFabHint: "You can also message us on WhatsApp using the green floating button.",
     bos: {
       kicker: "BOS subscription",
       title: "Dakinis One monthly plans",

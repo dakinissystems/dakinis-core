@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { DAKINIS_CONTACT_EMAIL, DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
+import { DAKINIS_CONTACT_EMAIL } from "../config/contact-urls.js";
 import {
   dakinisBuildBosPlanCards,
   dakinisBosOverage,
@@ -256,14 +256,7 @@ export default function PricingHybridSection({
               <a href={`mailto:${DAKINIS_CONTACT_EMAIL}`} className="btn">
                 {t("home.pricing.emailCta")}
               </a>
-              <a
-                href={DAKINIS_CONTACT_WHATSAPP_URL}
-                className="btn btn-outline"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t("home.pricing.whatsappCta")}
-              </a>
+              <p className="pricing-contact-card__whatsapp-hint">{t("pricing.whatsappFabHint")}</p>
             </div>
           </div>
         ) : null}

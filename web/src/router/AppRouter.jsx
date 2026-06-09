@@ -33,6 +33,8 @@ import { ReportesPage } from "../app/reportes/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
+import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
+import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -48,6 +50,8 @@ function Shell({ children }) {
 
   const navigateCompat = (pathname) => navigate(pathname);
 
+  const showWhatsappFab = dakinisShouldShowPublicWhatsappFab(location.pathname);
+
   return (
     <div className="app-shell">
       <AppTopBar
@@ -58,6 +62,7 @@ function Shell({ children }) {
       />
       <main className="app-main">{children}</main>
       <AppFooter navigate={navigateCompat} />
+      {showWhatsappFab ? <DraggableWhatsappButton /> : null}
     </div>
   );
 }

@@ -25,7 +25,6 @@ import RestaurantBusinessIntro from "../components/business/RestaurantBusinessIn
 import PasswordInput from "../components/PasswordInput.jsx";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
-import { DAKINIS_CONTACT_WHATSAPP_URL } from "../config/contact-urls.js";
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 export default function SystemPage({ activeSystemKey, navigate }) {
@@ -471,9 +470,9 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               <h2>{selectedSystem.label}</h2>
               <p>{t("system.ctaPanel")}</p>
             </div>
-            <a href={DAKINIS_CONTACT_WHATSAPP_URL} className="btn" target="_blank" rel="noreferrer">
+            <button type="button" className="btn" onClick={() => navigate(`/demo/${activeSystemKey}`)}>
               {systemPageContent.ctaLabel}
-            </a>
+            </button>
           </div>
         </section>
       </div>
