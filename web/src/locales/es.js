@@ -459,6 +459,8 @@ export default {
       "Un precio mensual claro para tu operación diaria. Sin pagar módulo a módulo: eliges el plan que encaja con tu negocio hoy y creces cuando lo necesites.",
     includesTitle: "Qué incluye",
     planCta: "Quiero este plan",
+    planWhatsappMessage:
+      "Hola, me interesa el plan {plan} de Dakinis One ({price} €/mes). ¿Podemos hablar de implantación y plazos?",
     recommendedBadge: "Más elegido",
     quotaWa: "{count} WhatsApp/mes incluidos",
     quotaAi: "{count} consultas IA/mes incluidas",
@@ -751,7 +753,19 @@ export default {
       products: "Productos",
       conversion: "Conversión",
       ctaPipeline: "Ver embudo de ventas",
-      ctaWhatsapp: "Abrir WhatsApp"
+      ctaWhatsapp: "Abrir WhatsApp",
+      insightsTitle: "Lo que importa hoy",
+      insights: [
+        "3 clientes sin respuesta > 48 h — plantilla WhatsApp lista",
+        "Stock bajo en 7 referencias — revisar pedido a proveedor",
+        "Ventas +12 % vs. mes anterior — embudo con 4 propuestas abiertas"
+      ],
+      trends: {
+        clients: "+8 % vs. mes anterior",
+        sales: "+12 % vs. mes anterior",
+        products: "523 referencias activas",
+        conversion: "+3 pts vs. trimestre"
+      }
     },
     clients: {
       kicker: "Clientes",
@@ -785,6 +799,81 @@ export default {
       totalSpent: "Total gastado",
       phone: "Teléfono"
     },
+    options: {
+      moreAria: "Más opciones",
+      defaultSubject: "este cliente",
+      whatsapp: {
+        clientHistory: "Ver historial CRM",
+        paymentLink: "Generar enlace de pago",
+        followUpTemplate: "Enviar plantilla de seguimiento",
+        assignAgent: "Asignar a mi equipo",
+        addCampaign: "Añadir a campaña"
+      },
+      crm: {
+        clientProfile: "Ver ficha del cliente",
+        whatsappProposal: "Enviar propuesta por WhatsApp",
+        scheduleFollowUp: "Programar seguimiento",
+        markWon: "Marcar como ganada"
+      },
+      inventory: {
+        reorderSupplier: "Pedir a proveedor",
+        adjustStock: "Ajustar stock",
+        linkToSale: "Vincular a venta",
+        setAlert: "Alerta de mínimo",
+        exportList: "Exportar listado"
+      },
+      reports: {
+        exportPdf: "Exportar informe PDF",
+        shareWhatsapp: "Compartir por WhatsApp",
+        comparePeriod: "Comparar periodo",
+        scheduleReport: "Programar envío mensual",
+        drillDown: "Ver detalle por producto"
+      },
+      dashboard: {
+        exportSummary: "Exportar resumen",
+        shareTeam: "Compartir con equipo",
+        setGoals: "Objetivos del mes"
+      },
+      feedback: {
+        whatsapp: {
+          clientHistory:
+            "Historial de {name}: compras, citas y conversaciones en un solo sitio — sin buscar en Excel.",
+          paymentLink: "Enlace de cobro generado para {name}. Envíalo por WhatsApp y cierra la venta al momento.",
+          followUpTemplate:
+            "Plantilla «¿Te reservo unidades?» lista para {name}. Un clic y el seguimiento queda automatizado.",
+          assignAgent:
+            "Chat de {name} asignado a tu equipo. Todos ven el mismo historial y contexto del cliente.",
+          addCampaign:
+            "{name} añadido a campaña «Clientes recurrentes» con recordatorio automático en 7 días."
+        },
+        crm: {
+          clientProfile: "Ficha de {name}: contacto, compras, notas y conversaciones WhatsApp vinculadas.",
+          whatsappProposal:
+            "Propuesta enviada a {name} por WhatsApp con enlace de aceptación — seguimiento en el embudo.",
+          scheduleFollowUp: "Recordatorio para {name} el viernes 10:00. No se te escapa ningún lead.",
+          markWon: "Oportunidad de {name} marcada como ganada. Venta registrada en reportes del mes."
+        },
+        inventory: {
+          reorderSupplier: "Pedido a proveedor iniciado para {name}. El stock se actualiza al recibir mercancía.",
+          adjustStock: "Stock de {name} ajustado. El cambio queda en el historial del producto.",
+          linkToSale: "{name} vinculado a la venta activa — inventario y ticket siempre alineados.",
+          setAlert: "Alerta de mínimo configurada para {name}. Te avisamos antes de quedarte sin stock.",
+          exportList: "Listado de inventario exportado. Compártelo con tu equipo o contabilidad."
+        },
+        reports: {
+          exportPdf: "Informe PDF de {name} listo para enviar al responsable o asesor.",
+          shareWhatsapp: "Resumen de ventas compartido por WhatsApp — decisiones sin esperar al ordenador.",
+          comparePeriod: "Comparativa generada: +12 % ingresos y +9 % pedidos vs. mes anterior.",
+          scheduleReport: "Envío mensual programado. Recibirás el informe el día 1 sin hacer nada más.",
+          drillDown: "Detalle por producto abierto — ves qué referencias impulsan el crecimiento."
+        },
+        dashboard: {
+          exportSummary: "Resumen ejecutivo de {name} exportado — KPIs, alertas y embudo en un PDF.",
+          shareTeam: "Panel compartido con tu equipo. Todos ven los mismos números en tiempo real.",
+          setGoals: "Objetivos del mes guardados para {name}. Seguimiento automático en reportes."
+        }
+      }
+    },
     inventory: {
       kicker: "Inventario",
       title: "Productos y stock",
@@ -792,13 +881,21 @@ export default {
       totalProducts: "Referencias",
       lowStock: "Stock bajo",
       expiring: "Próximos a caducar",
+      tableTitle: "Listado de productos",
+      tableLead: "Stock en tiempo real vinculado a ventas y comandas.",
+      tableSubject: "inventario",
       colProduct: "Producto",
       colSku: "SKU",
       colStock: "Stock",
       colStatus: "Estado",
       redirecting: "Abriendo inventario operativo…",
       realHint: "Activa el módulo inventario en tu vertical operativa.",
-      status: { ok: "OK", low: "Bajo mínimo", expiry: "Caduca pronto" }
+      status: { ok: "OK", low: "Bajo mínimo", expiry: "Caduca pronto" },
+      trends: {
+        total: "Catálogo completo",
+        low: "Requiere pedido",
+        expiring: "Revisar esta semana"
+      }
     },
     reports: {
       kicker: "Reportes",
@@ -808,8 +905,15 @@ export default {
       orders: "Pedidos",
       avgTicket: "Ticket medio",
       chartTitle: "Evolución de ventas",
+      chartLead: "Comparativa mensual — índice de actividad comercial",
       chartAria: "Gráfico de barras de ventas mensuales",
-      realHint: "Los reportes en vivo se activan con tu plan Analytics."
+      periodLabel: "Últimos 5 meses",
+      realHint: "Los reportes en vivo se activan con tu plan Analytics.",
+      trends: {
+        revenue: "+12 % vs. mes anterior",
+        orders: "+9 % vs. mes anterior",
+        avgTicket: "+4 % vs. mes anterior"
+      }
     },
     hub: {
       ctaTitle: "🚀 Ver negocio demo",
@@ -870,7 +974,8 @@ export default {
         proveedores: { title: "Proveedores", badge: "2 entregas", role: "owner", extra: "Esta semana" }
       },
       allergenPublicLead: "Lo que ve el comensal al escanear el QR en la mesa.",
-      allergenQrHint: "Cartel público listo para imprimir o mostrar en pantalla."
+      allergenQrHint: "Cartel público listo para imprimir o mostrar en pantalla.",
+      comandasKicker: "Comandas, mesas y cobro · demo operativa"
     },
     peluqueria: {
       brand: "Tu salón",
@@ -992,8 +1097,8 @@ export default {
       "Recetas (Manu): Pizza — 1 prepizza con 1 kg harina, 600 ml agua, 25 g sal, 10 g levadura. Empanadas — 3 docenas con 1 kg cebolla, ½ kg morrón, 1 kg carne, 36 tapas, 4 huevos, ¼ frasco aceitunas. Pedido ejemplo → ~4 prepizzas y ~3 docenas.",
     leadDumpling:
       "Recetas Dumpling House: Gyozas (8 uds) — harina, pollo/cerdo/verduras, salsa de soja y sésamo. También noodles vegetal y rollitos. «Cargar pedido» repone insumos; plan demo ~4 tandas gyozas pollo, 2 de cerdo y 3 raciones noodles.",
-    leadFermina:
-      "Fermina Food: bites de bolsa (cheddar/jalapeños ~9 uds por porción de ~50; chicken ~11 de ~120) y choripán. Recetas consumen unidades del inventario.",
+    leadRestauranteDemo:
+      "Carta demo: bites (cheddar/jalapeños ~9 uds por porción de ~50; chicken ~11 de ~120) y choripán. Las recetas consumen unidades del inventario.",
     inventory: "Inventario actual",
     ingredient: "Insumo",
     stock: "Stock",

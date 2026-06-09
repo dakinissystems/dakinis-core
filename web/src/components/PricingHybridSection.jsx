@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { DAKINIS_CONTACT_EMAIL } from "../config/contact-urls.js";
+import { dakinisPersistSelectedPlan, dakinisPlanWhatsappUrl } from "../utils/planWhatsapp.js";
 import {
   dakinisBuildBosPlanCards,
   dakinisBosOverage,
@@ -43,7 +44,7 @@ export default function PricingHybridSection({
   showContact = true,
   sectionId = "precios"
 }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const showProjects = variant === "full";
 
   const bosPlans = useMemo(
@@ -143,7 +144,17 @@ export default function PricingHybridSection({
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <a href="#contact" className="btn btn-outline pricing-plan-card__cta">
+              <a
+                href={dakinisPlanWhatsappUrl({
+                  locale,
+                  t,
+                  plan: { name: plan.name, priceEur: plan.priceEur }
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline pricing-plan-card__cta"
+                onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
+              >
                 {t("pricing.planCta")}
               </a>
             </article>

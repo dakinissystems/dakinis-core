@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { DAKINIS_CRM_PIPELINE_STAGES } from "../../data/businessDemoContent.js";
+import BusinessDemoOptionsMenu from "./BusinessDemoOptionsMenu.jsx";
 
 export default function CrmPipelineBoard({ draggable = true }) {
   const { t } = useLocale();
@@ -56,7 +57,8 @@ export default function CrmPipelineBoard({ draggable = true }) {
                 draggable={draggable}
                 onDragStart={() => onDragStart(stage.id, name)}
               >
-                {name}
+                <span className="crm-pipeline__card-name">{name}</span>
+                <BusinessDemoOptionsMenu context="crm" subjectName={name} />
               </li>
             ))}
           </ul>

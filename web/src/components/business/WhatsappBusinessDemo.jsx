@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { DAKINIS_WHATSAPP_DEMO_THREADS } from "../../data/businessDemoContent.js";
+import BusinessDemoOptionsMenu from "./BusinessDemoOptionsMenu.jsx";
 
 export default function WhatsappBusinessDemo() {
   const { t } = useLocale();
@@ -30,7 +31,10 @@ export default function WhatsappBusinessDemo() {
       {thread ? (
         <div className="wa-business-demo__main">
           <section className="wa-business-demo__chat card">
-            <h4>{thread.name}</h4>
+            <header className="wa-business-demo__chat-head">
+              <h4>{thread.name}</h4>
+              <BusinessDemoOptionsMenu context="whatsapp" subjectName={thread.name} />
+            </header>
             <ul className="wa-business-demo__messages" role="list">
               {thread.messages.map((msg, i) => (
                 <li key={i} className={`wa-business-demo__msg wa-business-demo__msg--${msg.from}`}>
@@ -41,8 +45,13 @@ export default function WhatsappBusinessDemo() {
           </section>
 
           <aside className="wa-business-demo__client card">
-            <p className="kicker">{t("businessDemo.whatsapp.linkedClient")}</p>
-            <h4>{t("businessDemo.whatsapp.clientLabel")}</h4>
+            <header className="wa-business-demo__client-head">
+              <div>
+                <p className="kicker">{t("businessDemo.whatsapp.linkedClient")}</p>
+                <h4>{t("businessDemo.whatsapp.clientLabel")}</h4>
+              </div>
+              <BusinessDemoOptionsMenu context="whatsapp" subjectName={thread.linkedClient.name} />
+            </header>
             <p className="wa-business-demo__client-name">{thread.linkedClient.name}</p>
             <dl className="wa-business-demo__client-meta">
               <div>

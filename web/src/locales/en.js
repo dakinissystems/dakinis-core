@@ -458,6 +458,8 @@ export default {
       "One clear monthly price for daily operations. No paying module by module — pick the plan that fits your business today and grow when you need to.",
     includesTitle: "What's included",
     planCta: "I want this plan",
+    planWhatsappMessage:
+      "Hello, I'm interested in the {plan} plan for Dakinis One (€{price}/month). Can we discuss setup and timeline?",
     recommendedBadge: "Most popular",
     quotaWa: "{count} WhatsApp/month included",
     quotaAi: "{count} AI queries/month included",
@@ -749,7 +751,19 @@ export default {
       products: "Products",
       conversion: "Conversion",
       ctaPipeline: "View sales pipeline",
-      ctaWhatsapp: "Open WhatsApp"
+      ctaWhatsapp: "Open WhatsApp",
+      insightsTitle: "What matters today",
+      insights: [
+        "3 clients with no reply > 48 h — WhatsApp template ready",
+        "Low stock on 7 SKUs — review supplier order",
+        "Sales +12 % vs. last month — pipeline with 4 open proposals"
+      ],
+      trends: {
+        clients: "+8 % vs. last month",
+        sales: "+12 % vs. last month",
+        products: "523 active SKUs",
+        conversion: "+3 pts vs. quarter"
+      }
     },
     clients: {
       kicker: "Clients",
@@ -783,6 +797,81 @@ export default {
       totalSpent: "Total spent",
       phone: "Phone"
     },
+    options: {
+      moreAria: "More options",
+      defaultSubject: "this client",
+      whatsapp: {
+        clientHistory: "View CRM history",
+        paymentLink: "Generate payment link",
+        followUpTemplate: "Send follow-up template",
+        assignAgent: "Assign to my team",
+        addCampaign: "Add to campaign"
+      },
+      crm: {
+        clientProfile: "View client profile",
+        whatsappProposal: "Send proposal via WhatsApp",
+        scheduleFollowUp: "Schedule follow-up",
+        markWon: "Mark as won"
+      },
+      inventory: {
+        reorderSupplier: "Order from supplier",
+        adjustStock: "Adjust stock",
+        linkToSale: "Link to sale",
+        setAlert: "Minimum alert",
+        exportList: "Export list"
+      },
+      reports: {
+        exportPdf: "Export PDF report",
+        shareWhatsapp: "Share via WhatsApp",
+        comparePeriod: "Compare period",
+        scheduleReport: "Schedule monthly send",
+        drillDown: "View product detail"
+      },
+      dashboard: {
+        exportSummary: "Export summary",
+        shareTeam: "Share with team",
+        setGoals: "Monthly goals"
+      },
+      feedback: {
+        whatsapp: {
+          clientHistory:
+            "{name}'s history: purchases, appointments and chats in one place — no more spreadsheet hunting.",
+          paymentLink: "Payment link generated for {name}. Send on WhatsApp and close the sale instantly.",
+          followUpTemplate:
+            "Template «Shall I reserve units?» ready for {name}. One tap and follow-up is automated.",
+          assignAgent:
+            "{name}'s chat assigned to your team. Everyone sees the same client context and history.",
+          addCampaign:
+            "{name} added to «Repeat customers» campaign with an automatic reminder in 7 days."
+        },
+        crm: {
+          clientProfile: "{name}'s profile: contact, purchases, notes and linked WhatsApp conversations.",
+          whatsappProposal:
+            "Proposal sent to {name} on WhatsApp with acceptance link — tracked in your pipeline.",
+          scheduleFollowUp: "Reminder set for {name} on Friday 10:00. No lead slips through the cracks.",
+          markWon: "{name}'s opportunity marked as won. Sale recorded in this month's reports."
+        },
+        inventory: {
+          reorderSupplier: "Supplier order started for {name}. Stock updates when goods arrive.",
+          adjustStock: "{name} stock adjusted. Change logged in product history.",
+          linkToSale: "{name} linked to active sale — inventory and ticket always aligned.",
+          setAlert: "Minimum alert set for {name}. We warn you before you run out.",
+          exportList: "Inventory list exported. Share with your team or accountant."
+        },
+        reports: {
+          exportPdf: "PDF report for {name} ready to send to the owner or advisor.",
+          shareWhatsapp: "Sales summary shared on WhatsApp — decisions without waiting for a desktop.",
+          comparePeriod: "Comparison ready: +12 % revenue and +9 % orders vs. last month.",
+          scheduleReport: "Monthly send scheduled. You'll get the report on the 1st automatically.",
+          drillDown: "Product detail opened — see which SKUs drive growth."
+        },
+        dashboard: {
+          exportSummary: "Executive summary for {name} exported — KPIs, alerts and pipeline in one PDF.",
+          shareTeam: "Panel shared with your team. Everyone sees the same numbers in real time.",
+          setGoals: "Monthly goals saved for {name}. Automatic tracking in reports."
+        }
+      }
+    },
     inventory: {
       kicker: "Inventory",
       title: "Products and stock",
@@ -790,13 +879,21 @@ export default {
       totalProducts: "SKUs",
       lowStock: "Low stock",
       expiring: "Expiring soon",
+      tableTitle: "Product list",
+      tableLead: "Real-time stock linked to sales and orders.",
+      tableSubject: "inventory",
       colProduct: "Product",
       colSku: "SKU",
       colStock: "Stock",
       colStatus: "Status",
       redirecting: "Opening operational inventory…",
       realHint: "Enable inventory in your operational vertical.",
-      status: { ok: "OK", low: "Below minimum", expiry: "Expiring soon" }
+      status: { ok: "OK", low: "Below minimum", expiry: "Expiring soon" },
+      trends: {
+        total: "Full catalogue",
+        low: "Reorder needed",
+        expiring: "Review this week"
+      }
     },
     reports: {
       kicker: "Reports",
@@ -806,8 +903,15 @@ export default {
       orders: "Orders",
       avgTicket: "Avg. ticket",
       chartTitle: "Sales trend",
+      chartLead: "Monthly comparison — commercial activity index",
       chartAria: "Monthly sales bar chart",
-      realHint: "Live reports unlock with your Analytics plan."
+      periodLabel: "Last 5 months",
+      realHint: "Live reports unlock with your Analytics plan.",
+      trends: {
+        revenue: "+12 % vs. last month",
+        orders: "+9 % vs. last month",
+        avgTicket: "+4 % vs. last month"
+      }
     },
     hub: {
       ctaTitle: "🚀 View business demo",
@@ -868,7 +972,8 @@ export default {
         proveedores: { title: "Suppliers", badge: "2 deliveries", role: "owner", extra: "This week" }
       },
       allergenPublicLead: "What diners see when scanning the table QR.",
-      allergenQrHint: "Public poster ready to print or display."
+      allergenQrHint: "Public poster ready to print or display.",
+      comandasKicker: "Orders, tables & checkout · operational demo"
     },
     peluqueria: {
       brand: "Your salon",
@@ -1006,8 +1111,8 @@ export default {
       "Recipes (Manu): Pizza — 1 base with 1 kg flour, 600 ml water, 25 g salt, 10 g yeast. Empanadas — 3 dozen with 1 kg onion, ½ kg pepper, 1 kg meat, 36 shells, 4 eggs, ¼ jar olives. Sample order → ~4 bases and ~3 dozen.",
     leadDumpling:
       "Dumpling House recipes: Gyozas (8 pcs) — flour, chicken/pork/veg, soy sauce and sesame. Also veg noodles and spring rolls. «Load order» restocks; demo plan ~4 chicken gyoza batches, 2 pork and 3 noodle portions.",
-    leadFermina:
-      "Fermina Food: bag bites (cheddar/jalapeño ~9 pcs per portion from ~50; chicken ~11 from ~120) and choripán. Recipes consume inventory units.",
+    leadRestauranteDemo:
+      "Demo menu: bag bites (cheddar/jalapeño ~9 pcs per ~50 portion; chicken ~11 from ~120) and choripán. Recipes consume inventory units.",
     inventory: "Current inventory",
     ingredient: "Ingredient",
     stock: "Stock",
