@@ -28,6 +28,7 @@ export default {
     lead: "Plans from €29/month: CRM, scheduling, inventory and WhatsApp with included quotas and predictable overage.",
     login: "Sign in",
     openHub: "Open Hub",
+    seeAllDemos: "See all demos",
     requestDemo: "Request a demo",
     corporateSite: "Corporate site",
     whatsappPitch:
@@ -36,7 +37,7 @@ export default {
     modules: ["CRM", "Communications", "Inventory", "Restaurant", "Reservations", "Invoicing (roadmap)"],
     bullet1: "Multi-tenant with isolated data per business",
     bullet2: "Verticals: clinic, restaurant, real estate, salon",
-    bullet3: "Enter via the Hub and open StreamAutomator or AkoeNet when you need them",
+    bullet3: "Scale with modules: CRM, WhatsApp, inventory and reports in one place",
     demosTitle: "Try your sector live",
     demosLead: "Interactive demos with full flow: booking, sale, inventory and executive dashboard.",
     valueKicker: "Why not Excel",
@@ -285,20 +286,21 @@ export default {
     kicker: "Commercial demo · {label}",
     title: "How you'd run your {label} with Dakinis One",
     lead: "Explore the interactive panel and see the return before you sign up.",
-    panelKicker: "Interactive panel",
-    panelTitle: "Daily operations — {label}"
+    panelKicker: "Your business operations",
+    panelTitle: "Your day-to-day — {label}",
+    openCommercialPanel: "Open commercial panel",
+    tryInteractive: "Try live operations"
   },
   hub: {
-    title: "Dakinis Hub",
-    lead: "Application center for Dakinis One and the ecosystem marketplace.",
+    title: "Your workspace",
+    lead: "Access clients, sales, inventory and connected apps for your business.",
     login: "Sign in",
     requestDemo: "Request a demo",
     sessionHello: "Signed in: {email} · business {business}",
-    applicationsTitle: "Applications",
-    applicationsLead:
-      "Dakinis One modules: CRM, communications, reservations and inventory. Some need Growth or Pro.",
-    marketplaceTitle: "Marketplace",
-    marketplaceLead: "Connected products with SSO: StreamAutomator, AkoeNet and custom development.",
+    applicationsTitle: "Business modules",
+    applicationsLead: "Clients, WhatsApp, inventory and more. Enable only what you need.",
+    marketplaceTitle: "Connected apps",
+    marketplaceLead: "Dakinis ecosystem tools you can link to your account.",
     productsTitle: "Ecosystem products",
     oneModulesTitle: "Dakinis One — modules",
     oneModulesLead: "Daily operations. Some modules need a Growth or Pro plan.",
@@ -322,6 +324,9 @@ export default {
       statApplications: "Applications: {count}",
       statMarketplace: "Marketplace: {count}",
       statTenant: "Tenant: {tenant}",
+      statModules: "Active modules: {count}",
+      statIntegrations: "Connected apps: {count}",
+      statBusiness: "Business: {name}",
       tenantUnknown: "—",
       quickActions: "Quick actions",
       actionNewClient: "New customer",
@@ -391,21 +396,24 @@ export default {
     demoTenant: {
       ribbonTitle: "You’re on a demo account",
       ribbonLead:
-        "Use the mockup for an app-style panel preview, then scroll for tenant-persisted data. Password: demo123.",
+        "Explore the commercial dashboard with clients, sales, inventory and WhatsApp preloaded.",
       toPanel: "Open my functional panel",
       toMockup: "Open interactive mockup",
       benefitIntro: "Why try your vertical here:"
     }
   },
   systemDemo: {
-    badge: "Demo (seed) account",
+    badge: "Commercial demo",
     accountLine: "Signed in as: {email}",
+    businessLine: "Business: {name}",
     passwordLabel: "Password for this demo",
     benefitsTitle: "What to explore in this vertical",
     mockupPrimary: "Open panel mockup — {label}",
     toHome: "Back to home",
     functionalHint:
-      "Below: forms and tables with real per-tenant persistence (SQLite). The mockup is interactive layout only.",
+      "Below you can try daily operations for this sector with sample data.",
+    dashboardPrimary: "Open my commercial panel",
+    operationalPanel: "{label} operations",
     verticals: {
       clinica: {
         headline: "Clinic demo: fewer no-shows, more repeat visits",
@@ -608,8 +616,10 @@ export default {
     }
   },
   login: {
-    kicker: "Multi-tenant SaaS access",
+    kicker: "Sign in to your business",
     title: "Sign in",
+    businessLead: "Manage clients, sales and inventory from one panel.",
+    tryWithoutAccount: "No account? Try the commercial demo with zero setup:",
     demoPassword: "Demo password for all tenants:",
     demoAccounts: "Demo accounts",
     tenants: {
@@ -693,10 +703,10 @@ export default {
     allergies: "Allergy poster · Dakinis One"
   },
   vistaMockup: {
-    kicker: "Preview · layout only",
-    title: "App-style panel — {label}",
+    kicker: "Preview",
+    title: "What your {label} would look like",
     lead:
-      "Visual example of how the app could look for this business type; no data persistence or API calls.",
+      "Visual layout for this business type. For live data, use the commercial panel.",
     home: "Home",
     platformAdmin: "Platform administration",
     goDemoSystem: "Open demo system",
@@ -706,11 +716,209 @@ export default {
     aria: "App navigation",
     app: "App",
     crm: "CRM",
+    clients: "👥 Clients",
+    inventory: "📦 Inventory",
+    sales: "💰 Sales",
+    reports: "📊 Reports",
     messages: "Messages",
     communications: "Communications",
-    whatsapp: "WhatsApp",
+    whatsapp: "💬 WhatsApp",
     hub: "Hub",
     settings: "Settings"
+  },
+  businessDemo: {
+    hero: {
+      title: "Your whole business in one place",
+      lead: "Clients, sales, inventory, reports and WhatsApp connected — nothing to configure.",
+      tiles: {
+        clients: "Clients",
+        inventory: "Inventory",
+        sales: "Sales",
+        reports: "Reports",
+        whatsapp: "WhatsApp"
+      }
+    },
+    dashboard: {
+      kicker: "Business overview",
+      greeting: "Hello, {name}",
+      lead: "What the owner checks first before running the day.",
+      fallbackBusiness: "Your business",
+      activeClients: "Active clients",
+      monthSales: "Sales this month",
+      products: "Products",
+      conversion: "Conversion",
+      ctaPipeline: "View sales pipeline",
+      ctaWhatsapp: "Open WhatsApp"
+    },
+    clients: {
+      kicker: "Clients",
+      title: "Your client base",
+      lead: "History, purchases and follow-up in one place."
+    },
+    sales: {
+      kicker: "Sales",
+      title: "Sales pipeline",
+      lead: "Drag opportunities across stages and close faster.",
+      realHint: "Connect live CRM to see your real pipeline."
+    },
+    pipeline: {
+      aria: "Sales pipeline",
+      sectionTitle: "Opportunities by stage",
+      lead: "New lead",
+      contacted: "Contacted",
+      proposal: "Proposal",
+      client: "Client"
+    },
+    whatsapp: {
+      kicker: "WhatsApp",
+      title: "Client conversations",
+      pageLead: "Every chat linked to the client: history, last purchase and spend.",
+      lead: "Real messages with business context — not just a technical inbox.",
+      conversations: "Conversations",
+      linkedClient: "Linked client",
+      clientLabel: "Client",
+      lastPurchase: "Last purchase",
+      totalSpent: "Total spent",
+      phone: "Phone"
+    },
+    inventory: {
+      kicker: "Inventory",
+      title: "Products and stock",
+      lead: "Stock levels, low alerts and expiry tracking.",
+      totalProducts: "SKUs",
+      lowStock: "Low stock",
+      expiring: "Expiring soon",
+      colProduct: "Product",
+      colSku: "SKU",
+      colStock: "Stock",
+      colStatus: "Status",
+      redirecting: "Opening operational inventory…",
+      realHint: "Enable inventory in your operational vertical.",
+      status: { ok: "OK", low: "Below minimum", expiry: "Expiring soon" }
+    },
+    reports: {
+      kicker: "Reports",
+      title: "Business reports",
+      lead: "Sales, orders and monthly trend at a glance.",
+      revenue: "Revenue (30 d)",
+      orders: "Orders",
+      avgTicket: "Avg. ticket",
+      chartTitle: "Sales trend",
+      chartAria: "Monthly sales bar chart",
+      realHint: "Live reports unlock with your Analytics plan."
+    },
+    hub: {
+      ctaTitle: "🚀 View business demo",
+      ctaLead: "Open the commercial panel with clients, sales, inventory and reports preloaded.",
+      ctaButton: "Open commercial dashboard"
+    }
+  },
+  mockupPanels: {
+    demoBadge: "Demo view",
+    roles: {
+      owner: "Manager",
+      reception: "Reception",
+      waiter: "Floor",
+      kitchen: "Kitchen",
+      agent: "Sales"
+    },
+    clinica: {
+      brand: "Your clinic",
+      tabs: {
+        resumen: "Overview",
+        agenda: "Schedule",
+        pacientes: "Clients",
+        proveedores: "Inventory",
+        whatsapp: "WhatsApp",
+        ajustes: "Settings"
+      },
+      toolbar: {
+        resumen: { title: "Today at the clinic", badge: "18 appointments", role: "owner", extra: "3 rooms" },
+        agenda: { title: "Weekly schedule", badge: "Confirmed", role: "reception" },
+        pacientes: { title: "Clients", badge: "182 records", role: "owner" },
+        proveedores: { title: "Stock & suppliers", badge: "2 alerts", role: "owner" },
+        whatsapp: { title: "WhatsApp", badge: "Reminders on", role: "reception" },
+        ajustes: { title: "Business settings", badge: "Hours & branding", role: "owner" }
+      },
+      settingsNote: "Customize hours, logo and reminders when you activate your account."
+    },
+    restaurante: {
+      brand: "Your restaurant",
+      tabs: {
+        mapa: "Tables",
+        reservas: "Bookings",
+        espera: "Waitlist",
+        comandas: "Orders & pay",
+        clientes: "Guests",
+        alergenos: "Allergen poster",
+        proveedores: "Suppliers"
+      },
+      toolbar: {
+        mapa: { title: "Floor service", badge: "Terrace + dining", role: "waiter", extra: "52 covers" },
+        reservas: { title: "Today's bookings", badge: "Full list", role: "reception", extra: "52 covers" },
+        espera: { title: "Waitlist", badge: "3 groups", role: "reception", extra: "~22 min" },
+        comandas: { title: "Orders & payment", badge: "Live", role: "waiter", extra: "Cash close" },
+        clientes: { title: "Guest notes", badge: "2 allergy tables", role: "waiter" },
+        alergenos: { title: "Allergen poster", badge: "QR in dining room", role: "owner" },
+        proveedores: { title: "Suppliers", badge: "2 deliveries", role: "owner", extra: "This week" }
+      },
+      allergenPublicLead: "What diners see when scanning the table QR.",
+      allergenQrHint: "Public poster ready to print or display."
+    },
+    peluqueria: {
+      brand: "Your salon",
+      tabs: {
+        hoy: "Today",
+        estilistas: "Schedule",
+        web: "Online booking",
+        clientes: "Clients",
+        productos: "Products",
+        campanas: "WhatsApp"
+      },
+      toolbar: {
+        hoy: { title: "Today's overview", badge: "4 stylists", role: "reception" },
+        estilistas: { title: "Stylist schedule", badge: "No overlaps", role: "reception" },
+        web: { title: "Web bookings", badge: "Channel live", role: "owner" },
+        clientes: { title: "Clients", badge: "Active files", role: "reception" },
+        productos: { title: "Products & orders", badge: "Stock OK", role: "owner" },
+        campanas: { title: "WhatsApp campaigns", badge: "1 active", role: "owner" }
+      }
+    },
+    inmobiliaria: {
+      brand: "Your agency",
+      tabs: {
+        pipeline: "Sales",
+        visitas: "Viewings",
+        leads: "Opportunities",
+        propiedades: "Properties",
+        aliados: "Marketing",
+        informes: "Reports"
+      },
+      toolbar: {
+        pipeline: { title: "Sales pipeline", badge: "33 active", role: "agent" },
+        visitas: { title: "Scheduled viewings", badge: "This week", role: "agent" },
+        leads: { title: "Opportunities", badge: "By source", role: "agent" },
+        propiedades: { title: "Properties", badge: "In portfolio", role: "agent" },
+        aliados: { title: "Marketing & partners", badge: "Campaigns", role: "owner" },
+        informes: { title: "Reports", badge: "Monthly", role: "owner" }
+      }
+    }
+  },
+  restaurant: {
+    businessKicker: "Restaurant",
+    businessTitle: "Floor, kitchen and inventory control",
+    businessLead: "Tables, orders, payments and stock in one flow — no technical screens.",
+    businessKpis: [
+      { label: "Sales today", value: "€1,840" },
+      { label: "Tables occupied", value: "12/18" },
+      { label: "Kitchen orders", value: "7" }
+    ],
+    roleNav: "What do you want to do?",
+    roleWaiter: "🍽️ Floor & tables",
+    roleKitchen: "👨‍🍳 Kitchen",
+    roleAdmin: "⚙️ Management",
+    adminTitle: "Restaurant setup",
+    adminLead: "Menu, floor plan, suppliers and inventory."
   },
   allergens: {
     panelTitle: "Allergens and intolerances (menu / kitchen)",
@@ -988,11 +1196,13 @@ export default {
     kitchenQueue: "Kitchen queue"
   },
   system: {
+    businessKicker: "Business: {name}",
     tenant: "Tenant: {slug}",
     resultsTitle: "Results you want in {label}",
     home: "Home",
     backToSystems: "Back to systems",
     openRealApp: "Open real app (/api/v1)",
+    openDashboard: "Go to commercial panel",
     mockupPreview: "Panel preview (mockup)",
     sessionLocked:
       "Active session: you cannot switch vertical; only your business panel ({label}).",
@@ -1011,8 +1221,10 @@ export default {
     colRef: "Ref.",
     colNotes: "Notes",
     dataLoad: "Data entry (persistence per tenant)",
+    dataSectionDemo: "Sample records",
     recordsError: "Records API: {error}. Showing local or mixed data.",
-    recordsSynced: "Latest data saved in your demo space and ready on screen.",
+    recordsErrorFriendly: "We could not sync right now. You can keep using sample data.",
+    recordsSynced: "Data saved and ready to use.",
     saveEntity: "Save {entity}",
     listing: "Listing from database",
     noRecords: "No records yet for this tenant.",
@@ -1081,28 +1293,36 @@ export default {
     }
   },
   app: {
-    loginRequired: "You must sign in to use the real JWT flow.",
+    loginRequired: "Sign in to view your business panel.",
     goLogin: "Go to login",
-    apiError: "API call failed",
+    apiError: "Could not complete the action. Please try again.",
     dashboard: {
-      title: "Private dashboard",
-      kicker: "JWT tenant: {slug}",
-      heading: "Dashboard API v1",
-      lead: "Quick tests for appointments and WhatsApp using Authorization Bearer.",
-      appointments: "Appointments",
-      slots: "Slots",
-      canSchedule: "Can schedule",
-      link: "Link",
+      title: "Business overview",
+      kicker: "{name}",
+      heading: "Control panel",
+      lead: "Sales, clients and important alerts at a glance.",
+      healthScore: "Business health",
+      growthScore: "Growth",
+      finance30d: "Revenue (30 days)",
+      margin: "Margin {pct}%",
+      benchmark: "Sector comparison",
+      recommendations: "Suggestions to improve",
+      aiAssistant: "Dakinis assistant",
+      appointments: "Bookings",
+      slots: "Time slots",
+      canSchedule: "Check availability",
+      link: "Booking link",
       whatsapp: "WhatsApp",
-      rules: "Rules"
+      rules: "Automations"
     },
     crm: {
       title: "CRM",
       heading: "Contacts & activities",
       lead: "Business core: the customer links reservations, orders, billing and WhatsApp.",
       leadPersisted:
-        "Contacts and activities stored per tenant. Inbound WhatsApp messages auto-link to the customer record.",
-      loginLead: "Sign in to use the real tenant via JWT.",
+        "Save contacts, notes and follow-ups. WhatsApp messages link automatically to each client.",
+      loginLead: "Sign in to manage your clients.",
+      notReadyFriendly: "The clients module is being activated. Try again shortly or contact support.",
       client: "Client",
       segment: "Segment",
       timeline: "Timeline",
@@ -1204,10 +1424,10 @@ export default {
     },
     whatsapp: {
       title: "WhatsApp",
-      kicker: "Hub · WhatsApp",
+      kicker: "Messaging",
       heading: "WhatsApp Business",
-      lead: "Conversations, contacts, templates, automations and AI in one module.",
-      loginLead: "Sign in to connect your tenant to WhatsApp Business API.",
+      lead: "Talk to clients and keep history linked to each profile.",
+      loginLead: "Sign in to view your WhatsApp conversations.",
       navAria: "WhatsApp sections",
       nav: {
         conversations: "Conversations",
@@ -1216,7 +1436,7 @@ export default {
         automations: "Automations",
         ai: "AI"
       },
-      conversationsLead: "Messages stored in PostgreSQL via webhook and API sends.",
+      conversationsLead: "All your client conversations in one place.",
       contactsLead: "Contacts from inbound messages or manual registration.",
       templatesLead: "Message previews; real sends use Meta-approved templates.",
       automationsLead: "Business rules tied to events (booking, orders, CRM).",
@@ -1227,7 +1447,7 @@ export default {
         "CRM ticket from inbound message"
       ],
       threadList: "Conversations",
-      noThreads: "No conversations yet. Configure the webhook and send or receive a message.",
+      noThreads: "No conversations yet. When a client writes, it will appear here.",
       selectThread: "Select a conversation",
       noContacts: "No contacts yet. They appear with the first inbound message.",
       unnamed: "Unnamed",
@@ -1244,7 +1464,11 @@ export default {
     },
     settings: {
       title: "Settings",
-      lead: "Active session and real tenant context.",
+      lead: "Your business configuration, plan and team.",
+      demoLead: "Advanced settings are simplified in the commercial demo.",
+      demoHint: "To customize logo, hours and billing, request a production account.",
+      businessName: "Business:",
+      plan: "Plan:",
       user: "User:",
       role: "Role:",
       tenant: "Tenant:",

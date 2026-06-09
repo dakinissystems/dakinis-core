@@ -1,34 +1,11 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import MockupToolbar from "./MockupToolbar.jsx";
 import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
+import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisMockupTabList, dakinisMockupToolbar } from "./mockupPanelHelpers.js";
 
-const TABS = [
-  { id: "pipeline", label: "Pipeline" },
-  { id: "visitas", label: "Visitas" },
-  { id: "leads", label: "Leads y fuentes" },
-  { id: "propiedades", label: "Propiedades" },
-  { id: "aliados", label: "Aliados / marketing" },
-  { id: "informes", label: "Informes" }
-];
-
-function Toolbar({ title, badge, user, extra }) {
-  return (
-    <div className="mockup-toolbar">
-      <div>
-        <strong>{title}</strong>
-        {badge ? (
-          <span className="mockup-badge" style={{ marginLeft: "0.75rem" }}>
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-        <span className="mockup-user-pill">{user}</span>
-        {extra}
-      </div>
-    </div>
-  );
-}
+const TAB_IDS = ["pipeline", "visitas", "leads", "propiedades", "aliados", "informes"];
 
 const COLUMNAS = [
   { name: "Nuevo", n: 9, c: "rgba(45,212,191,0.12)" },
@@ -225,39 +202,32 @@ function PanelInformes() {
         <span>Pipeline valor estimado</span>
       </div>
       <p className="lead" style={{ fontSize: "0.85rem", marginTop: "1rem", marginBottom: 0 }}>
-        En producción se generarían CSV/PDF; aquí solo maquetación.
+        Exporta a Excel o PDF cuando actives tu cuenta.
       </p>
     </article>
   );
 }
 
-const TOOLBAR = {
-  pipeline: { title: "Embudo comercial", badge: "Zona norte · equipo A" },
-  visitas: { title: "Visitas", badge: "Agenda comercial" },
-  leads: { title: "Leads y fuentes", badge: "Atribución" },
-  propiedades: { title: "Propiedades", badge: "Cartera" },
-  aliados: { title: "Aliados y marketing", badge: "Campañas" },
-  informes: { title: "Informes", badge: "Exportación" }
-};
-
 export default function InmobiliariaPanelMockup() {
+  const { t } = useLocale();
   const [tab, setTab] = useState("pipeline");
-  const tb = TOOLBAR[tab];
+  const tabs = dakinisMockupTabList(t, "inmobiliaria", TAB_IDS);
+  const tb = dakinisMockupToolbar(t, "inmobiliaria", tab);
   const leadBtn =
     tab === "pipeline" ? (
       <button type="button" className="btn btn-outline" style={{ padding: "0.45rem 0.85rem", fontSize: "0.9rem" }}>
-        + Lead
+        + Oportunidad
       </button>
     ) : null;
 
   return (
     <div className="mockup-app">
       <aside className="mockup-sidebar">
-        <div className="mockup-sidebar-brand">Dakinis · Comercial</div>
-        <MockupSidebarNav tabs={TABS} activeId={tab} onSelect={setTab} />
+        <div className="mockup-sidebar-brand">{t("mockupPanels.inmobiliaria.brand")}</div>
+        <MockupSidebarNav tabs={tabs} activeId={tab} onSelect={setTab} />
       </aside>
       <div className="mockup-main">
-        <Toolbar title={tb.title} badge={tb.badge} user="María · agente" extra={leadBtn} />
+        <MockupToolbar title={tb.title} badge={tb.badge} roleKey={tb.roleKey} extra={tb.extra} action={leadBtn} />
         {tab === "pipeline" ? <PanelPipeline /> : null}
         {tab === "visitas" ? <PanelVisitas /> : null}
         {tab === "leads" ? <PanelLeads /> : null}

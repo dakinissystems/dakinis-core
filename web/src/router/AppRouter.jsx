@@ -27,6 +27,9 @@ import { DashboardPage } from "../app/dashboard/index.js";
 import { CrmPage } from "../app/crm/index.js";
 import { WhatsappHubPage } from "../app/whatsapp/index.js";
 import { SettingsPage } from "../app/settings/index.js";
+import { VentasPage } from "../app/ventas/index.js";
+import { InventarioPage } from "../app/inventario/index.js";
+import { ReportesPage } from "../app/reportes/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
@@ -123,6 +126,30 @@ function AppRoutes() {
         element={
           <AppGuard>
             <CrmPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/ventas"
+        element={
+          <AppGuard>
+            <VentasPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/inventario"
+        element={
+          <AppGuard>
+            <InventarioPage navigate={nav} />
+          </AppGuard>
+        }
+      />
+      <Route
+        path="/app/reportes"
+        element={
+          <AppGuard>
+            <ReportesPage navigate={nav} />
           </AppGuard>
         }
       />

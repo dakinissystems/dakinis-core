@@ -21,6 +21,7 @@ import RestaurantRoleNav, {
   dakinisWriteRestaurantRole
 } from "../components/RestaurantRoleNav.jsx";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
+import RestaurantBusinessIntro from "../components/business/RestaurantBusinessIntro.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
@@ -150,7 +151,11 @@ export default function SystemPage({ activeSystemKey, navigate }) {
   return (
     <section className="modules">
       <div className="container">
-        <p className="kicker">{t("system.tenant", { slug: tenantSlugForVertical })}</p>
+        <p className="kicker">
+          {showDemoWelcome
+            ? t("system.businessKicker", { name: session.business?.name || selectedSystem.label })
+            : t("system.tenant", { slug: tenantSlugForVertical })}
+        </p>
         <h2>{systemPageContent.pageTitle}</h2>
         <p className="lead">{systemPageContent.pageDescription}</p>
         {showDemoWelcome ? (
@@ -178,17 +183,10 @@ export default function SystemPage({ activeSystemKey, navigate }) {
               {hideVerticalSwitcher ? t("system.home") : t("system.backToSystems")}
             </button>
             {session?.token ? (
-              <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
-                {t("system.openRealApp")}
+              <button type="button" className="btn" onClick={() => navigate("/app/dashboard")}>
+                {t("system.openDashboard")}
               </button>
             ) : null}
-            <button
-              type="button"
-              className="btn"
-              onClick={() => navigate(`/vista/${encodeURIComponent(activeSystemKey)}`)}
-            >
-              {t("system.mockupPreview")}
-            </button>
           </div>
         ) : null}
         {!hideVerticalSwitcher ? (
@@ -317,6 +315,7 @@ export default function SystemPage({ activeSystemKey, navigate }) {
 
         {activeSystemKey === "restaurante" ? (
           <>
+            {showDemoWelcome || dakinisIsSeedDemoTenantSession(session) ? <RestaurantBusinessIntro /> : null}
             <RestaurantRoleNav
               role={restaurantRole}
               onRoleChange={(next) => {
@@ -351,15 +350,22 @@ export default function SystemPage({ activeSystemKey, navigate }) {
           </>
         ) : null}
 
-        <h3>{t("system.dataLoad")}</h3>
-        {recordsError ? (
-          <p className="lead" style={{ color: "#fdba74" }}>
-            {t("system.recordsError", { error: recordsError })}
-          </p>
-        ) : recordsSynced ? (
-          <p className="lead">{t("system.recordsSynced")}</p>
+        {activeSystemKey !== "restaurante" ? (
+          <>
+            <h3>{showDemoWelcome ? t("system.dataSectionDemo") : t("system.dataLoad")}</h3>
+            {recordsError ? (
+              <p className="lead" style={{ color: "#fdba74" }}>
+                {showDemoWelcome
+                  ? t("system.recordsErrorFriendly")
+                  : t("system.recordsError", { error: recordsError })}
+              </p>
+            ) : recordsSynced ? (
+              <p className="lead">{t("system.recordsSynced")}</p>
+            ) : null}
+          </>
         ) : null}
 
+        {activeSystemKey !== "restaurante" ? (
         <form className="mockup-form card" onSubmit={dakinisHandleMockSubmit}>
           {activeMockup.formFields.map((field) => (
             <label className="mockup-field" key={`${activeSystemKey}-${field.key}`}>
@@ -398,7 +404,10 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             {t("system.saveEntity", { entity: activeMockup.entityLabel })}
           </button>
         </form>
+        ) : null}
 
+        {activeSystemKey !== "restaurante" ? (
+        <>
         <h3>{t("system.listing")}</h3>
         <article className="card">
           {records.length === 0 ? (
@@ -428,13 +437,17 @@ export default function SystemPage({ activeSystemKey, navigate }) {
             </div>
           )}
         </article>
+        </>
+        ) : null}
 
+        {activeSystemKey !== "restaurante" ? (
         <TenantTeamSection
           session={session}
           apiSession={apiSession}
           tenantSlugForVertical={tenantSlugForVertical}
           activeSystemKey={activeSystemKey}
         />
+        ) : null}
 
         <h3>{t("system.includes")}</h3>
         <p className="lead">{t("system.includesLead")}</p>

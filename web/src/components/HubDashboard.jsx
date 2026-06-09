@@ -49,8 +49,7 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
   const name = dakinisGreetingName(session);
   const period = dakinisGreetingPeriod(locale);
   const greeting = t(`hub.dashboard.greeting.${period}`, { name: name || t("hub.dashboard.guestName") });
-  const tenantLabel =
-    session?.business?.name || session?.business?.slug || t("hub.dashboard.tenantUnknown");
+  const tenantLabel = session?.business?.name || t("hub.dashboard.tenantUnknown");
   const appCount = dakinisCountApplicationTiles(applicationTiles, session);
   const plan = dakinisNormalizeCommercialPlan(session?.business?.plan);
   const canWhatsApp = dakinisPlanHasModule(plan, "whatsapp");
@@ -92,9 +91,9 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
         <div>
           <h3 className="hub-dashboard__greeting">{greeting}</h3>
           <ul className="hub-dashboard__stats">
-            <li>{t("hub.dashboard.statApplications", { count: appCount })}</li>
-            <li>{t("hub.dashboard.statMarketplace", { count: marketplaceCount })}</li>
-            <li>{t("hub.dashboard.statTenant", { tenant: tenantLabel })}</li>
+            <li>{t("hub.dashboard.statModules", { count: appCount })}</li>
+            <li>{t("hub.dashboard.statIntegrations", { count: marketplaceCount })}</li>
+            <li>{t("hub.dashboard.statBusiness", { name: tenantLabel })}</li>
           </ul>
         </div>
       </div>

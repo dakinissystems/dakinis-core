@@ -4,8 +4,9 @@ import {
   dakinisWhatsappSend,
   dakinisWhatsappThreadMessages
 } from "../../services/whatsapp.js";
+import WhatsappBusinessDemo from "../../components/business/WhatsappBusinessDemo.jsx";
 
-export default function WhatsappConversationsTab({ t }) {
+export default function WhatsappConversationsTab({ t, demoMode = false }) {
   const [threads, setThreads] = useState([]);
   const [selectedPhone, setSelectedPhone] = useState("");
   const [messages, setMessages] = useState([]);
@@ -73,9 +74,18 @@ export default function WhatsappConversationsTab({ t }) {
     }
   }
 
+  if (demoMode && !loading && threads.length === 0) {
+    return (
+      <div className="wa-tab">
+        <p className="kpi-label">{t("businessDemo.whatsapp.lead")}</p>
+        <WhatsappBusinessDemo />
+      </div>
+    );
+  }
+
   return (
     <div className="wa-tab">
-      <p className="kpi-label">{t("app.whatsapp.conversationsLead")}</p>
+      <p className="kpi-label">{demoMode ? t("businessDemo.whatsapp.lead") : t("app.whatsapp.conversationsLead")}</p>
       {loading ? <p className="kpi-label">{t("app.whatsapp.loading")}</p> : null}
       <div className="wa-conv-layout">
         <aside className="wa-thread-list card">

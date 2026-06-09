@@ -30,7 +30,7 @@ export default function ProductHomePage() {
       return;
     }
     if (session.business?.type && session.business.type !== "platform") {
-      navigate("/hub", { replace: true });
+      navigate("/app/dashboard", { replace: true });
     }
   }, [session, navigate]);
 
@@ -68,11 +68,11 @@ export default function ProductHomePage() {
                 type="button"
                 className="btn btn-outline"
                 onClick={() => {
-                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.HUB_OPENED, { from: "product_home" });
-                  navigate("/hub");
+                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home_secondary" });
+                  navigate("/demo/clinica");
                 }}
               >
-                {t("productHome.openHub")}
+                {t("productHome.seeAllDemos")}
               </button>
             </div>
             <p className="hero-actions-secondary">

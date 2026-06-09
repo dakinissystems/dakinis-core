@@ -53,7 +53,8 @@ export default function LoginPage() {
       });
       return;
     }
-    navigate("/hub", { replace: true });
+    const isTenantUser = user?.role !== "platform_admin" && business?.type !== "platform";
+    navigate(isTenantUser ? "/app/dashboard" : "/hub", { replace: true });
     setNeedsTotp(false);
     setTotpCode("");
   }
@@ -133,34 +134,13 @@ export default function LoginPage() {
       <div className="container login-page__inner">
         <p className="kicker">{t("login.kicker")}</p>
         <h2 className="login-page__title">{t("login.title")}</h2>
-        <p className="lead login-page__lead">
-          {t("login.demoPassword")} <code className="config-box">demo123</code>
-        </p>
-        <details className="login-demo-details card">
-          <summary>{t("login.demoAccounts")}</summary>
-          <ul className="demo-tenant-list">
-          <li>
-            <code className="config-box">admin@dakinis-platform.local</code>
-            <span className="demo-tenant-label">{t("login.platformAdmin")}</span>
-          </li>
-          <li>
-            <code className="config-box">admin@clinica-demo.local</code>
-            <span className="demo-tenant-label">{t("login.tenants.clinic")}</span>
-          </li>
-          <li>
-            <code className="config-box">admin@peluqueria-demo.local</code>
-            <span className="demo-tenant-label">{t("login.tenants.barber")}</span>
-          </li>
-          <li>
-            <code className="config-box">admin@restaurante-demo.local</code>
-            <span className="demo-tenant-label">{t("login.tenants.restaurant")}</span>
-          </li>
-          <li>
-            <code className="config-box">admin@inmobiliaria-demo.local</code>
-            <span className="demo-tenant-label">{t("login.tenants.estate")}</span>
-          </li>
-          </ul>
-        </details>
+        <p className="lead login-page__lead">{t("login.businessLead")}</p>
+        <div className="login-demo-cta card">
+          <p className="kpi-label">{t("login.tryWithoutAccount")}</p>
+          <button type="button" className="btn" onClick={() => navigate("/demo/restaurante")}>
+            {t("commercial.tryDemo")}
+          </button>
+        </div>
         <form className="mockup-form card login-form" onSubmit={handleSubmit}>
           <label className="mockup-field">
             <span>{t("login.email")}</span>

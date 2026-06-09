@@ -8,6 +8,9 @@ import {
   dakinisCrmListContacts,
   dakinisCrmMeta
 } from "../../services/crm.js";
+import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
+import CrmPipelineBoard from "../../components/business/CrmPipelineBoard.jsx";
+import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 
 const DAKINIS_CRM_JOURNEY_KEYS = ["client", "booking", "order", "invoice", "whatsapp", "followUp"];
 const DAKINIS_ACTIVITY_TYPES = ["note", "call", "whatsapp", "email", "meeting", "booking", "order"];
@@ -139,41 +142,59 @@ export default function CrmPage({ navigate }) {
 
   const selected = contacts.find((c) => c.id === selectedId);
   const journeySteps = DAKINIS_CRM_JOURNEY_KEYS.map((key) => t(`app.crm.journey.${key}`));
+  const isDemo = dakinisIsBusinessDemoSession(session);
+  const isBusinessFacing = dakinisIsBusinessFacingSession(session);
 
   return (
-    <section className="modules">
+    <section className="modules business-app-page">
       <div className="container">
-        <p className="kicker">{t("app.crm.title")}</p>
-        <h2>{t("app.crm.heading")}</h2>
-        <p className="lead">{t("app.crm.leadPersisted")}</p>
+        {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
+        <p className="kicker">
+          {isBusinessFacing ? t("businessDemo.clients.kicker") : t("app.crm.title")}
+        </p>
+        <h2>{isBusinessFacing ? t("businessDemo.clients.title") : t("app.crm.heading")}</h2>
+        <p className="lead">
+          {isBusinessFacing ? t("businessDemo.clients.lead") : t("app.crm.leadPersisted")}
+        </p>
+
+        {isDemo ? (
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h3 style={{ marginTop: 0 }}>{t("businessDemo.pipeline.sectionTitle")}</h3>
+            <CrmPipelineBoard />
+          </div>
+        ) : null}
 
         {crmReady === false ? (
           <p className="lead" style={{ color: "#f97316" }}>
-            {t("app.crm.notReady")}
+            {isBusinessFacing ? t("app.crm.notReadyFriendly") : t("app.crm.notReady")}
           </p>
         ) : null}
 
-        <div className="crm-journey card" aria-label={t("app.crm.journeyAria")}>
-          {journeySteps.map((label, index) => (
-            <span key={DAKINIS_CRM_JOURNEY_KEYS[index]} className="crm-journey__step">
-              {label}
-              {index < journeySteps.length - 1 ? (
-                <span className="crm-journey__arrow" aria-hidden>
-                  →
-                </span>
-              ) : null}
-            </span>
-          ))}
-        </div>
+        {!isDemo ? (
+          <div className="crm-journey card" aria-label={t("app.crm.journeyAria")}>
+            {journeySteps.map((label, index) => (
+              <span key={DAKINIS_CRM_JOURNEY_KEYS[index]} className="crm-journey__step">
+                {label}
+                {index < journeySteps.length - 1 ? (
+                  <span className="crm-journey__arrow" aria-hidden>
+                    →
+                  </span>
+                ) : null}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
-        <div className="crm-quick-links">
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
-            {t("app.crm.linkCommunications")}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
-            {t("appNav.hub")}
-          </button>
-        </div>
+        {!isDemo ? (
+          <div className="crm-quick-links">
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
+              {t("app.crm.linkCommunications")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
+              {t("appNav.hub")}
+            </button>
+          </div>
+        ) : null}
 
         {error ? (
           <p className="lead" style={{ color: "#f97316" }}>

@@ -1,34 +1,11 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import MockupToolbar from "./MockupToolbar.jsx";
 import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
+import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisMockupTabList, dakinisMockupToolbar } from "./mockupPanelHelpers.js";
 
-const TABS = [
-  { id: "hoy", label: "Hoy" },
-  { id: "estilistas", label: "Agenda por estilista" },
-  { id: "web", label: "Reservas web" },
-  { id: "clientes", label: "Clientes y fichas" },
-  { id: "productos", label: "Productos / pedidos" },
-  { id: "campanas", label: "Campañas WhatsApp" }
-];
-
-function Toolbar({ title, badge, user, action }) {
-  return (
-    <div className="mockup-toolbar">
-      <div>
-        <strong>{title}</strong>
-        {badge ? (
-          <span className="mockup-badge" style={{ marginLeft: "0.75rem" }}>
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-        <span className="mockup-user-pill">{user}</span>
-        {action}
-      </div>
-    </div>
-  );
-}
+const TAB_IDS = ["hoy", "estilistas", "web", "clientes", "productos", "campanas"];
 
 function PanelHoy() {
   return (
@@ -232,18 +209,11 @@ function PanelCampanas() {
   );
 }
 
-const TOOLBAR = {
-  hoy: { title: "Agenda — viernes", badge: "Ocupación 89%" },
-  estilistas: { title: "Vista por estilista", badge: "4 columnas" },
-  web: { title: "Reservas desde web", badge: "3 pendientes" },
-  clientes: { title: "Clientes y fichas", badge: "CRM salón" },
-  productos: { title: "Productos y pedidos", badge: "Mayorista" },
-  campanas: { title: "Campañas WhatsApp", badge: "1 activa" }
-};
-
 export default function PeluqueriaPanelMockup() {
+  const { t } = useLocale();
   const [tab, setTab] = useState("hoy");
-  const tb = TOOLBAR[tab];
+  const tabs = dakinisMockupTabList(t, "peluqueria", TAB_IDS);
+  const tb = dakinisMockupToolbar(t, "peluqueria", tab);
   const quickBtn =
     tab === "hoy" ? (
       <button type="button" className="btn" style={{ padding: "0.45rem 0.85rem", fontSize: "0.9rem" }}>
@@ -254,11 +224,11 @@ export default function PeluqueriaPanelMockup() {
   return (
     <div className="mockup-app">
       <aside className="mockup-sidebar">
-        <div className="mockup-sidebar-brand">Dakinis · Salón</div>
-        <MockupSidebarNav tabs={TABS} activeId={tab} onSelect={setTab} />
+        <div className="mockup-sidebar-brand">{t("mockupPanels.peluqueria.brand")}</div>
+        <MockupSidebarNav tabs={tabs} activeId={tab} onSelect={setTab} />
       </aside>
       <div className="mockup-main">
-        <Toolbar title={tb.title} badge={tb.badge} user="Recepción" action={quickBtn} />
+        <MockupToolbar title={tb.title} badge={tb.badge} roleKey={tb.roleKey} extra={tb.extra} action={quickBtn} />
         {tab === "hoy" ? <PanelHoy /> : null}
         {tab === "estilistas" ? <PanelEstilistas /> : null}
         {tab === "web" ? <PanelWeb /> : null}

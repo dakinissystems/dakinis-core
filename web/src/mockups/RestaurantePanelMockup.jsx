@@ -18,16 +18,10 @@ import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog
 import { dakinisTableItemCount } from "../utils/restaurantFloorPlan.js";
 import { dakinisPlayKitchenBell } from "../utils/kitchenBell.js";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import MockupToolbar from "./MockupToolbar.jsx";
+import { dakinisMockupTabList, dakinisMockupToolbar } from "./mockupPanelHelpers.js";
 
-const TABS = [
-  { id: "mapa", label: "Mapa de mesas" },
-  { id: "reservas", label: "Reservas" },
-  { id: "espera", label: "Lista de espera" },
-  { id: "comandas", label: "Comandas" },
-  { id: "clientes", label: "Alergias por reserva" },
-  { id: "alergenos", label: "Cartel alérgenos" },
-  { id: "proveedores", label: "Proveedores" }
-];
+const TAB_IDS = ["mapa", "reservas", "espera", "comandas", "clientes", "alergenos", "proveedores"];
 
 /** Demo: mismos presentes que el seed del tenant restaurante-demo (gluten, huevos). */
 const MOCK_ALLERGEN_CHECKLIST = [
@@ -55,25 +49,6 @@ const MOCK_ALLERGEN_CHECKLIST = [
 ];
 
 const MOCK_PUBLIC_ALLERGEN_URL = "https://core.dakinissystems.com/alergenos/restaurante-demo";
-
-function Toolbar({ title, badge, user, extra }) {
-  return (
-    <div className="mockup-toolbar">
-      <div>
-        <strong>{title}</strong>
-        {badge ? (
-          <span className="mockup-badge" style={{ marginLeft: "0.75rem" }}>
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-        <span className="mockup-user-pill">{user}</span>
-        {extra ? <span className="mockup-badge">{extra}</span> : null}
-      </div>
-    </div>
-  );
-}
 
 function PanelMapa() {
   return (
@@ -1199,6 +1174,7 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
 }
 
 function PanelAlergenosCartel() {
+  const { t } = useLocale();
   const byCategory = useMemo(() => {
     const groups = new Map();
     for (const item of MOCK_ALLERGEN_CHECKLIST) {
@@ -1260,28 +1236,28 @@ function PanelAlergenosCartel() {
             Guardar y actualizar QR
           </button>
           <span className="mockup-badge" style={{ marginLeft: "0.5rem" }}>
-            Vista mockup
+            {t("mockupPanels.demoBadge")}
           </span>
         </div>
 
         <div className="allergen-panel__qr">
-          <img src={qrUrl} width={140} height={140} alt="QR alergias (demo)" />
+          <img src={qrUrl} width={140} height={140} alt="QR alergias" />
           <div>
-            <a href={MOCK_PUBLIC_ALLERGEN_URL} target="_blank" rel="noreferrer">
-              {MOCK_PUBLIC_ALLERGEN_URL}
-            </a>
-            <p className="kpi-label">Vista pública: solo alérgenos marcados «Sí hay»</p>
+            <p className="lead" style={{ fontSize: "0.9rem", margin: 0 }}>
+              {t("mockupPanels.restaurante.allergenQrHint")}
+            </p>
+            <p className="kpi-label">Solo alérgenos marcados «Sí hay»</p>
           </div>
         </div>
       </article>
 
       <article className="card" style={{ marginTop: "1rem" }}>
-        <h3 style={{ marginTop: 0 }}>Vista cliente (QR / cartel)</h3>
+        <h3 style={{ marginTop: 0 }}>Vista del comensal</h3>
         <p className="lead" style={{ fontSize: "0.9rem" }}>
-          Lo que ve el comensal al escanear el QR — sin login:
+          {t("mockupPanels.restaurante.allergenPublicLead")}
         </p>
         <p className="kicker" style={{ marginBottom: "0.5rem" }}>
-          Restaurante demo · Manu
+          Carta de alérgenos
         </p>
         <AllergenPublicTable
           allergens={presentOnly}
@@ -1345,30 +1321,22 @@ function PanelProveedores() {
   );
 }
 
-const TOOLBAR = {
-  mapa: { title: "Servicio noche", badge: "Terraza + interior", extra: "52 cubiertos previstos" },
-  reservas: { title: "Reservas", badge: "Lista completa", extra: "52 cubiertos previstos" },
-  espera: { title: "Lista de espera", badge: "3 grupos", extra: "Tiempo medio 22 min" },
-  comandas: { title: "Comandas y facturación", badge: "Fermina Food", extra: "Demo · cierre caja" },
-  clientes: { title: "Alergias por reserva", badge: "2 mesas con nota", extra: "52 cubiertos previstos" },
-  alergenos: { title: "Cartel alérgenos", badge: "2 presentes en carta", extra: "QR cartel sala" },
-  proveedores: { title: "Proveedores", badge: "2 entregas", extra: "Semana actual" }
-};
-
 export default function RestaurantePanelMockup() {
+  const { t } = useLocale();
   const [tab, setTab] = useState("mapa");
   const [panelRole, setPanelRole] = useState(dakinisReadRestaurantRole);
-  const visibleTabs = TABS.filter((item) => panelRole === "admin" || item.id !== "proveedores");
-  const tb = TOOLBAR[tab] || TOOLBAR.comandas;
+  const tabs = dakinisMockupTabList(t, "restaurante", TAB_IDS);
+  const visibleTabs = tabs.filter((item) => panelRole === "admin" || item.id !== "proveedores");
+  const tb = dakinisMockupToolbar(t, "restaurante", tab);
 
   return (
     <div className="mockup-app">
       <aside className="mockup-sidebar">
-        <div className="mockup-sidebar-brand">Dakinis · Sala</div>
+        <div className="mockup-sidebar-brand">{t("mockupPanels.restaurante.brand")}</div>
         <MockupSidebarNav tabs={visibleTabs} activeId={tab} onSelect={setTab} />
       </aside>
       <div className="mockup-main">
-        <Toolbar title={tb.title} badge={tb.badge} user="Maître" extra={tb.extra} />
+        <MockupToolbar title={tb.title} badge={tb.badge} roleKey={tb.roleKey} extra={tb.extra} />
         <RestaurantRoleNav
           role={panelRole}
           onRoleChange={(next) => {

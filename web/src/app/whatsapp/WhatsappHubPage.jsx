@@ -6,6 +6,8 @@ import WhatsappContactsTab from "./WhatsappContactsTab.jsx";
 import WhatsappTemplatesTab from "./WhatsappTemplatesTab.jsx";
 import WhatsappAutomationsTab from "./WhatsappAutomationsTab.jsx";
 import WhatsappAiTab from "./WhatsappAiTab.jsx";
+import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
+import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 
 const DAKINIS_WA_TABS = [
   { path: "/app/whatsapp/conversations", key: "conversations" },
@@ -20,6 +22,11 @@ export default function WhatsappHubPage({ navigate }) {
   const { session } = useDakinisSession();
   const location = useLocation();
   const businessName = session?.business?.name || "Dakinis";
+  const isDemo = dakinisIsBusinessDemoSession(session);
+  const isBusinessFacing = dakinisIsBusinessFacingSession(session);
+  const visibleTabs = isDemo
+    ? DAKINIS_WA_TABS.filter((tab) => tab.key === "conversations" || tab.key === "contacts")
+    : DAKINIS_WA_TABS;
 
   const activeTab =
     DAKINIS_WA_TABS.find((tab) => location.pathname.startsWith(tab.path))?.key || "conversations";
@@ -39,14 +46,15 @@ export default function WhatsappHubPage({ navigate }) {
   }
 
   return (
-    <section className="modules comm-page wa-hub">
+    <section className="modules comm-page wa-hub business-app-page">
       <div className="container">
-        <p className="kicker">{t("app.whatsapp.kicker")}</p>
-        <h2>{t("app.whatsapp.heading")}</h2>
-        <p className="lead">{t("app.whatsapp.lead")}</p>
+        {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
+        <p className="kicker">{isBusinessFacing ? t("businessDemo.whatsapp.kicker") : t("app.whatsapp.kicker")}</p>
+        <h2>{isBusinessFacing ? t("businessDemo.whatsapp.title") : t("app.whatsapp.heading")}</h2>
+        <p className="lead">{isBusinessFacing ? t("businessDemo.whatsapp.pageLead") : t("app.whatsapp.lead")}</p>
 
         <nav className="wa-subnav" aria-label={t("app.whatsapp.navAria")}>
-          {DAKINIS_WA_TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
@@ -59,7 +67,7 @@ export default function WhatsappHubPage({ navigate }) {
         </nav>
 
         <div className="wa-tab-panel card" style={{ marginTop: "1.25rem" }}>
-          {activeTab === "conversations" ? <WhatsappConversationsTab t={t} /> : null}
+          {activeTab === "conversations" ? <WhatsappConversationsTab t={t} demoMode={isDemo} /> : null}
           {activeTab === "contacts" ? <WhatsappContactsTab t={t} /> : null}
           {activeTab === "templates" ? (
             <WhatsappTemplatesTab t={t} businessName={businessName} />
@@ -75,14 +83,16 @@ export default function WhatsappHubPage({ navigate }) {
           </button>
         </p>
 
-        <div className="system-page-actions" style={{ marginTop: "1.25rem" }}>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/app/crm")}>
-            {t("app.crm.title")}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
-            {t("appNav.hub")}
-          </button>
-        </div>
+        {!isDemo ? (
+          <div className="system-page-actions" style={{ marginTop: "1.25rem" }}>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/crm")}>
+              {t("app.crm.title")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
+              {t("appNav.hub")}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

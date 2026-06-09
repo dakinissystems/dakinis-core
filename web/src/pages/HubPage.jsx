@@ -17,6 +17,7 @@ import { company } from "@dakinis/shared-brand";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { dakinisOpenEcosystemProduct } from "../utils/ecosystemSso.js";
 import HubDashboard from "../components/HubDashboard.jsx";
+import { dakinisIsBusinessDemoSession } from "../utils/businessDemoMode.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -61,6 +62,12 @@ export default function HubPage() {
       dakinisPersistEcosystemSession(session);
     }
   }, [session?.token]);
+
+  useEffect(() => {
+    if (dakinisIsBusinessDemoSession(session)) {
+      navigate("/app/dashboard", { replace: true });
+    }
+  }, [session, navigate]);
 
   const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
 
@@ -141,6 +148,15 @@ export default function HubPage() {
           </div>
         ) : (
           <>
+            {dakinisIsBusinessDemoSession(session) ? (
+              <div className="hub-demo-commercial-cta card" style={{ marginBottom: "1.5rem" }}>
+                <h3 style={{ marginTop: 0 }}>{t("businessDemo.hub.ctaTitle")}</h3>
+                <p className="lead">{t("businessDemo.hub.ctaLead")}</p>
+                <button type="button" className="btn btn-lg" onClick={() => navigate("/app/dashboard")}>
+                  {t("businessDemo.hub.ctaButton")}
+                </button>
+              </div>
+            ) : null}
             <HubDashboard
               session={session}
               applicationTiles={oneModules}

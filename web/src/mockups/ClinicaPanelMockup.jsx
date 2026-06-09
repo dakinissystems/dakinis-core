@@ -1,34 +1,11 @@
 import { useState } from "react";
 import MockupSidebarNav from "./MockupSidebarNav.jsx";
+import MockupToolbar from "./MockupToolbar.jsx";
 import ExecutiveDashboardPanel from "../components/commercial/ExecutiveDashboardPanel.jsx";
+import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisMockupTabList, dakinisMockupToolbar } from "./mockupPanelHelpers.js";
 
-const TABS = [
-  { id: "resumen", label: "Resumen" },
-  { id: "agenda", label: "Agenda y cabinas" },
-  { id: "pacientes", label: "Pacientes y CRM" },
-  { id: "proveedores", label: "Proveedores / stock" },
-  { id: "whatsapp", label: "WhatsApp y avisos" },
-  { id: "ajustes", label: "Ajustes" }
-];
-
-function Toolbar({ title, badge, user, extra }) {
-  return (
-    <div className="mockup-toolbar">
-      <div>
-        <strong>{title}</strong>
-        {badge ? (
-          <span className="mockup-badge" style={{ marginLeft: "0.75rem" }}>
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-        <span className="mockup-user-pill">{user}</span>
-        {extra ? <span className="mockup-badge">{extra}</span> : null}
-      </div>
-    </div>
-  );
-}
+const TAB_IDS = ["resumen", "agenda", "pacientes", "proveedores", "whatsapp", "ajustes"];
 
 function PanelResumen() {
   return (
@@ -269,43 +246,37 @@ function PanelWhatsapp() {
 }
 
 function PanelAjustes() {
+  const { t } = useLocale();
   return (
     <article className="card">
-      <h3 style={{ marginTop: 0 }}>Preferencias del centro (demo)</h3>
+      <h3 style={{ marginTop: 0 }}>Preferencias del centro</h3>
       <ul style={{ margin: "0 0 1rem", paddingLeft: "1.1rem", color: "var(--muted)" }}>
-        <li>Zona horaria: Europa/Madrid</li>
-        <li>Duración slot por defecto: 45 min</li>
+        <li>Horario: Lun–Sáb 9:00–20:00</li>
+        <li>Duración de cita: 45 min</li>
         <li>Confirmación automática de citas web: activada</li>
-        <li>Integración WhatsApp Business: conectada (sandbox)</li>
+        <li>Recordatorios WhatsApp: activados</li>
       </ul>
       <p className="lead" style={{ fontSize: "0.9rem", margin: 0 }}>
-        Los cambios reales se aplicarían en la implementación; aquí solo maquetación.
+        {t("mockupPanels.clinica.settingsNote")}
       </p>
     </article>
   );
 }
 
-const TOOLBAR = {
-  resumen: { title: "Hoy — viernes 9 may 2026", badge: "3 cabinas activas", user: "Dr. equipo demo", extra: "Clínica centro" },
-  agenda: { title: "Agenda y cabinas — semana actual", badge: "Sincronizado", user: "Dr. equipo demo", extra: "Clínica centro" },
-  pacientes: { title: "Pacientes y CRM", badge: "182 fichas", user: "Dr. equipo demo", extra: "Clínica centro" },
-  proveedores: { title: "Proveedores / inventario", badge: "2 alertas", user: "Dr. equipo demo", extra: "Clínica centro" },
-  whatsapp: { title: "WhatsApp y avisos", badge: "Canal activo", user: "Dr. equipo demo", extra: "Clínica centro" },
-  ajustes: { title: "Ajustes del tenant", badge: "Solo lectura (mockup)", user: "Dr. equipo demo", extra: "Clínica centro" }
-};
-
 export default function ClinicaPanelMockup() {
+  const { t } = useLocale();
   const [tab, setTab] = useState("resumen");
-  const tb = TOOLBAR[tab];
+  const tabs = dakinisMockupTabList(t, "clinica", TAB_IDS);
+  const tb = dakinisMockupToolbar(t, "clinica", tab);
 
   return (
     <div className="mockup-app">
       <aside className="mockup-sidebar">
-        <div className="mockup-sidebar-brand">Dakinis · Clínica</div>
-        <MockupSidebarNav tabs={TABS} activeId={tab} onSelect={setTab} />
+        <div className="mockup-sidebar-brand">{t("mockupPanels.clinica.brand")}</div>
+        <MockupSidebarNav tabs={tabs} activeId={tab} onSelect={setTab} />
       </aside>
       <div className="mockup-main">
-        <Toolbar title={tb.title} badge={tb.badge} user={tb.user} extra={tb.extra} />
+        <MockupToolbar title={tb.title} badge={tb.badge} roleKey={tb.roleKey} extra={tb.extra} />
         {tab === "resumen" ? <PanelResumen /> : null}
         {tab === "agenda" ? <PanelAgenda /> : null}
         {tab === "pacientes" ? <PanelPacientes /> : null}

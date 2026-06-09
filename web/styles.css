@@ -3966,3 +3966,341 @@ section {
   gap: 1rem;
   margin-top: 1rem;
 }
+
+/* —— Vista comercial (dueño de negocio) —— */
+.business-nav-hero {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.08));
+  border: 1px solid var(--line);
+}
+
+.business-nav-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+}
+
+.business-nav-hero__lead {
+  margin: 0 0 1rem;
+  max-width: 52ch;
+}
+
+.business-nav-hero__tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.business-nav-hero--compact .business-nav-hero__tiles {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.business-nav-hero__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.business-nav-hero__tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.business-nav-hero__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.business-nav-hero__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.commercial-business-dashboard__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+}
+
+.commercial-kpi-card .kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0.15rem 0 0;
+}
+
+.commercial-business-dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.topbar-app-nav--business .btn {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.topbar-user-label {
+  font-size: 0.85rem;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.crm-pipeline__column {
+  min-height: 220px;
+  padding: 0.85rem;
+}
+
+.crm-pipeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.crm-pipeline__header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.crm-pipeline__count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.crm-pipeline__cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crm-pipeline__card {
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  cursor: grab;
+  font-size: 0.88rem;
+}
+
+.wa-business-demo {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: 1rem;
+}
+
+.wa-business-demo__list ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.wa-business-demo__thread {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wa-business-demo__thread.is-active,
+.wa-business-demo__thread:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.wa-business-demo__thread span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.wa-business-demo__main {
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 240px);
+  gap: 1rem;
+}
+
+.wa-business-demo__messages {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wa-business-demo__msg {
+  max-width: 85%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+}
+
+.wa-business-demo__msg--client {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wa-business-demo__msg--business {
+  align-self: flex-end;
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.wa-business-demo__client-meta {
+  margin: 0.5rem 0 0;
+}
+
+.wa-business-demo__client-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.wa-business-demo__client-meta dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.wa-business-demo__client-meta dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.inventory-business-demo__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-business-demo__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-business-demo__table th,
+.inventory-business-demo__table td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.inventory-status--low {
+  color: #fbbf24;
+}
+
+.inventory-status--expiry {
+  color: #f87171;
+}
+
+.reports-business-demo__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.reports-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.65rem;
+  height: 180px;
+  margin-top: 1rem;
+  padding: 0 0.25rem;
+}
+
+.reports-chart__bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.reports-chart__bar {
+  width: 100%;
+  max-width: 48px;
+  border-radius: 0.35rem 0.35rem 0 0;
+  background: linear-gradient(180deg, #818cf8, #6366f1);
+  min-height: 8px;
+}
+
+.reports-chart__label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.hub-demo-commercial-cta {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(99, 102, 241, 0.08));
+}
+
+.mockup-badge--demo {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.restaurant-business-intro {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.restaurant-business-intro__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.restaurant-business-intro__kpi .kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.15rem 0 0;
+}
+
+.demo-commercial-page .business-nav-hero {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .business-nav-hero__tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .commercial-business-dashboard__kpis,
+  .crm-pipeline,
+  .wa-business-demo,
+  .wa-business-demo__main {
+    grid-template-columns: 1fr;
+  }
+}
