@@ -13,32 +13,37 @@ import {
 import {
   dakinisBuildBosPlanCards,
   dakinisBosOverage,
-  dakinisImplementationTiers,
+  DAKINIS_PLAN_IMPLEMENTATION_KEYS,
   dakinisProfessionalServices,
   dakinisPackMvp,
   dakinisPackPro,
   dakinisPackAdvanced
 } from "../data/pricingCatalog.js";
+import PricingComparisonTable from "./PricingComparisonTable.jsx";
 
 const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
 const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
 
 function PricingPlanQuotas({ plan, t }) {
-  const chips = [];
-  if (plan.includedWa > 0) {
-    chips.push(t("pricing.quotaWa", { count: plan.includedWa.toLocaleString() }));
-  }
-  if (plan.includedAi > 0) {
-    chips.push(t("pricing.quotaAi", { count: plan.includedAi.toLocaleString() }));
-  }
-  if (!chips.length) return null;
+  if (!plan.includedWa && !plan.includedAi) return null;
   return (
     <div className="pricing-plan-quotas">
-      {chips.map((label) => (
-        <span key={label} className="pricing-quota-chip">
-          {label}
-        </span>
-      ))}
+      {plan.includedWa > 0 ? (
+        <div className="pricing-quota-block">
+          <p className="pricing-quota-block__lead">{t("pricing.quotaWaLead")}</p>
+          <span className="pricing-quota-chip">
+            {t("pricing.quotaWaFootnote", { count: plan.includedWa.toLocaleString() })}
+          </span>
+        </div>
+      ) : null}
+      {plan.includedAi > 0 ? (
+        <div className="pricing-quota-block">
+          <p className="pricing-quota-block__lead">{t("pricing.quotaAiLead")}</p>
+          <span className="pricing-quota-chip pricing-quota-chip--ai">
+            {t("pricing.quotaAiFootnote", { count: plan.includedAi.toLocaleString() })}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -142,6 +147,15 @@ export default function PricingHybridSection({
           <p className="pricing-hero__intro">{t("pricing.clientIntro")}</p>
         </div>
 
+        <article className="card pricing-problems-solved">
+          <h3>{t("pricing.problemsSolved.title")}</h3>
+          <ul className="pricing-problems-solved__list">
+            {(t("pricing.problemsSolved.items") || []).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+
         <div className="pack-grid bos-plan-grid pricing-plan-grid">
           {bosPlans.map((plan) => (
             <article
@@ -165,6 +179,9 @@ export default function PricingHybridSection({
               </div>
               <p className="pack-audience">{plan.audience}</p>
               <p className="pricing-plan-card__outcome">{plan.outcome}</p>
+              {plan.key === "pro" ? (
+                <p className="pricing-plan-card__value-anchor">{t("pricing.bos.plans.pro.valueAnchor")}</p>
+              ) : null}
               <PricingPlanQuotas plan={plan} t={t} />
               <p className="pricing-includes-title">{t("pricing.includesTitle")}</p>
               <ul className="pack-includes pricing-includes-list">
@@ -189,6 +206,10 @@ export default function PricingHybridSection({
           ))}
         </div>
 
+        <p className="pricing-impl-bridge lead">{t("pricing.implBridge")}</p>
+
+        <PricingComparisonTable />
+
         <aside className="pricing-callout bos-overage-note">
           <strong>{t("pricing.overageTitle")}</strong>
           <p>
@@ -202,13 +223,15 @@ export default function PricingHybridSection({
         <div className="pricing-section-block">
           <h3 className="maint-heading">{t("pricing.bos.implementationTitle")}</h3>
           <p className="lead maint-sub">{t("pricing.bos.implementationLead")}</p>
-          <div className="maint-grid implementation-grid pricing-impl-grid">
-            {dakinisImplementationTiers.map((tier) => (
-              <article key={tier.key} className="card price-card pricing-impl-card">
-                <h4>{t(`pricing.implementation.${tier.key}.label`)}</h4>
-                <p className="price pricing-impl-card__price">{tier.range}</p>
+          <div className="maint-grid implementation-grid pricing-impl-grid pricing-impl-grid--plans">
+            {DAKINIS_PLAN_IMPLEMENTATION_KEYS.map((planKey) => (
+              <article key={planKey} className="card price-card pricing-impl-card">
+                <h4>{t(`pricing.implementationByPlan.${planKey}.label`)}</h4>
+                <p className="price pricing-impl-card__price">
+                  {t(`pricing.implementationByPlan.${planKey}.range`)}
+                </p>
                 <p className="setup pricing-impl-card__desc">
-                  {t(`pricing.implementation.${tier.key}.description`)}
+                  {t(`pricing.implementationByPlan.${planKey}.description`)}
                 </p>
               </article>
             ))}
@@ -216,10 +239,11 @@ export default function PricingHybridSection({
         </div>
 
         {showProjects ? (
-          <div className="pricing-section-block">
-            <p className="kicker">{t("home.pricing.kicker")}</p>
-            <h2>{pricingIntro.title}</h2>
-            <p className="lead">{pricingIntro.subtitle}</p>
+          <div className="pricing-section-block pricing-custom-dev-zone">
+            <p className="kicker">{t("pricing.customDev.kicker")}</p>
+            <h2>{t("pricing.customDev.title")}</h2>
+            <p className="lead">{t("pricing.customDev.lead")}</p>
+            <p className="lead pricing-custom-dev-zone__note">{t("pricing.customDev.note")}</p>
             <p className="lead portfolio-lead">{pricingIntro.portfolioNote}</p>
             <ul className="pricing-value-points pricing-value-cards">
               {valuePoints.map((line) => (

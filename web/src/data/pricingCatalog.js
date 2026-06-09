@@ -14,6 +14,9 @@ import {
 
 export const DAKINIS_BOS_PLAN_KEYS = Object.freeze(["starter", "growth", "pro"]);
 
+/** Implantación inicial recomendada por plan (pago único, no mensualidad). */
+export const DAKINIS_PLAN_IMPLEMENTATION_KEYS = Object.freeze(["starter", "growth", "pro"]);
+
 export function dakinisBuildBosPlanCards() {
   return DAKINIS_BOS_PLAN_KEYS.map((key) => ({
     key,

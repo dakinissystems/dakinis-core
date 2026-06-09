@@ -21,7 +21,9 @@ export default function PricingPage() {
         <div className="container">
           <p className="kicker">{t("pricingPage.kicker")}</p>
           <h1>{t("pricingPage.title")}</h1>
-          <p className="lead">{t("pricingPage.lead")}</p>
+          <p className="lead pricing-page-intro__value">{t("pricingPage.valueHeadline")}</p>
+          <p className="lead pricing-page-intro__subvalue">{t("pricingPage.valueSubheadline")}</p>
+          <p className="kpi-label pricing-page-intro__meta">{t("pricingPage.lead")}</p>
         </div>
       </section>
       <PricingHybridSection variant="full" showContact sectionId="precios" />

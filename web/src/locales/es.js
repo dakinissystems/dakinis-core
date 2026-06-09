@@ -461,6 +461,10 @@ export default {
   pricingPage: {
     kicker: "Paquetes y contacto",
     title: "Planes y precios Dakinis One",
+    valueHeadline:
+      "Gestiona clientes, citas, inventario y WhatsApp desde una única plataforma.",
+    valueSubheadline:
+      "Menos tiempo en tareas administrativas. Más tiempo para atender y vender.",
     lead: "Suscripción mensual, implantación inicial y paquetes de proyecto — todo en un solo sitio para decidir con claridad."
   },
   pricing: {
@@ -476,8 +480,62 @@ export default {
     selectPlanHint: "Pulsa «Quiero este plan» en una tarjeta y el mensaje de email y WhatsApp se adaptará automáticamente.",
     contactWhatsappCta: "Escribir por WhatsApp",
     recommendedBadge: "Más elegido",
-    quotaWa: "{count} WhatsApp/mes incluidos",
-    quotaAi: "{count} consultas IA/mes incluidas",
+    quotaWaLead: "WhatsApp integrado para responder clientes desde el mismo panel.",
+    quotaWaFootnote: "Hasta {count} mensajes mensuales incluidos.",
+    quotaAiLead:
+      "Asistente IA para ayudarte a responder clientes, redactar mensajes y gestionar información.",
+    quotaAiFootnote: "Hasta {count} interacciones mensuales incluidas.",
+    implBridge:
+      "La mensualidad es tu suscripción al software. La implantación es un pago único al inicio, adaptada al plan que elijas.",
+    problemsSolved: {
+      title: "¿Qué problemas resuelve Dakinis One?",
+      items: [
+        "Pérdida de citas por falta de recordatorios",
+        "Falta de control del stock y caducidades",
+        "Información repartida entre WhatsApp y Excel",
+        "Seguimiento manual de clientes y ventas"
+      ]
+    },
+    compare: {
+      title: "Comparación de planes",
+      lead: "Todo lo esencial en una tabla para ver de un vistazo qué incluye cada plan.",
+      featureCol: "Función",
+      included: "Incluido",
+      notIncluded: "No incluido",
+      rows: {
+        crm: { label: "CRM", starter: true, growth: true, pro: true },
+        agenda: { label: "Agenda", starter: true, growth: true, pro: true },
+        reservations: { label: "Reservas online", starter: true, growth: true, pro: true },
+        inventory: { label: "Inventario", starter: false, growth: true, pro: true },
+        whatsapp: { label: "WhatsApp integrado", starter: false, growth: true, pro: true },
+        analytics: { label: "Analytics", starter: false, growth: true, pro: true },
+        ai: { label: "Asistente IA", starter: false, growth: false, pro: true },
+        automations: { label: "Automatizaciones", starter: false, growth: false, pro: true }
+      }
+    },
+    implementationByPlan: {
+      starter: {
+        label: "Implantación Starter",
+        range: "199 € – 300 €",
+        description: "Configuración básica, datos iniciales y formación del equipo en una sesión."
+      },
+      growth: {
+        label: "Implantación Growth",
+        range: "500 €",
+        description: "Migración de clientes y citas, inventario inicial y puesta en marcha acompañada."
+      },
+      pro: {
+        label: "Implantación Pro",
+        range: "1.000 €+",
+        description: "Automatizaciones, IA configurada y conexiones según tu operativa real."
+      }
+    },
+    customDev: {
+      kicker: "Solo si lo necesitas",
+      title: "Desarrollo a medida",
+      lead: "La solución estándar es Dakinis One. Los proyectos personalizados son para cuando tu operativa no encaja en los planes mensuales.",
+      note: "No sustituyen la suscripción: son trabajos puntuales de desarrollo, integración o migración cuando el producto estándar no basta."
+    },
     overageTitle: "Si te pasas de la cuota",
     contactHint: "Te respondemos con propuesta concreta: plan, implantación y plazo — sin letra pequeña.",
     whatsappFabHint: "El botón flotante verde usa el mismo mensaje si ya elegiste un plan.",
@@ -491,7 +549,8 @@ export default {
       overageLead:
         "Exceso de consumo: {aiRate} € / 1.000 consultas IA extra (plan Pro) · {waRate} € / 500 mensajes WhatsApp extra.",
       implementationTitle: "Implantación inicial (pago único)",
-      implementationLead: "Configuración, migración y puesta en marcha según complejidad del negocio.",
+      implementationLead:
+        "Cada plan tiene su rango de implantación. No pagas 500 € si empiezas con Starter: el coste de arranque va acorde al plan que elijas.",
       projectsHint:
         "¿Necesitas desarrollo a medida o integraciones especiales? Consulta los paquetes de proyecto en el sitio corporativo o contáctanos.",
       servicesTitle: "Servicios profesionales",
@@ -537,9 +596,11 @@ export default {
           audience: "Para negocios que quieren ahorrar tiempo con tecnología",
           outcome:
             "Automatizas tareas repetitivas, usas IA en el día a día y conectas el ecosistema Dakinis cuando quieres crecer sin contratar más administrativos.",
+          valueAnchor:
+            "Valorado normalmente en más de 250 €/mes si contrataras CRM, WhatsApp, inventario e IA por separado. Todo integrado en una sola plataforma.",
           includes: [
             "Todo lo del Growth",
-            "Copilot e IA con cuota generosa incluida",
+            "Asistente IA integrado",
             "Automatizaciones y flujos personalizados",
             "WhatsApp avanzado con mayor cuota",
             "Acceso al ecosistema Dakinis Network"
