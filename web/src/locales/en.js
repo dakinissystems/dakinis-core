@@ -25,7 +25,11 @@ export default {
   },
   productHome: {
     tagline: "Business Operating System for your business.",
-    lead: "Plans from €29/month: CRM, scheduling, inventory and WhatsApp with included quotas and predictable overage.",
+    lead: "CRM, scheduling, inventory and WhatsApp in one panel — no spreadsheets or disconnected tools.",
+    viewPlans: "View plans & packages",
+    pricingCtaKicker: "Clear pricing",
+    pricingCtaTitle: "Pick the plan that fits your business",
+    pricingCtaLead: "Monthly plans, setup and project packages on a dedicated page — no surprises.",
     login: "Sign in",
     openHub: "Open Hub",
     seeAllDemos: "See all demos",
@@ -453,6 +457,11 @@ export default {
       }
     }
   },
+  pricingPage: {
+    kicker: "Packages & contact",
+    title: "Dakinis One plans & pricing",
+    lead: "Monthly subscription, initial setup and project packages — everything in one place to decide with confidence."
+  },
   pricing: {
     clientIntro:
       "One clear monthly price for daily operations. No paying module by module — pick the plan that fits your business today and grow when you need to.",
@@ -460,12 +469,17 @@ export default {
     planCta: "I want this plan",
     planWhatsappMessage:
       "Hello, I'm interested in the {plan} plan for Dakinis One (€{price}/month). Can we discuss setup and timeline?",
+    planMailtoSubject: "Dakinis One — {plan} plan",
+    selectedPlanLabel: "Selected plan: {plan} (€{price}/month)",
+    contactMessageLabel: "Contact message:",
+    selectPlanHint: "Click «I want this plan» on a card and the email and WhatsApp message will update automatically.",
+    contactWhatsappCta: "Message on WhatsApp",
     recommendedBadge: "Most popular",
     quotaWa: "{count} WhatsApp/month included",
     quotaAi: "{count} AI queries/month included",
     overageTitle: "If you exceed your quota",
     contactHint: "We reply with a concrete proposal: plan, setup and timeline — no fine print.",
-    whatsappFabHint: "You can also message us on WhatsApp using the green floating button.",
+    whatsappFabHint: "The green floating button uses the same message once you've picked a plan.",
     bos: {
       kicker: "BOS subscription",
       title: "Dakinis One monthly plans",
@@ -703,6 +717,7 @@ export default {
     sistema: "{label} · Dakinis One",
     app: "Dakinis App",
     hub: "Dakinis Hub",
+    pricing: "Plans & packages · Dakinis One",
     allergies: "Allergy poster · Dakinis One"
   },
   vistaMockup: {
@@ -722,7 +737,7 @@ export default {
     clients: "👥 Clients",
     inventory: "📦 Inventory",
     sales: "💰 Sales",
-    reports: "📊 Reports",
+    reports: "📊 Analytics",
     messages: "Messages",
     communications: "Communications",
     whatsapp: "💬 WhatsApp",
@@ -737,7 +752,7 @@ export default {
         clients: "Clients",
         inventory: "Inventory",
         sales: "Sales",
-        reports: "Reports",
+        reports: "Analytics",
         whatsapp: "WhatsApp"
       }
     },
@@ -911,6 +926,57 @@ export default {
         revenue: "+12 % vs. last month",
         orders: "+9 % vs. last month",
         avgTicket: "+4 % vs. last month"
+      }
+    },
+    analytics: {
+      kicker: "Analytics",
+      title: "Business analytics",
+      lead: "Sales, channels, funnel and sector benchmarks — decisions backed by data, not guesswork.",
+      liveBadge: "Live data from your tenant",
+      planHint: "Live benchmarks require a Growth or Pro plan. Showing reference demo view.",
+      periodAria: "Analysis period",
+      periods: { "7d": "7 days", "30d": "30 days", "90d": "90 days" },
+      revenue: "Revenue",
+      orders: "Orders",
+      avgTicket: "Avg. ticket",
+      conversion: "Conversion",
+      salesTitle: "Sales trend",
+      salesLead: "Monthly commercial activity index",
+      chartAria: "Sales trend chart",
+      channelsTitle: "Sales by channel",
+      channelsLead: "Where revenue comes from — WhatsApp, in-store and web",
+      channels: {
+        whatsapp: "WhatsApp",
+        salon: "In-store",
+        web: "Web / bookings"
+      },
+      funnelTitle: "Sales funnel",
+      funnelLead: "From visit to closed sale",
+      funnel: {
+        visits: "Visits / contacts",
+        leads: "Qualified leads",
+        proposals: "Proposals sent",
+        sales: "Closed sales"
+      },
+      benchmarkTitle: "Sector comparison",
+      benchmarkLead: "Your business vs. {industry} average",
+      you: "You",
+      sector: "Sector",
+      topTitle: "Top performers",
+      topLead: "Products and clients driving revenue",
+      topProducts: "Products",
+      topClients: "Clients",
+      industries: {
+        restaurante: "restaurants",
+        clinica: "clinics & aesthetics",
+        peluqueria: "salons & beauty",
+        inmobiliaria: "real estate"
+      },
+      trends: {
+        revenue: "+12 % vs. prior period",
+        orders: "+9 % vs. prior period",
+        avgTicket: "+4 % vs. prior period",
+        conversion: "+3 pts vs. quarter"
       }
     },
     hub: {

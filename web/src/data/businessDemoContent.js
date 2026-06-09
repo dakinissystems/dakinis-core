@@ -1,3 +1,4 @@
+import { dakinisCompareToSector } from "@dakinis/shared/catalog/sector-benchmarks.js";
 import { dakinisGetDemoCommercialMetrics } from "./demoCommercialContent.js";
 
 export function dakinisGetBusinessDashboardKpis(verticalKey) {
@@ -67,3 +68,72 @@ export const DAKINIS_REPORTS_DEMO_SERIES = [
   { label: "Abr", value: 84 },
   { label: "May", value: 92 }
 ];
+
+const DAKINIS_ANALYTICS_TENANT_METRICS = {
+  restaurante: { salesMonthDeltaPct: 12, occupancyPct: 71, crmContacts: 124, reservations7d: 52 },
+  clinica: { salesMonthDeltaPct: 9, crmContacts: 98, reservations7d: 48 },
+  peluqueria: { salesMonthDeltaPct: 11, crmContacts: 112, reservations7d: 61 },
+  inmobiliaria: { salesMonthDeltaPct: 8, crmContacts: 76, reservations7d: 14 }
+};
+
+const DAKINIS_ANALYTICS_TOP_CLIENTS = {
+  restaurante: [
+    { name: "Ana García", value: "1.840 €", share: 22 },
+    { name: "Grupo Sol Events", value: "1.420 €", share: 17 },
+    { name: "Juan Pérez", value: "1.250 €", share: 15 }
+  ],
+  clinica: [
+    { name: "Laura Méndez", value: "2.100 €", share: 24 },
+    { name: "Clínica Vega", value: "1.680 €", share: 19 },
+    { name: "Carlos Ruiz", value: "980 €", share: 11 }
+  ],
+  peluqueria: [
+    { name: "Marta Soto", value: "620 €", share: 18 },
+    { name: "Elena Costa", value: "540 €", share: 16 },
+    { name: "Beatriz Núñez", value: "480 €", share: 14 }
+  ],
+  inmobiliaria: [
+    { name: "Inmob. Centro", value: "24.000 €", share: 38 },
+    { name: "Familia López", value: "12.500 €", share: 20 },
+    { name: "Hotel Costa SL", value: "8.200 €", share: 13 }
+  ]
+};
+
+/** Datos Analytics demo por vertical (benchmark, canales, embudo, tops). */
+export function dakinisGetAnalyticsDemoData(verticalKey = "restaurante") {
+  const vertical = DAKINIS_ANALYTICS_TENANT_METRICS[verticalKey]
+    ? verticalKey
+    : "restaurante";
+  const metrics = dakinisGetDemoCommercialMetrics(vertical);
+  const tenantMetrics = DAKINIS_ANALYTICS_TENANT_METRICS[vertical];
+  const benchmark = dakinisCompareToSector(vertical, tenantMetrics);
+
+  return {
+    kpis: {
+      revenue: metrics.monthSales,
+      orders: vertical === "inmobiliaria" ? 24 : vertical === "clinica" ? 142 : 186,
+      avgTicket: vertical === "inmobiliaria" ? "1.000 €" : vertical === "clinica" ? "90,50 €" : "45,40 €",
+      conversion: vertical === "inmobiliaria" ? "18 %" : "24 %"
+    },
+    series: DAKINIS_REPORTS_DEMO_SERIES,
+    channels: [
+      { key: "whatsapp", pct: 42, amount: "3.549 €" },
+      { key: "salon", pct: 35, amount: "2.958 €" },
+      { key: "web", pct: 23, amount: "1.943 €" }
+    ],
+    funnel: [
+      { key: "visits", count: 1240, widthPct: 100 },
+      { key: "leads", count: 186, widthPct: 72 },
+      { key: "proposals", count: 48, widthPct: 38 },
+      { key: "sales", count: 42, widthPct: 32 }
+    ],
+    topProducts: [
+      { name: metrics.topProduct, value: metrics.monthSales, share: 28 },
+      { name: "Pack recurrente", value: "1.120 €", share: 14 },
+      { name: "Servicio express", value: "890 €", share: 11 }
+    ],
+    topClients: DAKINIS_ANALYTICS_TOP_CLIENTS[vertical],
+    benchmark,
+    industry: vertical
+  };
+}

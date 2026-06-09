@@ -1,15 +1,16 @@
 /**
- * Anclas en la home (`#precios`, `#contact`) con el router manual de la SPA.
+ * Navegación a precios/contacto (página dedicada `/precios`).
  */
-export function dakinisGoHomeAnchor(navigate, fragment) {
-  const id = String(fragment).replace(/^#/, "");
-  const path = window.location.pathname;
-  if (path === "/" || path === "") {
-    window.location.hash = id;
+export function dakinisGoPricing(navigate, fragment) {
+  const id = String(fragment || "").replace(/^#/, "");
+  if (id === "contact") {
+    navigate("/precios#contact");
     return;
   }
-  navigate("/");
-  setTimeout(() => {
-    window.location.hash = id;
-  }, 16);
+  navigate("/precios");
+}
+
+/** @deprecated Usar `dakinisGoPricing`. */
+export function dakinisGoHomeAnchor(navigate, fragment) {
+  dakinisGoPricing(navigate, fragment);
 }

@@ -3,7 +3,6 @@ import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registr
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import {
   dakinisIsBusinessDemoSession,
   dakinisIsBusinessFacingSession,
@@ -73,11 +72,11 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
           <LanguageSwitcher />
           {!isSystemDemoView && !isBusinessDemo ? (
             <a
-              href="/#precios"
+              href="/precios"
               className="btn btn-outline"
               onClick={(e) => {
                 e.preventDefault();
-                dakinisGoHomeAnchor(navigate, "precios");
+                navigate("/precios");
               }}
             >
               {t("nav.packages")}
@@ -177,11 +176,11 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                 {t("nav.login")}
               </a>
               <a
-                href="/#precios"
+                href="/precios"
                 className="btn btn-outline"
                 onClick={(e) => {
                   e.preventDefault();
-                  dakinisGoHomeAnchor(navigate, "precios");
+                  navigate("/precios");
                 }}
               >
                 {t("nav.quote")}

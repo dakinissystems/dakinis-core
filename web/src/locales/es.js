@@ -25,7 +25,11 @@ export default {
   },
   productHome: {
     tagline: "Business Operating System para tu negocio.",
-    lead: "Planes desde 29 €/mes: CRM, agenda, inventario y WhatsApp con cuotas incluidas y exceso predecible.",
+    lead: "CRM, agenda, inventario y WhatsApp en un solo panel — sin hojas de cálculo ni sistemas sueltos.",
+    viewPlans: "Ver planes y paquetes",
+    pricingCtaKicker: "Precios claros",
+    pricingCtaTitle: "Elige el plan que encaja con tu negocio",
+    pricingCtaLead: "Planes mensuales, implantación y paquetes de proyecto en una página dedicada — sin sorpresas.",
     login: "Iniciar sesión",
     openHub: "Abrir Hub",
     seeAllDemos: "Ver todas las demos",
@@ -454,6 +458,11 @@ export default {
       }
     }
   },
+  pricingPage: {
+    kicker: "Paquetes y contacto",
+    title: "Planes y precios Dakinis One",
+    lead: "Suscripción mensual, implantación inicial y paquetes de proyecto — todo en un solo sitio para decidir con claridad."
+  },
   pricing: {
     clientIntro:
       "Un precio mensual claro para tu operación diaria. Sin pagar módulo a módulo: eliges el plan que encaja con tu negocio hoy y creces cuando lo necesites.",
@@ -461,12 +470,17 @@ export default {
     planCta: "Quiero este plan",
     planWhatsappMessage:
       "Hola, me interesa el plan {plan} de Dakinis One ({price} €/mes). ¿Podemos hablar de implantación y plazos?",
+    planMailtoSubject: "Dakinis One — plan {plan}",
+    selectedPlanLabel: "Plan seleccionado: {plan} ({price} €/mes)",
+    contactMessageLabel: "Mensaje de contacto:",
+    selectPlanHint: "Pulsa «Quiero este plan» en una tarjeta y el mensaje de email y WhatsApp se adaptará automáticamente.",
+    contactWhatsappCta: "Escribir por WhatsApp",
     recommendedBadge: "Más elegido",
     quotaWa: "{count} WhatsApp/mes incluidos",
     quotaAi: "{count} consultas IA/mes incluidas",
     overageTitle: "Si te pasas de la cuota",
     contactHint: "Te respondemos con propuesta concreta: plan, implantación y plazo — sin letra pequeña.",
-    whatsappFabHint: "También puedes escribirnos por WhatsApp con el botón flotante verde.",
+    whatsappFabHint: "El botón flotante verde usa el mismo mensaje si ya elegiste un plan.",
     bos: {
       kicker: "Suscripción BOS",
       title: "Planes mensuales Dakinis One",
@@ -705,6 +719,7 @@ export default {
     sistema: "{label} · Dakinis One",
     app: "Dakinis App",
     hub: "Dakinis Hub",
+    pricing: "Planes y paquetes · Dakinis One",
     allergies: "Cartel de alergias · Dakinis One"
   },
   vistaMockup: {
@@ -724,7 +739,7 @@ export default {
     clients: "👥 Clientes",
     inventory: "📦 Inventario",
     sales: "💰 Ventas",
-    reports: "📊 Reportes",
+    reports: "📊 Analytics",
     messages: "Mensajes",
     communications: "Comunicaciones",
     whatsapp: "💬 WhatsApp",
@@ -739,7 +754,7 @@ export default {
         clients: "Clientes",
         inventory: "Inventario",
         sales: "Ventas",
-        reports: "Reportes",
+        reports: "Analytics",
         whatsapp: "WhatsApp"
       }
     },
@@ -913,6 +928,57 @@ export default {
         revenue: "+12 % vs. mes anterior",
         orders: "+9 % vs. mes anterior",
         avgTicket: "+4 % vs. mes anterior"
+      }
+    },
+    analytics: {
+      kicker: "Analytics",
+      title: "Analytics del negocio",
+      lead: "Ventas, canales, embudo y comparativa con tu sector — decisiones con datos, no con intuición.",
+      liveBadge: "Datos en vivo de tu tenant",
+      planHint: "El benchmark en vivo requiere plan Growth o Pro. Mostrando vista demo de referencia.",
+      periodAria: "Periodo de análisis",
+      periods: { "7d": "7 días", "30d": "30 días", "90d": "90 días" },
+      revenue: "Ingresos",
+      orders: "Pedidos",
+      avgTicket: "Ticket medio",
+      conversion: "Conversión",
+      salesTitle: "Evolución de ventas",
+      salesLead: "Índice de actividad comercial por mes",
+      chartAria: "Gráfico de evolución de ventas",
+      channelsTitle: "Ventas por canal",
+      channelsLead: "Dónde entra el dinero — WhatsApp, salón y web",
+      channels: {
+        whatsapp: "WhatsApp",
+        salon: "Salón / presencial",
+        web: "Web / reservas"
+      },
+      funnelTitle: "Embudo comercial",
+      funnelLead: "De visita a venta cerrada",
+      funnel: {
+        visits: "Visitas / contactos",
+        leads: "Leads cualificados",
+        proposals: "Propuestas enviadas",
+        sales: "Ventas cerradas"
+      },
+      benchmarkTitle: "Comparativa con tu sector",
+      benchmarkLead: "Tu negocio vs. media de {industry}",
+      you: "Tú",
+      sector: "Sector",
+      topTitle: "Top del periodo",
+      topLead: "Productos y clientes que más aportan",
+      topProducts: "Productos",
+      topClients: "Clientes",
+      industries: {
+        restaurante: "restauración",
+        clinica: "clínicas y estética",
+        peluqueria: "peluquería y belleza",
+        inmobiliaria: "inmobiliaria"
+      },
+      trends: {
+        revenue: "+12 % vs. periodo anterior",
+        orders: "+9 % vs. periodo anterior",
+        avgTicket: "+4 % vs. periodo anterior",
+        conversion: "+3 pts vs. trimestre"
       }
     },
     hub: {

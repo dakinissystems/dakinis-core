@@ -58,18 +58,18 @@ export default function AppFooter({ navigate }) {
           </FooterRouteLink>
           <Sep />
           <a
-            href="/#precios"
+            href="/precios"
             className="site-footer-link"
             onClick={(e) => {
               e.preventDefault();
-              dakinisGoHomeAnchor(navigate, "precios");
+              navigate("/precios");
             }}
           >
             {t("footer.packages")}
           </a>
           <Sep />
           <a
-            href="/#contact"
+            href="/precios#contact"
             className="site-footer-link"
             onClick={(e) => {
               e.preventDefault();

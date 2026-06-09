@@ -327,24 +327,12 @@ export default function RestaurantComandasSection({
   if (!apiSession?.token) return null;
   if (!isFermina && !menu.length) return null;
 
+  const venueName = brand?.name || t("mockupPanels.restaurante.brand");
+
   return (
-    <section className={`fermina-ops${isFermina ? " fermina-ops--branded" : ""}`} style={{ marginTop: "2rem" }}>
-      {isFermina ? (
-        <header className="fermina-ops__header">
-          <img src="/assets/fermina-logo.png" alt="Fermina Food" className="fermina-ops__logo" width={200} height={80} />
-          <div>
-            <h3 style={{ margin: 0 }}>Fermina Food</h3>
-            <p className="kpi-label" style={{ margin: 0 }}>
-              {brand?.tagline || "foods, drinks & coffee"} · {t("fermina.subtitle")}
-            </p>
-          </div>
-        </header>
-      ) : (
-        <>
-          <h3>{t("fermina.title")}</h3>
-          <p className="lead">{t("fermina.leadGeneric")}</p>
-        </>
-      )}
+    <section className="fermina-ops" style={{ marginTop: "2rem" }}>
+      <h3>{venueName}</h3>
+      <p className="lead">{t("fermina.leadGeneric")}</p>
 
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
@@ -353,15 +341,15 @@ export default function RestaurantComandasSection({
       ) : null}
 
       {role === "camarero" ? (
-        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.waiterLead")}
         </p>
       ) : role === "cocina" ? (
-        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.kitchenLead")}
         </p>
       ) : (
-        <p className="lead" style={{ fontSize: "0.9rem", marginTop: isFermina ? "0.5rem" : 0 }}>
+        <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.adminComandasLead")}
         </p>
       )}
@@ -836,10 +824,10 @@ export default function RestaurantComandasSection({
           <FerminaPrintSheet
             kind={printDoc.kind}
             doc={printDoc.data}
-            businessName={brand?.name || "Fermina Food"}
+            businessName={venueName}
             dateLocale={dateLocale}
             t={t}
-            showLogo={isFermina}
+            showLogo={false}
             channelLabel={(ch) => dakinisRestaurantChannelLabel(ch, t)}
             paymentLabel={(pm) => dakinisRestaurantPaymentLabel(pm, t)}
           />

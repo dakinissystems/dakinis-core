@@ -1,7 +1,15 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { DAKINIS_CONTACT_EMAIL } from "../config/contact-urls.js";
-import { dakinisPersistSelectedPlan, dakinisPlanWhatsappUrl } from "../utils/planWhatsapp.js";
+import {
+  DAKINIS_PLAN_SELECTED_EVENT,
+  dakinisPersistSelectedPlan,
+  dakinisPlanContactMessage,
+  dakinisPlanMailtoUrl,
+  dakinisPlanWhatsappUrl,
+  dakinisReadSelectedPlan,
+  dakinisWhatsappUrlWithOptionalPlan
+} from "../utils/planWhatsapp.js";
 import {
   dakinisBuildBosPlanCards,
   dakinisBosOverage,
@@ -46,6 +54,24 @@ export default function PricingHybridSection({
 }) {
   const { locale, t } = useLocale();
   const showProjects = variant === "full";
+  const [planRevision, setPlanRevision] = useState(0);
+
+  useEffect(() => {
+    const onPlanSelected = () => setPlanRevision((n) => n + 1);
+    window.addEventListener(DAKINIS_PLAN_SELECTED_EVENT, onPlanSelected);
+    return () => window.removeEventListener(DAKINIS_PLAN_SELECTED_EVENT, onPlanSelected);
+  }, []);
+
+  const selectedPlan = useMemo(() => dakinisReadSelectedPlan(), [planRevision]);
+  const contactWhatsappHref = useMemo(
+    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t }),
+    [locale, t, planRevision]
+  );
+  const contactMessage = useMemo(() => dakinisPlanContactMessage(t, selectedPlan), [t, selectedPlan]);
+  const contactMailtoHref = useMemo(
+    () => dakinisPlanMailtoUrl(DAKINIS_CONTACT_EMAIL, { t, selected: selectedPlan }),
+    [t, selectedPlan]
+  );
 
   const bosPlans = useMemo(
     () =>
@@ -120,7 +146,9 @@ export default function PricingHybridSection({
           {bosPlans.map((plan) => (
             <article
               key={plan.key}
-              className={`card pack-card bos-plan-card pricing-plan-card${plan.featured ? " featured" : ""}`}
+              className={`card pack-card bos-plan-card pricing-plan-card${
+                plan.featured ? " featured" : ""
+              }${selectedPlan?.key === plan.key ? " is-selected" : ""}`}
             >
               {plan.featured ? (
                 <span className="pricing-plan-card__ribbon">{t("pricing.recommendedBadge")}</span>
@@ -263,12 +291,34 @@ export default function PricingHybridSection({
             <h2>{t("home.pricing.contactTitle")}</h2>
             <p className="lead contact-lead">{t("home.pricing.contactLead")}</p>
             <p className="pricing-contact-card__hint">{t("pricing.contactHint")}</p>
+            {selectedPlan?.key ? (
+              <div className="pricing-contact-card__plan-message">
+                <p className="pricing-contact-card__plan-label">
+                  {t("pricing.selectedPlanLabel", {
+                    plan: t(`pricing.bos.plans.${selectedPlan.key}.name`),
+                    price: selectedPlan.priceEur
+                  })}
+                </p>
+                <p className="pricing-contact-card__message-label">{t("pricing.contactMessageLabel")}</p>
+                <blockquote className="pricing-contact-card__message-preview">{contactMessage}</blockquote>
+              </div>
+            ) : (
+              <p className="pricing-contact-card__select-hint">{t("pricing.selectPlanHint")}</p>
+            )}
             <div className="contact-actions">
-              <a href={`mailto:${DAKINIS_CONTACT_EMAIL}`} className="btn">
+              <a href={contactMailtoHref} className="btn">
                 {t("home.pricing.emailCta")}
               </a>
-              <p className="pricing-contact-card__whatsapp-hint">{t("pricing.whatsappFabHint")}</p>
+              <a
+                href={contactWhatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+              >
+                {t("pricing.contactWhatsappCta")}
+              </a>
             </div>
+            <p className="pricing-contact-card__whatsapp-hint">{t("pricing.whatsappFabHint")}</p>
           </div>
         ) : null}
       </div>

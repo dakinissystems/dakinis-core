@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale } from "../../context/LocaleContext.jsx";
 
 const DAKINIS_DEMO_MENU_OPTIONS = {
@@ -37,20 +38,72 @@ const DAKINIS_DEMO_MENU_OPTIONS = {
 };
 
 const DAKINIS_DEMO_TOAST_CONTEXTS = new Set(["crm", "inventory", "reports", "dashboard"]);
+const DAKINIS_PANEL_MIN_WIDTH = 216;
+const DAKINIS_PANEL_EST_HEIGHT = 200;
+
+function dakinisCanUseDom() {
+  return typeof document !== "undefined" && typeof window !== "undefined";
+}
 
 export default function BusinessDemoOptionsMenu({ context = "whatsapp", subjectName = "", className = "" }) {
   const { t } = useLocale();
   const menuId = useId();
-  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+  const panelRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [panelStyle, setPanelStyle] = useState(null);
 
   const options = DAKINIS_DEMO_MENU_OPTIONS[context] || DAKINIS_DEMO_MENU_OPTIONS.whatsapp;
+  const useToast = DAKINIS_DEMO_TOAST_CONTEXTS.has(context);
+
+  const updatePanelPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger || !dakinisCanUseDom()) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const panelHeight = panelRef.current?.offsetHeight || DAKINIS_PANEL_EST_HEIGHT;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < panelHeight + 12 && rect.top > panelHeight + 12;
+
+    let top = openUp ? rect.top - panelHeight - 6 : rect.bottom + 6;
+    let left = rect.right - DAKINIS_PANEL_MIN_WIDTH;
+    left = Math.max(8, Math.min(left, window.innerWidth - DAKINIS_PANEL_MIN_WIDTH - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - panelHeight - 8));
+
+    setPanelStyle({
+      position: "fixed",
+      top: `${top}px`,
+      left: `${left}px`,
+      minWidth: `${DAKINIS_PANEL_MIN_WIDTH}px`,
+      zIndex: 90
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPanelStyle(null);
+      return undefined;
+    }
+    updatePanelPosition();
+    const raf = requestAnimationFrame(() => updatePanelPosition());
+    const onLayoutChange = () => updatePanelPosition();
+    window.addEventListener("resize", onLayoutChange);
+    window.addEventListener("scroll", onLayoutChange, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onLayoutChange);
+      window.removeEventListener("scroll", onLayoutChange, true);
+    };
+  }, [open, updatePanelPosition]);
 
   useEffect(() => {
     if (!open) return undefined;
     function onPointerDown(e) {
-      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+      const target = e.target;
+      if (triggerRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onKeyDown(e) {
       if (e.key === "Escape") setOpen(false);
@@ -78,16 +131,55 @@ export default function BusinessDemoOptionsMenu({ context = "whatsapp", subjectN
     );
   }
 
+  const panel =
+    open && panelStyle && dakinisCanUseDom() ? (
+      <ul
+        id={menuId}
+        ref={panelRef}
+        className="demo-options-menu__panel demo-options-menu__panel--floating"
+        role="menu"
+        style={panelStyle}
+      >
+        {options.map((opt) => (
+          <li key={opt.id} role="none">
+            <button
+              type="button"
+              role="menuitem"
+              className="demo-options-menu__item"
+              onClick={() => selectOption(opt.id)}
+            >
+              {t(opt.labelKey)}
+            </button>
+          </li>
+        ))}
+      </ul>
+    ) : null;
+
+  const feedbackNode = feedback ? (
+    <p
+      className={`demo-options-menu__feedback${
+        useToast ? " demo-options-menu__feedback--toast" : " demo-options-menu__feedback--inline"
+      }`}
+      role="status"
+    >
+      {feedback}
+    </p>
+  ) : null;
+
   return (
-    <div className={`demo-options-menu${className ? ` ${className}` : ""}`} ref={rootRef}>
+    <div className={`demo-options-menu${className ? ` ${className}` : ""}`}>
       <button
+        ref={triggerRef}
         type="button"
         className="demo-options-menu__trigger"
         aria-label={t("businessDemo.options.moreAria")}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         draggable={false}
       >
@@ -96,33 +188,10 @@ export default function BusinessDemoOptionsMenu({ context = "whatsapp", subjectN
         </span>
       </button>
 
-      {open ? (
-        <ul id={menuId} className="demo-options-menu__panel" role="menu">
-          {options.map((opt) => (
-            <li key={opt.id} role="none">
-              <button
-                type="button"
-                role="menuitem"
-                className="demo-options-menu__item"
-                onClick={() => selectOption(opt.id)}
-              >
-                {t(opt.labelKey)}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {feedback ? (
-        <p
-          className={`demo-options-menu__feedback${
-            DAKINIS_DEMO_TOAST_CONTEXTS.has(context) ? " demo-options-menu__feedback--toast" : ""
-          }`}
-          role="status"
-        >
-          {feedback}
-        </p>
-      ) : null}
+      {panel && dakinisCanUseDom() ? createPortal(panel, document.body) : null}
+      {feedbackNode && useToast && dakinisCanUseDom()
+        ? createPortal(feedbackNode, document.body)
+        : feedbackNode}
     </div>
   );
 }

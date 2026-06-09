@@ -274,7 +274,7 @@ export default function RestaurantStockSection({ apiSession, tenantSlugForVertic
       <h3>{t("kitchen.title")}</h3>
       <p className="lead">
         {t(
-          isFerminaHouse ? "kitchen.leadFermina" : isDumplingHouse ? "kitchen.leadDumpling" : "kitchen.lead"
+          isFerminaHouse ? "kitchen.leadRestauranteDemo" : isDumplingHouse ? "kitchen.leadDumpling" : "kitchen.lead"
         )}
       </p>
       {error ? (

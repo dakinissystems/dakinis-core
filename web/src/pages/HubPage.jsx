@@ -180,7 +180,14 @@ export default function HubPage() {
             {session.business?.plan ? (
               <p className="lead" style={{ marginBottom: "1rem" }}>
                 {t("hub.currentPlan", { plan: session.business.plan })}{" "}
-                <a href="/#precios" className="link-btn">
+                <a
+                  href="/precios"
+                  className="link-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/precios");
+                  }}
+                >
                   {t("hub.upgradePlanCta")}
                 </a>
               </p>

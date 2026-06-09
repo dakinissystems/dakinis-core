@@ -1,7 +1,7 @@
-import { useCallback } from "react";
-import { dakinisContactWhatsappUrl } from "@dakinis/shared-brand/social-links";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDraggableFloatingButton } from "../hooks/useDraggableFloatingButton.js";
+import { DAKINIS_PLAN_SELECTED_EVENT, dakinisWhatsappUrlWithOptionalPlan } from "../utils/planWhatsapp.js";
 
 const STORAGE_KEY = "dakinis-whatsapp-fab-position";
 
@@ -18,7 +18,18 @@ function WhatsappIcon() {
 
 export default function DraggableWhatsappButton() {
   const { locale, t } = useLocale();
-  const href = dakinisContactWhatsappUrl(locale);
+  const [planRevision, setPlanRevision] = useState(0);
+
+  useEffect(() => {
+    const onPlanSelected = () => setPlanRevision((n) => n + 1);
+    window.addEventListener(DAKINIS_PLAN_SELECTED_EVENT, onPlanSelected);
+    return () => window.removeEventListener(DAKINIS_PLAN_SELECTED_EVENT, onPlanSelected);
+  }, []);
+
+  const href = useMemo(
+    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t }),
+    [locale, t, planRevision]
+  );
 
   const openWhatsapp = useCallback(() => {
     window.open(href, "_blank", "noopener,noreferrer");

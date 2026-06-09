@@ -81,6 +81,9 @@ export default function CommercialBusinessDashboard({ navigate }) {
         <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
           {t("businessDemo.dashboard.ctaWhatsapp")}
         </button>
+        <button type="button" className="btn btn-outline" onClick={() => navigate("/app/reportes")}>
+          {t("appNav.reports")}
+        </button>
       </div>
     </div>
   );

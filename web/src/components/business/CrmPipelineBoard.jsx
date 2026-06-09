@@ -58,7 +58,9 @@ export default function CrmPipelineBoard({ draggable = true }) {
                 onDragStart={() => onDragStart(stage.id, name)}
               >
                 <span className="crm-pipeline__card-name">{name}</span>
-                <BusinessDemoOptionsMenu context="crm" subjectName={name} />
+                <div onDragStart={(e) => e.preventDefault()}>
+                  <BusinessDemoOptionsMenu context="crm" subjectName={name} />
+                </div>
               </li>
             ))}
           </ul>

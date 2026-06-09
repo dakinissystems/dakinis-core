@@ -303,11 +303,11 @@ const MOCK_FERMINA_LINES = [
   { name: "Choripán", qty: 2, unitPrice: 7.5 }
 ];
 
-const FERMINA_VENUE_NAME = "Fermina Food";
+const DEMO_RESTAURANT_VENUE = "Tu restaurante";
 
 const MOCK_FERMINA_ORDER = {
   orderNumber: 1042,
-  venueName: FERMINA_VENUE_NAME,
+  venueName: DEMO_RESTAURANT_VENUE,
   createdAt: "2026-05-31T18:45:00.000Z",
   customerName: "Terraza 3",
   table: "Terraza 3",
@@ -329,7 +329,7 @@ function ferminaSeedOrders() {
     {
       id: "o-1041",
       orderNumber: 1041,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: ferminaMinutesAgo(3),
       customerName: "Lucía — para llevar",
       table: "Mostrador",
@@ -343,7 +343,7 @@ function ferminaSeedOrders() {
     {
       id: "o-1040",
       orderNumber: 1040,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: "2026-05-31T14:05:00.000Z",
       customerName: "Pedido Glovo #8821",
       table: "—",
@@ -360,7 +360,7 @@ function ferminaSeedOrders() {
     {
       id: "o-1039",
       orderNumber: 1039,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: "2026-05-31T12:30:00.000Z",
       customerName: "Uber Eats · Carlos",
       table: "—",
@@ -375,7 +375,7 @@ function ferminaSeedOrders() {
 }
 
 const MOCK_FERMINA_INVOICE_CLIENT = {
-  invoiceNumber: "FF-C-2026-0008",
+  invoiceNumber: "DEMO-C-2026-0008",
   type: "cliente",
   customerName: "Lucía Ortega",
   taxId: "",
@@ -387,9 +387,9 @@ const MOCK_FERMINA_INVOICE_CLIENT = {
 };
 
 const MOCK_FERMINA_INVOICE_GESTOR = {
-  invoiceNumber: "FF-G-2026-0003",
+  invoiceNumber: "DEMO-G-2026-0003",
   type: "gestor",
-  customerName: "Fermina Food SRL",
+  customerName: "Tu restaurante S.L.",
   taxId: "30-71234567-8",
   subtotal: 41.5,
   tax: 8.72,
@@ -560,7 +560,7 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: new Date().toISOString(),
       customerName: label,
       table: label,
@@ -587,7 +587,7 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: new Date().toISOString(),
       customerName: label,
       table: label,
@@ -610,7 +610,7 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
     const order = {
       id: `o-${nextOrderNum}`,
       orderNumber: nextOrderNum,
-      venueName: FERMINA_VENUE_NAME,
+      venueName: DEMO_RESTAURANT_VENUE,
       createdAt: new Date().toISOString(),
       customerName: customerName.trim() || "Cliente",
       table: table.trim(),
@@ -644,12 +644,12 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
 
   return (
     <>
-      <article className="card fermina-ops--branded" style={{ marginBottom: "1rem" }}>
-        <div className="fermina-ops__header" style={{ marginBottom: "0.75rem" }}>
-          <img src="/assets/fermina-logo.png" alt="Fermina Food" className="fermina-ops__logo" width={160} />
+      <article className="card" style={{ marginBottom: "1rem" }}>
+        <div style={{ marginBottom: "0.75rem" }}>
           <div>
+            <h3 style={{ margin: "0 0 0.25rem" }}>{t("mockupPanels.restaurante.brand")}</h3>
             <p className="kicker" style={{ margin: 0 }}>
-              Comida argentina · demo operativa
+              {t("mockupPanels.restaurante.comandasKicker")}
             </p>
             <p className="lead" style={{ margin: "0.25rem 0 0", fontSize: "0.9rem" }}>
               <strong>Mesas:</strong> 5 salón + 5 terraza, cuenta por mesa y cierre (efectivo/tarjeta). Para llevar y
@@ -1087,9 +1087,10 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
           <FerminaPrintSheet
             kind="comanda"
             doc={printDoc.doc}
-            businessName={FERMINA_VENUE_NAME}
+            businessName={DEMO_RESTAURANT_VENUE}
             channelLabel={ferminaChannelLabel}
             paymentLabel={ferminaPaymentLabel}
+            showLogo={false}
           />
         </div>
       ) : null}
@@ -1141,29 +1142,31 @@ function PanelComandas({ panelRole, mesasOnly = false }) {
       <article className="card">
         <h3 style={{ marginTop: 0 }}>Vistas de impresión (como sale al imprimir)</h3>
         <p className="lead" style={{ fontSize: "0.9rem" }}>
-          Al pulsar <strong>Imprimir</strong> en comanda o factura, el navegador abre esta hoja (logo Fermina,
-          líneas y total).
+          Al pulsar <strong>Imprimir</strong> en comanda o factura, el navegador abre esta hoja con líneas y total.
         </p>
         <div className="mockup-print-grid" style={{ marginTop: "1rem" }}>
           <FerminaPrintSheet
             kind="comanda"
             doc={MOCK_FERMINA_ORDER}
-            businessName={FERMINA_VENUE_NAME}
+            businessName={DEMO_RESTAURANT_VENUE}
             channelLabel={ferminaChannelLabel}
             paymentLabel={ferminaPaymentLabel}
             caption="Comanda cocina"
+            showLogo={false}
           />
           <FerminaPrintSheet
             kind="factura"
             doc={MOCK_FERMINA_INVOICE_CLIENT}
-            businessName={FERMINA_VENUE_NAME}
+            businessName={DEMO_RESTAURANT_VENUE}
             caption="Factura cliente"
+            showLogo={false}
           />
           <FerminaPrintSheet
             kind="factura"
             doc={MOCK_FERMINA_INVOICE_GESTOR}
-            businessName={FERMINA_VENUE_NAME}
+            businessName={DEMO_RESTAURANT_VENUE}
             caption="Factura gestor"
+            showLogo={false}
           />
         </div>
       </article>

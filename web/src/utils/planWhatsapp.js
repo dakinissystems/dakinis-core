@@ -47,3 +47,20 @@ export function dakinisWhatsappUrlWithOptionalPlan({ locale, t }) {
   }
   return dakinisContactWhatsappUrl(locale);
 }
+
+export function dakinisPlanContactMessage(t, selected = dakinisReadSelectedPlan()) {
+  if (!selected?.key) return null;
+  const planName = t(`pricing.bos.plans.${selected.key}.name`);
+  return dakinisPlanWhatsappMessage(t, { name: planName, priceEur: selected.priceEur });
+}
+
+export function dakinisPlanMailtoUrl(email, { t, selected = dakinisReadSelectedPlan() }) {
+  const params = new URLSearchParams();
+  if (selected?.key) {
+    const planName = t(`pricing.bos.plans.${selected.key}.name`);
+    params.set("subject", t("pricing.planMailtoSubject", { plan: planName }));
+    params.set("body", dakinisPlanWhatsappMessage(t, { name: planName, priceEur: selected.priceEur }));
+  }
+  const q = params.toString();
+  return `mailto:${email}${q ? `?${q}` : ""}`;
+}

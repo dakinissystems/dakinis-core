@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { company } from "@dakinis/shared-brand";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
-import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import PricingHybridSection from "../components/PricingHybridSection.jsx";
 import DemoVerticalCards from "../components/commercial/DemoVerticalCards.jsx";
 import ExcelVsDakinisTable from "../components/commercial/ExcelVsDakinisTable.jsx";
 import ExcelCostSimulator from "../components/commercial/ExcelCostSimulator.jsx";
@@ -76,17 +74,13 @@ export default function ProductHomePage() {
               </button>
             </div>
             <p className="hero-actions-secondary">
-              <a
-                href="/#precios"
+              <button
+                type="button"
                 className="link-btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  dakinisGoHomeAnchor(navigate, "precios");
-                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home" });
-                }}
+                onClick={() => navigate("/precios")}
               >
-                {t("productHome.requestDemo")}
-              </a>
+                {t("productHome.viewPlans")}
+              </button>
               <span className="hero-actions-dot">·</span>
               <a href={DAKINIS_URL_CORPORATE} className="link-btn" target="_blank" rel="noreferrer">
                 {t("productHome.corporateSite")}
@@ -155,7 +149,16 @@ export default function ProductHomePage() {
         </div>
       </section>
 
-      <PricingHybridSection variant="saas" showContact />
+      <section className="modules commercial-section commercial-section--alt">
+        <div className="container card pricing-page-cta">
+          <p className="kicker">{t("productHome.pricingCtaKicker")}</p>
+          <h2 style={{ marginTop: "0.25rem" }}>{t("productHome.pricingCtaTitle")}</h2>
+          <p className="lead">{t("productHome.pricingCtaLead")}</p>
+          <button type="button" className="btn" onClick={() => navigate("/precios")}>
+            {t("productHome.viewPlans")}
+          </button>
+        </div>
+      </section>
     </>
   );
 }

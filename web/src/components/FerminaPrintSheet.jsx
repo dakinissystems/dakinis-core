@@ -17,13 +17,13 @@ import { ferminaFormatOrderPlacedAt } from "../utils/ferminaPrintFormat.js";
 export default function FerminaPrintSheet({
   kind,
   doc,
-  businessName = "Fermina Food",
+  businessName = "Tu restaurante",
   dateLocale = "es-ES",
   t,
   channelLabel,
   paymentLabel,
   caption,
-  showLogo = true
+  showLogo = false
 }) {
   const isComanda = kind === "comanda";
   const lineTotal = (l) => (l.qty * l.unitPrice).toFixed(2);

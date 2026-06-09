@@ -8,6 +8,7 @@ import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
 import { useDakinisFeatureTelemetry } from "../hooks/useDakinisFeatureTelemetry.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import ProductHomePage from "../pages/ProductHomePage.jsx";
+import PricingPage from "../pages/PricingPage.jsx";
 import HubPage from "../pages/HubPage.jsx";
 import EcosystemLaunchPage from "../pages/EcosystemLaunchPage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
@@ -90,8 +91,16 @@ function AppRoutes() {
     else if (path === "/legal") document.title = t("doc.legal");
     else if (path === "/admin") document.title = t("doc.admin");
     else if (path.startsWith("/app/")) document.title = t("doc.app");
+    else if (path === "/precios") document.title = t("doc.pricing");
     else document.title = t("doc.default");
   }, [location.pathname, locale, t]);
+
+  useEffect(() => {
+    const hash = location.hash.replace("#", "");
+    if (location.pathname === "/" && (hash === "precios" || hash === "contact")) {
+      navigate(hash === "contact" ? "/precios#contact" : "/precios", { replace: true });
+    }
+  }, [location.pathname, location.hash, navigate]);
 
   useEffect(() => {
     if (!session?.token) return;
@@ -214,6 +223,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPage navigate={nav} />} />
       <Route path="/terms" element={<TermsPage navigate={nav} />} />
       <Route path="/legal" element={<LegalNoticePage navigate={nav} />} />
+      <Route path="/precios" element={<PricingPage />} />
       <Route path="/" element={<ProductHomePage />} />
       <Route path="*" element={<LegacyPathRoutes navigate={nav} />} />
     </Routes>

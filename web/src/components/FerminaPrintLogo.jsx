@@ -1,21 +1,23 @@
-/** Logo para ticket/comanda — URL absoluta y carga eager para que no salga en blanco al imprimir o PDF. */
-export function ferminaPrintLogoSrc() {
-  const path = "/assets/fermina-logo.png";
+/** Logo opcional para ticket/comanda — URL absoluta y carga eager para impresión o PDF. */
+export function ferminaPrintLogoSrc(logoPath = "") {
+  if (!logoPath) return "";
   if (typeof window !== "undefined" && window.location?.origin) {
     try {
-      return new URL(path, window.location.origin).href;
+      return new URL(logoPath, window.location.origin).href;
     } catch {
-      return path;
+      return logoPath;
     }
   }
-  return path;
+  return logoPath;
 }
 
-export default function FerminaPrintLogo({ width = 160 }) {
+export default function FerminaPrintLogo({ width = 160, src = "" }) {
+  const resolved = ferminaPrintLogoSrc(src);
+  if (!resolved) return null;
   return (
     <img
-      src={ferminaPrintLogoSrc()}
-      alt="Fermina Food"
+      src={resolved}
+      alt=""
       className="fermina-print-sheet__logo"
       width={width}
       height="auto"
