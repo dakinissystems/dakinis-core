@@ -4266,6 +4266,16 @@ section {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(99, 102, 241, 0.08));
 }
 
+.hub-demo-commercial-cta__actions {
+  margin-top: 1rem;
+}
+
+.crm-demo-hint {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .mockup-badge--demo {
   background: rgba(99, 102, 241, 0.12);
   color: var(--muted);
@@ -4311,21 +4321,30 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 3.25rem;
-  min-height: 3.25rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0.85rem;
+  margin: 0;
   border-radius: 999px;
   background: #25d366;
   color: #fff;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   cursor: grab;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
   user-select: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .whatsapp-fab {
+    min-width: 3.25rem;
+    min-height: 3.25rem;
+  }
 }
 
 .whatsapp-fab:hover {
-  transform: translate(-50%, -50%) scale(1.08);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
 }
 

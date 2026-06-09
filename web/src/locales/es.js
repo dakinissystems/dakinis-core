@@ -756,7 +756,8 @@ export default {
     clients: {
       kicker: "Clientes",
       title: "Tu cartera de clientes",
-      lead: "Historial, compras y seguimiento en un solo sitio."
+      lead: "Historial, compras y seguimiento en un solo sitio.",
+      demoHint: "Arrastra las oportunidades entre columnas para ver cómo sigues cada venta."
     },
     sales: {
       kicker: "Ventas",
@@ -813,7 +814,10 @@ export default {
     hub: {
       ctaTitle: "🚀 Ver negocio demo",
       ctaLead: "Entra al panel comercial con clientes, ventas, inventario y reportes ya cargados.",
-      ctaButton: "Abrir dashboard comercial"
+      ctaButton: "Abrir dashboard comercial",
+      publicLead:
+        "Explora el panel como si fueras el dueño del negocio: clientes, ventas, inventario, reportes y WhatsApp ya cargados — sin configurar nada.",
+      ctaButtonPublic: "Probar demo gratis"
     }
   },
   mockupPanels: {

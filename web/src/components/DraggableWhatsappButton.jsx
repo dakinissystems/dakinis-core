@@ -1,13 +1,9 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback } from "react";
 import { dakinisContactWhatsappUrl } from "@dakinis/shared-brand/social-links";
 import { useLocale } from "../context/LocaleContext.jsx";
-import {
-  dakinisReadFloatingPosition,
-  dakinisWriteFloatingPosition
-} from "../utils/draggableFloatingPosition.js";
+import { useDraggableFloatingButton } from "../hooks/useDraggableFloatingButton.js";
 
 const STORAGE_KEY = "dakinis-whatsapp-fab-position";
-const DRAG_THRESHOLD_PX = 8;
 
 function WhatsappIcon() {
   return (
@@ -20,78 +16,22 @@ function WhatsappIcon() {
   );
 }
 
-function dakinisOpenWhatsapp(href) {
-  window.open(href, "_blank", "noopener,noreferrer");
-}
-
 export default function DraggableWhatsappButton() {
   const { locale, t } = useLocale();
   const href = dakinisContactWhatsappUrl(locale);
-  const [pos, setPos] = useState(() => dakinisReadFloatingPosition(STORAGE_KEY));
-  const dragStartRef = useRef(null);
-  const pointerOriginRef = useRef(null);
-  const hasMovedRef = useRef(false);
 
-  const savePosition = useCallback((x, y) => {
-    dakinisWriteFloatingPosition(STORAGE_KEY, { x, y });
-  }, []);
+  const openWhatsapp = useCallback(() => {
+    window.open(href, "_blank", "noopener,noreferrer");
+  }, [href]);
 
-  const handlePointerDown = (e) => {
-    hasMovedRef.current = false;
-    pointerOriginRef.current = { x: e.clientX, y: e.clientY };
-    dragStartRef.current = { x: e.clientX, y: e.clientY, posX: pos.x, posY: pos.y };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e) => {
-    if (!dragStartRef.current || !pointerOriginRef.current) return;
-
-    const origin = pointerOriginRef.current;
-    const moved = Math.hypot(e.clientX - origin.x, e.clientY - origin.y) > DRAG_THRESHOLD_PX;
-    if (!moved) return;
-
-    hasMovedRef.current = true;
-    e.preventDefault();
-
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const start = dragStartRef.current;
-    const dx = ((e.clientX - start.x) / w) * 100;
-    const dy = ((e.clientY - start.y) / h) * 100;
-    const nx = Math.max(0, Math.min(100, start.posX + dx));
-    const ny = Math.max(0, Math.min(100, start.posY + dy));
-    setPos({ x: nx, y: ny });
-    dragStartRef.current = { x: e.clientX, y: e.clientY, posX: nx, posY: ny };
-  };
-
-  const handlePointerUp = (e) => {
-    const start = dragStartRef.current;
-    const didMove = hasMovedRef.current;
-
-    e.currentTarget.releasePointerCapture(e.pointerId);
-
-    if (didMove && start) {
-      setPos({ x: start.posX, y: start.posY });
-      savePosition(start.posX, start.posY);
-    } else if (!didMove) {
-      dakinisOpenWhatsapp(href);
-    }
-
-    dragStartRef.current = null;
-    pointerOriginRef.current = null;
-    hasMovedRef.current = false;
-  };
-
-  const handlePointerCancel = (e) => {
-    e.currentTarget.releasePointerCapture(e.pointerId);
-    dragStartRef.current = null;
-    pointerOriginRef.current = null;
-    hasMovedRef.current = false;
-  };
-
-  const handleClick = (e) => {
-    e.preventDefault();
-  };
+  const {
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerCancel,
+    handleClick,
+    fabStyle
+  } = useDraggableFloatingButton({ storageKey: STORAGE_KEY, onTap: openWhatsapp });
 
   return (
     <a
@@ -99,11 +39,7 @@ export default function DraggableWhatsappButton() {
       target="_blank"
       rel="noopener noreferrer"
       className="whatsapp-fab"
-      style={{
-        left: `${pos.x}%`,
-        top: `${pos.y}%`,
-        transform: "translate(-50%, -50%)"
-      }}
+      style={fabStyle}
       aria-label={t("home.pricing.whatsappCta")}
       title={t("home.pricing.whatsappCta")}
       onClick={handleClick}

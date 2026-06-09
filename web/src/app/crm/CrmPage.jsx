@@ -23,6 +23,8 @@ function dakinisContactLabel(c) {
 export default function CrmPage({ navigate }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
+  const isDemo = dakinisIsBusinessDemoSession(session);
+  const isBusinessFacing = dakinisIsBusinessFacingSession(session);
   const [contacts, setContacts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [timeline, setTimeline] = useState(null);
@@ -89,12 +91,14 @@ export default function CrmPage({ navigate }) {
   );
 
   useEffect(() => {
+    if (isDemo) return;
     loadContacts();
-  }, [loadContacts]);
+  }, [isDemo, loadContacts]);
 
   useEffect(() => {
+    if (isDemo) return;
     if (selectedId) loadTimeline(selectedId);
-  }, [selectedId, loadTimeline]);
+  }, [isDemo, selectedId, loadTimeline]);
 
   async function handleCreateContact(e) {
     e.preventDefault();
@@ -142,8 +146,39 @@ export default function CrmPage({ navigate }) {
 
   const selected = contacts.find((c) => c.id === selectedId);
   const journeySteps = DAKINIS_CRM_JOURNEY_KEYS.map((key) => t(`app.crm.journey.${key}`));
-  const isDemo = dakinisIsBusinessDemoSession(session);
-  const isBusinessFacing = dakinisIsBusinessFacingSession(session);
+
+  if (isDemo) {
+    return (
+      <section className="modules business-app-page">
+        <div className="container">
+          {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
+          <p className="kicker">{t("businessDemo.clients.kicker")}</p>
+          <h2>{t("businessDemo.clients.title")}</h2>
+          <p className="lead">{t("businessDemo.clients.lead")}</p>
+          <span className="mockup-badge">{t("commercial.executive.demoBadge")}</span>
+
+          <div className="crm-demo-pipeline" style={{ marginTop: "1.25rem" }}>
+            <h3 style={{ marginTop: 0 }}>{t("businessDemo.pipeline.sectionTitle")}</h3>
+            <CrmPipelineBoard />
+          </div>
+
+          <p className="lead crm-demo-hint">{t("businessDemo.clients.demoHint")}</p>
+
+          <div className="commercial-business-dashboard__actions">
+            <button type="button" className="btn" onClick={() => navigate("/app/ventas")}>
+              {t("businessDemo.dashboard.ctaPipeline")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
+              {t("businessDemo.dashboard.ctaWhatsapp")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
+              {t("businessDemo.hub.ctaButton")}
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="modules business-app-page">
@@ -156,13 +191,6 @@ export default function CrmPage({ navigate }) {
         <p className="lead">
           {isBusinessFacing ? t("businessDemo.clients.lead") : t("app.crm.leadPersisted")}
         </p>
-
-        {isDemo ? (
-          <div style={{ marginBottom: "1.25rem" }}>
-            <h3 style={{ marginTop: 0 }}>{t("businessDemo.pipeline.sectionTitle")}</h3>
-            <CrmPipelineBoard />
-          </div>
-        ) : null}
 
         {crmReady === false ? (
           <p className="lead" style={{ color: "#f97316" }}>

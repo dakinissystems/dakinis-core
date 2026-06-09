@@ -131,20 +131,34 @@ export default function HubPage() {
         <p className="lead">{t("hub.lead")}</p>
 
         {!session?.token ? (
-          <div className="system-page-actions" style={{ marginBottom: "1.5rem" }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { from: "hub" });
-                navigate("/login");
-              }}
-            >
-              {t("hub.login")}
-            </button>
-            <a href={DAKINIS_URL_CORPORATE} className="btn btn-outline" target="_blank" rel="noreferrer">
-              {t("hub.requestDemo")}
-            </a>
+          <div className="hub-demo-commercial-cta card" style={{ marginBottom: "1.5rem" }}>
+            <h3 style={{ marginTop: 0 }}>{t("businessDemo.hub.ctaTitle")}</h3>
+            <p className="lead">{t("businessDemo.hub.publicLead")}</p>
+            <div className="system-page-actions hub-demo-commercial-cta__actions">
+              <button
+                type="button"
+                className="btn btn-lg"
+                onClick={() => {
+                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "hub_public" });
+                  navigate("/demo/restaurante");
+                }}
+              >
+                {t("businessDemo.hub.ctaButtonPublic")}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { from: "hub" });
+                  navigate("/login");
+                }}
+              >
+                {t("hub.login")}
+              </button>
+              <a href={DAKINIS_URL_CORPORATE} className="btn btn-outline" target="_blank" rel="noreferrer">
+                {t("hub.requestDemo")}
+              </a>
+            </div>
           </div>
         ) : (
           <>
