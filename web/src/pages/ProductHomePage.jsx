@@ -1,21 +1,23 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
-import { company } from "@dakinis/shared-brand";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
+import { company } from "@dakinis/shared-brand";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import DemoVerticalCards from "../components/commercial/DemoVerticalCards.jsx";
 import ExcelVsDakinisTable from "../components/commercial/ExcelVsDakinisTable.jsx";
 import ExcelCostSimulator from "../components/commercial/ExcelCostSimulator.jsx";
 import ModuleMarketplaceVisual from "../components/commercial/ModuleMarketplaceVisual.jsx";
+import GettingStartedSteps from "../components/commercial/GettingStartedSteps.jsx";
+import ProductShowcaseSection from "../components/commercial/ProductShowcaseSection.jsx";
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
 }
 
-/** Entrada SaaS Dakinis One — sin marketing corporativo duplicado. */
+/** Entrada SaaS Dakinis One — funnel problema → ahorro → confianza → demo → extras. */
 export default function ProductHomePage() {
   const navigate = useNavigate();
   const { t } = useLocale();
@@ -32,13 +34,18 @@ export default function ProductHomePage() {
     }
   }, [session, navigate]);
 
+  const openDemo = () => {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home_calculator" });
+    navigate("/demo/restaurante");
+  };
+
   return (
     <>
       <section className="hero product-home">
         <div className="container hero-grid">
           <div>
-            <p className="kicker">{company.tradingName}</p>
-            <h1>{company.productLineName}</h1>
+            <p className="kicker">{t("productHome.kicker")}</p>
+            <h1>{t("productHome.h1")}</h1>
             <p className="lead hero-benefit">{t("productHome.tagline")}</p>
             <p className="lead">{t("productHome.lead")}</p>
             <div className="hero-actions">
@@ -62,23 +69,12 @@ export default function ProductHomePage() {
               >
                 {t("productHome.login")}
               </button>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => {
-                  dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home_secondary" });
-                  navigate("/demo/clinica");
-                }}
-              >
-                {t("productHome.seeAllDemos")}
-              </button>
+              <a href="#excel-simulator" className="btn btn-outline">
+                {t("productHome.calcLink")}
+              </a>
             </div>
             <p className="hero-actions-secondary">
-              <button
-                type="button"
-                className="link-btn"
-                onClick={() => navigate("/precios")}
-              >
+              <button type="button" className="link-btn" onClick={() => navigate("/precios")}>
                 {t("productHome.viewPlans")}
               </button>
               <span className="hero-actions-dot">·</span>
@@ -96,12 +92,45 @@ export default function ProductHomePage() {
               height={120}
               loading="eager"
             />
-            <ul>
-              <li>{t("productHome.bullet1")}</li>
-              <li>{t("productHome.bullet2")}</li>
-              <li>{t("productHome.bullet3")}</li>
+            <ul className="product-home__hero-outcomes">
+              {(t("productHome.heroOutcomes") || []).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
+        </div>
+      </section>
+
+      <section className="commercial-section product-home__calculator-section">
+        <div className="container">
+          <ExcelCostSimulator onTryDemo={openDemo} />
+        </div>
+      </section>
+
+      <section className="commercial-section commercial-section--alt">
+        <div className="container card commercial-trust-card">
+          <p className="kicker">{t("productHome.trustKicker")}</p>
+          <h2 className="commercial-trust-card__title">{t("productHome.trustTitle")}</h2>
+          <p className="lead commercial-trust-card__experience">{t("productHome.trustExperience")}</p>
+          <p className="commercial-trust-card__subtitle">{t("productHome.trustSubtitle")}</p>
+          <p className="commercial-trust-card__story">{t("productHome.trustStory")}</p>
+          <ul className="commercial-roi-list commercial-trust-list">
+            {(t("productHome.trustBullets") || []).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="commercial-section">
+        <div className="container">
+          <GettingStartedSteps />
+        </div>
+      </section>
+
+      <section className="commercial-section commercial-section--alt product-home__showcase-section">
+        <div className="container">
+          <ProductShowcaseSection onTryDemo={openDemo} />
         </div>
       </section>
 
@@ -114,24 +143,8 @@ export default function ProductHomePage() {
       </section>
 
       <section className="commercial-section commercial-section--alt">
-        <div className="container commercial-two-col">
-          <ModuleMarketplaceVisual />
+        <div className="container">
           <ExcelVsDakinisTable />
-        </div>
-      </section>
-
-      <section className="commercial-section">
-        <div className="container commercial-two-col">
-          <ExcelCostSimulator />
-          <div className="card commercial-value-card">
-            <p className="kicker">{t("productHome.valueKicker")}</p>
-            <h3 style={{ margin: "0.25rem 0 0.5rem" }}>{t("productHome.valueTitle")}</h3>
-            <ul className="commercial-roi-list">
-              {(t("productHome.valueBullets") || []).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
         </div>
       </section>
 
@@ -139,17 +152,22 @@ export default function ProductHomePage() {
         <div className="container">
           <h2>{t("productHome.whatsIncluded")}</h2>
           <div className="pill-grid">
-            {(t("productHome.modules") || []).map((label) => (
+            {(t("productHome.screenItems") || []).map((label) => (
               <span key={label}>{label}</span>
             ))}
           </div>
-          <p className="lead" style={{ marginTop: "1rem" }}>
-            {t("productHome.whatsappPitch")}
-          </p>
+          <p className="lead product-home__whatsapp-pitch">{t("productHome.whatsappPitch")}</p>
         </div>
       </section>
 
-      <section className="modules commercial-section commercial-section--alt">
+      <section className="commercial-section commercial-section--alt">
+        <div className="container">
+          <ModuleMarketplaceVisual />
+          <p className="lead product-home__extras-hint">{t("productHome.extrasHint")}</p>
+        </div>
+      </section>
+
+      <section className="modules commercial-section">
         <div className="container card pricing-page-cta">
           <p className="kicker">{t("productHome.pricingCtaKicker")}</p>
           <h2 style={{ marginTop: "0.25rem" }}>{t("productHome.pricingCtaTitle")}</h2>

@@ -24,32 +24,98 @@ export default {
     byCompany: "by Dakinis Systems"
   },
   productHome: {
-    tagline: "Business Operating System for your business.",
-    lead: "CRM, scheduling, inventory and WhatsApp in one panel — no spreadsheets or disconnected tools.",
+    kicker: "Dakinis One",
+    h1: "Stop running your business on Excel.",
+    tagline: "Sales, clients and inventory in one place.",
+    lead: "No more jumping between Excel sheets, WhatsApp and paper. We migrate your data and support you through setup.",
+    heroOutcomes: ["Sales", "Clients", "Inventory", "Appointments"],
+    calcLink: "Calculate savings",
     viewPlans: "View plans & packages",
-    pricingCtaKicker: "Clear pricing",
-    pricingCtaTitle: "Pick the plan that fits your business",
-    pricingCtaLead: "Monthly plans, setup and project packages on a dedicated page — no surprises.",
+    pricingCtaKicker: "No surprises",
+    pricingCtaTitle: "Control sales, clients and inventory without the hassle",
+    pricingCtaLead:
+      "We migrate your Excel, configure the system and support you through setup. 15+ years helping businesses with technology.",
     login: "Sign in",
     openHub: "Open Hub",
     seeAllDemos: "See all demos",
     requestDemo: "Request a demo",
     corporateSite: "Corporate site",
+    trustKicker: "Why Dakinis?",
+    trustTitle: "We don't just build software — we understand how businesses actually work",
+    trustExperience: "15+ years working alongside businesses, universities and shops.",
+    trustSubtitle: "Setup, support, data migration and training for real users.",
+    trustStory:
+      "Dakinis was built by someone who spent 15 years in IT support watching shops, universities and offices run their day on Excel, paper, WhatsApp and tools that don't talk to each other — not someone who only sells licences from a desk.",
+    trustBullets: [
+      "We know how users work because we've spent years training them and fixing their issues",
+      "We migrate your spreadsheets, configure the system and stay with you through go-live",
+      "Training included so your team can use it from day one"
+    ],
+    showcase: {
+      kicker: "What it looks like",
+      title: "Real problems, screens you understand",
+      lead: "Real demo screenshots: stock, WhatsApp with linked clients and monthly sales — no generic dashboard icons.",
+      cta: "Try the interactive demo",
+      items: [
+        {
+          key: "inventory",
+          icon: "📊",
+          problemLabel: "Inventory",
+          title: "Still tracking stock in Excel?",
+          text: "Get alerts before you run out or lose goods to expiry.",
+          imageAlt: "Inventory panel with SKUs, low stock and expiring products"
+        },
+        {
+          key: "whatsapp",
+          icon: "📱",
+          problemLabel: "WhatsApp",
+          title: "Still hunting for client data across chats and sheets?",
+          text: "When a customer messages you, see who they are, what they spent and what they bought — no spreadsheet search.",
+          imageAlt: "WhatsApp conversation with linked client card: last purchase and total spent"
+        },
+        {
+          key: "sales",
+          icon: "📈",
+          problemLabel: "Sales",
+          title: "How much did you sell this month?",
+          text: "Check revenue, orders and monthly trend in seconds — without building tables by hand.",
+          imageAlt: "Sales report with revenue, orders, average ticket and monthly bar chart"
+        }
+      ]
+    },
+    gettingStarted: {
+      kicker: "No fear of change",
+      title: "How to get started with Dakinis",
+      lead: "The biggest fear isn't the software — it's losing data, stopping the business or not knowing how to use it. That's why we go step by step with you.",
+      steps: [
+        { title: "We upload your Excel", text: "Your sheets and lists move into the system without losing history." },
+        { title: "We set up your business", text: "Your sector, users and data ready to work." },
+        { title: "We train your team", text: "Plain-language training — not a technical manual." },
+        { title: "You start working", text: "Business as usual. You don't shut down to switch." }
+      ],
+      timeline: "Typical timeline: 1–3 days",
+      reassurance: [
+        "You don't lose your data",
+        "You don't learn it alone",
+        "You don't stop your business",
+        "If something doesn't fit, we adjust it with you"
+      ]
+    },
+    whatsIncluded: "Sales, clients and inventory in one place",
+    screenItems: ["Sales", "Clients", "Inventory", "Appointments", "Reports", "Stock alerts"],
     whatsappPitch:
-      "Reach your customers on WhatsApp from Dakinis One — part of the ecosystem, not a bolt-on.",
-    whatsIncluded: "Product modules",
-    modules: ["CRM", "Communications", "Inventory", "Restaurant", "Reservations", "Invoicing (roadmap)"],
-    bullet1: "Multi-tenant with isolated data per business",
-    bullet2: "Verticals: clinic, restaurant, real estate, salon",
-    bullet3: "Scale with modules: CRM, WhatsApp, inventory and reports in one place",
-    demosTitle: "Try your sector live",
-    demosLead: "Interactive demos with full flow: booking, sale, inventory and executive dashboard.",
-    valueKicker: "Why not Excel",
-    valueTitle: "Less wasted time, more closed sales",
+      "When a customer messages on WhatsApp, you see their history, purchases and data on the same screen — no copying back to Excel.",
+    extrasHint:
+      "WhatsApp, automations and advanced AI are there when your business already has the basics under control — you don't have to start there.",
+    demosTitle: "See how it looks in your sector",
+    demosLead:
+      "Demos by business type — not generic software. Pick clinic, restaurant, salon or real estate.",
+    valueKicker: "Before it costs you money",
+    valueTitle: "Stay ahead of your inventory",
     valueBullets: [
-      "Everything connected in one panel — no copying between spreadsheets",
-      "Visible ROI from day one: time saved and fewer mistakes",
-      "Scale module by module when you need it"
+      "Real-time stock with low-stock alerts",
+      "Expiry control before you lose goods",
+      "Automatic reports without building spreadsheets by hand"
     ]
   },
   commercial: {
@@ -66,32 +132,34 @@ export default {
       alertsTitle: "Important alerts"
     },
     simulator: {
-      kicker: "Calculator",
-      title: "How much does Excel still cost you?",
-      lead: "Estimate time lost on manual tasks each month.",
-      employees: "Number of employees",
-      salesPerDay: "Sales or appointments per day",
-      resultHours: "You lose roughly {hours} hours per month on manual tasks",
-      resultMoney: "That's about €{amount}/month in team time (at €18/h)"
+      kicker: "Savings calculator",
+      title: "How many hours a week do you spend on Excel?",
+      lead: "Pick a realistic estimate. Many SMBs don't count the time lost in sheets, copying data and hunting for information.",
+      hoursLabel: "Hours per week on Excel and manual tasks",
+      presetHours: "{hours} h/week",
+      resultHours: "You lose roughly {hours} hours per month.",
+      resultMoney: "That can mean about €{amount}/month in team time (at €18/h).",
+      resultAutomation: "With Dakinis you can automate much of that work.",
+      calcCta: "See how it would look for your business"
     },
     excelCompare: {
       kicker: "Comparison",
-      title: "Excel vs Dakinis One",
-      lead: "What SMBs need to see before deciding.",
+      title: "Still running your business on Excel?",
+      lead: "Same business, less chaos: useful information in one place instead of scattered sheets.",
       colExcel: "Excel / loose WhatsApp",
       colDakinis: "Dakinis One",
       rows: [
         { excel: "Data scattered across sheets", dakinis: "Everything integrated in one panel" },
         { excel: "Manual inventory", dakinis: "Automated stock with alerts" },
-        { excel: "No CRM", dakinis: "CRM with follow-up included" },
+        { excel: "No client follow-up", dakinis: "Client history and follow-up included" },
         { excel: "No online booking", dakinis: "Online booking and reminders" },
         { excel: "WhatsApp without history", dakinis: "WhatsApp integrated with the business" }
       ]
     },
     marketplace: {
-      kicker: "Scale when you want",
-      title: "Add features when you need them",
-      lead: "Start with essentials and enable modules without switching platforms.",
+      kicker: "Grow when you need to",
+      title: "Start simple, add later",
+      lead: "First you organise sales, clients and inventory. Everything else turns on when your business asks for it.",
       modules: {
         crm: { name: "CRM", defaultOn: true, roi: "Close more sales with automatic follow-up" },
         whatsapp: { name: "WhatsApp", defaultOn: true, roi: "Fewer no-shows and faster replies" },
@@ -459,20 +527,19 @@ export default {
   },
   pricingPage: {
     kicker: "Plans",
-    title: "Dakinis One plans & pricing",
-    valueHeadline:
-      "Manage clients, appointments, inventory and WhatsApp from one platform.",
+    title: "Leave Excel behind and centralise your business",
+    valueHeadline: "Sales, clients and inventory in one place.",
     valueSubheadline:
-      "Less time on admin. More time to serve customers and sell.",
+      "Control sales, clients and inventory without hassle. We migrate your data and train your team.",
     leadPoints: [
       "Clear monthly subscription",
-      "One-time initial setup",
-      "Bespoke project packages"
+      "Setup and Excel migration included at go-live",
+      "Training for your team"
     ]
   },
   pricing: {
     clientIntro:
-      "One clear monthly price for daily operations. No paying module by module — pick the plan that fits your business today and grow when you need to.",
+      "One clear monthly price for your day-to-day. We handle setup and Excel migration — you keep serving customers while the system gets ready.",
     includesTitle: "What's included",
     planCta: "I want this plan",
     planWhatsappMessage:
@@ -491,12 +558,12 @@ export default {
     implBridge:
       "The monthly fee is your software subscription. Setup is a one-time payment at the start, matched to the plan you choose.",
     problemsSolved: {
-      title: "What problems does Dakinis One solve?",
+      title: "Sound familiar?",
       items: [
-        "Missed appointments without reminders",
-        "No control over stock and expiry dates",
-        "Information split between WhatsApp and spreadsheets",
-        "Manual follow-up of clients and sales"
+        "You hunt for one figure across three Excel sheets and a WhatsApp chat",
+        "You don't know real stock until something's missing on the shelf",
+        "Appointments slip because there's no automatic reminder",
+        "Clients and sales tracked by hand — something's always out of date"
       ]
     },
     compare: {
@@ -506,14 +573,14 @@ export default {
       included: "Included",
       notIncluded: "Not included",
       rows: {
-        crm: { label: "CRM", starter: true, growth: true, pro: true },
-        agenda: { label: "Scheduling", starter: true, growth: true, pro: true },
+        crm: { label: "Clients and sales", starter: true, growth: true, pro: true },
+        agenda: { label: "Schedule and appointments", starter: true, growth: true, pro: true },
         reservations: { label: "Online booking", starter: true, growth: true, pro: true },
-        inventory: { label: "Inventory", starter: false, growth: true, pro: true },
-        whatsapp: { label: "Integrated WhatsApp", starter: false, growth: true, pro: true },
-        analytics: { label: "Analytics", starter: false, growth: true, pro: true },
-        ai: { label: "AI assistant", starter: false, growth: false, pro: true },
-        automations: { label: "Automations", starter: false, growth: false, pro: true }
+        inventory: { label: "Inventory and stock", starter: false, growth: true, pro: true },
+        whatsapp: { label: "WhatsApp in the panel", starter: false, growth: true, pro: true },
+        analytics: { label: "Automatic reports", starter: false, growth: true, pro: true },
+        ai: { label: "Advanced assistant", starter: false, growth: false, pro: true },
+        automations: { label: "Automatic reminders", starter: false, growth: false, pro: true }
       }
     },
     implementationByPlan: {
@@ -530,7 +597,7 @@ export default {
       pro: {
         label: "Pro setup",
         range: "€1,000+",
-        description: "Automations, AI configured and connections tailored to how you operate."
+        description: "Full migration, automations and connections tailored to how you operate."
       }
     },
     customDev: {
@@ -543,10 +610,10 @@ export default {
     contactHint: "We reply with a concrete proposal: plan, setup and timeline — no fine print.",
     whatsappFabHint: "The green floating button uses the same message once you've picked a plan.",
     bos: {
-      kicker: "BOS subscription",
-      title: "Dakinis One monthly plans",
+      kicker: "Monthly subscription",
+      title: "Pick a plan for the size of your business",
       subtitle:
-        "CRM, scheduling, inventory and WhatsApp in one place. One fixed monthly fee with clear included quotas before you start.",
+        "Sales, clients, inventory and appointments in one place. One fixed monthly fee and we help you get started.",
       perMonth: "/month",
       recommended: "recommended",
       overageLead:
@@ -595,12 +662,12 @@ export default {
         },
         pro: {
           name: "Pro",
-          tagline: "Scale with AI and automation",
-          audience: "For businesses that want to save time with technology",
+          tagline: "Less manual work every day",
+          audience: "For high-volume businesses that can't keep doing everything by hand",
           outcome:
-            "Automate repetitive work, use AI day to day and connect the Dakinis ecosystem when you want to grow without hiring more admin staff.",
+            "Automate reminders, centralise WhatsApp and save time without hiring more admin staff.",
           valueAnchor:
-            "Typically worth over €250/month if you bought CRM, WhatsApp, inventory and AI as separate tools. Everything integrated in one platform.",
+            "Typically worth over €250/month if you bought several separate tools. Everything integrated in one platform.",
           includes: [
             "Everything in Growth",
             "Integrated AI assistant",
@@ -868,8 +935,9 @@ export default {
     whatsapp: {
       kicker: "WhatsApp",
       title: "Client conversations",
-      pageLead: "Every chat linked to the client: history, last purchase and spend.",
-      lead: "Real messages with business context — not just a technical inbox.",
+      pageLead:
+        "When a customer messages you, see who they are, what they spent and what they bought — without hunting spreadsheets.",
+      lead: "Every chat linked to the client: history, last purchase and spend in one place.",
       conversations: "Conversations",
       linkedClient: "Linked client",
       clientLabel: "Client",
@@ -977,8 +1045,8 @@ export default {
     },
     reports: {
       kicker: "Reports",
-      title: "Business reports",
-      lead: "Sales, orders and monthly trend at a glance.",
+      title: "How much did you sell this month?",
+      lead: "See your sales at a glance: revenue, orders and monthly trend.",
       revenue: "Revenue (30 d)",
       orders: "Orders",
       avgTicket: "Avg. ticket",
@@ -995,7 +1063,7 @@ export default {
     },
     analytics: {
       kicker: "Analytics",
-      title: "Business analytics",
+      title: "How much did you sell — and where do customers come from?",
       lead: "Sales, channels, funnel and sector benchmarks — decisions backed by data, not guesswork.",
       liveBadge: "Live data from your tenant",
       planHint: "Live benchmarks require a Growth or Pro plan. Showing reference demo view.",

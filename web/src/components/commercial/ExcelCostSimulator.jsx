@@ -1,60 +1,57 @@
 import { useMemo, useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 
-function dakinisCalcExcelCost(employees, salesPerDay) {
-  const emp = Math.max(1, Number(employees) || 1);
-  const sales = Math.max(1, Number(salesPerDay) || 1);
-  const hoursPerMonth = Math.round(emp * 2.5 + sales * 0.08);
-  const moneyPerMonth = Math.round(hoursPerMonth * 18);
+const DAKINIS_WEEKLY_HOUR_PRESETS = [5, 10, 20];
+const DAKINIS_HOURLY_RATE_EUR = 18;
+
+function dakinisCalcExcelHoursCost(weeklyHours) {
+  const hours = Math.max(1, Number(weeklyHours) || 1);
+  const hoursPerMonth = hours * 4;
+  const moneyPerMonth = Math.round(hoursPerMonth * DAKINIS_HOURLY_RATE_EUR);
   return { hoursPerMonth, moneyPerMonth };
 }
 
-export default function ExcelCostSimulator({ id = "excel-simulator" }) {
+export default function ExcelCostSimulator({ id = "excel-simulator", onTryDemo }) {
   const { t } = useLocale();
-  const [employees, setEmployees] = useState(3);
-  const [salesPerDay, setSalesPerDay] = useState(25);
+  const [weeklyHours, setWeeklyHours] = useState(10);
 
-  const result = useMemo(() => dakinisCalcExcelCost(employees, salesPerDay), [employees, salesPerDay]);
+  const result = useMemo(() => dakinisCalcExcelHoursCost(weeklyHours), [weeklyHours]);
 
   return (
-    <section className="commercial-simulator card" id={id}>
+    <section className="commercial-simulator card commercial-simulator--prominent" id={id}>
       <p className="kicker">{t("commercial.simulator.kicker")}</p>
-      <h3 style={{ margin: "0.25rem 0 0.5rem" }}>{t("commercial.simulator.title")}</h3>
-      <p className="lead" style={{ fontSize: "0.95rem", marginTop: 0 }}>
-        {t("commercial.simulator.lead")}
-      </p>
+      <h3 className="commercial-simulator__title">{t("commercial.simulator.title")}</h3>
+      <p className="lead commercial-simulator__lead">{t("commercial.simulator.lead")}</p>
 
-      <div className="commercial-simulator__fields">
-        <label className="mockup-field">
-          <span>{t("commercial.simulator.employees")}</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={employees}
-            onChange={(e) => setEmployees(e.target.value)}
-          />
-        </label>
-        <label className="mockup-field">
-          <span>{t("commercial.simulator.salesPerDay")}</span>
-          <input
-            type="number"
-            min={1}
-            max={500}
-            value={salesPerDay}
-            onChange={(e) => setSalesPerDay(e.target.value)}
-          />
-        </label>
+      <p className="commercial-simulator__label">{t("commercial.simulator.hoursLabel")}</p>
+      <div className="commercial-simulator__presets" role="group" aria-label={t("commercial.simulator.hoursLabel")}>
+        {DAKINIS_WEEKLY_HOUR_PRESETS.map((hours) => (
+          <button
+            key={hours}
+            type="button"
+            className={`btn btn-outline commercial-simulator__preset${weeklyHours === hours ? " is-active" : ""}`}
+            onClick={() => setWeeklyHours(hours)}
+          >
+            {t("commercial.simulator.presetHours", { hours })}
+          </button>
+        ))}
       </div>
 
       <div className="commercial-simulator__result">
         <p className="commercial-simulator__result-main">
           {t("commercial.simulator.resultHours", { hours: result.hoursPerMonth })}
         </p>
-        <p className="lead" style={{ margin: "0.5rem 0 0", fontSize: "0.9rem" }}>
+        <p className="lead commercial-simulator__result-sub">
           {t("commercial.simulator.resultMoney", { amount: result.moneyPerMonth })}
         </p>
+        <p className="commercial-simulator__result-automation">{t("commercial.simulator.resultAutomation")}</p>
       </div>
+
+      {onTryDemo ? (
+        <button type="button" className="btn commercial-simulator__cta" onClick={onTryDemo}>
+          {t("commercial.simulator.calcCta")}
+        </button>
+      ) : null}
     </section>
   );
 }

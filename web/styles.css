@@ -463,6 +463,43 @@ a.link-btn {
   font-weight: 700;
 }
 
+.product-home__hero-outcomes {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.product-home__hero-outcomes li {
+  position: relative;
+  margin: 0;
+  padding-left: 1.35rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #d6eaff;
+}
+
+.product-home__hero-outcomes li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.commercial-trust-card {
+  padding: 1.35rem 1.5rem;
+  border-color: rgba(138, 154, 123, 0.35);
+  background: rgba(138, 154, 123, 0.06);
+}
+
+.commercial-trust-list li {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .pricing-problems-solved {
   margin-top: 1.5rem;
   padding: 1.15rem 1.25rem;
@@ -3949,6 +3986,318 @@ section {
 
 .commercial-marketplace__name {
   font-size: 0.95rem;
+}
+
+.commercial-simulator--prominent {
+  padding: 1.5rem 1.65rem;
+  border-color: rgba(138, 154, 123, 0.4);
+  background: linear-gradient(165deg, rgba(138, 154, 123, 0.08) 0%, rgba(8, 18, 30, 0.15) 100%);
+}
+
+.commercial-simulator__title {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.commercial-simulator__lead {
+  font-size: 0.95rem;
+  margin-top: 0;
+}
+
+.commercial-simulator__label {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.commercial-simulator__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.commercial-simulator__preset.is-active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: rgba(45, 212, 191, 0.12);
+}
+
+.commercial-simulator__result-sub {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.commercial-simulator__result-automation {
+  margin: 0.75rem 0 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #d6eaff;
+}
+
+.commercial-simulator__cta {
+  margin-top: 1rem;
+}
+
+.product-home__calculator-section {
+  padding-top: 0.25rem;
+}
+
+.commercial-trust-card__title {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.commercial-trust-card__experience {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  color: #d6eaff;
+}
+
+.commercial-trust-card__subtitle {
+  margin: 0 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.getting-started {
+  text-align: center;
+}
+
+.getting-started__lead {
+  max-width: 58ch;
+  margin: 0 auto 1.25rem;
+}
+
+.getting-started__flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  max-width: 28rem;
+}
+
+.getting-started__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.getting-started__step-card {
+  width: 100%;
+  padding: 1rem 1.15rem;
+  text-align: center;
+  border-color: rgba(138, 154, 123, 0.35);
+}
+
+.getting-started__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #04262a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-bottom: 0.45rem;
+}
+
+.getting-started__step-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.getting-started__step-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.getting-started__arrow {
+  display: block;
+  padding: 0.35rem 0;
+  font-size: 1.1rem;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.getting-started__timeline {
+  margin: 1.25rem 0 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #d6eaff;
+}
+
+.getting-started__reassurance {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 1rem;
+  max-width: 52rem;
+}
+
+.getting-started__reassurance li {
+  position: relative;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+  color: #b8cfe4;
+}
+
+.getting-started__reassurance li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .getting-started__flow {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    max-width: none;
+    gap: 0.35rem;
+  }
+
+  .getting-started__step {
+    flex: 1;
+    min-width: 0;
+    max-width: 220px;
+  }
+
+  .getting-started__arrow {
+    padding: 0 0.15rem;
+    align-self: center;
+    transform: rotate(-90deg);
+  }
+
+  .getting-started__step-card {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.commercial-trust-card__story {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #b8cfe4;
+  max-width: 62ch;
+}
+
+.product-home__whatsapp-pitch {
+  margin-top: 1rem;
+}
+
+.product-home__extras-hint {
+  margin-top: 1rem;
+  max-width: 58ch;
+  font-size: 0.95rem;
+}
+
+.product-showcase {
+  text-align: center;
+}
+
+.product-showcase__lead {
+  max-width: 52ch;
+  margin: 0 auto 2rem;
+}
+
+.product-showcase__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  text-align: left;
+}
+
+.product-showcase__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.product-showcase__item--reversed .product-showcase__copy {
+  order: 2;
+}
+
+.product-showcase__item--reversed .product-showcase__figure {
+  order: 1;
+}
+
+.product-showcase__problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+.product-showcase__problem-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.product-showcase__item-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.product-showcase__item-text {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 0.98rem;
+}
+
+.product-showcase__figure {
+  margin: 0;
+  padding: 0.5rem;
+  overflow: hidden;
+  border-color: rgba(138, 154, 123, 0.35);
+  background: rgba(8, 18, 30, 0.35);
+}
+
+.product-showcase__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.product-showcase__cta-wrap {
+  margin-top: 2rem;
+}
+
+@media (max-width: 900px) {
+  .product-showcase__item,
+  .product-showcase__item--reversed {
+    grid-template-columns: 1fr;
+  }
+
+  .product-showcase__item--reversed .product-showcase__copy,
+  .product-showcase__item--reversed .product-showcase__figure {
+    order: unset;
+  }
 }
 
 .commercial-simulator__fields {
