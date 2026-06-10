@@ -75,6 +75,36 @@ body {
   background: rgba(45, 212, 191, 0.12);
 }
 
+.topbar-packages-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.topbar-packages-btn.is-active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: rgba(45, 212, 191, 0.12);
+}
+
+.topbar-packages-btn__dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.topbar-packages-btn__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .lang-switch {
   display: inline-flex;
   border: 1px solid var(--line);

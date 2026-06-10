@@ -73,13 +73,21 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
           {!isSystemDemoView && !isBusinessDemo ? (
             <a
               href="/precios"
-              className="btn btn-outline"
+              className={`btn btn-outline topbar-packages-btn${
+                currentPath === "/precios" || currentPath.startsWith("/precios/") ? " is-active" : ""
+              }`}
+              aria-label={t("nav.packages")}
+              title={t("nav.packages")}
               onClick={(e) => {
                 e.preventDefault();
                 navigate("/precios");
               }}
             >
-              {t("nav.packages")}
+              <span className="topbar-packages-btn__dots" aria-hidden="true">
+                <span className="topbar-packages-btn__dot" />
+                <span className="topbar-packages-btn__dot" />
+                <span className="topbar-packages-btn__dot" />
+              </span>
             </a>
           ) : null}
           {session?.user?.email ? (
