@@ -54,24 +54,24 @@ export default {
     showcase: {
       kicker: "What it looks like",
       title: "Real problems, screens you understand",
-      lead: "Real demo screenshots: stock, WhatsApp with linked clients and monthly sales — no generic dashboard icons.",
+      lead: "Real demo screenshots — starting with the pain almost every SMB shares: WhatsApp without context.",
       cta: "Try the interactive demo",
       items: [
+        {
+          key: "whatsapp",
+          icon: "📱",
+          problemLabel: "WhatsApp",
+          title: "Still jumping between WhatsApp, Excel and the invoice?",
+          text: "Customer messages → you see who they are, what they spent and their last purchase. No asking staff or opening sheets.",
+          imageAlt: "WhatsApp conversation with linked client card: last purchase and total spent"
+        },
         {
           key: "inventory",
           icon: "📊",
           problemLabel: "Inventory",
           title: "Still tracking stock in Excel?",
-          text: "Get alerts before you run out or lose goods to expiry.",
-          imageAlt: "Inventory panel with SKUs, low stock and expiring products"
-        },
-        {
-          key: "whatsapp",
-          icon: "📱",
-          problemLabel: "WhatsApp",
-          title: "Still hunting for client data across chats and sheets?",
-          text: "When a customer messages you, see who they are, what they spent and what they bought — no spreadsheet search.",
-          imageAlt: "WhatsApp conversation with linked client card: last purchase and total spent"
+          text: "⚠️ Products below minimum and expiring this week — before you lose money on the shelf.",
+          imageAlt: "Inventory panel with low-stock and expiry alerts"
         },
         {
           key: "sales",
@@ -82,6 +82,31 @@ export default {
           imageAlt: "Sales report with revenue, orders, average ticket and monthly bar chart"
         }
       ]
+    },
+    video: {
+      kicker: "In 60 seconds",
+      title: "From Excel and WhatsApp to one screen",
+      lead: "The full journey in under a minute — no tech jargon.",
+      playerAria: "Introduction video",
+      placeholder: "Video coming soon",
+      placeholderNote: "While we record the video, try the interactive demo or book a no-obligation call.",
+      scenes: [
+        "Still running your business on Excel and WhatsApp?",
+        "When a customer messages…",
+        "With Dakinis you see who they are, what they spent and what they bought.",
+        "Control sales and inventory from one place.",
+        "We help you migrate your data."
+      ],
+      cta: "Try the demo",
+      ctaPricing: "View plans"
+    },
+    socialProof: {
+      kicker: "Coming soon",
+      title: "Real stories from businesses like yours",
+      lead: "We're collecting our first testimonials. If you want to be a reference in your area, let's talk.",
+      quotePreview:
+        "«We went from 8 Excel sheets to one screen» — that's how your story will sound when we have it.",
+      cta: "I want to be first"
     },
     gettingStarted: {
       kicker: "No fear of change",
@@ -1026,7 +1051,9 @@ export default {
       lead: "Stock levels, low alerts and expiry tracking.",
       totalProducts: "SKUs",
       lowStock: "Low stock",
+      lowStockPain: "⚠️ {count} products below minimum",
       expiring: "Expiring soon",
+      expiringPain: "⚠️ {count} products expire this week",
       tableTitle: "Product list",
       tableLead: "Real-time stock linked to sales and orders.",
       tableSubject: "inventory",

@@ -4288,6 +4288,135 @@ section {
   margin-top: 2rem;
 }
 
+.commercial-kpi-card--pain {
+  border-color: rgba(234, 179, 8, 0.45);
+  background: rgba(234, 179, 8, 0.08);
+}
+
+.kpi-value--pain {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #fde68a;
+}
+
+.product-video {
+  padding: 1.5rem 1.65rem;
+  border-color: rgba(138, 154, 123, 0.35);
+}
+
+.product-video__lead {
+  max-width: 52ch;
+  margin-bottom: 1.25rem;
+}
+
+.product-video__player {
+  margin-bottom: 1.25rem;
+}
+
+.product-video__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(138, 154, 123, 0.45);
+  background: rgba(8, 18, 30, 0.35);
+  text-align: center;
+}
+
+.product-video__placeholder-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: rgba(138, 154, 123, 0.2);
+  font-size: 1.25rem;
+  color: var(--brand);
+  margin-bottom: 0.75rem;
+}
+
+.product-video__placeholder-label {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #d6eaff;
+}
+
+.product-video__placeholder-note {
+  margin: 0.5rem 0 0;
+  max-width: 42ch;
+}
+
+.product-video__scenes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+  max-width: 52rem;
+}
+
+.product-video__scenes li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #c8d9ea;
+  text-align: left;
+}
+
+.product-video__scene-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: rgba(138, 154, 123, 0.2);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.product-video__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.product-social-teaser {
+  padding: 1.35rem 1.5rem;
+  border-color: rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.06);
+  text-align: center;
+}
+
+.product-social-teaser__title {
+  margin: 0.25rem 0 0.65rem;
+}
+
+.product-social-teaser__quote {
+  margin: 1rem auto;
+  padding: 0.85rem 1rem;
+  max-width: 48ch;
+  border-left: 3px solid var(--brand);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #d6eaff;
+  text-align: left;
+}
+
 @media (max-width: 900px) {
   .product-showcase__item,
   .product-showcase__item--reversed {

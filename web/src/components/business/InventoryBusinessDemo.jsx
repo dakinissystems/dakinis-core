@@ -3,9 +3,9 @@ import { DAKINIS_INVENTORY_DEMO_PRODUCTS } from "../../data/businessDemoContent.
 import BusinessDemoOptionsMenu from "./BusinessDemoOptionsMenu.jsx";
 
 const DAKINIS_INVENTORY_SUMMARY = [
-  { key: "totalProducts", value: "523", trendKey: "businessDemo.inventory.trends.total" },
-  { key: "lowStock", value: "7", trendKey: "businessDemo.inventory.trends.low" },
-  { key: "expiring", value: "3", trendKey: "businessDemo.inventory.trends.expiring" }
+  { key: "totalProducts", value: "523", trendKey: "businessDemo.inventory.trends.total", pain: false },
+  { key: "lowStock", value: "7", trendKey: "businessDemo.inventory.trends.low", pain: true },
+  { key: "expiring", value: "3", trendKey: "businessDemo.inventory.trends.expiring", pain: true }
 ];
 
 export default function InventoryBusinessDemo() {
@@ -15,9 +15,22 @@ export default function InventoryBusinessDemo() {
     <div className="inventory-business-demo">
       <div className="inventory-business-demo__summary">
         {DAKINIS_INVENTORY_SUMMARY.map((item) => (
-          <article key={item.key} className="card commercial-kpi-card commercial-kpi-card--inventory">
-            <p className="kpi-label">{t(`businessDemo.inventory.${item.key}`)}</p>
-            <p className="kpi-value">{item.value}</p>
+          <article
+            key={item.key}
+            className={`card commercial-kpi-card commercial-kpi-card--inventory${
+              item.pain ? " commercial-kpi-card--pain" : ""
+            }`}
+          >
+            {item.pain ? (
+              <p className="kpi-value kpi-value--pain">
+                {t(`businessDemo.inventory.${item.key}Pain`, { count: item.value })}
+              </p>
+            ) : (
+              <>
+                <p className="kpi-label">{t(`businessDemo.inventory.${item.key}`)}</p>
+                <p className="kpi-value">{item.value}</p>
+              </>
+            )}
             <p className="commercial-kpi-card__trend">{t(item.trendKey)}</p>
           </article>
         ))}

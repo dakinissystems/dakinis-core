@@ -12,6 +12,8 @@ import ExcelCostSimulator from "../components/commercial/ExcelCostSimulator.jsx"
 import ModuleMarketplaceVisual from "../components/commercial/ModuleMarketplaceVisual.jsx";
 import GettingStartedSteps from "../components/commercial/GettingStartedSteps.jsx";
 import ProductShowcaseSection from "../components/commercial/ProductShowcaseSection.jsx";
+import ProductVideoSection from "../components/commercial/ProductVideoSection.jsx";
+import ProductSocialProofTeaser from "../components/commercial/ProductSocialProofTeaser.jsx";
 
 function dakinisIsPlatformAdminSession(session) {
   return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
@@ -134,6 +136,12 @@ export default function ProductHomePage() {
         </div>
       </section>
 
+      <section className="commercial-section">
+        <div className="container">
+          <ProductVideoSection onTryDemo={openDemo} onPricing={() => navigate("/precios")} />
+        </div>
+      </section>
+
       <section className="modules commercial-section">
         <div className="container">
           <h2>{t("productHome.demosTitle")}</h2>
@@ -164,6 +172,12 @@ export default function ProductHomePage() {
         <div className="container">
           <ModuleMarketplaceVisual />
           <p className="lead product-home__extras-hint">{t("productHome.extrasHint")}</p>
+        </div>
+      </section>
+
+      <section className="commercial-section commercial-section--alt">
+        <div className="container">
+          <ProductSocialProofTeaser onContact={() => navigate("/precios#contact")} />
         </div>
       </section>
 

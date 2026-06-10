@@ -54,24 +54,24 @@ export default {
     showcase: {
       kicker: "Así se ve en la práctica",
       title: "Problemas reales, pantallas que entiendes",
-      lead: "Capturas reales de la demo: stock, WhatsApp con cliente vinculado y ventas del mes — sin iconos genéricos.",
+      lead: "Capturas reales de la demo — empezando por el dolor que casi todas las pymes comparten: WhatsApp sin contexto.",
       cta: "Probar en la demo interactiva",
       items: [
+        {
+          key: "whatsapp",
+          icon: "📱",
+          problemLabel: "WhatsApp",
+          title: "¿Aún buscas entre WhatsApp, Excel y la factura?",
+          text: "Cliente escribe → aparece quién es, cuánto ha gastado y su última compra. Sin preguntar al empleado ni abrir hojas.",
+          imageAlt: "Conversación de WhatsApp con ficha de cliente vinculada: última compra y total gastado"
+        },
         {
           key: "inventory",
           icon: "📊",
           problemLabel: "Inventario",
           title: "¿Sigues controlando el stock en Excel?",
-          text: "Recibe alertas antes de quedarte sin stock o perder productos por caducidad.",
-          imageAlt: "Panel de inventario con referencias, stock bajo y productos que caducan pronto"
-        },
-        {
-          key: "whatsapp",
-          icon: "📱",
-          problemLabel: "WhatsApp",
-          title: "¿Aún buscas datos del cliente entre chats y hojas?",
-          text: "Cuando un cliente te escribe, ves quién es, cuánto ha gastado y qué compró — sin buscar en Excel.",
-          imageAlt: "Conversación de WhatsApp con ficha de cliente vinculada: última compra y total gastado"
+          text: "⚠️ Productos por debajo del mínimo y caducidades esta semana — antes de perder dinero en el mostrador.",
+          imageAlt: "Panel de inventario con alertas de stock bajo y productos que caducan pronto"
         },
         {
           key: "sales",
@@ -82,6 +82,31 @@ export default {
           imageAlt: "Informe de ventas con ingresos, pedidos, ticket medio y gráfico de evolución mensual"
         }
       ]
+    },
+    video: {
+      kicker: "En 60 segundos",
+      title: "De Excel y WhatsApp a una sola pantalla",
+      lead: "El recorrido completo en menos de un minuto — sin jerga técnica.",
+      playerAria: "Vídeo de presentación",
+      placeholder: "Vídeo en preparación",
+      placeholderNote: "Mientras grabamos el vídeo, prueba la demo interactiva o pide una llamada sin compromiso.",
+      scenes: [
+        "¿Aún gestionas tu negocio con Excel y WhatsApp?",
+        "Cuando un cliente escribe…",
+        "Con Dakinis ves quién es, cuánto ha gastado y qué compró.",
+        "Controla ventas e inventario desde un solo lugar.",
+        "Te ayudamos a migrar tus datos."
+      ],
+      cta: "Probar la demo",
+      ctaPricing: "Ver planes"
+    },
+    socialProof: {
+      kicker: "Próximamente",
+      title: "Casos reales de negocios como el tuyo",
+      lead: "Estamos recogiendo los primeros testimonios en Málaga, Lugo, Jerez y alrededores. Si quieres ser referencia en tu sector, hablemos.",
+      quotePreview:
+        "«Pasamos de 8 hojas de Excel a una sola pantalla» — así sonará tu caso cuando lo tengamos.",
+      cta: "Quiero ser el primero"
     },
     gettingStarted: {
       kicker: "Sin miedo al cambio",
@@ -1028,7 +1053,9 @@ export default {
       lead: "Control de existencias, alertas de mínimo y caducidades.",
       totalProducts: "Referencias",
       lowStock: "Stock bajo",
+      lowStockPain: "⚠️ {count} productos por debajo del mínimo",
       expiring: "Próximos a caducar",
+      expiringPain: "⚠️ {count} productos caducan esta semana",
       tableTitle: "Listado de productos",
       tableLead: "Stock en tiempo real vinculado a ventas y comandas.",
       tableSubject: "inventario",
