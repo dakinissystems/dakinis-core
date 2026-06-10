@@ -9,7 +9,7 @@ export default {
     unexpectedErrorHint: "Recarga la página. Si persiste, contacta soporte."
   },
   nav: {
-    packages: "Paquetes y contacto",
+    packages: "Paquetes",
     login: "Iniciar sesión",
     quote: "Solicitar presupuesto",
     hub: "Hub",
@@ -459,13 +459,17 @@ export default {
     }
   },
   pricingPage: {
-    kicker: "Paquetes y contacto",
+    kicker: "Paquetes",
     title: "Planes y precios Dakinis One",
     valueHeadline:
       "Gestiona clientes, citas, inventario y WhatsApp desde una única plataforma.",
     valueSubheadline:
       "Menos tiempo en tareas administrativas. Más tiempo para atender y vender.",
-    lead: "Suscripción mensual, implantación inicial y paquetes de proyecto — todo en un solo sitio para decidir con claridad."
+    leadPoints: [
+      "Suscripción mensual clara",
+      "Implantación inicial (pago único)",
+      "Paquetes de proyecto a medida"
+    ]
   },
   pricing: {
     clientIntro:

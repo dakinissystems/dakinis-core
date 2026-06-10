@@ -23,7 +23,11 @@ export default function PricingPage() {
           <h1>{t("pricingPage.title")}</h1>
           <p className="lead pricing-page-intro__value">{t("pricingPage.valueHeadline")}</p>
           <p className="lead pricing-page-intro__subvalue">{t("pricingPage.valueSubheadline")}</p>
-          <p className="kpi-label pricing-page-intro__meta">{t("pricingPage.lead")}</p>
+          <ul className="pricing-page-intro__points">
+            {(t("pricingPage.leadPoints") || []).map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
         </div>
       </section>
       <PricingHybridSection variant="full" showContact sectionId="precios" />

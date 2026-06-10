@@ -1,8 +1,6 @@
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisGoHomeAnchor } from "../utils/homeAnchors.js";
-
 function Sep() {
   return (
     <span className="site-footer-sep" aria-hidden>
@@ -66,17 +64,6 @@ export default function AppFooter({ navigate }) {
             }}
           >
             {t("footer.packages")}
-          </a>
-          <Sep />
-          <a
-            href="/precios#contact"
-            className="site-footer-link"
-            onClick={(e) => {
-              e.preventDefault();
-              dakinisGoHomeAnchor(navigate, "contact");
-            }}
-          >
-            {t("footer.contact")}
           </a>
           <Sep />
           <a

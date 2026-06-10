@@ -9,7 +9,7 @@ export default {
     unexpectedErrorHint: "Reload the page. If it persists, contact support."
   },
   nav: {
-    packages: "Plans & contact",
+    packages: "Plans",
     login: "Log in",
     quote: "Request a quote",
     hub: "Hub",
@@ -458,13 +458,17 @@ export default {
     }
   },
   pricingPage: {
-    kicker: "Packages & contact",
+    kicker: "Plans",
     title: "Dakinis One plans & pricing",
     valueHeadline:
       "Manage clients, appointments, inventory and WhatsApp from one platform.",
     valueSubheadline:
       "Less time on admin. More time to serve customers and sell.",
-    lead: "Monthly subscription, initial setup and project packages — everything in one place to decide with confidence."
+    leadPoints: [
+      "Clear monthly subscription",
+      "One-time initial setup",
+      "Bespoke project packages"
+    ]
   },
   pricing: {
     clientIntro:
