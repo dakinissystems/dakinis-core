@@ -19,6 +19,29 @@ const DAKINIS_BUSINESS_NAV = [
   { path: "/app/whatsapp", labelKey: "appNav.whatsapp" }
 ];
 
+function TopbarPackagesButton({ navigate, currentPath, t }) {
+  const isActive = currentPath === "/precios" || currentPath.startsWith("/precios/");
+
+  return (
+    <a
+      href="/precios"
+      className={`btn btn-outline topbar-packages-btn${isActive ? " is-active" : ""}`}
+      aria-label={t("nav.packages")}
+      title={t("nav.packages")}
+      onClick={(e) => {
+        e.preventDefault();
+        navigate("/precios");
+      }}
+    >
+      <span className="topbar-packages-btn__dots" aria-hidden="true">
+        <span className="topbar-packages-btn__dot" />
+        <span className="topbar-packages-btn__dot" />
+        <span className="topbar-packages-btn__dot" />
+      </span>
+    </a>
+  );
+}
+
 export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
   const { t } = useLocale();
   const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
@@ -69,29 +92,12 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
         </div>
         <div className="topbar-actions">
           {!isBusinessDemo ? <DakinisCopilotBar /> : null}
-          <LanguageSwitcher />
-          {!isSystemDemoView && !isBusinessDemo ? (
-            <a
-              href="/precios"
-              className={`btn btn-outline topbar-packages-btn${
-                currentPath === "/precios" || currentPath.startsWith("/precios/") ? " is-active" : ""
-              }`}
-              aria-label={t("nav.packages")}
-              title={t("nav.packages")}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/precios");
-              }}
-            >
-              <span className="topbar-packages-btn__dots" aria-hidden="true">
-                <span className="topbar-packages-btn__dot" />
-                <span className="topbar-packages-btn__dot" />
-                <span className="topbar-packages-btn__dot" />
-              </span>
-            </a>
-          ) : null}
           {session?.user?.email ? (
             <>
+              <LanguageSwitcher />
+              {!isSystemDemoView && !isBusinessDemo ? (
+                <TopbarPackagesButton navigate={navigate} currentPath={currentPath} t={t} />
+              ) : null}
               {isBusinessFacing && !isSystemDemoView ? (
                 <div className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
                   {DAKINIS_BUSINESS_NAV.map((item) => (
@@ -172,10 +178,11 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               </button>
             </>
           ) : (
-            <>
+            <div className="topbar-guest-actions">
+              <LanguageSwitcher />
               <a
                 href="/login"
-                className="btn btn-outline"
+                className="btn btn-outline topbar-login-btn"
                 onClick={(e) => {
                   e.preventDefault();
                   navigate("/login");
@@ -183,17 +190,10 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               >
                 {t("nav.login")}
               </a>
-              <a
-                href="/precios"
-                className="btn btn-outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/precios");
-                }}
-              >
-                {t("nav.quote")}
-              </a>
-            </>
+              {!isSystemDemoView && !isBusinessDemo ? (
+                <TopbarPackagesButton navigate={navigate} currentPath={currentPath} t={t} />
+              ) : null}
+            </div>
           )}
         </div>
       </div>
