@@ -8,7 +8,7 @@ import {
   dakinisNormalizeStockScanCode,
   dakinisResolveStockItemSlug
 } from "@dakinis/shared/catalog/stock-barcodes.js";
-import { dakinisSqlTimestampNow } from "../db/dialect.js";
+import { dakinisSqlInsertIgnore, dakinisSqlTimestampNow } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
@@ -89,16 +89,16 @@ async function dakinisNextLotLabelCode(businessId) {
 }
 
 async function dakinisEnsureDefaultLocations(businessId) {
-  const count = await dakinisQueryOne(
-    `SELECT COUNT(*) AS c FROM tenant_stock_locations WHERE business_id = ?`,
-    [businessId]
-  );
-  if (Number(count?.c) > 0) return;
-
   for (const loc of DAKINIS_DEFAULT_STOCK_LOCATIONS) {
     await dakinisRun(
-      `INSERT INTO tenant_stock_locations (id, business_id, slug, name, kind, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      dakinisSqlInsertIgnore("tenant_stock_locations", [
+        "id",
+        "business_id",
+        "slug",
+        "name",
+        "kind",
+        "sort_order"
+      ]),
       [dakinisNewId("loc"), businessId, loc.slug, loc.name, loc.kind, loc.sortOrder]
     );
   }
