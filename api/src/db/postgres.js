@@ -9,6 +9,17 @@ const { Pool } = pg;
 /** @type {import("pg").Pool | null} */
 let pgPool = null;
 
+async function dakinisEnsureTenantAccessColumns(schema) {
+  const q = (sql) => pgPool.query(sql);
+  await q(`ALTER TABLE ${schema}.tenant_subscriptions ADD COLUMN IF NOT EXISTS entitled_plan TEXT`);
+  await q(
+    `ALTER TABLE ${schema}.tenant_subscriptions ADD COLUMN IF NOT EXISTS access_state TEXT NOT NULL DEFAULT 'active'`
+  );
+  await q(`ALTER TABLE ${schema}.tenant_subscriptions ADD COLUMN IF NOT EXISTS access_reason TEXT`);
+  await q(`ALTER TABLE ${schema}.tenant_subscriptions ADD COLUMN IF NOT EXISTS access_note TEXT`);
+  await q(`ALTER TABLE ${schema}.tenant_subscriptions ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ`);
+}
+
 async function dakinisEnsureUserCredentialColumns(schema) {
   const q = (sql) => pgPool.query(sql);
   await q(
@@ -47,6 +58,7 @@ export async function dakinisInitPostgresPool() {
   });
   await pgPool.query("SELECT 1");
   await dakinisEnsureUserCredentialColumns(schema);
+  await dakinisEnsureTenantAccessColumns(schema);
   const businessCheck = await pgPool.query("SELECT to_regclass($1::text) AS reg", [
     `${schema}.business`
   ]);

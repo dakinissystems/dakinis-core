@@ -1,5 +1,5 @@
 /**
- * Modelo comercial híbrido Dakinis BOS (sin Stripe SDK aún).
+ * Modelo comercial híbrido Dakinis BOS (Stripe Payment Links + Checkout Session).
  * Principal: planes SaaS 29/79/149 + cuotas incluidas + exceso por consumo.
  * Paralelo: implantación + servicios profesionales (fuera de suscripción automática).
  */

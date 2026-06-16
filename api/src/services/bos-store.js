@@ -131,11 +131,14 @@ export async function dakinisGetBillingSummary(business) {
     subscription: sub
       ? {
           plan: sub.plan,
+          entitledPlan: sub.entitled_plan || sub.plan,
           status: sub.status,
+          accessState: sub.access_state || "active",
+          accessReason: sub.access_reason || null,
           periodStart: sub.current_period_start,
           periodEnd: sub.current_period_end
         }
-      : { plan, status: "active" },
+      : { plan, status: "active", accessState: "active" },
     usage: {
       ai,
       whatsapp: {
@@ -156,7 +159,7 @@ export async function dakinisGetBillingSummary(business) {
       note: commercial.overage.aiEur || commercial.overage.whatsappEur
         ? "Plan base + exceso consumo (IA/WhatsApp)"
         : "Solo plan base (dentro de cuotas incluidas)",
-      stripeConnected: false
+      stripeConnected: Boolean(sub?.stripe_customer_id)
     }
   };
 }

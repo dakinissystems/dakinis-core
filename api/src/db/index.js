@@ -96,6 +96,26 @@ function dakinisMigrateStockBarcodeColumn(db) {
   }
 }
 
+function dakinisMigrateTenantAccess(db) {
+  const cols = db.prepare("PRAGMA table_info(tenant_subscriptions)").all();
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("entitled_plan")) {
+    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN entitled_plan TEXT");
+  }
+  if (!names.has("access_state")) {
+    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_state TEXT NOT NULL DEFAULT 'active'");
+  }
+  if (!names.has("access_reason")) {
+    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_reason TEXT");
+  }
+  if (!names.has("access_note")) {
+    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_note TEXT");
+  }
+  if (!names.has("closed_at")) {
+    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN closed_at TEXT");
+  }
+}
+
 function dakinisMigrateInventoryLots(db) {
   db.exec(fs.readFileSync(path.join(__dirname, "schema-inventory-lots-migrate.sql"), "utf8"));
   const movCols = db.prepare("PRAGMA table_info(tenant_stock_movements)").all();
@@ -141,6 +161,7 @@ function dakinisInitSqlite() {
   dakinisMigrateTenantIntelligence(db);
   dakinisMigrateIntelligenceV2(db);
   dakinisMigrateBos(db);
+  dakinisMigrateTenantAccess(db);
   dakinisMigrateTelemetry(db);
   dakinisMigrateFeatureEvents(db);
   dakinisMigrateUserCredentials(db);

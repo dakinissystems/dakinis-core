@@ -18,6 +18,7 @@ import PlatformAdminPage from "../pages/PlatformAdminPage.jsx";
 import VistaMockupPage from "../pages/VistaMockupPage.jsx";
 import SystemPage from "../pages/SystemPage.jsx";
 import PublicAllergiesPage from "../pages/PublicAllergiesPage.jsx";
+import CheckoutSuccessPage from "../pages/CheckoutSuccessPage.jsx";
 import {
   FaqPage,
   LegalNoticePage,
@@ -92,6 +93,7 @@ function AppRoutes() {
     else if (path === "/admin") document.title = t("doc.admin");
     else if (path.startsWith("/app/")) document.title = t("doc.app");
     else if (path === "/precios") document.title = t("doc.pricing");
+    else if (path === "/success") document.title = t("doc.checkoutSuccess");
     else document.title = t("doc.default");
   }, [location.pathname, locale, t]);
 
@@ -224,6 +226,7 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage navigate={nav} />} />
       <Route path="/legal" element={<LegalNoticePage navigate={nav} />} />
       <Route path="/precios" element={<PricingPage />} />
+      <Route path="/success" element={<CheckoutSuccessPage />} />
       <Route path="/" element={<ProductHomePage />} />
       <Route path="*" element={<LegacyPathRoutes navigate={nav} />} />
     </Routes>

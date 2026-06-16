@@ -567,6 +567,10 @@ export default {
       "One clear monthly price for your day-to-day. We handle setup and Excel migration — you keep serving customers while the system gets ready.",
     includesTitle: "What's included",
     planCta: "I want this plan",
+    stripeCta: "Subscribe",
+    stripeLoading: "Redirecting to Stripe…",
+    stripeError: "Could not open checkout. Try again or message us on WhatsApp.",
+    planCtaWhatsapp: "I'd rather talk on WhatsApp",
     planWhatsappMessage:
       "Hello, I'm interested in the {plan} plan for Dakinis One (€{price}/month). Can we discuss setup and timeline?",
     planMailtoSubject: "Dakinis One — {plan} plan",
@@ -875,7 +879,26 @@ export default {
     app: "Dakinis App",
     hub: "Dakinis Hub",
     pricing: "Plans & packages · Dakinis One",
+    checkoutSuccess: "Subscription confirmed · Dakinis One",
     allergies: "Allergy poster · Dakinis One"
+  },
+  checkout: {
+    success: {
+      kicker: "Payment",
+      title: "Subscription activated!",
+      genericTitle: "Thank you for subscribing",
+      genericLead:
+        "If you just paid on Stripe, your plan will be active shortly. If you do not have an account yet, we will follow up with next steps.",
+      planActivated: "Your {plan} plan is being activated.",
+      nextSteps:
+        "Sign in with the same email you used on Stripe. For first access, check your welcome email or contact us.",
+      verifying: "Confirming your payment…",
+      errorTitle: "We could not verify the payment",
+      error: "Invalid or expired checkout session.",
+      goLogin: "Sign in",
+      viewPlans: "View plans",
+      backToPricing: "Back to pricing"
+    }
   },
   vistaMockup: {
     kicker: "Preview",
@@ -1612,6 +1635,34 @@ export default {
     resetEmailed: "Reset link sent to {email}.",
     resetManual: "Email not sent. Share manually with {email}: {url}",
     resetError: "Could not resend email",
+    access: {
+      column: "Access",
+      manage: "Access",
+      formTitle: "Tenant access control",
+      action: "Action",
+      actionSuspend: "Suspend",
+      actionReactivate: "Reactivate",
+      actionClose: "Close tenant",
+      reason: "Reason",
+      reasonLegal: "Legal / dispute",
+      reasonAbuse: "Service abuse",
+      reasonFraud: "Fraud",
+      reasonContract: "Contract breach",
+      reasonOther: "Other",
+      note: "Internal note",
+      notePlaceholder: "Internal reference, ticket, counsel…",
+      apply: "Apply",
+      error: "Could not update access",
+      confirmSuspend: "Suspend this tenant? API access will be blocked except billing.",
+      confirmReactivate: "Reactivate access? Stripe payment status will also apply.",
+      confirmClose: "Permanently close this tenant? They will not be able to sign in.",
+      state: {
+        active: "Active",
+        degraded: "Degraded (payment)",
+        suspended: "Suspended",
+        closed: "Closed"
+      }
+    },
     catalog: {
       title: "Ecosystem catalog (Hub / Landing)",
       lead:

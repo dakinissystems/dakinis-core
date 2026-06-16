@@ -17,6 +17,10 @@ import {
   dakinisConsumePasswordReset,
   dakinisRequestPasswordResetByEmail
 } from "../services/password-reset.js";
+import {
+  dakinisGetTenantAccessContext
+} from "../services/tenant-access-store.js";
+import { dakinisTenantLoginAccessDenialOrNull } from "../middleware/tenant-access.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -70,9 +74,13 @@ export async function dakinisHandleAuthLogin(rawBody) {
     return dakinisJsonError(500, "INTERNAL_ERROR", "Negocio asociado no encontrado");
   }
 
+  const accessCtx = await dakinisGetTenantAccessContext(business.id, business.plan);
+  const loginDenied = dakinisTenantLoginAccessDenialOrNull(accessCtx);
+  if (loginDenied) return loginDenied;
+
   const token = dakinisSignUserToken(user);
 
-  const planTier = dakinisNormalizeCommercialPlan(business.plan);
+  const planTier = dakinisNormalizeCommercialPlan(accessCtx.effectivePlan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
 
   await dakinisPublishEvent("user.login", {
@@ -99,9 +107,16 @@ export async function dakinisHandleAuthLogin(rawBody) {
         slug: business.slug,
         name: business.name,
         type: business.type,
-        plan: business.plan,
+        plan: accessCtx.effectivePlan,
+        planEntitled: accessCtx.entitledPlan,
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        access: {
+          state: accessCtx.accessState,
+          reason: accessCtx.accessReason,
+          degraded: accessCtx.degraded,
+          suspended: accessCtx.suspended
+        }
       }
     },
     business.type,
@@ -134,14 +149,23 @@ export async function dakinisHandleMe(req) {
 
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+  const accessCtx = await dakinisGetTenantAccessContext(business.id, business.plan);
 
   return dakinisJsonSuccess(
     {
       user,
       business: {
         ...business,
-        planTier,
-        modulesEnabled
+        plan: accessCtx.effectivePlan,
+        planEntitled: accessCtx.entitledPlan,
+        planTier: dakinisNormalizeCommercialPlan(accessCtx.effectivePlan),
+        modulesEnabled: dakinisListModulesForPlan(accessCtx.effectivePlan),
+        access: {
+          state: accessCtx.accessState,
+          reason: accessCtx.accessReason,
+          degraded: accessCtx.degraded,
+          suspended: accessCtx.suspended
+        }
       }
     },
     business.type,

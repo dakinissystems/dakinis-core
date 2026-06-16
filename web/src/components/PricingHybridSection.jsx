@@ -20,6 +20,81 @@ import {
   dakinisPackAdvanced
 } from "../data/pricingCatalog.js";
 import PricingComparisonTable from "./PricingComparisonTable.jsx";
+import {
+  dakinisFetchStripePlans,
+  dakinisStartStripeCheckout,
+  dakinisStripePaymentLinkUrl
+} from "../services/stripe-checkout.js";
+
+function PlanStripeSubscribeButton({ plan, t, locale, stripePlans }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const planConfig = stripePlans?.plans?.[plan.key];
+  const canStripe = Boolean(stripePlans?.configured && planConfig?.checkoutAvailable);
+
+  async function handleSubscribe() {
+    if (!canStripe || loading) return;
+    setLoading(true);
+    setError("");
+    dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur });
+    try {
+      if (planConfig.paymentLink) {
+        window.location.href = dakinisStripePaymentLinkUrl(planConfig.paymentLink);
+        return;
+      }
+      await dakinisStartStripeCheckout({ plan: plan.key });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("pricing.stripeError"));
+      setLoading(false);
+    }
+  }
+
+  if (!canStripe) {
+    return (
+      <a
+        href={dakinisPlanWhatsappUrl({
+          locale,
+          t,
+          plan: { name: plan.name, priceEur: plan.priceEur }
+        })}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn-outline pricing-plan-card__cta"
+        onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
+      >
+        {t("pricing.planCta")}
+      </a>
+    );
+  }
+
+  return (
+    <div className="pricing-plan-card__checkout">
+      <button
+        type="button"
+        className="btn btn-primary pricing-plan-card__cta"
+        onClick={handleSubscribe}
+        disabled={loading}
+      >
+        {loading ? t("pricing.stripeLoading") : t("pricing.stripeCta")}
+      </button>
+      {error ? <p className="pricing-plan-card__checkout-error">{error}</p> : null}
+      <a
+        href={dakinisPlanWhatsappUrl({
+          locale,
+          t,
+          plan: { name: plan.name, priceEur: plan.priceEur }
+        })}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="pricing-plan-card__whatsapp-alt"
+        onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
+      >
+        {t("pricing.planCtaWhatsapp")}
+      </a>
+    </div>
+  );
+}
 
 const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
 const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
@@ -60,6 +135,13 @@ export default function PricingHybridSection({
   const { locale, t } = useLocale();
   const showProjects = variant === "full";
   const [planRevision, setPlanRevision] = useState(0);
+  const [stripePlans, setStripePlans] = useState(null);
+
+  useEffect(() => {
+    dakinisFetchStripePlans()
+      .then((data) => setStripePlans(data))
+      .catch(() => setStripePlans(null));
+  }, []);
 
   useEffect(() => {
     const onPlanSelected = () => setPlanRevision((n) => n + 1);
@@ -189,19 +271,7 @@ export default function PricingHybridSection({
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <a
-                href={dakinisPlanWhatsappUrl({
-                  locale,
-                  t,
-                  plan: { name: plan.name, priceEur: plan.priceEur }
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-outline pricing-plan-card__cta"
-                onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
-              >
-                {t("pricing.planCta")}
-              </a>
+              <PlanStripeSubscribeButton plan={plan} t={t} locale={locale} stripePlans={stripePlans} />
             </article>
           ))}
         </div>

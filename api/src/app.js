@@ -4,6 +4,8 @@ import {
   dakinisHandlePlatformBusinessCreate,
   dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
+  dakinisHandlePlatformBusinessAccessPatch,
+  dakinisHandlePlatformBusinessDelete,
   dakinisHandlePlatformUserPatch,
   dakinisHandlePlatformUserResendReset,
   dakinisHandlePlatformUsers
@@ -66,6 +68,12 @@ import {
   dakinisHandleWhatsappWebhookVerify,
   dakinisHandleWhatsappWebhookPost
 } from "./api/whatsapp-routes.js";
+import {
+  dakinisHandleStripeWebhookPost,
+  dakinisHandleStripePublicPlansGet,
+  dakinisHandleStripeCheckoutSessionPost,
+  dakinisHandleStripeSessionGet
+} from "./api/stripe-routes.js";
 import { dakinisHandlePublicCatalog } from "./api/catalog-routes.js";
 import {
   dakinisHandlePublicIndustryTemplatesGet,
@@ -78,6 +86,7 @@ import {
 } from "./api/catalog-admin-routes.js";
 import { dakinisResolveTenant } from "./middleware/tenant.js";
 import { dakinisAuthenticateRequest } from "./middleware/auth.js";
+import { dakinisTenantAccessDenialOrNull } from "./middleware/tenant-access.js";
 
 export async function dakinisDispatch(req, rawBody, url) {
   const path = url.pathname;
@@ -97,6 +106,18 @@ export async function dakinisDispatch(req, rawBody, url) {
     const authErr = dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinessUpdate(platformBizPatchMatch[1], rawBody);
+  }
+  const platformBizAccessMatch = /^\/api\/platform\/businesses\/([^/]+)\/access$/.exec(path);
+  if (platformBizAccessMatch && req.method === "PATCH") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessAccessPatch(platformBizAccessMatch[1], rawBody);
+  }
+  const platformBizDeleteMatch = /^\/api\/platform\/businesses\/([^/]+)$/.exec(path);
+  if (platformBizDeleteMatch && req.method === "DELETE") {
+    const authErr = dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessDelete(platformBizDeleteMatch[1], rawBody);
   }
   if (path === "/api/platform/users" && req.method === "GET") {
     const authErr = dakinisRequirePlatformAdmin(req);
@@ -149,6 +170,22 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandleWhatsappWebhookPost(rawBody, req);
   }
 
+  const dakinisStripeWebhook =
+    path === "/webhooks/stripe" || path === "/api/webhooks/stripe";
+  if (dakinisStripeWebhook && req.method === "POST") {
+    return dakinisHandleStripeWebhookPost(rawBody, req);
+  }
+
+  if (path === "/api/public/stripe/plans" && req.method === "GET") {
+    return dakinisHandleStripePublicPlansGet();
+  }
+  if (path === "/api/public/stripe/checkout-session" && req.method === "POST") {
+    return dakinisHandleStripeCheckoutSessionPost(rawBody);
+  }
+  if (path === "/api/public/stripe/session" && req.method === "GET") {
+    return dakinisHandleStripeSessionGet(url);
+  }
+
   if (path === "/api/public/catalog" && req.method === "GET") {
     return await dakinisHandlePublicCatalog();
   }
@@ -186,6 +223,9 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (tenant.error) return tenant.error;
   const authError = await dakinisAuthenticateRequest(req, tenant.business);
   if (authError) return authError;
+
+  const accessDenied = dakinisTenantAccessDenialOrNull(req, path, req.method);
+  if (accessDenied) return accessDenied;
 
   if (path === "/api/me" && req.method === "GET") return dakinisHandleMeRequest(req);
   if (path === "/api/tenant/supply/deliveries" && req.method === "GET") return dakinisHandleSupplyDeliveriesList(req);

@@ -568,6 +568,10 @@ export default {
       "Un precio mensual claro para tu día a día. Nosotros implantamos y migramos tus Excel: tú sigues atendiendo clientes mientras el sistema queda listo.",
     includesTitle: "Qué incluye",
     planCta: "Quiero este plan",
+    stripeCta: "Suscríbete",
+    stripeLoading: "Redirigiendo a Stripe…",
+    stripeError: "No se pudo abrir el pago. Inténtalo de nuevo o escríbenos por WhatsApp.",
+    planCtaWhatsapp: "Prefiero hablar por WhatsApp",
     planWhatsappMessage:
       "Hola, me interesa el plan {plan} de Dakinis One ({price} €/mes). ¿Podemos hablar de implantación y plazos?",
     planMailtoSubject: "Dakinis One — plan {plan}",
@@ -877,7 +881,26 @@ export default {
     app: "Dakinis App",
     hub: "Dakinis Hub",
     pricing: "Planes y paquetes · Dakinis One",
+    checkoutSuccess: "Suscripción confirmada · Dakinis One",
     allergies: "Cartel de alergias · Dakinis One"
+  },
+  checkout: {
+    success: {
+      kicker: "Pago",
+      title: "¡Suscripción activada!",
+      genericTitle: "Gracias por tu suscripción",
+      genericLead:
+        "Si acabas de pagar en Stripe, en unos minutos tendrás acceso al plan contratado. Si aún no tienes cuenta, te contactaremos con los siguientes pasos.",
+      planActivated: "Tu plan {plan} está en proceso de activación.",
+      nextSteps:
+        "Usa el mismo email que en Stripe para iniciar sesión. Si es tu primer acceso, revisa el correo de bienvenida o escríbenos.",
+      verifying: "Confirmando tu pago…",
+      errorTitle: "No pudimos verificar el pago",
+      error: "Sesión de pago no válida o expirada.",
+      goLogin: "Iniciar sesión",
+      viewPlans: "Ver planes",
+      backToPricing: "Volver a precios"
+    }
   },
   vistaMockup: {
     kicker: "Vista previa",
@@ -1608,6 +1631,34 @@ export default {
     resetEmailed: "Enlace de restablecimiento enviado a {email}.",
     resetManual: "Email no enviado. Reenvía manualmente a {email}: {url}",
     resetError: "No se pudo reenviar el correo",
+    access: {
+      column: "Acceso",
+      manage: "Acceso",
+      formTitle: "Control de acceso del tenant",
+      action: "Acción",
+      actionSuspend: "Suspender",
+      actionReactivate: "Reactivar",
+      actionClose: "Cerrar tenant",
+      reason: "Motivo",
+      reasonLegal: "Legal / reclamación",
+      reasonAbuse: "Abuso del servicio",
+      reasonFraud: "Fraude",
+      reasonContract: "Incumplimiento contractual",
+      reasonOther: "Otro",
+      note: "Nota interna",
+      notePlaceholder: "Referencia interna, ticket, abogado…",
+      apply: "Aplicar",
+      error: "No se pudo actualizar el acceso",
+      confirmSuspend: "¿Suspender este tenant? El cliente no podrá usar la API salvo facturación.",
+      confirmReactivate: "¿Reactivar acceso? Se aplicará también el estado de pago Stripe.",
+      confirmClose: "¿Cerrar definitivamente este tenant? No podrá iniciar sesión.",
+      state: {
+        active: "Activo",
+        degraded: "Degradado (pago)",
+        suspended: "Suspendido",
+        closed: "Cerrado"
+      }
+    },
     catalog: {
       title: "Catálogo ecosistema (Hub / Landing)",
       lead:

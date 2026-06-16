@@ -5735,3 +5735,92 @@ section {
   font-size: 0.9rem;
   color: var(--muted);
 }
+
+.checkout-result-page__inner {
+  max-width: 40rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.checkout-result-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.checkout-result-page__note {
+  margin-top: 1rem;
+  color: var(--muted);
+}
+
+.pricing-plan-card__checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.pricing-plan-card__checkout-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b42318;
+}
+
+.pricing-plan-card__whatsapp-alt {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.pricing-plan-card__whatsapp-alt:hover {
+  color: var(--text);
+}
+
+.admin-access-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-access-badge--active {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.admin-access-badge--degraded {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.admin-access-badge--suspended {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.admin-access-badge--closed {
+  background: #f2f4f7;
+  color: #344054;
+}
+
+.admin-access-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-access-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  max-width: 36rem;
+}

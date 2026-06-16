@@ -22,6 +22,9 @@ import {
   dakinisResendPasswordResetForUserId,
   dakinisSendOnboardingEmail
 } from "../services/password-reset.js";
+import {
+  dakinisApplyAdminTenantAccess
+} from "../services/tenant-access-store.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -250,8 +253,14 @@ export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
 export async function dakinisHandlePlatformBusinesses() {
   const orderName = dakinisSqlOrderEmail("name");
   const rows = await dakinisQueryAll(
-    `SELECT id, slug, name, type, plan, created_at
-       FROM business
+    `SELECT b.id, b.slug, b.name, b.type, b.plan, b.created_at,
+            ts.status AS stripe_status,
+            ts.access_state,
+            ts.access_reason,
+            ts.entitled_plan,
+            ts.closed_at
+       FROM business b
+       LEFT JOIN tenant_subscriptions ts ON ts.business_id = b.id
        ORDER BY ${orderName}`
   );
   return dakinisJsonSuccess({ businesses: rows }, "platform", {});
@@ -344,5 +353,60 @@ export async function dakinisHandlePlatformUserResendReset(userId) {
     },
     "platform",
     {}
+  );
+}
+
+export async function dakinisHandlePlatformBusinessAccessPatch(businessId, rawBody) {
+  const id = typeof businessId === "string" ? businessId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de negocio invalido");
+  }
+  const body = dakinisParseJson(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+  const action = typeof body.action === "string" ? body.action.trim().toLowerCase() : "";
+  if (!["suspend", "reactivate", "close"].includes(action)) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "action debe ser suspend, reactivate o close");
+  }
+
+  const result = await dakinisApplyAdminTenantAccess(id, {
+    action,
+    reason: body.reason,
+    note: body.note
+  });
+  if (!result.ok) {
+    const code = result.reason === "platform_account_protected" ? "FORBIDDEN" : "VALIDATION_ERROR";
+    return dakinisJsonError(result.reason === "business_not_found" ? 404 : 400, code, result.reason);
+  }
+
+  const business = await dakinisQueryOne(
+    `SELECT b.id, b.slug, b.name, b.type, b.plan, b.created_at,
+            ts.status AS stripe_status, ts.access_state, ts.access_reason, ts.entitled_plan, ts.closed_at
+     FROM business b
+     LEFT JOIN tenant_subscriptions ts ON ts.business_id = b.id
+     WHERE b.id = ?`,
+    [id]
+  );
+
+  await dakinisPublishEvent("tenant.access.changed", {
+    tenantId: id,
+    action,
+    accessState: result.accessState,
+    reason: body.reason || null
+  });
+
+  return dakinisJsonSuccess({ business, access: result }, "platform", {});
+}
+
+export async function dakinisHandlePlatformBusinessDelete(businessId, rawBody) {
+  const body = dakinisParseJson(rawBody || "{}") || {};
+  return dakinisHandlePlatformBusinessAccessPatch(
+    businessId,
+    JSON.stringify({
+      action: "close",
+      reason: body.reason || "admin_other",
+      note: body.note || "Eliminado desde panel plataforma"
+    })
   );
 }

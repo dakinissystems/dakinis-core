@@ -6,6 +6,7 @@ import {
   dakinisLoadModuleOverrides,
   dakinisSeedDefaultBranchAsync
 } from "../services/tenant-intelligence-store.js";
+import { dakinisApplyTenantAccessToBusiness } from "./tenant-access.js";
 
 export async function dakinisResolveTenant(req) {
   const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
@@ -34,5 +35,6 @@ export async function dakinisResolveTenant(req) {
     await dakinisSeedDefaultBranchAsync(business.id, business.name, "principal").catch(() => {});
   }
   req.dakinisBusiness = { ...business, _moduleOverrides: overrides };
+  await dakinisApplyTenantAccessToBusiness(req);
   return { business: req.dakinisBusiness };
 }

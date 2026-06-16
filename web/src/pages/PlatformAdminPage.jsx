@@ -96,6 +96,57 @@ export default function PlatformAdminPage({ navigate }) {
   const [editUserEmail, setEditUserEmail] = useState("");
   const [userActionMsg, setUserActionMsg] = useState("");
 
+  const [accessActionId, setAccessActionId] = useState(null);
+  const [accessForm, setAccessForm] = useState({ action: "suspend", reason: "admin_other", note: "" });
+
+  const DAKINIS_ACCESS_REASONS = useMemo(
+    () => [
+      { value: "admin_legal", label: t("admin.access.reasonLegal") },
+      { value: "admin_abuse", label: t("admin.access.reasonAbuse") },
+      { value: "admin_fraud", label: t("admin.access.reasonFraud") },
+      { value: "admin_contract", label: t("admin.access.reasonContract") },
+      { value: "admin_other", label: t("admin.access.reasonOther") }
+    ],
+    [t]
+  );
+
+  function accessStateLabel(state) {
+    const key = state || "active";
+    const labels = {
+      active: t("admin.access.state.active"),
+      degraded: t("admin.access.state.degraded"),
+      suspended: t("admin.access.state.suspended"),
+      closed: t("admin.access.state.closed")
+    };
+    return labels[key] || key;
+  }
+
+  async function submitAccessAction(businessId) {
+    if (!session?.token || !businessId) return;
+    const confirmMsg =
+      accessForm.action === "close"
+        ? t("admin.access.confirmClose")
+        : accessForm.action === "suspend"
+          ? t("admin.access.confirmSuspend")
+          : t("admin.access.confirmReactivate");
+    if (!window.confirm(confirmMsg)) return;
+    setSaving(true);
+    setError("");
+    try {
+      await dakinisBearerJsonFetch(`/api/platform/businesses/${encodeURIComponent(businessId)}/access`, session.token, {
+        method: "PATCH",
+        body: accessForm
+      });
+      setAccessActionId(null);
+      setAccessForm({ action: "suspend", reason: "admin_other", note: "" });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("admin.access.error"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const tenantUsersOnly = useMemo(
     () => users.filter((u) => u.role !== "platform_admin"),
     [users]
@@ -500,6 +551,7 @@ export default function PlatformAdminPage({ navigate }) {
                 <th>Slug</th>
                 <th>Tipo</th>
                 <th>Plan</th>
+                <th>{t("admin.access.column")}</th>
                 <th />
               </tr>
             </thead>
@@ -511,16 +563,98 @@ export default function PlatformAdminPage({ navigate }) {
                     <code>{b.slug}</code>
                   </td>
                   <td>{dakinisFormatBusinessTypeLabel(b.type)}</td>
-                  <td>{b.plan}</td>
                   <td>
-                    <button type="button" className="btn btn-outline" onClick={() => startEdit(b)} disabled={!!editingId}>
-                      Editar
-                    </button>
+                    {b.plan}
+                    {b.entitled_plan && b.entitled_plan !== b.plan ? (
+                      <span className="admin-access-hint"> → {b.entitled_plan}</span>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span className={`admin-access-badge admin-access-badge--${b.access_state || "active"}`}>
+                      {accessStateLabel(b.access_state)}
+                    </span>
+                    {b.access_reason ? (
+                      <span className="admin-access-hint"> ({b.access_reason})</span>
+                    ) : null}
+                  </td>
+                  <td>
+                    <div className="admin-access-actions">
+                      <button type="button" className="btn btn-outline" onClick={() => startEdit(b)} disabled={!!editingId}>
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => {
+                          setAccessActionId(b.id);
+                          setAccessForm({
+                            action: b.access_state === "suspended" ? "reactivate" : "suspend",
+                            reason: "admin_other",
+                            note: ""
+                          });
+                        }}
+                        disabled={b.type === "platform" || !!editingId}
+                      >
+                        {t("admin.access.manage")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {accessActionId ? (
+            <form
+              className="card admin-access-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitAccessAction(accessActionId);
+              }}
+            >
+              <h4>{t("admin.access.formTitle")}</h4>
+              <label className="mockup-field">
+                <span>{t("admin.access.action")}</span>
+                <select
+                  value={accessForm.action}
+                  onChange={(ev) => setAccessForm((p) => ({ ...p, action: ev.target.value }))}
+                >
+                  <option value="suspend">{t("admin.access.actionSuspend")}</option>
+                  <option value="reactivate">{t("admin.access.actionReactivate")}</option>
+                  <option value="close">{t("admin.access.actionClose")}</option>
+                </select>
+              </label>
+              <label className="mockup-field">
+                <span>{t("admin.access.reason")}</span>
+                <select
+                  value={accessForm.reason}
+                  onChange={(ev) => setAccessForm((p) => ({ ...p, reason: ev.target.value }))}
+                >
+                  {DAKINIS_ACCESS_REASONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="mockup-field">
+                <span>{t("admin.access.note")}</span>
+                <textarea
+                  value={accessForm.note}
+                  onChange={(ev) => setAccessForm((p) => ({ ...p, note: ev.target.value }))}
+                  rows={3}
+                  placeholder={t("admin.access.notePlaceholder")}
+                />
+              </label>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <button type="submit" className="btn" disabled={saving}>
+                  {t("admin.access.apply")}
+                </button>
+                <button type="button" className="btn btn-outline" onClick={() => setAccessActionId(null)} disabled={saving}>
+                  {t("admin.cancel")}
+                </button>
+              </div>
+            </form>
+          ) : null}
         </article>
 
         <PlatformCatalogPanel />
