@@ -4,10 +4,11 @@ const NIF = "18513473Z";
 const ADDRESS = "Málaga, España";
 const COUNTRY_ES = "España";
 const COUNTRY_EN = "Spain";
-const PRIVACY = "privacy@dakinis-systems.com";
-const LEGAL = "legal@dakinis-systems.com";
-const SECURITY = "security@dakinis-systems.com";
-const SAFETY = "safety@dakinis-systems.com";
+const PRIVACY = "privacy@dakinissystems.com";
+const LEGAL = "legal@dakinissystems.com";
+const HELP = "help@dakinissystems.com";
+const SAFETY = "legal@dakinissystems.com";
+const HELLO = "hello@dakinissystems.com";
 const AEPD = "https://www.aepd.es";
 const CORPORATE = "https://dakinissystems.com/";
 const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/privacidad-solicitudes";
@@ -169,7 +170,7 @@ export const legalCoreEs = {
       { h: "6. Monitorización", p: "Registro estructurado e revisión de incidentes." },
       {
         h: "7. Vulnerabilidades",
-        p: `Reportar a ${SECURITY} o ${LEGAL}.`
+        p: `Reportar a ${HELP} o ${LEGAL}.`
       },
       { h: "8. Limitación", p: "Medidas razonables; ningún sistema es totalmente invulnerable." }
     ]
@@ -181,7 +182,7 @@ export const legalCoreEs = {
       { h: "2. Disponibilidad", p: "Objetivo de disponibilidad del servicio: 99,5 % mensual (excluye mantenimiento programado comunicado)." },
       { h: "3. Soporte", p: "Respuesta general: 48 horas laborables. Incidentes críticos: 24 horas." },
       { h: "4. Exclusiones", p: "Fuerza mayor, fallos de terceros fuera de control razonable y mantenimiento anunciado." },
-      { h: "5. Contacto", p: `${PRIVACY} · ${LEGAL}` }
+      { h: "5. Contacto", p: `${HELP} · ${LEGAL}` }
     ]
   }
 };
@@ -303,7 +304,7 @@ export const legalCoreEn = {
       { h: "6. Monitoring", p: "Structured logging and incident review." },
       {
         h: "7. Vulnerabilities",
-        p: `Report to ${SECURITY} or ${LEGAL}.`
+        p: `Report to ${HELP} or ${LEGAL}.`
       },
       { h: "8. Limitation", p: "Reasonable measures; no system is fully invulnerable." }
     ]
@@ -315,7 +316,7 @@ export const legalCoreEn = {
       { h: "2. Availability", p: "Service availability target: 99.5% monthly (excluding announced scheduled maintenance)." },
       { h: "3. Support", p: "General response: 48 business hours. Critical incidents: 24 hours." },
       { h: "4. Exclusions", p: "Force majeure, third-party failures outside reasonable control, and announced maintenance." },
-      { h: "5. Contact", p: `${PRIVACY} · ${LEGAL}` }
+      { h: "5. Contact", p: `${HELP} · ${LEGAL}` }
     ]
   }
 };
