@@ -1,5 +1,7 @@
 const RESEND_API_URL = "https://api.resend.com/emails";
 
+/** Email transaccional Dakinis One (onboarding, reset password). Requiere RESEND_API_KEY + RESEND_FROM. */
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
