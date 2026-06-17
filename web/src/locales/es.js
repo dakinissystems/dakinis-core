@@ -436,11 +436,13 @@ export default {
   footer: {
     navAria: "Enlaces pie de página",
     copyright:
-      "© {year} Dakinis Systems (trading name of Christian Villar). All rights reserved.",
+      "© {year} Dakinis Systems (Christian David Villar Colodro). Todos los derechos reservados.",
     faq: "FAQ",
     privacy: "Privacidad",
     terms: "Términos",
     legalNotice: "Aviso legal",
+    security: "Seguridad",
+    sla: "SLA",
     packages: "Paquetes",
     contact: "Contacto",
     access: "Acceso"
@@ -876,6 +878,8 @@ export default {
     privacy: "Privacidad · Dakinis One",
     terms: "Términos · Dakinis One",
     legal: "Aviso legal · Dakinis One",
+    security: "Seguridad · Dakinis One",
+    sla: "SLA · Dakinis One",
     vista: "Vista previa · {label} · Dakinis One",
     sistema: "{label} · Dakinis One",
     app: "Dakinis App",

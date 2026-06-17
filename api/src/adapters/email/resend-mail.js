@@ -45,7 +45,7 @@ export async function dakinisSendResendEmail({ to, subject, html, text }) {
     return { ok: false, error: "RESEND_API_KEY not set" };
   }
   const from =
-    String(process.env.RESEND_FROM || "").trim() || "Dakinis One <noreply@dakinissystems.com>";
+    String(process.env.RESEND_FROM || "").trim() || "Dakinis Systems <noreply@streamautomator.com>";
 
   try {
     const res = await fetch(RESEND_API_URL, {

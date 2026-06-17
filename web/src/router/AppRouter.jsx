@@ -23,6 +23,8 @@ import {
   FaqPage,
   LegalNoticePage,
   PrivacyPage,
+  SecurityPage,
+  SlaPage,
   TermsPage
 } from "../pages/StaticInfoPages.jsx";
 import { DashboardPage } from "../app/dashboard/index.js";
@@ -90,6 +92,8 @@ function AppRoutes() {
     else if (path === "/privacy") document.title = t("doc.privacy");
     else if (path === "/terms") document.title = t("doc.terms");
     else if (path === "/legal") document.title = t("doc.legal");
+    else if (path === "/security") document.title = t("doc.security");
+    else if (path === "/sla") document.title = t("doc.sla");
     else if (path === "/admin") document.title = t("doc.admin");
     else if (path.startsWith("/app/")) document.title = t("doc.app");
     else if (path === "/precios") document.title = t("doc.pricing");
@@ -225,6 +229,8 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPage navigate={nav} />} />
       <Route path="/terms" element={<TermsPage navigate={nav} />} />
       <Route path="/legal" element={<LegalNoticePage navigate={nav} />} />
+      <Route path="/security" element={<SecurityPage navigate={nav} />} />
+      <Route path="/sla" element={<SlaPage navigate={nav} />} />
       <Route path="/precios" element={<PricingPage />} />
       <Route path="/success" element={<CheckoutSuccessPage />} />
       <Route path="/" element={<ProductHomePage />} />

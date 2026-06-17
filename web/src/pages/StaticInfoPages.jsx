@@ -54,3 +54,11 @@ export function TermsPage({ navigate }) {
 export function LegalNoticePage({ navigate }) {
   return <LegalShell navigate={navigate} docKey="notice" />;
 }
+
+export function SecurityPage({ navigate }) {
+  return <LegalShell navigate={navigate} docKey="security" />;
+}
+
+export function SlaPage({ navigate }) {
+  return <LegalShell navigate={navigate} docKey="sla" />;
+}

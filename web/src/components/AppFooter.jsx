@@ -55,6 +55,14 @@ export default function AppFooter({ navigate }) {
             {t("footer.legalNotice")}
           </FooterRouteLink>
           <Sep />
+          <FooterRouteLink href="/security" navigate={navigate}>
+            {t("footer.security")}
+          </FooterRouteLink>
+          <Sep />
+          <FooterRouteLink href="/sla" navigate={navigate}>
+            {t("footer.sla")}
+          </FooterRouteLink>
+          <Sep />
           <a
             href="/precios"
             className="site-footer-link"

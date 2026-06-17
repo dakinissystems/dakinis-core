@@ -1,260 +1,321 @@
+const OWNER = "Christian David Villar Colodro";
+const TRADING = "Dakinis Systems";
+const NIF = "18513473Z";
+const ADDRESS = "Málaga, España";
+const COUNTRY_ES = "España";
+const COUNTRY_EN = "Spain";
 const PRIVACY = "privacy@dakinis-systems.com";
 const LEGAL = "legal@dakinis-systems.com";
+const SECURITY = "security@dakinis-systems.com";
+const SAFETY = "safety@dakinis-systems.com";
+const AEPD = "https://www.aepd.es";
 const CORPORATE = "https://dakinissystems.com/";
+const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/privacidad-solicitudes";
 const META_BUSINESS_TOOLS_TERMS = "https://www.facebook.com/legal/terms/businesstools";
 const META_DATA_PROCESSING_TERMS = "https://www.facebook.com/legal/terms/dataprocessing";
 const WHATSAPP_BUSINESS_TERMS = "https://www.whatsapp.com/legal/business-terms";
 const AD_CHOICES = "https://www.aboutads.info/choices";
 const EU_AD_CHOICES = "https://www.youronlinechoices.eu/";
+const UPDATED_ES = "Última actualización: 19 mayo 2026";
+const UPDATED_EN = "Last updated: 19 May 2026";
+const MIN_AGE = 14;
+
+const controllerEs = `Operador / Responsable: ${OWNER}. Nombre comercial: ${TRADING}. NIF: ${NIF}. Domicilio: ${ADDRESS}. País: ${COUNTRY_ES}. Privacidad: ${PRIVACY}. Legal: ${LEGAL}.`;
+const controllerEn = `Operator / Controller: ${OWNER}. Trading name: ${TRADING}. Tax ID (NIF): ${NIF}. Address: ${ADDRESS}. Country: ${COUNTRY_EN}. Privacy: ${PRIVACY}. Legal: ${LEGAL}.`;
+
+const processorsEs =
+  "Solo compartimos datos personales con encargados del tratamiento que ofrecen garantías contractuales y técnicas adecuadas conforme al RGPD (p. ej. hosting Railway, base de datos PostgreSQL/Supabase, Stripe para suscripciones).";
+const processorsEn =
+  "We only share personal data with processors that provide adequate contractual and technical safeguards under the GDPR (e.g. Railway hosting, PostgreSQL/Supabase database, Stripe for subscriptions).";
+
+const retentionEs =
+  "Datos de cuenta: mientras la cuenta permanezca activa. Logs de seguridad: hasta 12 meses. Comunicaciones de soporte: hasta 24 meses. Registros de facturación: según obligaciones fiscales aplicables.";
+const retentionEn =
+  "Account data: while the account remains active. Security logs: up to 12 months. Support communications: up to 24 months. Billing records: according to applicable tax obligations.";
+
+const minAgeEs = `Los servicios no están dirigidos a personas menores de ${MIN_AGE} años.`;
+const minAgeEn = `The services are not directed to persons under ${MIN_AGE} years of age.`;
+
+const exportEs = `Puedes solicitar una copia de tus datos personales en un formato estructurado y de uso habitual escribiendo a ${PRIVACY} o usando nuestro canal de solicitudes de privacidad (${PRIVACY_REQUESTS_AKOENET_ES} para AkoeNet).`;
+const exportEn = `You may request a copy of your personal data in a structured, commonly used format by writing to ${PRIVACY} or using our Privacy Requests channel (${PRIVACY_REQUESTS_AKOENET_ES} for AkoeNet).`;
+
+const aiEs =
+  "Algunas funciones pueden usar sistemas automatizados para clasificar, enrutar o procesar información. Estos sistemas asisten la toma de decisiones humana y no están destinados a producir decisiones con efectos jurídicos significativos sobre las personas usuarias sin revisión humana cuando la ley lo exija.";
+const aiEn =
+  "Some features may use automated systems to classify, route, or process information. These systems assist human decision-making and are not intended to produce legally significant decisions about users without human review where required by law.";
+
+const metaExtraEs =
+  "Dakinis Systems no controla el tratamiento independiente de Meta. Los clientes deben revisar la documentación legal de Meta antes de activar integraciones.";
+const metaExtraEn =
+  "Dakinis Systems does not control Meta's independent processing activities. Customers should review Meta's own legal documentation before enabling integrations.";
 
 export const legalCoreEs = {
   back: "← Inicio",
-  updated: "Última actualización: 3 de junio de 2026",
+  updated: UPDATED_ES,
   corporateLink: "Política corporativa",
   faq: {
     title: "FAQ",
     sections: [
       {
         h: "¿Qué es Dakinis One?",
-        p: "Demo y panel SaaS multi-tenant para distintos tipos de negocio (clínica, peluquería, restaurante, inmobiliaria). Algunas funciones son maquetación; otras persisten datos por tenant en la API."
+        p: "Panel SaaS multi-tenant para distintos tipos de negocio (clínica, peluquería, restaurante, inmobiliaria)."
       },
       {
         h: "¿Cómo contacto?",
-        p: `Usa la sección de contacto en ${CORPORATE} o escribe a ${PRIVACY}.`
+        p: `Sección de contacto en ${CORPORATE} o ${PRIVACY}.`
       }
     ]
   },
   privacy: {
     title: "Política de privacidad",
     sections: [
-      {
-        h: "1. Responsable",
-        p: `Dakinis Systems (nombre comercial de Christian Villar). Contacto privacidad: ${PRIVACY}. Sitio corporativo: ${CORPORATE}`
-      },
+      { h: "1. Responsable", p: controllerEs },
       {
         h: "2. Ámbito",
-        p: "Esta política aplica a core.dakinissystems.com (Dakinis One): login, paneles por tenant, cartel público de alérgenos y rutas /app de prueba API."
+        p: "Esta política aplica a core.dakinissystems.com (Dakinis One): login, paneles por tenant, cartel público de alérgenos y rutas /app."
       },
       {
         h: "3. Datos que tratamos",
-        p: "Email, contraseña (almacenada de forma segura en el servidor), rol de usuario, datos del negocio (slug, tipo), registros operativos del tenant, checklist de alérgenos y nombre del local si usas el módulo restaurante."
+        p: "Email, contraseña (hash seguro), rol, datos del negocio (slug, tipo), registros del tenant, checklist de alérgenos y datos del módulo restaurante."
       },
       {
         h: "4. Cartel público de alergias",
-        p: "La página /alergenos/... muestra solo la información que el restaurante marca como visible. No exige cuenta del comensal. El restaurante puede editar el cartel si inicia sesión como admin de su tenant."
+        p: "La página /alergenos/... muestra solo información que el restaurante marca como visible. No exige cuenta del comensal."
       },
       {
         h: "5. Finalidad y base legal",
-        p: "Prestar el servicio contratado o demo autorizada, seguridad de la plataforma e interés legítimo. No vendemos datos personales."
+        p: "Prestar el servicio contratado, seguridad e interés legítimo. No vendemos datos personales."
+      },
+      { h: "6. Encargados del tratamiento", p: processorsEs },
+      { h: "7. Conservación", p: retentionEs },
+      {
+        h: "8. Transferencias internacionales",
+        p: "Algunos encargados (Railway, Meta, Stripe u OAuth) pueden tratar datos fuera del EEE. Cuando proceda, usamos Cláusulas Contractuales Tipo (CCT/SCC) u otras garantías equivalentes."
       },
       {
-        h: "6. Encargados",
-        p: "Hosting (p. ej. Railway) y base de datos (SQLite en demo, PostgreSQL en producción según despliegue)."
+        h: "9. Conservación y seguridad",
+        p: "Medidas: HTTPS, aislamiento por tenant, hashes de contraseña. Ver /security."
       },
       {
-        h: "7. Conservación y seguridad",
-        p: "Conservamos datos mientras la cuenta o el tenant estén activos o sea necesario por ley. Aplicamos medidas técnicas razonables (HTTPS, aislamiento por tenant)."
+        h: "10. Analítica",
+        p: "Actualmente no usamos cookies de analítica en Dakinis One. Si se añaden, actualizaremos esta política y solicitaremos consentimiento cuando sea exigible."
+      },
+      { h: "11. Menores", p: minAgeEs },
+      {
+        h: "12. Tus derechos",
+        p: `Acceso, rectificación, supresión, oposición, limitación y portabilidad en ${PRIVACY}. Reclamación AEPD: ${AEPD}`
+      },
+      { h: "13. Exportación de datos", p: exportEs },
+      {
+        h: "14. Comunicaciones y WhatsApp",
+        p: "El módulo Comunicaciones permite plantillas y vistas previa. WhatsApp Business API solo con integración activa del tenant."
       },
       {
-        h: "8. Google y analítica",
-        p: "Dakinis One no usa login con Google ni cookies de analítica en el estado actual. Si se añaden integraciones, actualizaremos esta política."
+        h: "15. Meta Business Tools",
+        p: `WhatsApp Business API y otras herramientas Meta: ${META_BUSINESS_TOOLS_TERMS}. DPA Meta: ${META_DATA_PROCESSING_TERMS}. ${metaExtraEs}`
       },
       {
-        h: "9. Tus derechos",
-        p: `Puedes solicitar acceso, rectificación o supresión en ${PRIVACY}. Reclamación ante la AEPD: www.aepd.es.`
+        h: "16. Obligaciones del tenant (Meta)",
+        p: `Debes tener base legal, no compartir datos de menores de ${MIN_AGE} años ni categorías prohibidas, mostrar avisos y enlaces de exclusión (${AD_CHOICES}, ${EU_AD_CHOICES}). WhatsApp: ${WHATSAPP_BUSINESS_TERMS}.`
       },
-      {
-        h: "10. Comunicaciones y WhatsApp",
-        p: "El módulo Comunicaciones (ruta /app/messages) permite plantillas, reglas y vistas previa de mensajes. El envío real por WhatsApp Business API solo aplica cuando el tenant activa la integración y dispone de cuenta y permisos de Meta/WhatsApp."
-      },
-      {
-        h: "11. Condiciones de las herramientas empresariales de Meta",
-        p: `Si usas WhatsApp Business API, píxel de Meta, API de conversiones u otras herramientas empresariales de Meta a través de Dakinis One o tus propios canales vinculados al tenant, también se aplican las Condiciones de las herramientas empresariales de Meta (texto oficial: ${META_BUSINESS_TOOLS_TERMS}). Meta puede tratar «Datos de herramientas empresariales», incluida información de contacto (para coincidencias, con cifrado según su documentación) y datos de eventos (acciones en tu web, app o tienda). En la UE, pueden aplicarse las Condiciones del tratamiento de los datos de Meta (${META_DATA_PROCESSING_TERMS}) y, según el caso, tratamiento conjunto (art. 26 RGPD) entre tú y Meta Ireland para ciertos datos de eventos.`
-      },
-      {
-        h: "12. Obligaciones del tenant frente a Meta y a tus clientes",
-        p: `Como responsable del tratamiento frente a tus clientes finales debes, entre otras cosas: (a) tener base legal y, si procede, consentimiento para compartir datos con Meta y enviar mensajes comerciales; (b) no compartir datos de menores de 13 años ni categorías prohibidas por Meta; (c) cifrar la información de contacto según exija Meta; (d) mostrar en tu web y app un aviso claro sobre tecnologías de terceros (incl. Meta) para medición y publicidad, y enlaces de exclusión (p. ej. ${AD_CHOICES} y ${EU_AD_CHOICES}); (e) obtener consentimiento previo donde la ley lo exija antes de cookies o SDK de Meta en dispositivos de usuarios; (f) notificarnos sin demora reclamaciones relacionadas con herramientas Meta y colaborar en su respuesta. Meta puede conservar datos de eventos hasta dos años y usar datos para mensajes comerciales en Messenger/WhatsApp según sus condiciones. WhatsApp Business: ${WHATSAPP_BUSINESS_TERMS}. Dudas: ${PRIVACY}.`
-      }
+      { h: "17. Automatización e IA", p: aiEs }
     ]
   },
   terms: {
     title: "Términos de uso",
     sections: [
+      { h: "1. Aceptación", p: "Al usar Dakinis One aceptas estos términos." },
       {
-        h: "1. Aceptación",
-        p: "Al usar Dakinis One aceptas estos términos. Si no estás de acuerdo, no uses el servicio."
+        h: "2. Operador",
+        p: controllerEs
       },
       {
-        h: "2. Naturaleza del servicio",
-        p: "Incluye entornos demo con credenciales de prueba. No uses datos reales de clientes finales sin acuerdo comercial y despliegue adecuado."
+        h: "3. Naturaleza del servicio",
+        p: "SaaS B2B multi-tenant. Puede incluir entornos demo; no uses datos reales de clientes finales sin acuerdo comercial."
       },
+      { h: "4. Cuentas y tenants", p: "Cada negocio opera aislado. Eres responsable de tus credenciales." },
+      { h: "5. Uso permitido", p: "No accedas a datos de otros tenants ni realices pruebas de intrusión sin autorización." },
       {
-        h: "3. Cuentas y tenants",
-        p: "Cada negocio opera en un espacio aislado. Eres responsable de la confidencialidad de tus credenciales."
+        h: "6. Suscripción e impago",
+        p: "El impago puede degradar el plan contratado hasta regularizar el pago (plan efectivo Starter). Dakinis Systems puede suspender o cerrar cuentas por incumplimiento grave, abuso o requerimiento legal."
       },
+      { h: "7. SLA", p: "Objetivo de disponibilidad 99,5 % mensual; soporte en 48 h laborables; incidentes críticos en 24 h. Detalle en /sla." },
+      { h: "8. Limitación de responsabilidad", p: "Servicio «tal cual». No respondemos por daños indirectos en la medida permitida por ley." },
+      { h: "9. Contacto", p: `${LEGAL} · ${PRIVACY}` },
       {
-        h: "4. Uso permitido",
-        p: "No intentes acceder a datos de otros tenants, ni realizar pruebas de intrusión sin autorización."
+        h: "10. WhatsApp y Meta",
+        p: `Integraciones sujetas a condiciones Meta (${META_BUSINESS_TOOLS_TERMS}). ${metaExtraEs} Dakinis Systems no es Meta ni WhatsApp.`
       },
-      {
-        h: "5. Limitación de responsabilidad",
-        p: "El servicio se ofrece «tal cual» en fase demo/MVP. Dakinis Systems no responde por daños indirectos derivados del uso de prueba."
-      },
-      {
-        h: "6. Contacto",
-        p: `${LEGAL}`
-      },
-      {
-        h: "7. WhatsApp, Comunicaciones y Meta",
-        p: `El módulo Comunicaciones y cualquier integración con WhatsApp Business API están sujetos a las condiciones de WhatsApp y a las Condiciones de las herramientas empresariales de Meta (${META_BUSINESS_TOOLS_TERMS}), además de estos términos. Dakinis Systems no es Meta ni WhatsApp; no garantizamos la disponibilidad de APIs de terceros. El tenant es responsable del cumplimiento de las condiciones de Meta, de obtener los consentimientos necesarios y de las políticas de mensajería comercial aplicables.`
-      }
+      { h: "11. Automatización e IA", p: aiEs }
     ]
   },
   notice: {
     title: "Aviso legal",
     sections: [
+      { h: "1. Titular (LSSI)", p: controllerEs },
+      { h: "2. Objeto", p: "Aplicación web Dakinis One — panel SaaS multi-tenant." },
+      { h: "3. Propiedad intelectual", p: "Código, diseño y marcas protegidos." },
+      { h: "4. Enlaces", p: `Información corporativa: ${CORPORATE}` }
+    ]
+  },
+  security: {
+    title: "Política de seguridad",
+    sections: [
+      { h: "1. Transporte", p: "HTTPS/TLS obligatorio en producción." },
+      { h: "2. Contraseñas", p: "Almacenamiento con hash seguro (bcrypt u equivalente)." },
+      { h: "3. Multi-tenant", p: "Aislamiento por business_id en API y base de datos." },
+      { h: "4. Acceso", p: "Roles de usuario, admin de tenant y platform admin." },
+      { h: "5. Backups", p: "Copias periódicas de PostgreSQL según procedimiento operativo." },
+      { h: "6. Monitorización", p: "Registro estructurado e revisión de incidentes." },
       {
-        h: "1. Titular",
-        p: `Dakinis Systems — nombre comercial de Christian Villar (España). ${LEGAL} · ${PRIVACY}`
+        h: "7. Vulnerabilidades",
+        p: `Reportar a ${SECURITY} o ${LEGAL}.`
       },
-      {
-        h: "2. Objeto del sitio",
-        p: "Aplicación web Dakinis One para demostración y operación de paneles multi-tenant."
-      },
-      {
-        h: "3. Propiedad intelectual",
-        p: "Código, diseño y marcas protegidos. Queda prohibida la reproducción no autorizada."
-      },
-      {
-        h: "4. Enlaces",
-        p: `Información corporativa en ${CORPORATE}`
-      }
+      { h: "8. Limitación", p: "Medidas razonables; ningún sistema es totalmente invulnerable." }
+    ]
+  },
+  sla: {
+    title: "Acuerdo de nivel de servicio (SLA)",
+    sections: [
+      { h: "1. Operador", p: controllerEs },
+      { h: "2. Disponibilidad", p: "Objetivo de disponibilidad del servicio: 99,5 % mensual (excluye mantenimiento programado comunicado)." },
+      { h: "3. Soporte", p: "Respuesta general: 48 horas laborables. Incidentes críticos: 24 horas." },
+      { h: "4. Exclusiones", p: "Fuerza mayor, fallos de terceros fuera de control razonable y mantenimiento anunciado." },
+      { h: "5. Contacto", p: `${PRIVACY} · ${LEGAL}` }
     ]
   }
 };
 
 export const legalCoreEn = {
   back: "← Home",
-  updated: "Last updated: June 3, 2026",
+  updated: UPDATED_EN,
   corporateLink: "Corporate policy",
   faq: {
     title: "FAQ",
     sections: [
       {
         h: "What is Dakinis One?",
-        p: "A multi-tenant SaaS demo and panel for business types (clinic, salon, restaurant, real estate). Some views are mockups; others persist per-tenant data via the API."
+        p: "Multi-tenant SaaS panel for business types (clinic, salon, restaurant, real estate)."
       },
       {
         h: "How to contact?",
-        p: `Use the contact section at ${CORPORATE} or email ${PRIVACY}.`
+        p: `Contact section at ${CORPORATE} or ${PRIVACY}.`
       }
     ]
   },
   privacy: {
     title: "Privacy policy",
     sections: [
-      {
-        h: "1. Controller",
-        p: `Dakinis Systems (trading name of Christian Villar). Privacy: ${PRIVACY}. Corporate site: ${CORPORATE}`
-      },
+      { h: "1. Controller", p: controllerEn },
       {
         h: "2. Scope",
-        p: "This policy covers core.dakinissystems.com (Dakinis One): login, tenant panels, public allergy posters, and /app API test routes."
+        p: "This policy covers core.dakinissystems.com (Dakinis One): login, tenant panels, public allergy posters, and /app routes."
       },
       {
         h: "3. Data we process",
-        p: "Email, password (stored securely on the server), user role, business data (slug, type), tenant operational records, allergen checklist, and venue name for the restaurant module."
+        p: "Email, password (secure hash), role, business data (slug, type), tenant records, allergen checklist, and restaurant module data."
       },
       {
         h: "4. Public allergy poster",
-        p: "The /alergenos/... page shows only information the restaurant chooses to display. No diner account is required. The restaurant may edit the poster when signed in as its tenant admin."
+        p: "The /alergenos/... page shows only information the restaurant chooses to display. No diner account is required."
       },
       {
         h: "5. Purpose and legal basis",
-        p: "Provide the contracted or authorized demo service, platform security, and legitimate interest. We do not sell personal data."
+        p: "Provide the contracted service, security, and legitimate interest. We do not sell personal data."
+      },
+      { h: "6. Processors", p: processorsEn },
+      { h: "7. Retention", p: retentionEn },
+      {
+        h: "8. International transfers",
+        p: "Some processors (Railway, Meta, Stripe, or OAuth) may process data outside the EEA. Where applicable, we use Standard Contractual Clauses (SCCs) or equivalent safeguards."
       },
       {
-        h: "6. Processors",
-        p: "Hosting (e.g. Railway) and database (SQLite in demo, PostgreSQL in production depending on deployment)."
+        h: "9. Security measures",
+        p: "HTTPS, tenant isolation, password hashing. See /security."
       },
       {
-        h: "7. Retention and security",
-        p: "We keep data while the account or tenant is active or required by law. We use reasonable measures (HTTPS, tenant isolation)."
+        h: "10. Analytics",
+        p: "We currently do not use analytics cookies on Dakinis One. If added, we will update this policy and request consent where required."
+      },
+      { h: "11. Minors", p: minAgeEn },
+      {
+        h: "12. Your rights",
+        p: `Access, rectification, erasure, objection, restriction, and portability at ${PRIVACY}. AEPD complaint: ${AEPD}`
+      },
+      { h: "13. Data export", p: exportEn },
+      {
+        h: "14. Communications and WhatsApp",
+        p: "The Communications module supports templates and previews. WhatsApp Business API only when the tenant enables the integration."
       },
       {
-        h: "8. Google and analytics",
-        p: "Dakinis One does not use Google sign-in or analytics cookies currently. If integrations are added, this policy will be updated."
+        h: "15. Meta Business Tools",
+        p: `WhatsApp Business API and other Meta tools: ${META_BUSINESS_TOOLS_TERMS}. Meta DPA: ${META_DATA_PROCESSING_TERMS}. ${metaExtraEn}`
       },
       {
-        h: "9. Your rights",
-        p: `You may request access, rectification, or erasure at ${PRIVACY}. Complaints to the Spanish DPA (AEPD): www.aepd.es.`
+        h: "16. Tenant obligations (Meta)",
+        p: `Lawful basis required; do not share data on children under ${MIN_AGE} or prohibited categories; provide notices and opt-out links (${AD_CHOICES}, ${EU_AD_CHOICES}). WhatsApp: ${WHATSAPP_BUSINESS_TERMS}.`
       },
-      {
-        h: "10. Communications and WhatsApp",
-        p: "The Communications module (/app/messages) supports templates, rules, and message previews. Actual sending via WhatsApp Business API only applies when the tenant enables the integration and holds valid Meta/WhatsApp accounts and permissions."
-      },
-      {
-        h: "11. Meta Business Tools Terms",
-        p: `If you use WhatsApp Business API, Meta Pixel, Conversions API, or other Meta Business Tools through Dakinis One or your own channels linked to the tenant, Meta’s Business Tools Terms also apply (official text: ${META_BUSINESS_TOOLS_TERMS}). Meta may process “Business Tool Data”, including contact information (for matching, encrypted per Meta’s documentation) and event data (actions on your website, app, or store). In the EU/EEA, Meta’s Data Processing Terms (${META_DATA_PROCESSING_TERMS}) may apply, and in some cases joint controllership (GDPR Art. 26) between you and Meta Ireland for certain event data.`
-      },
-      {
-        h: "12. Tenant obligations regarding Meta and your customers",
-        p: `As controller for your end-customers you must, among other things: (a) have a lawful basis and, where required, consent to share data with Meta and send commercial messages; (b) not share data relating to children under 13 or prohibited categories under Meta’s terms; (c) encrypt contact information as required by Meta; (d) provide a clear notice on your website and app about third-party technologies (including Meta) for measurement and advertising, with opt-out links (e.g. ${AD_CHOICES} and ${EU_AD_CHOICES}); (e) obtain prior consent where the law requires it before Meta cookies or SDKs on end-users’ devices; (f) promptly notify us of claims related to Meta tools and cooperate in responses. Meta may retain event data for up to two years and use data for commercial messaging on Messenger/WhatsApp per its terms. WhatsApp Business: ${WHATSAPP_BUSINESS_TERMS}. Questions: ${PRIVACY}.`
-      }
+      { h: "17. Automation and AI", p: aiEn }
     ]
   },
   terms: {
     title: "Terms of use",
     sections: [
+      { h: "1. Acceptance", p: "By using Dakinis One you accept these terms." },
+      { h: "2. Operator", p: controllerEn },
       {
-        h: "1. Acceptance",
-        p: "By using Dakinis One you accept these terms. If you disagree, do not use the service."
+        h: "3. Nature of the service",
+        p: "B2B multi-tenant SaaS. May include demo environments; do not use real end-customer data without a commercial agreement."
       },
+      { h: "4. Accounts and tenants", p: "Each business is isolated. You are responsible for your credentials." },
+      { h: "5. Acceptable use", p: "Do not access other tenants' data or perform unauthorized security testing." },
       {
-        h: "2. Nature of the service",
-        p: "Includes demo environments with test credentials. Do not use real end-customer data without a commercial agreement and proper deployment."
+        h: "6. Subscription and non-payment",
+        p: "Non-payment may degrade your contracted plan until payment is regularized (effective Starter plan). Dakinis Systems may suspend or close accounts for serious breach, abuse, or legal requirement."
       },
+      { h: "7. SLA", p: "Service availability target 99.5% monthly; support within 48 business hours; critical incidents within 24 hours. Details at /sla." },
+      { h: "8. Limitation of liability", p: "Service provided as is. No liability for indirect damages to the extent permitted by law." },
+      { h: "9. Contact", p: `${LEGAL} · ${PRIVACY}` },
       {
-        h: "3. Accounts and tenants",
-        p: "Each business operates in an isolated space. You are responsible for keeping credentials confidential."
+        h: "10. WhatsApp and Meta",
+        p: `Integrations subject to Meta terms (${META_BUSINESS_TOOLS_TERMS}). ${metaExtraEn} Dakinis Systems is not Meta or WhatsApp.`
       },
-      {
-        h: "4. Acceptable use",
-        p: "Do not access other tenants’ data or perform unauthorized security testing."
-      },
-      {
-        h: "5. Limitation of liability",
-        p: "The service is provided “as is” in demo/MVP phase. Dakinis Systems is not liable for indirect damages from trial use."
-      },
-      {
-        h: "6. Contact",
-        p: `${LEGAL}`
-      },
-      {
-        h: "7. WhatsApp, Communications, and Meta",
-        p: `The Communications module and any WhatsApp Business API integration are subject to WhatsApp’s terms and Meta Business Tools Terms (${META_BUSINESS_TOOLS_TERMS}), in addition to these terms. Dakinis Systems is not Meta or WhatsApp; we do not guarantee third-party API availability. The tenant is responsible for complying with Meta’s terms, obtaining required consents, and applicable commercial messaging rules.`
-      }
+      { h: "11. Automation and AI", p: aiEn }
     ]
   },
   notice: {
     title: "Legal notice",
     sections: [
+      { h: "1. Owner (LSSI)", p: controllerEn },
+      { h: "2. Purpose", p: "Dakinis One web application — multi-tenant SaaS panel." },
+      { h: "3. Intellectual property", p: "Code, design, and trademarks are protected." },
+      { h: "4. Links", p: `Corporate information: ${CORPORATE}` }
+    ]
+  },
+  security: {
+    title: "Security policy",
+    sections: [
+      { h: "1. Transport", p: "Mandatory HTTPS/TLS in production." },
+      { h: "2. Passwords", p: "Secure hashing (bcrypt or equivalent)." },
+      { h: "3. Multi-tenant", p: "Isolation by business_id in API and database." },
+      { h: "4. Access", p: "User roles, tenant admin, and platform admin." },
+      { h: "5. Backups", p: "Periodic PostgreSQL backups per operational procedure." },
+      { h: "6. Monitoring", p: "Structured logging and incident review." },
       {
-        h: "1. Owner",
-        p: `Dakinis Systems — trading name of Christian Villar (Spain). ${LEGAL} · ${PRIVACY}`
+        h: "7. Vulnerabilities",
+        p: `Report to ${SECURITY} or ${LEGAL}.`
       },
-      {
-        h: "2. Purpose",
-        p: "Dakinis One web application for multi-tenant panel demonstration and operation."
-      },
-      {
-        h: "3. Intellectual property",
-        p: "Code, design, and trademarks are protected. Unauthorized reproduction is prohibited."
-      },
-      {
-        h: "4. Links",
-        p: `Corporate information at ${CORPORATE}`
-      }
+      { h: "8. Limitation", p: "Reasonable measures; no system is fully invulnerable." }
+    ]
+  },
+  sla: {
+    title: "Service level agreement (SLA)",
+    sections: [
+      { h: "1. Operator", p: controllerEn },
+      { h: "2. Availability", p: "Service availability target: 99.5% monthly (excluding announced scheduled maintenance)." },
+      { h: "3. Support", p: "General response: 48 business hours. Critical incidents: 24 hours." },
+      { h: "4. Exclusions", p: "Force majeure, third-party failures outside reasonable control, and announced maintenance." },
+      { h: "5. Contact", p: `${PRIVACY} · ${LEGAL}` }
     ]
   }
 };
