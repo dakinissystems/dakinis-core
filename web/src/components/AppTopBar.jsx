@@ -10,6 +10,7 @@ import {
 } from "../utils/businessDemoMode.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
+import { HUB_NAV_SLOTS } from "@dakinis/shared-ux/hub-nav.js";
 
 const DAKINIS_BUSINESS_NAV = [
   { path: "/app/crm", labelKey: "appNav.clients" },
@@ -91,7 +92,16 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
           </span>
         </div>
         <div className="topbar-actions">
-          {!isBusinessDemo ? <DakinisCopilotBar /> : null}
+          {isBusinessFacing && !isPlatformAdmin ? <DakinisCopilotBar /> : null}
+          <button
+            type="button"
+            className="btn btn-outline dakinis-hub-nav-search"
+            title={`${HUB_NAV_SLOTS.search.label} (${HUB_NAV_SLOTS.search.shortcut})`}
+            aria-label={HUB_NAV_SLOTS.search.label}
+            onClick={() => window.dispatchEvent(new CustomEvent("dakinis:open-command-palette"))}
+          >
+            🔍 {HUB_NAV_SLOTS.search.label}
+          </button>
           {session?.user?.email ? (
             <>
               <LanguageSwitcher />

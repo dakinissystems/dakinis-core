@@ -425,12 +425,43 @@ export default {
       statIntegrations: "Connected apps: {count}",
       statBusiness: "Business: {name}",
       tenantUnknown: "—",
+      subtitle: "Everything happens here — your apps, notifications and AI in one place.",
       quickActions: "Quick actions",
       actionNewClient: "New customer",
       actionNewOrder: "New order",
       actionSendWhatsApp: "Send WhatsApp",
       actionOpenInventory: "Open inventory"
+    },
+    widgets: {
+      lifeflowHint: "Your score went up this week.",
+      viewSales: "View sales",
+      openCalendar: "Open calendar",
+      viewCommunity: "View community",
+      aiHint: "I have 3 recommendations for today.",
+      viewRecs: "View recommendations"
+    },
+    notifications: {
+      title: "Notifications",
+      scoreUp: "LifeFlow Score +12",
+      newOrder: "New order in Core",
+      published: "Video published on Stream",
+      newUsers: "15 new users on AkoeNet",
+      aiRec: "New AI recommendation"
+    },
+    timeline: {
+      title: "Today's activity",
+      invoice: "Invoice created",
+      ai: "AI answered in Copilot",
+      score: "LifeFlow score updated",
+      customer: "New customer registered"
     }
+  },
+  cmdk: {
+    title: "Search and commands",
+    placeholder: "Search customers, open apps, ask AI…",
+    noResults: "No results — try another term",
+    hintNavigate: "↑↓ navigate · Enter run · Esc close",
+    hintAi: "Ask Dakinis AI via «Ask Dakinis AI»"
   },
   footer: {
     navAria: "Footer links",
@@ -440,8 +471,10 @@ export default {
     privacy: "Privacy",
     terms: "Terms",
     legalNotice: "Legal notice",
+    cookies: "Cookies",
     security: "Security",
     sla: "SLA",
+    refunds: "Refunds",
     packages: "Plans",
     contact: "Contact",
     access: "Sign in"
@@ -827,6 +860,7 @@ export default {
     },
     submitIdp: "Sign in with Dakinis account (SSO)",
     idpHint: "Ecosystem SSO needs the IdP and links AkoeNet without re-entering your password there.",
+    legalHint: "By signing in you accept our",
     forgotPassword: "Forgot your password?"
   },
   forgotPassword: {
@@ -876,6 +910,8 @@ export default {
     privacy: "Privacy · Dakinis One",
     terms: "Terms · Dakinis One",
     legal: "Legal notice · Dakinis One",
+    cookies: "Cookies · Dakinis One",
+    refunds: "Refunds · Dakinis One",
     security: "Security · Dakinis One",
     sla: "SLA · Dakinis One",
     vista: "Preview · {label} · Dakinis One",
@@ -932,6 +968,15 @@ export default {
     hero: {
       title: "Your whole business in one place",
       lead: "Clients, sales, inventory, reports and WhatsApp connected — nothing to configure.",
+      aiKicker: "AI assistant",
+      aiTitle: "Ask Dakinis",
+      aiLead: "Analyze clients, sales and inventory with your real business data.",
+      askPlaceholder: "Ask about lost clients, sales trends, stock alerts…",
+      askAria: "Ask Dakinis AI",
+      askButton: "Ask",
+      answerLabel: "Answer",
+      loginForAi: "Sign in to use the AI assistant.",
+      stubHint: "Dev mode without OpenAI. Add OPENAI_API_KEY in platform/ai/.env for GPT answers.",
       tiles: {
         clients: "Clients",
         inventory: "Inventory",
@@ -1724,6 +1769,8 @@ export default {
       refresh: "Refresh",
       loading: "Loading…",
       noContacts: "No contacts yet. Create one or receive a WhatsApp message.",
+      aiHintInactive: "Check inactive customers — AI can suggest reactivation campaigns.",
+      aiHintAction: "Open Copilot",
       newContact: "New contact",
       firstName: "First name",
       lastName: "Last name",

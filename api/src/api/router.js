@@ -20,18 +20,6 @@ import { dakinisPostgresSchema } from "../db/schema-config.js";
 import { dakinisIsSupabasePoolerUrl } from "../db/postgres-connection.js";
 import { dakinisValidateDatabaseUrl, dakinisMaskDatabaseUrl } from "../db/validate-database-url.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
-import {
-  dakinisHandleWhatsappSend,
-  dakinisHandleWhatsappConversations,
-  dakinisHandleWhatsappThreadMessages,
-  dakinisHandleWhatsappContacts,
-  dakinisHandleWhatsappMessagesFlat,
-  dakinisHandleWhatsappContactUpsert
-} from "./whatsapp-routes.js";
-import { dakinisIsWhatsappConfigured } from "../services/whatsapp-config.js";
-import { dakinisGetIndustryTemplate } from "@dakinis/shared/catalog/business-templates.js";
-import { dakinisParseBusinessConfig } from "@dakinis/shared/catalog/business-settings.js";
-import { dakinisResolveTenantModules } from "@dakinis/shared/catalog/tenant-modules.js";
 
 function dakinisParseJsonSafely(rawBody) {
   if (!rawBody || !String(rawBody).trim()) return {};
@@ -115,7 +103,6 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
             ? dakinisMaskDatabaseUrl(process.env.DATABASE_URL || "")
             : undefined,
         sentry: dakinisIsSentryEnabled(),
-        whatsappConfigured: dakinisIsWhatsappConfigured(),
         uptimeSec: Math.floor(process.uptime())
       },
       "custom"
@@ -232,20 +219,12 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/config") {
     const planTier = dakinisNormalizeCommercialPlan(business.plan);
     const modulesEnabled = dakinisListModulesForPlan(planTier);
-    const template = dakinisGetIndustryTemplate(business.type);
-    const { settings } = dakinisParseBusinessConfig(business.config_json);
-    const tenantModules = dakinisResolveTenantModules(business, business._moduleOverrides || {});
     return dakinisJsonSuccess(
       {
         config: modules.config,
         plan: business.plan,
         planTier,
-        modulesEnabled,
-        industry: template
-          ? { key: template.key, label: template.label, entity: template.entity }
-          : null,
-        settings,
-        tenantModules: tenantModules.marketplace.filter((m) => m.enabled).map((m) => m.key)
+        modulesEnabled
       },
       adapterKey,
       metaBase
@@ -311,46 +290,6 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/whatsapp/rules") {
     const rules = modules.whatsapp.dakinisListAutomationRules();
     return dakinisJsonSuccess({ rules }, adapterKey, metaBase);
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/whatsapp/preview") {
-    const eventType =
-      typeof payload.eventType === "string" ? payload.eventType.trim() : "booking.created";
-    const message = modules.whatsapp.dakinisPreviewEventMessage({
-      eventType,
-      payload: payload.payload ?? payload
-    });
-    return dakinisJsonSuccess({ eventType, message, queued: false }, adapterKey, metaBase);
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/whatsapp/send") {
-    return dakinisHandleWhatsappSend(req, rawBody, business, adapterKey);
-  }
-
-  if (req.method === "GET" && url.pathname === "/api/whatsapp/conversations") {
-    return dakinisHandleWhatsappConversations(business, adapterKey, url);
-  }
-
-  const waThreadMatch = /^\/api\/whatsapp\/conversations\/([^/]+)\/messages$/.exec(url.pathname);
-  if (waThreadMatch && req.method === "GET") {
-    return dakinisHandleWhatsappThreadMessages(
-      business,
-      adapterKey,
-      decodeURIComponent(waThreadMatch[1]),
-      url
-    );
-  }
-
-  if (req.method === "GET" && url.pathname === "/api/whatsapp/messages") {
-    return dakinisHandleWhatsappMessagesFlat(business, adapterKey, url);
-  }
-
-  if (req.method === "GET" && url.pathname === "/api/whatsapp/contacts") {
-    return dakinisHandleWhatsappContacts(business, adapterKey);
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/whatsapp/contacts") {
-    return dakinisHandleWhatsappContactUpsert(business, adapterKey, rawBody);
   }
 
   if (req.method === "POST" && url.pathname === "/api/leads/move-stage") {

@@ -1,20 +1,13 @@
 import http from "node:http";
+import "./src/load-env.js";
 import { dakinisAssertProductionJwtSecret } from "./src/api/jwt-config.js";
-import { dakinisAssertProductionMasterApiKey } from "./src/api/master-key-config.js";
 import { dakinisInitDb } from "./src/db/index.js";
 import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisStructuredLog } from "./src/api/structured-logger.js";
 import { dakinisDispatch } from "./src/app.js";
 import { dakinisInitSentry, dakinisCaptureException } from "./src/lib/sentry.js";
-import { dakinisInitWhatsappEventHandlers } from "./src/lib/whatsapp-event-handlers.js";
-import { dakinisInitWhatsappCrmBridge } from "./src/lib/whatsapp-crm-bridge.js";
-import { dakinisInitAutomationEngine } from "./src/lib/automation-engine.js";
 
 dakinisAssertProductionJwtSecret();
-dakinisAssertProductionMasterApiKey();
-dakinisInitWhatsappEventHandlers();
-dakinisInitWhatsappCrmBridge();
-dakinisInitAutomationEngine();
 
 const PORT = Number(process.env.PORT || 8787);
 const USE_FASTIFY = String(process.env.USE_FASTIFY || "").toLowerCase() === "true";
@@ -97,13 +90,8 @@ function createNativeServer() {
           res.setHeader("X-Auth-Method", auth.method || "unknown");
           res.setHeader("X-Auth-Role", auth.role);
         }
-        const contentType = result.contentType || "application/json; charset=utf-8";
-        res.writeHead(result.status, { "Content-Type": contentType });
-        if (typeof result.body === "string") {
-          res.end(result.body);
-        } else {
-          res.end(JSON.stringify(result.body));
-        }
+        res.writeHead(result.status, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify(result.body));
       } catch (error) {
         dakinisCaptureException(error, { path: req.url, method: req.method });
         res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });

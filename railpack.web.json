@@ -3,8 +3,9 @@
   "provider": "node",
   "packages": { "node": "20" },
   "steps": {
-    "install": {
-      "commands": ["npm install", "npm run build -w @dakinis/web"]
+    "build": {
+      "inputs": ["...", { "local": true, "include": ["."] }],
+      "commands": ["npm run build -w @dakinis/web"]
     }
   },
   "deploy": {

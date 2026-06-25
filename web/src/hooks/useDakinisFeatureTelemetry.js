@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { dakinisPathToTelemetryFeature } from "@dakinis/shared/catalog/telemetry-features.js";
 import { dakinisTenantTelemetryFeature } from "../services/tenant-intelligence.js";
+import { dakinisIsBusinessDemoSession } from "../utils/businessDemoMode.js";
 
 function dakinisEndTelemetrySession(session, sessionId) {
   if (!session?.token || !sessionId) return;
@@ -30,6 +31,7 @@ export function useDakinisFeatureTelemetry(session, pathname) {
 
   useEffect(() => {
     if (!session?.token || !pathname.startsWith("/app/")) return undefined;
+    if (dakinisIsBusinessDemoSession(session)) return undefined;
 
     const prev = activeRef.current;
     if (prev.sessionId && prev.path !== pathname) {

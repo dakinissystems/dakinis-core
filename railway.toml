@@ -1,6 +1,0 @@
-# Railway — overrides para Railpack (Core Back / Front usan railpack*.json en la raíz del repo).
-# Si el build sigue mostrando "npm ci", define también en el dashboard:
-#   RAILPACK_INSTALL_CMD = npm install
-
-[build]
-installCommand = "npm install"

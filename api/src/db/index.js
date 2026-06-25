@@ -32,108 +32,24 @@ function dakinisMigratePlatformUserId(db) {
   }
 }
 
-function dakinisMigratePlatformKv(db) {
-  db.exec(
-    `CREATE TABLE IF NOT EXISTS platform_kv (
-      key TEXT PRIMARY KEY,
-      value_json TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`
-  );
+function dakinisMigrateAiUsage(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ai_usage (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      user_id TEXT,
+      usage_type TEXT NOT NULL DEFAULT 'advisor',
+      year_month TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ai_usage_business_month ON ai_usage(business_id, usage_type, year_month);
+  `);
 }
 
-function dakinisMigrateWhatsappTables(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-whatsapp-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateCrmTables(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-crm-migrate.sql"), "utf8"));
-  dakinisMigrateWhatsappCrmColumns(db);
-}
-
-function dakinisMigrateTenantIntelligence(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-tenant-intelligence-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateIntelligenceV2(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-intelligence-v2-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateBos(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-bos-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateTelemetry(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-telemetry-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateFeatureEvents(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-feature-events-migrate.sql"), "utf8"));
-}
-
-function dakinisMigrateUserCredentials(db) {
-  const cols = db.prepare("PRAGMA table_info(users)").all();
-  const names = new Set(cols.map((c) => c.name));
-  if (!names.has("must_change_password")) {
-    db.exec("ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0");
-  }
-  if (!names.has("password_reset_token_hash")) {
-    db.exec("ALTER TABLE users ADD COLUMN password_reset_token_hash TEXT");
-  }
-  if (!names.has("password_reset_expires_at")) {
-    db.exec("ALTER TABLE users ADD COLUMN password_reset_expires_at TEXT");
-  }
-  if (!names.has("confirmed_at")) {
-    db.exec("ALTER TABLE users ADD COLUMN confirmed_at TEXT");
-  }
-}
-
-function dakinisMigrateStockBarcodeColumn(db) {
-  const cols = db.prepare("PRAGMA table_info(tenant_stock_items)").all();
-  const names = new Set(cols.map((c) => c.name));
-  if (!names.has("barcode")) {
-    db.exec("ALTER TABLE tenant_stock_items ADD COLUMN barcode TEXT NOT NULL DEFAULT ''");
-  }
-}
-
-function dakinisMigrateTenantAccess(db) {
-  const cols = db.prepare("PRAGMA table_info(tenant_subscriptions)").all();
-  const names = new Set(cols.map((c) => c.name));
-  if (!names.has("entitled_plan")) {
-    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN entitled_plan TEXT");
-  }
-  if (!names.has("access_state")) {
-    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_state TEXT NOT NULL DEFAULT 'active'");
-  }
-  if (!names.has("access_reason")) {
-    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_reason TEXT");
-  }
-  if (!names.has("access_note")) {
-    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN access_note TEXT");
-  }
-  if (!names.has("closed_at")) {
-    db.exec("ALTER TABLE tenant_subscriptions ADD COLUMN closed_at TEXT");
-  }
-}
-
-function dakinisMigrateInventoryLots(db) {
-  db.exec(fs.readFileSync(path.join(__dirname, "schema-inventory-lots-migrate.sql"), "utf8"));
-  const movCols = db.prepare("PRAGMA table_info(tenant_stock_movements)").all();
-  const movNames = new Set(movCols.map((c) => c.name));
-  if (!movNames.has("lot_id")) {
-    db.exec("ALTER TABLE tenant_stock_movements ADD COLUMN lot_id TEXT");
-  }
-}
-
-function dakinisMigrateWhatsappCrmColumns(db) {
-  const cols = db.prepare("PRAGMA table_info(tenant_whatsapp_messages)").all();
-  const names = new Set(cols.map((c) => c.name));
-  if (!names.has("contact_id")) {
-    db.exec("ALTER TABLE tenant_whatsapp_messages ADD COLUMN contact_id TEXT");
-  }
-  if (!names.has("conversation_id")) {
-    db.exec("ALTER TABLE tenant_whatsapp_messages ADD COLUMN conversation_id TEXT");
-  }
+/** Demo restaurante → Pro para probar Copilot IA en dev. */
+function dakinisMigrateDemoProPlan(db) {
+  db.prepare(`UPDATE business SET plan = 'pro' WHERE slug = 'restaurante-demo' AND plan != 'pro'`).run();
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -153,18 +69,8 @@ function dakinisInitSqlite() {
   db.exec(fs.readFileSync(schemaPath, "utf8"));
   dakinisMigrateUsersTotp(db);
   dakinisMigratePlatformUserId(db);
-  dakinisMigratePlatformKv(db);
-  dakinisMigrateWhatsappTables(db);
-  dakinisMigrateCrmTables(db);
-  dakinisMigrateStockBarcodeColumn(db);
-  dakinisMigrateInventoryLots(db);
-  dakinisMigrateTenantIntelligence(db);
-  dakinisMigrateIntelligenceV2(db);
-  dakinisMigrateBos(db);
-  dakinisMigrateTenantAccess(db);
-  dakinisMigrateTelemetry(db);
-  dakinisMigrateFeatureEvents(db);
-  dakinisMigrateUserCredentials(db);
+  dakinisMigrateAiUsage(db);
+  dakinisMigrateDemoProPlan(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);
 

@@ -4,10 +4,6 @@ import {
   dakinisHandlePlatformBusinessCreate,
   dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
-  dakinisHandlePlatformBusinessAccessPatch,
-  dakinisHandlePlatformBusinessDelete,
-  dakinisHandlePlatformUserPatch,
-  dakinisHandlePlatformUserResendReset,
   dakinisHandlePlatformUsers
 } from "./api/platform-routes.js";
 import {
@@ -22,9 +18,7 @@ import {
   dakinisHandleRestaurantProductionPost,
   dakinisHandleRestaurantProductionSimulatePost,
   dakinisHandleRestaurantProfilePatch,
-  dakinisHandleRestaurantStockPurchasePost,
-  dakinisHandleRestaurantStockItemPost,
-  dakinisHandleRestaurantStockScanPost
+  dakinisHandleRestaurantStockPurchasePost
 } from "./api/tenant-restaurant.js";
 import {
   dakinisHandleRestaurantInvoicesList,
@@ -32,14 +26,8 @@ import {
   dakinisHandleRestaurantMenuGet,
   dakinisHandleRestaurantOrdersList,
   dakinisHandleRestaurantOrdersPatch,
-  dakinisHandleRestaurantOrdersPost,
-  dakinisHandleRestaurantMenuPatch
+  dakinisHandleRestaurantOrdersPost
 } from "./api/tenant-restaurant-orders.js";
-import {
-  dakinisHandleRestaurantFloorGet,
-  dakinisHandleRestaurantFloorPatch,
-  dakinisHandleRestaurantTableSessionPatch
-} from "./api/tenant-restaurant-floor.js";
 import {
   dakinisHandleSupplyAlertsDelete,
   dakinisHandleSupplyAlertsList,
@@ -50,43 +38,16 @@ import {
   dakinisHandleSupplyDeliveriesPatch,
   dakinisHandleSupplyDeliveriesPost
 } from "./api/tenant-supply.js";
-import {
-  dakinisHandleInventoryConsumePost,
-  dakinisHandleInventoryLocationsGet,
-  dakinisHandleInventoryLotResolveGet,
-  dakinisHandleInventoryLotsList,
-  dakinisHandleInventoryReceivePost,
-  dakinisHandleInventorySummaryGet
-} from "./api/tenant-inventory-lots.js";
 import { dakinisHandleUsersRoute } from "./modules/users/routes.js";
 import { dakinisHandleTenantsRoute } from "./modules/tenants/routes.js";
 import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
 import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
-import {
-  dakinisHandleWhatsappWebhookVerify,
-  dakinisHandleWhatsappWebhookPost
-} from "./api/whatsapp-routes.js";
-import {
-  dakinisHandleStripeWebhookPost,
-  dakinisHandleStripePublicPlansGet,
-  dakinisHandleStripeCheckoutSessionPost,
-  dakinisHandleStripeSessionGet
-} from "./api/stripe-routes.js";
-import { dakinisHandlePublicCatalog } from "./api/catalog-routes.js";
-import {
-  dakinisHandlePublicIndustryTemplatesGet,
-  dakinisHandleTenantIntelligenceRoute
-} from "./api/tenant-intelligence-routes.js";
-import { dakinisHandlePublicPortalGet } from "./api/bos-routes.js";
-import {
-  dakinisHandlePlatformCatalogGet,
-  dakinisHandlePlatformCatalogPut
-} from "./api/catalog-admin-routes.js";
+import { dakinisHandleInternalIntelligenceRoute } from "./api/internal-intelligence.js";
+import { dakinisHandleTenantIntelligenceRoute } from "./api/tenant-intelligence.js";
 import { dakinisResolveTenant } from "./middleware/tenant.js";
 import { dakinisAuthenticateRequest } from "./middleware/auth.js";
-import { dakinisTenantAccessDenialOrNull } from "./middleware/tenant-access.js";
 
 export async function dakinisDispatch(req, rawBody, url) {
   const path = url.pathname;
@@ -107,94 +68,14 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinessUpdate(platformBizPatchMatch[1], rawBody);
   }
-  const platformBizAccessMatch = /^\/api\/platform\/businesses\/([^/]+)\/access$/.exec(path);
-  if (platformBizAccessMatch && req.method === "PATCH") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformBusinessAccessPatch(platformBizAccessMatch[1], rawBody);
-  }
-  const platformBizDeleteMatch = /^\/api\/platform\/businesses\/([^/]+)$/.exec(path);
-  if (platformBizDeleteMatch && req.method === "DELETE") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformBusinessDelete(platformBizDeleteMatch[1], rawBody);
-  }
   if (path === "/api/platform/users" && req.method === "GET") {
     const authErr = dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformUsers();
   }
-  const platformUserPatchMatch = /^\/api\/platform\/users\/([^/]+)$/.exec(path);
-  if (platformUserPatchMatch && req.method === "PATCH") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformUserPatch(platformUserPatchMatch[1], rawBody);
-  }
-  const platformUserResendMatch = /^\/api\/platform\/users\/([^/]+)\/resend-password-reset$/.exec(path);
-  if (platformUserResendMatch && req.method === "POST") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformUserResendReset(platformUserResendMatch[1]);
-  }
-  if (path === "/api/platform/telemetry/summary" && req.method === "GET") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    const { dakinisHandlePlatformTelemetrySummaryGet } = await import("./api/telemetry-routes.js");
-    const days = Number(url.searchParams.get("days") || 30);
-    return dakinisHandlePlatformTelemetrySummaryGet(days);
-  }
-  if (path === "/api/platform/catalog" && req.method === "GET") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformCatalogGet();
-  }
-  if (path === "/api/platform/catalog" && req.method === "PUT") {
-    const authErr = dakinisRequirePlatformAdmin(req);
-    if (authErr) return authErr;
-    return dakinisHandlePlatformCatalogPut(rawBody);
-  }
 
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
-  }
-
-  const dakinisWhatsappWebhook =
-    path === "/webhooks/whatsapp" ||
-    path === "/api/webhooks/whatsapp" ||
-    path === "/api/whatsapp/webhook";
-
-  if (dakinisWhatsappWebhook && req.method === "GET") {
-    return dakinisHandleWhatsappWebhookVerify(url);
-  }
-  if (dakinisWhatsappWebhook && req.method === "POST") {
-    return dakinisHandleWhatsappWebhookPost(rawBody, req);
-  }
-
-  const dakinisStripeWebhook =
-    path === "/webhooks/stripe" || path === "/api/webhooks/stripe";
-  if (dakinisStripeWebhook && req.method === "POST") {
-    return dakinisHandleStripeWebhookPost(rawBody, req);
-  }
-
-  if (path === "/api/public/stripe/plans" && req.method === "GET") {
-    return dakinisHandleStripePublicPlansGet();
-  }
-  if (path === "/api/public/stripe/checkout-session" && req.method === "POST") {
-    return dakinisHandleStripeCheckoutSessionPost(rawBody);
-  }
-  if (path === "/api/public/stripe/session" && req.method === "GET") {
-    return dakinisHandleStripeSessionGet(url);
-  }
-
-  if (path === "/api/public/catalog" && req.method === "GET") {
-    return await dakinisHandlePublicCatalog();
-  }
-  if (path === "/api/public/industry-templates" && req.method === "GET") {
-    return dakinisHandlePublicIndustryTemplatesGet();
-  }
-  const publicPortalMatch = /^\/api\/public\/portal\/([^/]+)$/.exec(path);
-  if (publicPortalMatch && req.method === "GET") {
-    return dakinisHandlePublicPortalGet(decodeURIComponent(publicPortalMatch[1]));
   }
 
   const publicAllergiesMatch = /^\/api\/public\/restaurant\/([^/]+)\/allergies$/.exec(path);
@@ -204,14 +85,6 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/auth/login" && req.method === "POST") {
     return dakinisHandleAuthLoginRequest(rawBody);
   }
-  if (path === "/api/auth/forgot-password" && req.method === "POST") {
-    const { dakinisHandleAuthForgotPassword } = await import("./api/auth-routes.js");
-    return dakinisHandleAuthForgotPassword(rawBody);
-  }
-  if (path === "/api/auth/reset-password" && req.method === "POST") {
-    const { dakinisHandleAuthResetPassword } = await import("./api/auth-routes.js");
-    return dakinisHandleAuthResetPassword(rawBody);
-  }
   if (path === "/api/auth/exchange" && req.method === "POST") {
     return dakinisHandleAuthExchangeRequest(req, rawBody);
   }
@@ -219,15 +92,22 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisJsonError(404, "NOT_FOUND", "Solo rutas /api/* en este servidor");
   }
 
+  if (path.startsWith("/api/internal/intelligence/")) {
+    const internal = await dakinisHandleInternalIntelligenceRoute(req, rawBody, path);
+    if (internal) return internal;
+    return dakinisJsonError(404, "NOT_FOUND", "Endpoint interno no encontrado");
+  }
+
   const tenant = await dakinisResolveTenant(req);
   if (tenant.error) return tenant.error;
   const authError = await dakinisAuthenticateRequest(req, tenant.business);
   if (authError) return authError;
 
-  const accessDenied = dakinisTenantAccessDenialOrNull(req, path, req.method);
-  if (accessDenied) return accessDenied;
-
   if (path === "/api/me" && req.method === "GET") return dakinisHandleMeRequest(req);
+
+  const intelligenceResult = await dakinisHandleTenantIntelligenceRoute(req, rawBody, path);
+  if (intelligenceResult) return intelligenceResult;
+
   if (path === "/api/tenant/supply/deliveries" && req.method === "GET") return dakinisHandleSupplyDeliveriesList(req);
   if (path === "/api/tenant/supply/deliveries" && req.method === "POST")
     return dakinisHandleSupplyDeliveriesPost(req, rawBody);
@@ -243,10 +123,6 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/kitchen" && req.method === "GET") return dakinisHandleRestaurantKitchenGet(req);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
     return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
-  if (path === "/api/tenant/restaurant/stock/items" && req.method === "POST")
-    return dakinisHandleRestaurantStockItemPost(req, rawBody);
-  if (path === "/api/tenant/restaurant/stock/scan" && req.method === "POST")
-    return dakinisHandleRestaurantStockScanPost(req, rawBody);
   if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")
     return dakinisHandleRestaurantProductionSimulatePost(req, rawBody);
   if (path === "/api/tenant/restaurant/production" && req.method === "POST")
@@ -254,14 +130,6 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/profile" && req.method === "PATCH")
     return dakinisHandleRestaurantProfilePatch(req, rawBody);
   if (path === "/api/tenant/restaurant/menu" && req.method === "GET") return dakinisHandleRestaurantMenuGet(req);
-  if (path === "/api/tenant/restaurant/menu" && req.method === "PATCH")
-    return dakinisHandleRestaurantMenuPatch(req, rawBody);
-  if (path === "/api/tenant/restaurant/floor" && req.method === "GET") return dakinisHandleRestaurantFloorGet(req);
-  if (path === "/api/tenant/restaurant/floor" && req.method === "PATCH")
-    return dakinisHandleRestaurantFloorPatch(req, rawBody);
-  const restaurantTableSession = /^\/api\/tenant\/restaurant\/table-sessions\/([^/]+)$/.exec(path);
-  if (restaurantTableSession && req.method === "PATCH")
-    return dakinisHandleRestaurantTableSessionPatch(req, restaurantTableSession[1], rawBody);
   if (path === "/api/tenant/restaurant/orders" && req.method === "GET") return dakinisHandleRestaurantOrdersList(req);
   if (path === "/api/tenant/restaurant/orders" && req.method === "POST")
     return dakinisHandleRestaurantOrdersPost(req, rawBody);
@@ -272,21 +140,7 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/invoices" && req.method === "POST")
     return dakinisHandleRestaurantInvoicesPost(req, rawBody);
 
-  if (path === "/api/tenant/inventory/locations" && req.method === "GET")
-    return dakinisHandleInventoryLocationsGet(req);
-  if (path === "/api/tenant/inventory/summary" && req.method === "GET")
-    return dakinisHandleInventorySummaryGet(req);
-  if (path === "/api/tenant/inventory/lots" && req.method === "GET") return dakinisHandleInventoryLotsList(req);
-  if (path === "/api/tenant/inventory/receive" && req.method === "POST")
-    return dakinisHandleInventoryReceivePost(req, rawBody);
-  if (path === "/api/tenant/inventory/consume" && req.method === "POST")
-    return dakinisHandleInventoryConsumePost(req, rawBody);
-  const inventoryLotResolve = /^\/api\/tenant\/inventory\/lots\/resolve\/([^/]+)$/.exec(path);
-  if (inventoryLotResolve && req.method === "GET")
-    return dakinisHandleInventoryLotResolveGet(req, decodeURIComponent(inventoryLotResolve[1]));
-
   const moduleResult =
-    dakinisHandleTenantIntelligenceRoute(req, rawBody, url) ||
     dakinisHandleUsersRoute(req, rawBody, path) ||
     dakinisHandleTenantsRoute(req, path) ||
     dakinisHandleCrmRoute(req, rawBody, url) ||

@@ -28,6 +28,56 @@ export function dakinisDaysUntilExpiry(expiryDateIso, now = new Date()) {
   return Math.ceil((exp.getTime() - now.getTime()) / 86_400_000);
 }
 
+/** Lotes de demostración (misma fuente que InventoryLotsPanel hasta API de lotes). */
+export function dakinisDemoInventoryLots(now = new Date()) {
+  const in3 = new Date(now);
+  in3.setDate(in3.getDate() + 3);
+  const in7 = new Date(now);
+  in7.setDate(in7.getDate() + 6);
+  const in30 = new Date(now);
+  in30.setDate(in30.getDate() + 28);
+  const fmt = (d) => d.toISOString().slice(0, 10);
+
+  const raw = [
+    {
+      id: "demo-1",
+      labelCode: "LOT-2026-000042",
+      productName: "Yogur natural 1L",
+      supplierLot: "YG2548",
+      expiryDate: fmt(in3),
+      quantityRemaining: 24,
+      locationName: "Nevera 1"
+    },
+    {
+      id: "demo-2",
+      labelCode: "LOT-2026-000041",
+      productName: "Queso manchego",
+      supplierLot: "QM1122",
+      expiryDate: fmt(in7),
+      quantityRemaining: 8,
+      locationName: "Nevera 2"
+    },
+    {
+      id: "demo-3",
+      labelCode: "LOT-2026-000040",
+      productName: "Pollo troceado",
+      supplierLot: "PO8891",
+      expiryDate: fmt(in30),
+      quantityRemaining: 12,
+      locationName: "Congelador"
+    }
+  ];
+
+  return raw.map((lot) => {
+    const daysUntilExpiry = dakinisDaysUntilExpiry(lot.expiryDate, now);
+    return {
+      ...lot,
+      daysUntilExpiry,
+      expirySeverity: dakinisExpirySeverity(lot.expiryDate, now)
+    };
+  });
+}
+
 export function dakinisLotQrUrl(labelCode, size = 200) {
   const code = String(labelCode || "").trim();
   if (!code) return "";

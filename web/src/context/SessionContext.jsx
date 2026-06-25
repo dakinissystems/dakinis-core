@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { DAKINIS_AUTH_EXPIRED_EVENT } from "../services/auth-events.js";
 
 const DAKINIS_STORAGE_KEY = "dakinis_session_v1";
 
@@ -20,6 +21,15 @@ function dakinisReadStoredSession() {
 
 export function DakinisSessionProvider({ children }) {
   const [session, setSessionState] = useState(() => dakinisReadStoredSession());
+
+  useEffect(() => {
+    const onExpired = () => {
+      setSessionState(null);
+      sessionStorage.removeItem(DAKINIS_STORAGE_KEY);
+    };
+    window.addEventListener(DAKINIS_AUTH_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(DAKINIS_AUTH_EXPIRED_EVENT, onExpired);
+  }, []);
 
   const setSession = useCallback((next) => {
     setSessionState(next);

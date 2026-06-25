@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-import { dakinisHashTenantApiKey } from "../api/api-key-utils.js";
 import { dakinisEnsureRestaurantKitchenSeed } from "./restaurant-kitchen-seed.js";
 import {
   DAKINIS_RESTAURANT_DEMO_PRODUCTION,
@@ -49,7 +48,7 @@ export function dakinisSeed(db) {
       slug: "restaurante-demo",
       name: "Restaurante Premium Demo (tenant)",
       type: "restaurante",
-      plan: "starter"
+      plan: "pro"
     }
   ];
 
@@ -101,9 +100,7 @@ export function dakinisSeed(db) {
     db.prepare(`UPDATE users SET totp_secret = NULL, totp_enabled = 0 WHERE id = 'usr_platform_1'`).run();
   }
 
-  const apiKeys = [
-    { key_value: dakinisHashTenantApiKey("dakinis-read-key"), business_id: businesses[2].id, role: "read-only" }
-  ];
+  const apiKeys = [{ key_value: "dakinis-read-key", business_id: businesses[2].id, role: "read-only" }];
 
   const insertKey = db.prepare(`
     INSERT OR IGNORE INTO tenant_api_keys (key_value, business_id, role)
@@ -376,6 +373,7 @@ export function dakinisSeed(db) {
 
   const restaurantBizId = businesses[4].id;
   dakinisEnsureRestaurantKitchenSeed(db, restaurantBizId);
+  dakinisSeedWhatsappDemo(db, restaurantBizId);
 
   const restaurantDemoDone = db
     .prepare(`SELECT 1 AS ok FROM tenant_production_batches WHERE id = 'seed-prod-manu'`)
@@ -444,6 +442,57 @@ export function dakinisSeed(db) {
       JSON.stringify(outputs),
       "Semilla alineada al ejemplo de Manu"
     );
+  }
+}
+
+function dakinisSeedWhatsappDemo(db, businessId) {
+  const count = db
+    .prepare(`SELECT COUNT(*) AS n FROM tenant_whatsapp_messages WHERE business_id = ?`)
+    .get(businessId)?.n;
+  if (count > 0) return;
+
+  const insertMessage = db.prepare(`
+    INSERT OR IGNORE INTO tenant_whatsapp_messages (id, business_id, direction, peer_phone, body_text, msg_type, created_at)
+    VALUES (@id, @business_id, @direction, @peer_phone, @body_text, 'text', @created_at)
+  `);
+  const insertContact = db.prepare(`
+    INSERT OR IGNORE INTO tenant_whatsapp_contacts (id, business_id, phone, display_name, last_seen_at)
+    VALUES (@id, @business_id, @phone, @display_name, datetime('now'))
+  `);
+
+  insertContact.run({
+    id: "wac_demo_manu",
+    business_id: businessId,
+    phone: "34600111222",
+    display_name: "Manu (demo)"
+  });
+
+  const demoMessages = [
+    {
+      id: "wam_demo_1",
+      direction: "inbound",
+      peer_phone: "34600111222",
+      body_text: "Hola, ¿tenéis mesa para 4 esta noche?",
+      created_at: "2026-05-18 18:02:00"
+    },
+    {
+      id: "wam_demo_2",
+      direction: "outbound",
+      peer_phone: "34600111222",
+      body_text: "¡Hola Manu! Sí, tenemos mesa a las 21:00. ¿Te confirmo?",
+      created_at: "2026-05-18 18:04:00"
+    },
+    {
+      id: "wam_demo_3",
+      direction: "inbound",
+      peer_phone: "34600111222",
+      body_text: "Perfecto, gracias 👍",
+      created_at: "2026-05-18 18:05:00"
+    }
+  ];
+
+  for (const msg of demoMessages) {
+    insertMessage.run({ ...msg, business_id: businessId });
   }
 }
 

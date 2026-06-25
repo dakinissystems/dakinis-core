@@ -2,26 +2,14 @@ import { randomUUID } from "node:crypto";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
-import {
-  DAKINIS_FERMINA_HOUSE_SLUG,
-  dakinisNormalizeRestaurantChannel,
-  dakinisNormalizeRestaurantPayment
-} from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const ENTITY_ORDER = "restaurant_order";
 const ENTITY_INVOICE = "restaurant_invoice";
 
-export function dakinisRestaurantOnly(business) {
+function dakinisRestaurantOnly(business) {
   if (String(business.type).toLowerCase() !== "restaurante") {
     return dakinisJsonError(403, "FORBIDDEN", "Modulo solo para negocios tipo restaurante");
-  }
-  return null;
-}
-
-function dakinisRequireRestaurantAdmin(req) {
-  const role = req.dakinisAuth?.role || "admin";
-  if (role !== "admin" && role !== "platform_admin") {
-    return dakinisJsonError(403, "FORBIDDEN", "Solo administradores del negocio");
   }
   return null;
 }
@@ -83,65 +71,17 @@ export async function dakinisHandleRestaurantMenuGet(req) {
   const menu = config?.menu?.items ?? [];
   const brand = config?.brand ?? null;
 
-  const floorTables = Array.isArray(config?.floor?.tables) ? config.floor.tables : null;
-
   return dakinisJsonSuccess(
     {
       venueName: biz?.name,
       slug: biz?.slug,
       brand,
       menu,
-      floorTables,
       isFermina: biz?.slug === DAKINIS_FERMINA_HOUSE_SLUG
     },
     req.dakinisBusiness.type,
     dakinisMeta(req)
   );
-}
-
-export async function dakinisHandleRestaurantMenuPatch(req, rawBody) {
-  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
-  if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
-  if (jwtErr) return jwtErr;
-  const adminErr = dakinisRequireRestaurantAdmin(req);
-  if (adminErr) return adminErr;
-
-  const body = dakinisParseJson(rawBody);
-  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
-
-  const items = Array.isArray(body.items) ? body.items : null;
-  if (!items?.length) return dakinisJsonError(400, "VALIDATION_ERROR", "items requerido");
-
-  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [
-    req.dakinisBusiness.id
-  ]);
-  let config = {};
-  try {
-    config = JSON.parse(biz?.config_json || "{}");
-  } catch {
-    config = {};
-  }
-
-  const menuItems = config?.menu?.items ?? [];
-  const byId = Object.fromEntries(
-    items
-      .filter((it) => it?.id)
-      .map((it) => [String(it.id), Number(it.priceEur)])
-  );
-
-  const nextMenu = menuItems.map((item) => {
-    if (byId[item.id] === undefined || Number.isNaN(byId[item.id])) return item;
-    return { ...item, priceEur: Math.round(byId[item.id] * 100) / 100 };
-  });
-
-  config.menu = { ...(config.menu || {}), items: nextMenu };
-  await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [
-    JSON.stringify(config),
-    req.dakinisBusiness.id
-  ]);
-
-  return dakinisJsonSuccess({ menu: nextMenu }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantOrdersList(req) {
@@ -186,8 +126,7 @@ export async function dakinisHandleRestaurantOrdersPost(req, rawBody) {
 
   const payload = {
     orderNumber,
-    channel: dakinisNormalizeRestaurantChannel(body.channel),
-    paymentMethod: dakinisNormalizeRestaurantPayment(body.paymentMethod),
+    channel: body.channel || "salon",
     table: String(body.table || "").trim(),
     customerName: String(body.customerName || "Cliente").trim() || "Cliente",
     status: "nueva",
@@ -224,7 +163,7 @@ export async function dakinisHandleRestaurantOrdersPatch(req, orderId, rawBody) 
   if (jwtErr) return jwtErr;
 
   const row = await dakinisQueryOne(
-    `SELECT id, payload, created_at FROM tenant_records WHERE id = ? AND business_id = ? AND entity = ?`,
+    `SELECT id, payload FROM tenant_records WHERE id = ? AND business_id = ? AND entity = ?`,
     [orderId, req.dakinisBusiness.id, ENTITY_ORDER]
   );
   if (!row) return dakinisJsonError(404, "NOT_FOUND", "Comanda no encontrada");
@@ -236,10 +175,6 @@ export async function dakinisHandleRestaurantOrdersPatch(req, orderId, rawBody) 
   const next = {
     ...current,
     ...(body.status ? { status: body.status } : {}),
-    ...(body.channel !== undefined ? { channel: dakinisNormalizeRestaurantChannel(body.channel) } : {}),
-    ...(body.paymentMethod !== undefined
-      ? { paymentMethod: dakinisNormalizeRestaurantPayment(body.paymentMethod) }
-      : {}),
     ...(body.table !== undefined ? { table: String(body.table).trim() } : {}),
     ...(body.customerName !== undefined ? { customerName: String(body.customerName).trim() } : {}),
     ...(body.notes !== undefined ? { notes: String(body.notes).trim() } : {})
@@ -250,11 +185,7 @@ export async function dakinisHandleRestaurantOrdersPatch(req, orderId, rawBody) 
     orderId
   ]);
 
-  const updated = await dakinisQueryOne(
-    `SELECT id, payload, created_at FROM tenant_records WHERE id = ?`,
-    [orderId]
-  );
-  return dakinisJsonSuccess({ order: dakinisParsePayload(updated) }, req.dakinisBusiness.type, dakinisMeta(req));
+  return dakinisJsonSuccess({ order: { id: orderId, ...next } }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantInvoicesList(req) {
@@ -288,16 +219,14 @@ export async function dakinisHandleRestaurantInvoicesPost(req, rawBody) {
 
   const invoiceType = body.type === "gestor" ? "gestor" : "cliente";
   const lines = Array.isArray(body.lines) ? body.lines : [];
-  let orderMeta = null;
-  if (body.orderId) {
+  if (!lines.length && body.orderId) {
     const orderRow = await dakinisQueryOne(
       `SELECT payload FROM tenant_records WHERE id = ? AND business_id = ? AND entity = ?`,
       [body.orderId, req.dakinisBusiness.id, ENTITY_ORDER]
     );
     if (orderRow) {
       const order = dakinisParsePayload(orderRow);
-      orderMeta = order;
-      if (!lines.length) lines.push(...(order.lines || []));
+      lines.push(...(order.lines || []));
     }
   }
   if (!lines.length) return dakinisJsonError(400, "VALIDATION_ERROR", "La factura necesita lineas o orderId");
@@ -318,10 +247,8 @@ export async function dakinisHandleRestaurantInvoicesPost(req, rawBody) {
     invoiceNumber,
     type: invoiceType,
     orderId: body.orderId || null,
-    orderNumber: body.orderNumber ?? orderMeta?.orderNumber ?? null,
-    channel: orderMeta?.channel ?? dakinisNormalizeRestaurantChannel(body.channel),
-    paymentMethod: orderMeta?.paymentMethod ?? dakinisNormalizeRestaurantPayment(body.paymentMethod),
-    customerName: String(body.customerName || orderMeta?.customerName || "Cliente").trim() || "Cliente",
+    orderNumber: body.orderNumber ?? null,
+    customerName: String(body.customerName || "Cliente").trim() || "Cliente",
     taxId: String(body.taxId || "").trim(),
     lines: lines.map((l) => ({
       name: l.name,

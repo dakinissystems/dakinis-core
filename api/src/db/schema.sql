@@ -28,10 +28,6 @@ CREATE TABLE IF NOT EXISTS users (
   totp_secret TEXT,
   totp_enabled INTEGER NOT NULL DEFAULT 0,
   platform_user_id TEXT UNIQUE,
-  must_change_password INTEGER NOT NULL DEFAULT 0,
-  password_reset_token_hash TEXT,
-  password_reset_expires_at TEXT,
-  confirmed_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (email),
   FOREIGN KEY (business_id) REFERENCES business(id)
@@ -85,7 +81,6 @@ CREATE TABLE IF NOT EXISTS tenant_stock_items (
   unit TEXT NOT NULL DEFAULT 'u',
   quantity REAL NOT NULL DEFAULT 0,
   min_quantity REAL NOT NULL DEFAULT 0,
-  barcode TEXT NOT NULL DEFAULT '',
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (business_id, slug),
   FOREIGN KEY (business_id) REFERENCES business(id)
@@ -136,47 +131,6 @@ CREATE TABLE IF NOT EXISTS tenant_stock_movements (
 
 CREATE INDEX IF NOT EXISTS idx_stock_movements_business ON tenant_stock_movements(business_id);
 
-CREATE TABLE IF NOT EXISTS tenant_stock_locations (
-  id TEXT PRIMARY KEY,
-  business_id TEXT NOT NULL,
-  slug TEXT NOT NULL,
-  name TEXT NOT NULL,
-  kind TEXT NOT NULL DEFAULT 'storage' CHECK (kind IN ('fridge', 'freezer', 'storage', 'floor', 'prep')),
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (business_id, slug),
-  FOREIGN KEY (business_id) REFERENCES business(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_stock_locations_business ON tenant_stock_locations(business_id);
-
-CREATE TABLE IF NOT EXISTS tenant_stock_lots (
-  id TEXT PRIMARY KEY,
-  business_id TEXT NOT NULL,
-  label_code TEXT NOT NULL,
-  stock_item_id TEXT,
-  product_name TEXT NOT NULL,
-  product_barcode TEXT NOT NULL DEFAULT '',
-  supplier_lot TEXT NOT NULL DEFAULT '',
-  expiry_date TEXT NOT NULL,
-  quantity REAL NOT NULL,
-  quantity_remaining REAL NOT NULL,
-  location_id TEXT,
-  supplier TEXT NOT NULL DEFAULT '',
-  received_at TEXT NOT NULL DEFAULT (datetime('now')),
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'depleted', 'waste')),
-  notes TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (business_id, label_code),
-  FOREIGN KEY (business_id) REFERENCES business(id),
-  FOREIGN KEY (stock_item_id) REFERENCES tenant_stock_items(id),
-  FOREIGN KEY (location_id) REFERENCES tenant_stock_locations(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_stock_lots_business_expiry ON tenant_stock_lots(business_id, expiry_date);
-CREATE INDEX IF NOT EXISTS idx_stock_lots_business_status ON tenant_stock_lots(business_id, status);
-CREATE INDEX IF NOT EXISTS idx_stock_lots_location ON tenant_stock_lots(business_id, location_id);
-
 CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
   business_id TEXT PRIMARY KEY,
   public_token TEXT UNIQUE NOT NULL,
@@ -186,13 +140,18 @@ CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
   FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
-CREATE TABLE IF NOT EXISTS platform_kv (
-  key TEXT PRIMARY KEY,
-  value_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL,
+  user_id TEXT,
+  usage_type TEXT NOT NULL DEFAULT 'advisor',
+  year_month TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
--- WhatsApp Business API (Fase 3)
+CREATE INDEX IF NOT EXISTS idx_ai_usage_business_month ON ai_usage(business_id, usage_type, year_month);
+
 CREATE TABLE IF NOT EXISTS tenant_whatsapp_contacts (
   id TEXT PRIMARY KEY,
   business_id TEXT NOT NULL,
@@ -204,6 +163,7 @@ CREATE TABLE IF NOT EXISTS tenant_whatsapp_contacts (
   UNIQUE (business_id, phone),
   FOREIGN KEY (business_id) REFERENCES business(id)
 );
+
 CREATE INDEX IF NOT EXISTS idx_wa_contacts_business ON tenant_whatsapp_contacts(business_id);
 
 CREATE TABLE IF NOT EXISTS tenant_whatsapp_messages (
@@ -218,6 +178,7 @@ CREATE TABLE IF NOT EXISTS tenant_whatsapp_messages (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (business_id) REFERENCES business(id)
 );
+
 CREATE INDEX IF NOT EXISTS idx_wa_messages_business_created
   ON tenant_whatsapp_messages(business_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_wa_messages_peer

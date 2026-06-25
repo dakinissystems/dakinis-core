@@ -12,9 +12,15 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     resolve: {
+      dedupe: ["react", "react-dom"],
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
-        "@dakinis/shared-brand": path.resolve(__dirname, "../packages/shared-brand/src")
+        "@dakinis/shared-brand": path.resolve(__dirname, "../packages/shared-brand/src"),
+        "@dakinis/shared-ux": path.resolve(__dirname, "../../../packages/shared-ux/src"),
+        "@dakinis/shared-loading": path.resolve(__dirname, "../../../packages/shared-loading/src"),
+        "@dakinis/shared-illustrations": path.resolve(__dirname, "../../../packages/shared-illustrations/src"),
+        react: path.resolve(__dirname, "../node_modules/react"),
+        "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
       }
     },
     server: {

@@ -13,14 +13,6 @@ import {
   dakinisResolveCoreUserFromPlatformToken
 } from "./platform-user-bridge.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
-import {
-  dakinisConsumePasswordReset,
-  dakinisRequestPasswordResetByEmail
-} from "../services/password-reset.js";
-import {
-  dakinisGetTenantAccessContext
-} from "../services/tenant-access-store.js";
-import { dakinisTenantLoginAccessDenialOrNull } from "../middleware/tenant-access.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -74,13 +66,9 @@ export async function dakinisHandleAuthLogin(rawBody) {
     return dakinisJsonError(500, "INTERNAL_ERROR", "Negocio asociado no encontrado");
   }
 
-  const accessCtx = await dakinisGetTenantAccessContext(business.id, business.plan);
-  const loginDenied = dakinisTenantLoginAccessDenialOrNull(accessCtx);
-  if (loginDenied) return loginDenied;
-
   const token = dakinisSignUserToken(user);
 
-  const planTier = dakinisNormalizeCommercialPlan(accessCtx.effectivePlan);
+  const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
 
   await dakinisPublishEvent("user.login", {
@@ -90,33 +78,22 @@ export async function dakinisHandleAuthLogin(rawBody) {
     source: "core_local"
   });
 
-  const mustChangePassword =
-    Number(user.must_change_password) === 1 || user.must_change_password === true;
-
   return dakinisJsonSuccess(
     {
       token,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
-        mustChangePassword
+        role: user.role
       },
       business: {
         id: business.id,
         slug: business.slug,
         name: business.name,
         type: business.type,
-        plan: accessCtx.effectivePlan,
-        planEntitled: accessCtx.entitledPlan,
+        plan: business.plan,
         planTier,
-        modulesEnabled,
-        access: {
-          state: accessCtx.accessState,
-          reason: accessCtx.accessReason,
-          degraded: accessCtx.degraded,
-          suspended: accessCtx.suspended
-        }
+        modulesEnabled
       }
     },
     business.type,
@@ -149,23 +126,14 @@ export async function dakinisHandleMe(req) {
 
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
-  const accessCtx = await dakinisGetTenantAccessContext(business.id, business.plan);
 
   return dakinisJsonSuccess(
     {
       user,
       business: {
         ...business,
-        plan: accessCtx.effectivePlan,
-        planEntitled: accessCtx.entitledPlan,
-        planTier: dakinisNormalizeCommercialPlan(accessCtx.effectivePlan),
-        modulesEnabled: dakinisListModulesForPlan(accessCtx.effectivePlan),
-        access: {
-          state: accessCtx.accessState,
-          reason: accessCtx.accessReason,
-          degraded: accessCtx.degraded,
-          suspended: accessCtx.suspended
-        }
+        planTier,
+        modulesEnabled
       }
     },
     business.type,
@@ -198,27 +166,10 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
 
-  let payload;
-  try {
-    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
-  } catch {
-    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
-  }
-
-  let bizRef =
+  const bizRef =
     (typeof body.businessId === "string" && body.businessId.trim()) ||
     (typeof body.businessSlug === "string" && body.businessSlug.trim()) ||
     "";
-
-  if (!bizRef) {
-    const claimTenant =
-      (typeof payload.tenant === "string" && payload.tenant.trim()) ||
-      (typeof payload.tenant_slug === "string" && payload.tenant_slug.trim()) ||
-      (typeof payload.tenantSlug === "string" && payload.tenantSlug.trim()) ||
-      (typeof payload.business_slug === "string" && payload.business_slug.trim()) ||
-      "";
-    bizRef = claimTenant;
-  }
 
   if (!bizRef) {
     return dakinisJsonError(
@@ -231,6 +182,13 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
   const business = await dakinisResolveBusinessFromHeader(bizRef);
   if (!business) {
     return dakinisJsonError(404, "UNKNOWN_TENANT", "Negocio no encontrado", { tenantRef: bizRef });
+  }
+
+  let payload;
+  try {
+    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+  } catch {
+    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
   }
 
   let user;
@@ -263,17 +221,13 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     source: "platform_idp"
   });
 
-  const mustChangePassword =
-    Number(user.must_change_password) === 1 || user.must_change_password === true;
-
   return dakinisJsonSuccess(
     {
       token: coreJwt,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
-        mustChangePassword
+        role: user.role
       },
       business: {
         id: business.id,
@@ -287,50 +241,5 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
     },
     business.type,
     { businessId: business.id, businessSlug: business.slug, planTier }
-  );
-}
-
-export async function dakinisHandleAuthForgotPassword(rawBody) {
-  const body = dakinisParseLoginBody(rawBody);
-  if (body === null) {
-    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
-  }
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  if (!email) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "email es obligatorio");
-  }
-
-  await dakinisRequestPasswordResetByEmail(email);
-
-  return dakinisJsonSuccess(
-    {
-      message:
-        "Si el email existe en el sistema, recibirás un enlace para restablecer la contraseña en unos minutos."
-    },
-    "platform",
-    {}
-  );
-}
-
-export async function dakinisHandleAuthResetPassword(rawBody) {
-  const body = dakinisParseLoginBody(rawBody);
-  if (body === null) {
-    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
-  }
-  const token = typeof body.token === "string" ? body.token.trim() : "";
-  const password = typeof body.password === "string" ? body.password : "";
-  if (!token || !password) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "token y password son obligatorios");
-  }
-
-  const result = await dakinisConsumePasswordReset(token, password);
-  if (!result.ok) {
-    return dakinisJsonError(400, result.code || "INVALID_TOKEN", result.message || "Token invalido");
-  }
-
-  return dakinisJsonSuccess(
-    { message: "Contraseña actualizada. Ya puedes iniciar sesión." },
-    "platform",
-    {}
   );
 }

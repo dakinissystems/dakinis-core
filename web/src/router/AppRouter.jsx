@@ -6,6 +6,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
 import { useDakinisFeatureTelemetry } from "../hooks/useDakinisFeatureTelemetry.js";
+import { DAKINIS_AUTH_EXPIRED_EVENT } from "../services/auth-events.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import ProductHomePage from "../pages/ProductHomePage.jsx";
 import PricingPage from "../pages/PricingPage.jsx";
@@ -25,7 +26,9 @@ import {
   PrivacyPage,
   SecurityPage,
   SlaPage,
-  TermsPage
+  TermsPage,
+  CookiesPage,
+  RefundsPage
 } from "../pages/StaticInfoPages.jsx";
 import { DashboardPage } from "../app/dashboard/index.js";
 import { CrmPage } from "../app/crm/index.js";
@@ -38,6 +41,7 @@ import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
 import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
+import DakinisCommandPaletteProvider from "../components/experience/DakinisCommandPaletteProvider.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -66,6 +70,7 @@ function Shell({ children }) {
       />
       <main className="app-main">{children}</main>
       <AppFooter navigate={navigateCompat} />
+      <DakinisCommandPaletteProvider />
       {showWhatsappFab ? <DraggableWhatsappButton /> : null}
     </div>
   );
@@ -82,6 +87,7 @@ function AdminGuard({ children }) {
 function AppRoutes() {
   const navigate = useNavigate();
   const { session } = useDakinisSession();
+  const signOut = useDakinisLogout();
   const { t, locale } = useLocale();
   const location = useLocation();
 
@@ -93,6 +99,8 @@ function AppRoutes() {
     else if (path === "/terms") document.title = t("doc.terms");
     else if (path === "/legal") document.title = t("doc.legal");
     else if (path === "/security") document.title = t("doc.security");
+    else if (path === "/cookies") document.title = t("doc.cookies");
+    else if (path === "/refunds") document.title = t("doc.refunds");
     else if (path === "/sla") document.title = t("doc.sla");
     else if (path === "/admin") document.title = t("doc.admin");
     else if (path.startsWith("/app/")) document.title = t("doc.app");
@@ -116,6 +124,19 @@ function AppRoutes() {
   }, [session, location.pathname, navigate]);
 
   useDakinisFeatureTelemetry(session, location.pathname);
+
+  useEffect(() => {
+    const onExpired = () => {
+      try {
+        sessionStorage.setItem("dakinis_session_expired", "1");
+      } catch {
+        /* ignore */
+      }
+      signOut();
+    };
+    window.addEventListener(DAKINIS_AUTH_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(DAKINIS_AUTH_EXPIRED_EVENT, onExpired);
+  }, [signOut]);
 
   const nav = (pathname) => navigate(pathname);
 
@@ -230,6 +251,8 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage navigate={nav} />} />
       <Route path="/legal" element={<LegalNoticePage navigate={nav} />} />
       <Route path="/security" element={<SecurityPage navigate={nav} />} />
+      <Route path="/cookies" element={<CookiesPage navigate={nav} />} />
+      <Route path="/refunds" element={<RefundsPage navigate={nav} />} />
       <Route path="/sla" element={<SlaPage navigate={nav} />} />
       <Route path="/precios" element={<PricingPage />} />
       <Route path="/success" element={<CheckoutSuccessPage />} />

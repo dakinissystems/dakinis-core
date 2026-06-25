@@ -12,6 +12,7 @@
     "start": "npm run start -w @dakinis/api",
     "dev": "npm run dev -w @dakinis/web",
     "dev:full": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @dakinis/web\" \"npm run start -w @dakinis/api\"",
+    "dev:full:ai": "concurrently -n web,api,ai -c cyan,magenta,green \"npm run dev -w @dakinis/web\" \"npm run start -w @dakinis/api\" \"npm run start --prefix ../ai\"",
     "build": "npm run build -w @dakinis/web",
     "preview": "npm run preview -w @dakinis/web",
     "start:web": "node web/serve-production.mjs",

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import { dakinisResetAuthExpiredFlag } from "../services/auth-events.js";
 import { dakinisPersistEcosystemSession, dakinisPersistIdpTokens } from "@dakinis/shared-brand/sso";
 import { dakinisPublicJsonFetch, DakinisApiError } from "../services/api.js";
 import {
@@ -25,6 +26,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const idpEnabled = isIdpAuthEnabled();
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("dakinis_session_expired") === "1") {
+        sessionStorage.removeItem("dakinis_session_expired");
+        setError("Tu sesión expiró. Inicia sesión de nuevo.");
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   function dakinisApplySession(payload, idpExtra) {
     const { token, user, business } = payload;
     if (!token || !business?.type) {
@@ -37,6 +49,7 @@ export default function LoginPage() {
       ...(idpExtra ? { idp: idpExtra } : {})
     };
     setSession(nextSession);
+    dakinisResetAuthExpiredFlag();
     dakinisPersistEcosystemSession(nextSession);
     if (idpExtra?.accessToken) {
       dakinisPersistIdpTokens(idpExtra);
@@ -206,6 +219,16 @@ export default function LoginPage() {
           </div>
         </form>
         {idpEnabled ? <p className="kpi-label login-idp-hint">{t("login.idpHint")}</p> : null}
+        <p className="kpi-label login-legal-hint">
+          {t("login.legalHint")}{" "}
+          <button type="button" className="link-btn" onClick={() => navigate("/terms")}>
+            {t("footer.terms")}
+          </button>
+          {" · "}
+          <button type="button" className="link-btn" onClick={() => navigate("/privacy")}>
+            {t("footer.privacy")}
+          </button>
+        </p>
       </div>
     </section>
   );

@@ -426,12 +426,43 @@ export default {
       statIntegrations: "Apps conectadas: {count}",
       statBusiness: "Negocio: {name}",
       tenantUnknown: "—",
+      subtitle: "Todo pasa aquí — tus apps, notificaciones e IA en un solo lugar.",
       quickActions: "Acciones rápidas",
       actionNewClient: "Nuevo cliente",
       actionNewOrder: "Nuevo pedido",
       actionSendWhatsApp: "Enviar WhatsApp",
       actionOpenInventory: "Abrir inventario"
+    },
+    widgets: {
+      lifeflowHint: "Tu score subió esta semana.",
+      viewSales: "Ver ventas",
+      openCalendar: "Abrir calendario",
+      viewCommunity: "Ver comunidad",
+      aiHint: "Tengo 3 recomendaciones para hoy.",
+      viewRecs: "Ver recomendaciones"
+    },
+    notifications: {
+      title: "Notificaciones",
+      scoreUp: "LifeFlow Score +12",
+      newOrder: "Nuevo pedido en Core",
+      published: "Vídeo publicado en Stream",
+      newUsers: "15 usuarios nuevos en AkoeNet",
+      aiRec: "Nueva recomendación de IA"
+    },
+    timeline: {
+      title: "Actividad de hoy",
+      invoice: "Factura creada",
+      ai: "IA respondió en Copilot",
+      score: "Score LifeFlow actualizado",
+      customer: "Nuevo cliente registrado"
     }
+  },
+  cmdk: {
+    title: "Buscar y comandos",
+    placeholder: "Buscar clientes, abrir apps, preguntar a IA…",
+    noResults: "Sin resultados — prueba otro término",
+    hintNavigate: "↑↓ navegar · Enter ejecutar · Esc cerrar",
+    hintAi: "Pregunta a Dakinis AI desde «Preguntar a Dakinis AI»"
   },
   footer: {
     navAria: "Enlaces pie de página",
@@ -441,8 +472,10 @@ export default {
     privacy: "Privacidad",
     terms: "Términos",
     legalNotice: "Aviso legal",
+    cookies: "Cookies",
     security: "Seguridad",
     sla: "SLA",
+    refunds: "Reembolsos",
     packages: "Paquetes",
     contact: "Contacto",
     access: "Acceso"
@@ -829,6 +862,7 @@ export default {
     },
     submitIdp: "Entrar con cuenta Dakinis (SSO)",
     idpHint: "El SSO del ecosistema requiere IdP y enlaza AkoeNet sin volver a escribir contraseña allí.",
+    legalHint: "Al iniciar sesión aceptas los",
     forgotPassword: "¿Olvidaste la contraseña?"
   },
   forgotPassword: {
@@ -878,6 +912,8 @@ export default {
     privacy: "Privacidad · Dakinis One",
     terms: "Términos · Dakinis One",
     legal: "Aviso legal · Dakinis One",
+    cookies: "Cookies · Dakinis One",
+    refunds: "Reembolsos · Dakinis One",
     security: "Seguridad · Dakinis One",
     sla: "SLA · Dakinis One",
     vista: "Vista previa · {label} · Dakinis One",
@@ -934,6 +970,15 @@ export default {
     hero: {
       title: "Todo tu negocio en un solo lugar",
       lead: "Clientes, ventas, inventario, reportes y WhatsApp conectados — sin configurar nada.",
+      aiKicker: "Asistente IA",
+      aiTitle: "Pregúntale a Dakinis",
+      aiLead: "Analiza clientes, ventas e inventario con datos reales de tu negocio.",
+      askPlaceholder: "Pregunta por clientes perdidos, ventas, alertas de stock…",
+      askAria: "Pregunta a Dakinis IA",
+      askButton: "Preguntar",
+      answerLabel: "Respuesta",
+      loginForAi: "Inicia sesión para usar el asistente IA.",
+      stubHint: "Modo desarrollo sin OpenAI. Añade OPENAI_API_KEY en platform/ai/.env para respuestas GPT.",
       tiles: {
         clients: "Clientes",
         inventory: "Inventario",
@@ -1720,6 +1765,8 @@ export default {
       refresh: "Actualizar",
       loading: "Cargando…",
       noContacts: "Sin contactos. Crea uno o recibe un WhatsApp.",
+      aiHintInactive: "Revisa clientes inactivos — la IA puede sugerir campañas de reactivación.",
+      aiHintAction: "Abrir Copilot",
       newContact: "Nuevo contacto",
       firstName: "Nombre",
       lastName: "Apellidos",

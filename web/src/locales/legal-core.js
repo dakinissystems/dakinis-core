@@ -11,7 +11,7 @@ const SAFETY = "legal@dakinissystems.com";
 const HELLO = "hello@dakinissystems.com";
 const AEPD = "https://www.aepd.es";
 const CORPORATE = "https://dakinissystems.com/";
-const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/privacidad-solicitudes";
+const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/dpo";
 const META_BUSINESS_TOOLS_TERMS = "https://www.facebook.com/legal/terms/businesstools";
 const META_DATA_PROCESSING_TERMS = "https://www.facebook.com/legal/terms/dataprocessing";
 const WHATSAPP_BUSINESS_TERMS = "https://www.whatsapp.com/legal/business-terms";
@@ -138,7 +138,7 @@ export const legalCoreEs = {
       { h: "5. Uso permitido", p: "No accedas a datos de otros tenants ni realices pruebas de intrusión sin autorización." },
       {
         h: "6. Suscripción e impago",
-        p: "El impago puede degradar el plan contratado hasta regularizar el pago (plan efectivo Starter). Dakinis Systems puede suspender o cerrar cuentas por incumplimiento grave, abuso o requerimiento legal."
+        p: "El impago puede degradar el plan contratado hasta regularizar el pago (plan efectivo Starter). Dakinis Systems puede suspender o cerrar cuentas por incumplimiento grave, abuso o requerimiento legal. Detalle en la política de acceso de tenant (docs corporativos)."
       },
       { h: "7. SLA", p: "Objetivo de disponibilidad 99,5 % mensual; soporte en 48 h laborables; incidentes críticos en 24 h. Detalle en /sla." },
       { h: "8. Limitación de responsabilidad", p: "Servicio «tal cual». No respondemos por daños indirectos en la medida permitida por ley." },
@@ -183,6 +183,45 @@ export const legalCoreEs = {
       { h: "3. Soporte", p: "Respuesta general: 48 horas laborables. Incidentes críticos: 24 horas." },
       { h: "4. Exclusiones", p: "Fuerza mayor, fallos de terceros fuera de control razonable y mantenimiento anunciado." },
       { h: "5. Contacto", p: `${HELP} · ${LEGAL}` }
+    ]
+  },
+  cookies: {
+    title: "Política de cookies",
+    sections: [
+      {
+        h: "1. Resumen",
+        p: "Dakinis One no usa Google Analytics, Meta Pixel ni cookies de publicidad. Si las añadimos, actualizaremos esta política y solicitaremos consentimiento cuando sea exigible."
+      },
+      {
+        h: "2. Almacenamiento estrictamente necesario",
+        p: "Token de sesión JWT, preferencia de idioma y datos de sesión del tenant en almacenamiento local o cookies de sesión. Son imprescindibles para el login y el panel."
+      },
+      {
+        h: "3. Analítica",
+        p: "Actualmente no hay cookies de analítica. Ver también la sección 10 de /privacy."
+      },
+      {
+        h: "4. Contacto",
+        p: `Consultas: ${PRIVACY} · ${LEGAL}. Política corporativa: ${CORPORATE}`
+      }
+    ]
+  },
+  refunds: {
+    title: "Política de reembolsos",
+    sections: [
+      {
+        h: "1. Suscripciones B2B",
+        p: "Los planes Growth y Pro se facturan vía Stripe. La renovación es automática hasta cancelación desde Ajustes o el portal de cliente."
+      },
+      {
+        h: "2. Reembolsos",
+        p: "Salvo obligación legal, no hay reembolso de periodos ya facturados. Cancela antes de la fecha de renovación para evitar cargos futuros."
+      },
+      {
+        h: "3. Errores de cobro",
+        p: "Cargos duplicados o incorrectos: billing@dakinissystems.com en un plazo de 14 días."
+      },
+      { h: "4. Contacto", p: `billing@dakinissystems.com · ${LEGAL}` }
     ]
   }
 };
@@ -272,7 +311,7 @@ export const legalCoreEn = {
       { h: "5. Acceptable use", p: "Do not access other tenants' data or perform unauthorized security testing." },
       {
         h: "6. Subscription and non-payment",
-        p: "Non-payment may degrade your contracted plan until payment is regularized (effective Starter plan). Dakinis Systems may suspend or close accounts for serious breach, abuse, or legal requirement."
+        p: "Non-payment may downgrade your contracted plan until payment is regularized (effective Starter plan). Dakinis Systems may suspend or close accounts for serious breach, abuse, or legal requirement. See the tenant access policy (corporate docs) for details."
       },
       { h: "7. SLA", p: "Service availability target 99.5% monthly; support within 48 business hours; critical incidents within 24 hours. Details at /sla." },
       { h: "8. Limitation of liability", p: "Service provided as is. No liability for indirect damages to the extent permitted by law." },
@@ -317,6 +356,45 @@ export const legalCoreEn = {
       { h: "3. Support", p: "General response: 48 business hours. Critical incidents: 24 hours." },
       { h: "4. Exclusions", p: "Force majeure, third-party failures outside reasonable control, and announced maintenance." },
       { h: "5. Contact", p: `${HELP} · ${LEGAL}` }
+    ]
+  },
+  cookies: {
+    title: "Cookie policy",
+    sections: [
+      {
+        h: "1. Summary",
+        p: "Dakinis One does not use Google Analytics, Meta Pixel, or advertising cookies. If we add them, we will update this policy and request consent where required."
+      },
+      {
+        h: "2. Strictly necessary storage",
+        p: "JWT session token, language preference, and tenant session data in local storage or session cookies. Required for login and the dashboard."
+      },
+      {
+        h: "3. Analytics",
+        p: "We currently do not use analytics cookies. See also section 10 of /privacy."
+      },
+      {
+        h: "4. Contact",
+        p: `Questions: ${PRIVACY} · ${LEGAL}. Corporate policy: ${CORPORATE}`
+      }
+    ]
+  },
+  refunds: {
+    title: "Refund policy",
+    sections: [
+      {
+        h: "1. B2B subscriptions",
+        p: "Growth and Pro plans are billed via Stripe. Renewal is automatic until cancelled from Settings or the customer portal."
+      },
+      {
+        h: "2. Refunds",
+        p: "Unless required by law, billed periods are non-refundable. Cancel before renewal to avoid future charges."
+      },
+      {
+        h: "3. Billing errors",
+        p: "Duplicate or incorrect charges: billing@dakinissystems.com within 14 days."
+      },
+      { h: "4. Contact", p: `billing@dakinissystems.com · ${LEGAL}` }
     ]
   }
 };

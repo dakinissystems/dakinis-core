@@ -1,3 +1,6 @@
+import HubWidgetGrid from "@dakinis/shared-ux/react/HubWidgetGrid.jsx";
+import NotificationsCenter from "@dakinis/shared-ux/react/NotificationsCenter.jsx";
+import ActivityTimeline from "@dakinis/shared-ux/react/ActivityTimeline.jsx";
 import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -85,11 +88,19 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
     }
   ];
 
+  function onWidgetAction(id) {
+    if (id.startsWith("lifeflow")) navigate("/hub");
+    else if (id.startsWith("core")) navigate("/app/ventas");
+    else if (id.startsWith("ai")) navigate("/app/dashboard");
+    else navigate("/hub");
+  }
+
   return (
     <div className="hub-dashboard card">
       <div className="hub-dashboard__head">
         <div>
           <h3 className="hub-dashboard__greeting">{greeting}</h3>
+          <p className="lead hub-dashboard__subtitle">{t("hub.dashboard.subtitle")}</p>
           <ul className="hub-dashboard__stats">
             <li>{t("hub.dashboard.statModules", { count: appCount })}</li>
             <li>{t("hub.dashboard.statIntegrations", { count: marketplaceCount })}</li>
@@ -97,6 +108,14 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
           </ul>
         </div>
       </div>
+
+      <HubWidgetGrid onAction={onWidgetAction} t={t} />
+
+      <div className="hub-dashboard__grid-2">
+        <NotificationsCenter t={t} />
+        <ActivityTimeline t={t} />
+      </div>
+
       <div className="hub-dashboard__actions">
         <p className="kpi-label">{t("hub.dashboard.quickActions")}</p>
         <div className="hub-dashboard__action-row">

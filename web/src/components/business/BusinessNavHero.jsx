@@ -1,4 +1,5 @@
 import { useLocale } from "../../context/LocaleContext.jsx";
+import BusinessNavHeroAskAi from "./BusinessNavHeroAskAi.jsx";
 
 const DAKINIS_BUSINESS_TILES = [
   { key: "clients", icon: "👥", path: "/app/crm" },
@@ -8,7 +9,7 @@ const DAKINIS_BUSINESS_TILES = [
   { key: "whatsapp", icon: "💬", path: "/app/whatsapp" }
 ];
 
-export default function BusinessNavHero({ navigate, compact = false }) {
+export default function BusinessNavHero({ navigate, compact = false, showCopilot = !compact }) {
   const { t } = useLocale();
 
   return (
@@ -17,6 +18,7 @@ export default function BusinessNavHero({ navigate, compact = false }) {
         <div className="business-nav-hero__copy">
           <h2 className="business-nav-hero__title">{t("businessDemo.hero.title")}</h2>
           <p className="lead business-nav-hero__lead">{t("businessDemo.hero.lead")}</p>
+          {showCopilot ? <BusinessNavHeroAskAi /> : null}
         </div>
       ) : null}
       <div className="business-nav-hero__tiles" role="list">

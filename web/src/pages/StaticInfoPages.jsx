@@ -62,3 +62,11 @@ export function SecurityPage({ navigate }) {
 export function SlaPage({ navigate }) {
   return <LegalShell navigate={navigate} docKey="sla" />;
 }
+
+export function CookiesPage({ navigate }) {
+  return <LegalShell navigate={navigate} docKey="cookies" />;
+}
+
+export function RefundsPage({ navigate }) {
+  return <LegalShell navigate={navigate} docKey="refunds" />;
+}

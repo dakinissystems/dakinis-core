@@ -55,12 +55,20 @@ export default function AppFooter({ navigate }) {
             {t("footer.legalNotice")}
           </FooterRouteLink>
           <Sep />
+          <FooterRouteLink href="/cookies" navigate={navigate}>
+            {t("footer.cookies")}
+          </FooterRouteLink>
+          <Sep />
           <FooterRouteLink href="/security" navigate={navigate}>
             {t("footer.security")}
           </FooterRouteLink>
           <Sep />
           <FooterRouteLink href="/sla" navigate={navigate}>
             {t("footer.sla")}
+          </FooterRouteLink>
+          <Sep />
+          <FooterRouteLink href="/refunds" navigate={navigate}>
+            {t("footer.refunds")}
           </FooterRouteLink>
           <Sep />
           <a

@@ -10,6 +10,8 @@ import {
 } from "../../services/crm.js";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import CrmPipelineBoard from "../../components/business/CrmPipelineBoard.jsx";
+import EmptyState from "@dakinis/shared-ux/react/EmptyState.jsx";
+import AiContextualHint from "@dakinis/shared-ux/react/AiContextualHint.jsx";
 import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 
 const DAKINIS_CRM_JOURNEY_KEYS = ["client", "booking", "order", "invoice", "whatsapp", "followUp"];
@@ -230,6 +232,14 @@ export default function CrmPage({ navigate }) {
           </p>
         ) : null}
 
+        {!isDemo ? (
+          <AiContextualHint
+            message={t("app.crm.aiHintInactive")}
+            actionLabel={t("app.crm.aiHintAction")}
+            onAction={() => navigate("/app/dashboard")}
+          />
+        ) : null}
+
         <div className="wa-conv-layout" style={{ marginTop: "1.25rem" }}>
           <aside className="wa-conv-list card">
             <label className="mockup-field">
@@ -258,12 +268,17 @@ export default function CrmPage({ navigate }) {
                   </button>
                 </li>
               ))}
-              {!loading && contacts.length === 0 ? (
-                <li className="kpi-label">{t("app.crm.noContacts")}</li>
-              ) : null}
             </ul>
 
-            <form className="mockup-form" onSubmit={handleCreateContact} style={{ marginTop: "1rem" }}>
+            {!loading && contacts.length === 0 ? (
+              <EmptyState
+                product="core"
+                stateKey="noCustomers"
+                onPrimary={() => document.querySelector(".crm-new-contact-form")?.scrollIntoView({ behavior: "smooth" })}
+              />
+            ) : null}
+
+            <form className="mockup-form crm-new-contact-form" onSubmit={handleCreateContact} style={{ marginTop: "1rem" }}>
               <p className="kpi-label">{t("app.crm.newContact")}</p>
               <label className="mockup-field">
                 <span>{t("app.crm.firstName")}</span>

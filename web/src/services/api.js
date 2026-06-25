@@ -164,6 +164,10 @@ async function dakinisParseJsonResponse(res, url) {
   }
   if (!res.ok) {
     const code = json?.error?.code;
+    if (res.status === 401 && (code === "UNAUTHORIZED" || code === "INVALID_TOKEN")) {
+      const { dakinisEmitAuthExpired } = await import("./auth-events.js");
+      dakinisEmitAuthExpired({ url, code });
+    }
     const msg = json?.error?.message || res.statusText || "Error HTTP";
     if (code) {
       throw new DakinisApiError(msg, {

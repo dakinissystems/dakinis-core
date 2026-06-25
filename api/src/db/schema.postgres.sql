@@ -130,3 +130,44 @@ CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
   allergies_json TEXT NOT NULL DEFAULT '[]',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  user_id TEXT,
+  usage_type TEXT NOT NULL DEFAULT 'advisor',
+  year_month TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_usage_business_month ON ai_usage(business_id, usage_type, year_month);
+
+CREATE TABLE IF NOT EXISTS tenant_whatsapp_contacts (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  phone TEXT NOT NULL,
+  display_name TEXT,
+  wa_profile_name TEXT,
+  last_seen_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (business_id, phone)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_contacts_business ON tenant_whatsapp_contacts(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_whatsapp_messages (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+  wamid TEXT,
+  peer_phone TEXT NOT NULL,
+  body_text TEXT,
+  msg_type TEXT NOT NULL DEFAULT 'text',
+  payload_json TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_messages_business_created
+  ON tenant_whatsapp_messages(business_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wa_messages_peer
+  ON tenant_whatsapp_messages(business_id, peer_phone, created_at DESC);
