@@ -77,8 +77,9 @@ export function dakinisTenantRefFromIdpLogin(idpData) {
   return String(raw).trim();
 }
 
-/** Slugs demo cuando el JWT IdP no trae tenant. */
+/** Slugs demo / producción cuando el JWT IdP no trae tenant. */
 const DEMO_SLUG_BY_EMAIL = {
+  "admin@dakinissystems.com": "dakinis-platform",
   "admin@dakinis-platform.local": "dakinis-platform",
   "admin@clinica-demo.local": "clinica-demo",
   "admin@peluqueria-demo.local": "peluqueria-demo",
@@ -86,7 +87,10 @@ const DEMO_SLUG_BY_EMAIL = {
   "admin@inmobiliaria-demo.local": "inmobiliaria-demo"
 };
 
-export function dakinisResolveExchangeTenantRef(email, idpData) {
+export function dakinisResolveExchangeTenantRef(email, idpData, businessField) {
+  const manual = String(businessField || "").trim();
+  if (manual) return manual;
+
   const fromJwt = dakinisTenantRefFromIdpLogin(idpData);
   if (fromJwt) return fromJwt;
   const key = String(email || "")

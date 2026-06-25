@@ -20,6 +20,7 @@ export default function LoginPage() {
   const { setSession } = useDakinisSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [businessSlug, setBusinessSlug] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState("");
@@ -80,7 +81,7 @@ export default function LoginPage() {
     try {
       const idp = await loginViaIdp(email.trim(), password);
       if (idp.refreshToken) setIdpRefreshToken(idp.refreshToken);
-      const tenantRef = dakinisResolveExchangeTenantRef(email, idp);
+      const tenantRef = dakinisResolveExchangeTenantRef(email, idp, businessSlug);
       if (!tenantRef) {
         throw new Error(t("login.errors.idpTenant"));
       }
@@ -104,11 +105,11 @@ export default function LoginPage() {
     }
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmitLocal(e) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED);
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { via: "local" });
     try {
       if (needsTotp && !totpCode.trim()) {
         setError(t("login.errors.totpRequired"));
@@ -140,6 +141,14 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (idpEnabled) {
+      return handleIdpSubmit(e);
+    }
+    return handleSubmitLocal(e);
   }
 
   return (
@@ -193,6 +202,18 @@ export default function LoginPage() {
               />
             </label>
           ) : null}
+          {idpEnabled ? (
+            <label className="mockup-field">
+              <span>{t("login.businessSlug")}</span>
+              <input
+                type="text"
+                value={businessSlug}
+                onChange={(ev) => setBusinessSlug(ev.target.value)}
+                placeholder="dakinis-platform · restaurante-demo"
+                autoComplete="organization"
+              />
+            </label>
+          ) : null}
           {error ? <p className="login-form__error">{error}</p> : null}
           <p className="kpi-label" style={{ margin: 0 }}>
             <button type="button" className="btn btn-outline" style={{ padding: "0.25rem 0.5rem" }} onClick={() => navigate("/forgot-password")}>
@@ -201,16 +222,20 @@ export default function LoginPage() {
           </p>
           <div className="login-form__actions">
             <button type="submit" className="btn login-form__submit" disabled={loading}>
-              {loading ? t("login.submitting") : t("login.submit")}
+              {loading
+                ? t("login.submitting")
+                : idpEnabled
+                  ? t("login.submitIdp")
+                  : t("login.submit")}
             </button>
-            {idpEnabled ? (
+            {idpEnabled && import.meta.env.DEV ? (
               <button
                 type="button"
                 className="btn btn-outline"
                 disabled={loading}
-                onClick={handleIdpSubmit}
+                onClick={handleSubmitLocal}
               >
-                {loading ? t("login.submitting") : t("login.submitIdp")}
+                {loading ? t("login.submitting") : t("login.submitLocalDev")}
               </button>
             ) : null}
             <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>

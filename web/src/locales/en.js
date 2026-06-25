@@ -849,6 +849,8 @@ export default {
     totpPlaceholder: "6 digits",
     submitting: "Signing in…",
     submit: "Sign in",
+    submitLocalDev: "Local login (dev SQLite)",
+    businessSlug: "Business (tenant slug)",
     back: "Back",
     errors: {
       totpRequired: "Enter the 6-digit code from your authenticator app.",

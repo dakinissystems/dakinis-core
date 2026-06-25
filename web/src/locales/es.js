@@ -851,6 +851,8 @@ export default {
     totpPlaceholder: "6 dígitos",
     submitting: "Entrando...",
     submit: "Entrar",
+    submitLocalDev: "Login local (dev SQLite)",
+    businessSlug: "Negocio (slug del tenant)",
     back: "Volver",
     errors: {
       totpRequired: "Introduce el código de 6 dígitos de tu aplicación autenticadora.",
@@ -861,7 +863,7 @@ export default {
       idpTenant: "No se pudo resolver el negocio para SSO. Usa login local o configura tenant en el JWT IdP."
     },
     submitIdp: "Entrar con cuenta Dakinis (SSO)",
-    idpHint: "El SSO del ecosistema requiere IdP y enlaza AkoeNet sin volver a escribir contraseña allí.",
+    idpHint: "En producción el login usa Auth central (auth.dakinissystems.com). Admin plataforma: tenant dakinis-platform.",
     legalHint: "Al iniciar sesión aceptas los",
     forgotPassword: "¿Olvidaste la contraseña?"
   },
