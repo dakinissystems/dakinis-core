@@ -17,13 +17,12 @@ import { company } from "@dakinis/shared-brand";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { dakinisOpenEcosystemProduct } from "../utils/ecosystemSso.js";
 import HubDashboard from "../components/HubDashboard.jsx";
-import { dakinisIsBusinessDemoSession } from "../utils/businessDemoMode.js";
+import {
+  dakinisIsBusinessDemoSession,
+  dakinisIsPlatformAdminSession
+} from "../utils/businessDemoMode.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
 
 function dakinisResolveTilePath(tile, session) {
   if (tile.id === "my-business" && session?.business?.type) {
@@ -62,12 +61,6 @@ export default function HubPage() {
       dakinisPersistEcosystemSession(session);
     }
   }, [session?.token]);
-
-  useEffect(() => {
-    if (dakinisIsBusinessDemoSession(session)) {
-      navigate("/app/dashboard", { replace: true });
-    }
-  }, [session, navigate]);
 
   const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
 

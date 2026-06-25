@@ -996,6 +996,8 @@ export default {
       monthSales: "Sales this month",
       products: "Products",
       conversion: "Conversion",
+      ctaOperations: "View business operations",
+      ctaRestaurant: "View tables & orders",
       ctaPipeline: "View sales pipeline",
       ctaWhatsapp: "Open WhatsApp",
       insightsTitle: "What matters today",

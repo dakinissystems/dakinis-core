@@ -1,13 +1,10 @@
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 import { DAKINIS_VISTA_MOCKUPS } from "../mockups/index.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
 
 export default function VistaMockupPage({ verticalKey, navigate }) {
   const { t } = useLocale();

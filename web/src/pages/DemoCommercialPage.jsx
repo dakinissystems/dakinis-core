@@ -8,12 +8,9 @@ import BusinessAiCopilot from "../components/commercial/BusinessAiCopilot.jsx";
 import DemoFlowGuide from "../components/commercial/DemoFlowGuide.jsx";
 import DemoRoiBenefits from "../components/commercial/DemoRoiBenefits.jsx";
 import BusinessNavHero from "../components/business/BusinessNavHero.jsx";
+import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
 
 /** Demo comercial orientada a dueño de negocio. */
 export default function DemoCommercialPage({ verticalKey, navigate }) {

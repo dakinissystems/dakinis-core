@@ -6,6 +6,7 @@ import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { company } from "@dakinis/shared-brand";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
+import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 import DemoVerticalCards from "../components/commercial/DemoVerticalCards.jsx";
 import ExcelVsDakinisTable from "../components/commercial/ExcelVsDakinisTable.jsx";
 import ExcelCostSimulator from "../components/commercial/ExcelCostSimulator.jsx";
@@ -14,10 +15,6 @@ import GettingStartedSteps from "../components/commercial/GettingStartedSteps.js
 import ProductShowcaseSection from "../components/commercial/ProductShowcaseSection.jsx";
 import ProductVideoSection from "../components/commercial/ProductVideoSection.jsx";
 import ProductSocialProofTeaser from "../components/commercial/ProductSocialProofTeaser.jsx";
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
 
 /** Entrada SaaS Dakinis One — funnel problema → ahorro → confianza → demo → extras. */
 export default function ProductHomePage() {

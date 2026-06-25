@@ -75,7 +75,16 @@ export default function CommercialBusinessDashboard({ navigate }) {
       </div>
 
       <div className="commercial-business-dashboard__actions">
-        <button type="button" className="btn" onClick={() => navigate("/app/ventas")}>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => navigate(`/sistema/${encodeURIComponent(vertical)}`)}
+        >
+          {vertical === "restaurante"
+            ? t("businessDemo.dashboard.ctaRestaurant")
+            : t("businessDemo.dashboard.ctaOperations")}
+        </button>
+        <button type="button" className="btn btn-outline" onClick={() => navigate("/app/ventas")}>
           {t("businessDemo.dashboard.ctaPipeline")}
         </button>
         <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>

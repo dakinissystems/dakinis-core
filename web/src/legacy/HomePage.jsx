@@ -5,10 +5,7 @@ import { useDakinisSession } from "../context/SessionContext.jsx";
 import PricingHybridSection from "../components/PricingHybridSection.jsx";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
+import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 
 export default function HomePage({ navigate, dakinisSystemRegistry }) {
   const { session } = useDakinisSession();

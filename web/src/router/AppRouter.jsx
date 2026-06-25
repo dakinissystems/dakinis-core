@@ -43,12 +43,9 @@ import AppGuard from "../components/AppGuard.jsx";
 import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
 import DakinisCommandPaletteProvider from "../components/experience/DakinisCommandPaletteProvider.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
+import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
-
-function dakinisIsPlatformAdminSession(session) {
-  return session?.user?.role === "platform_admin" || session?.business?.type === "platform";
-}
 
 function Shell({ children }) {
   const navigate = useNavigate();

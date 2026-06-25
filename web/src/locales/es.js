@@ -998,6 +998,8 @@ export default {
       monthSales: "Ventas este mes",
       products: "Productos",
       conversion: "Conversión",
+      ctaOperations: "Ver operaciones del negocio",
+      ctaRestaurant: "Ver mesas y comandas",
       ctaPipeline: "Ver embudo de ventas",
       ctaWhatsapp: "Abrir WhatsApp",
       insightsTitle: "Lo que importa hoy",

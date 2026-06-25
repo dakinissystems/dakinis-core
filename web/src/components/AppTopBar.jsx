@@ -137,7 +137,9 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                 <button type="button" className="btn btn-outline" onClick={() => navigate("/admin")}>
                   {t("nav.platformPanel")}
                 </button>
-              ) : !isBusinessDemo && session.business?.slug ? (
+              ) : session.business?.type &&
+                (session.business?.slug || isBusinessDemo) &&
+                systemRegistry[session.business.type] ? (
                 <>
                   {!isSystemDemoView ? (
                     <button
@@ -145,7 +147,9 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                       className="btn btn-outline"
                       onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
                     >
-                      {t("nav.myBusiness")}
+                      {isBusinessDemo && session.business.type === "restaurante"
+                        ? t("businessDemo.dashboard.ctaRestaurant")
+                        : t("nav.myBusiness")}
                     </button>
                   ) : null}
                   {tenantCanOpenMockup ? (
