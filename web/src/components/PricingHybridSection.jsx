@@ -25,6 +25,7 @@ import {
   dakinisStartStripeCheckout,
   dakinisStripePaymentLinkUrl
 } from "../services/stripe-checkout.js";
+import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 
 function PlanStripeSubscribeButton({ plan, t, locale, stripePlans }) {
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,11 @@ function PlanStripeSubscribeButton({ plan, t, locale, stripePlans }) {
     setLoading(true);
     setError("");
     dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur });
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.SIGNUP_STARTED, {
+      plan: plan.key,
+      priceEur: plan.priceEur,
+      via: "stripe"
+    });
     try {
       if (planConfig.paymentLink) {
         window.location.href = dakinisStripePaymentLinkUrl(planConfig.paymentLink);

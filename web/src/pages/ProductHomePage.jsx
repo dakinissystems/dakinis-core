@@ -33,6 +33,10 @@ export default function ProductHomePage() {
     }
   }, [session, navigate]);
 
+  useEffect(() => {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.CORE_PAGE_VIEW, { surface: "product_home" });
+  }, []);
+
   const openDemo = () => {
     dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.DEMO_OPENED, { from: "product_home_calculator" });
     navigate("/demo/restaurante");

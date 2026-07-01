@@ -1,11 +1,16 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import PricingHybridSection from "../components/PricingHybridSection.jsx";
 
 export default function PricingPage() {
   const { t } = useLocale();
   const location = useLocation();
+
+  useEffect(() => {
+    dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.CORE_PRICING_VIEW, { surface: "pricing_page" });
+  }, []);
 
   useEffect(() => {
     if (location.hash !== "#contact") return undefined;

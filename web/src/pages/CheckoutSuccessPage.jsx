@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
+import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { dakinisFetchStripeCheckoutSession } from "../services/stripe-checkout.js";
 
 export default function CheckoutSuccessPage() {
@@ -24,6 +25,12 @@ export default function CheckoutSuccessPage() {
           plan: data?.plan || null,
           paymentStatus: data?.paymentStatus
         });
+        if (data?.paymentStatus === "paid" || data?.plan) {
+          dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.SIGNUP_COMPLETED, {
+            plan: data?.plan || undefined,
+            paymentStatus: data?.paymentStatus
+          });
+        }
       })
       .catch((err) => {
         if (cancelled) return;
