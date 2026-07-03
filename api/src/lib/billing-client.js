@@ -7,7 +7,7 @@ function dakinisBillingBaseUrl() {
   if (direct) return direct;
   const gateway = (process.env.DAKINIS_GATEWAY_URL || "").replace(/\/$/, "");
   if (gateway) return `${gateway}/billing`;
-  return "http://billing.railway.internal:8080";
+  return "http://dakinis-billing.railway.internal:4080";
 }
 
 function dakinisBillingHeaders() {
