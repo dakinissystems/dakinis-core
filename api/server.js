@@ -113,6 +113,8 @@ async function start() {
   await dakinisInitSentry("dakinis-core-api");
   const { dakinisRegisterEventConsumers } = await import("./src/lib/event-consumers.js");
   dakinisRegisterEventConsumers();
+  const { dakinisStartBillingRedisConsumer } = await import("./src/lib/billing-redis-consumer.js");
+  dakinisStartBillingRedisConsumer();
   const driver = await dakinisInitDb();
 
   if (USE_FASTIFY) {

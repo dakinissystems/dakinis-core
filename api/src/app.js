@@ -46,8 +46,18 @@ import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
 import { dakinisHandleInternalIntelligenceRoute } from "./api/internal-intelligence.js";
 import { dakinisHandleTenantIntelligenceRoute } from "./api/tenant-intelligence.js";
-import { dakinisResolveTenant } from "./middleware/tenant.js";
+import {
+  dakinisHandlePublicStripePlans,
+  dakinisHandlePublicStripeCheckoutSession,
+  dakinisHandlePublicStripeSessionLookup,
+} from "./api/stripe-public-routes.js";
+import {
+  dakinisHandleInternalBillingSync,
+  dakinisHandleTenantBillingPortal,
+  dakinisHandleTenantBillingSubscription,
+} from "./api/billing-routes.js";
 import { dakinisAuthenticateRequest } from "./middleware/auth.js";
+import { dakinisResolveTenant } from "./middleware/tenant.js";
 
 export async function dakinisDispatch(req, rawBody, url) {
   const path = url.pathname;
@@ -88,6 +98,22 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/auth/exchange" && req.method === "POST") {
     return dakinisHandleAuthExchangeRequest(req, rawBody);
   }
+
+  if (path === "/api/public/stripe/plans" && req.method === "GET") {
+    return dakinisHandlePublicStripePlans();
+  }
+  if (path === "/api/public/stripe/checkout-session" && req.method === "POST") {
+    return dakinisHandlePublicStripeCheckoutSession(rawBody);
+  }
+  const stripeSessionMatch = /^\/api\/public\/stripe\/session$/.exec(path);
+  if (stripeSessionMatch && req.method === "GET") {
+    return dakinisHandlePublicStripeSessionLookup(url.searchParams.get("session_id"));
+  }
+
+  if (path === "/api/internal/billing/sync" && req.method === "POST") {
+    return dakinisHandleInternalBillingSync(req, rawBody);
+  }
+
   if (!path.startsWith("/api/")) {
     return dakinisJsonError(404, "NOT_FOUND", "Solo rutas /api/* en este servidor");
   }
@@ -104,6 +130,13 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (authError) return authError;
 
   if (path === "/api/me" && req.method === "GET") return dakinisHandleMeRequest(req);
+
+  if (path === "/api/billing/subscription" && req.method === "GET") {
+    return dakinisHandleTenantBillingSubscription(req);
+  }
+  if (path === "/api/billing/portal" && req.method === "POST") {
+    return dakinisHandleTenantBillingPortal(req, rawBody);
+  }
 
   const intelligenceResult = await dakinisHandleTenantIntelligenceRoute(req, rawBody, path);
   if (intelligenceResult) return intelligenceResult;

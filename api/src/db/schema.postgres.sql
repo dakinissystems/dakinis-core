@@ -171,3 +171,19 @@ CREATE INDEX IF NOT EXISTS idx_wa_messages_business_created
   ON tenant_whatsapp_messages(business_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_wa_messages_peer
   ON tenant_whatsapp_messages(business_id, peer_phone, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS tenant_subscriptions (
+  business_id TEXT PRIMARY KEY REFERENCES business(id),
+  plan TEXT NOT NULL DEFAULT 'starter',
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trialing', 'past_due', 'canceled')),
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  entitled_plan TEXT,
+  access_state TEXT NOT NULL DEFAULT 'active',
+  access_reason TEXT,
+  access_note TEXT,
+  closed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
