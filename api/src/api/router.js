@@ -10,6 +10,7 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import { dakinisGetDbDriver } from "../db/index.js";
 import { dakinisIsSentryEnabled } from "../lib/sentry.js";
+import { dakinisWhatsappMetaConfig } from "../lib/whatsapp-meta.js";
 import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
@@ -103,6 +104,7 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
             ? dakinisMaskDatabaseUrl(process.env.DATABASE_URL || "")
             : undefined,
         sentry: dakinisIsSentryEnabled(),
+        whatsapp: dakinisWhatsappMetaConfig(),
         uptimeSec: Math.floor(process.uptime())
       },
       "custom"

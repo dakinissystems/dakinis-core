@@ -49,6 +49,10 @@ import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
 import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
+import {
+  dakinisHandleWhatsappWebhook,
+  dakinisIsWhatsappWebhookPath
+} from "./api/whatsapp-webhook.js";
 import { dakinisHandleInternalIntelligenceRoute } from "./api/internal-intelligence.js";
 import { dakinisHandleTenantIntelligenceRoute } from "./api/tenant-intelligence.js";
 import {
@@ -117,6 +121,10 @@ export async function dakinisDispatch(req, rawBody, url) {
 
   if (path === "/api/health" && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
+  }
+
+  if (dakinisIsWhatsappWebhookPath(path, req.method)) {
+    return dakinisHandleWhatsappWebhook(req, rawBody, url);
   }
 
   const publicAllergiesMatch = /^\/api\/public\/restaurant\/([^/]+)\/allergies$/.exec(path);

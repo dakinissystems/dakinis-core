@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { dakinisSqlOrderCreatedAtDesc, dakinisSqlTimestampNow } from "../db/dialect.js";
-import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
+import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
+import { dakinisQueryAll, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
+import { dakinisWhatsappMetaConfigured, dakinisWhatsappMetaSendText } from "../lib/whatsapp-meta.js";
+import { dakinisUpsertWhatsappContactInline } from "./whatsapp-webhook-store.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -62,23 +64,7 @@ function dakinisRowContact(row) {
 }
 
 async function dakinisUpsertWhatsappContact(businessId, phone) {
-  const now = dakinisSqlTimestampNow();
-  const existing = await dakinisQueryOne(
-    `SELECT id FROM tenant_whatsapp_contacts WHERE business_id = ? AND phone = ?`,
-    [businessId, phone]
-  );
-  if (existing) {
-    await dakinisRun(`UPDATE tenant_whatsapp_contacts SET last_seen_at = ${now} WHERE id = ?`, [existing.id]);
-    return existing.id;
-  }
-
-  const id = `wac_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  await dakinisRun(
-    `INSERT INTO tenant_whatsapp_contacts (id, business_id, phone, last_seen_at)
-     VALUES (?, ?, ?, ${now})`,
-    [id, businessId, phone]
-  );
-  return id;
+  return dakinisUpsertWhatsappContactInline(businessId, phone, null);
 }
 
 export function dakinisIsWhatsappInboxPath(pathname, method) {
@@ -165,15 +151,50 @@ export async function dakinisHandleWhatsappInbox(req, rawBody, url) {
     }
 
     const id = `wam_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+    let status = "queued";
+    let wamid = null;
+    let deliveryError = null;
+
+    if (dakinisWhatsappMetaConfigured()) {
+      const sent = await dakinisWhatsappMetaSendText(phone, message);
+      if (sent.ok) {
+        status = "sent";
+        wamid = sent.wamid;
+      } else {
+        status = "failed";
+        deliveryError = sent.error;
+      }
+    }
+
     await dakinisRun(
-      `INSERT INTO tenant_whatsapp_messages (id, business_id, direction, peer_phone, body_text, msg_type)
-       VALUES (?, ?, 'outbound', ?, ?, 'text')`,
-      [id, business.id, phone, message]
+      `INSERT INTO tenant_whatsapp_messages (id, business_id, direction, wamid, peer_phone, body_text, msg_type)
+       VALUES (?, ?, 'outbound', ?, ?, ?, 'text')`,
+      [id, business.id, wamid, phone, message]
     );
     await dakinisUpsertWhatsappContact(business.id, phone);
 
+    if (status === "failed") {
+      return dakinisJsonError(
+        502,
+        "WHATSAPP_SEND_FAILED",
+        deliveryError || "No se pudo enviar por Meta Cloud API",
+        { id, phone, status }
+      );
+    }
+
     return dakinisJsonSuccess(
-      { id, phone, message, status: "queued", direction: "outbound" },
+      {
+        id,
+        phone,
+        message,
+        status,
+        wamid,
+        provider: dakinisWhatsappMetaConfigured() ? "meta-cloud-api" : "local-only",
+        note: dakinisWhatsappMetaConfigured()
+          ? undefined
+          : "Mensaje guardado en inbox; configura WHATSAPP_ACCESS_TOKEN y WHATSAPP_PHONE_NUMBER_ID para envío real.",
+        direction: "outbound",
+      },
       business.type,
       dakinisMeta(req)
     );
