@@ -12,6 +12,7 @@ import {
 } from "@dakinis/shared/catalog/business-templates.js";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 import PlatformCatalogPanel from "../components/PlatformCatalogPanel.jsx";
+import PlatformHubAccessPanel from "../components/PlatformHubAccessPanel.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 
 const DAKINIS_TYPE_OTHER = "__other__";
@@ -89,6 +90,7 @@ export default function PlatformAdminPage({ navigate }) {
     slug: "",
     plan: ""
   });
+  const [editHubProducts, setEditHubProducts] = useState(["core"]);
   const [editTypeSelect, setEditTypeSelect] = useState("clinica");
   const [editTypeCustom, setEditTypeCustom] = useState("");
   const [pilotTelemetry, setPilotTelemetry] = useState([]);
@@ -197,6 +199,7 @@ export default function PlatformAdminPage({ navigate }) {
       slug: b.slug,
       plan: planSelect
     });
+    setEditHubProducts(Array.isArray(b.hubProducts) && b.hubProducts.length ? b.hubProducts : ["core"]);
     const preset = new Set([...verticalKeys, "platform"]);
     if (preset.has(b.type)) {
       setEditTypeSelect(b.type);
@@ -529,6 +532,14 @@ export default function PlatformAdminPage({ navigate }) {
                   </label>
                 ) : null}
               </div>
+              {editingId && businesses.find((b) => b.id === editingId) ? (
+                <PlatformHubAccessPanel
+                  businessId={editingId}
+                  businessSlug={editForm.slug}
+                  initialProducts={editHubProducts}
+                  onSaved={load}
+                />
+              ) : null}
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 <button type="submit" className="btn" disabled={saving}>
                   Guardar cambios

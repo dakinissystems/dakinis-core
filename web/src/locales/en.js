@@ -1931,5 +1931,16 @@ export default {
       publicAllergies: "Public poster:",
       logout: "Sign out"
     }
+  },
+  admin: {
+    hubAccess: {
+      title: "Hub visible apps",
+      lead: "Users in tenant «{slug}» will only see checked apps on hub.dakinissystems.com.",
+      alwaysOn: "Always visible",
+      save: "Save Hub access",
+      saving: "Saving…",
+      saved: "Hub access updated",
+      saveError: "Could not save Hub access"
+    }
   }
 };

@@ -1927,5 +1927,16 @@ export default {
       publicAllergies: "Cartel público:",
       logout: "Cerrar sesión"
     }
+  },
+  admin: {
+    hubAccess: {
+      title: "Apps visibles en Hub",
+      lead: "Usuarios del tenant «{slug}» solo verán las apps marcadas en hub.dakinissystems.com.",
+      alwaysOn: "Siempre visible",
+      save: "Guardar acceso Hub",
+      saving: "Guardando…",
+      saved: "Acceso Hub actualizado",
+      saveError: "No se pudo guardar el acceso Hub"
+    }
   }
 };

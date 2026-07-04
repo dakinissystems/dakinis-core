@@ -7,7 +7,9 @@ import {
   dakinisHandlePlatformUsers,
   dakinisHandlePlatformCatalogGet,
   dakinisHandlePlatformCatalogPut,
-  dakinisHandlePlatformTelemetrySummary
+  dakinisHandlePlatformTelemetrySummary,
+  dakinisHandlePlatformBusinessHubProductsGet,
+  dakinisHandlePlatformBusinessHubProductsPatch
 } from "./api/platform-routes.js";
 import {
   dakinisHandleAuthLoginRequest,
@@ -100,6 +102,17 @@ export async function dakinisDispatch(req, rawBody, url) {
     const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformTelemetrySummary(url.searchParams);
+  }
+  const platformHubProductsMatch = /^\/api\/platform\/businesses\/([^/]+)\/hub-products$/.exec(path);
+  if (platformHubProductsMatch && req.method === "GET") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessHubProductsGet(platformHubProductsMatch[1]);
+  }
+  if (platformHubProductsMatch && req.method === "PATCH") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformBusinessHubProductsPatch(platformHubProductsMatch[1], rawBody);
   }
 
   if (path === "/api/health" && req.method === "GET") {

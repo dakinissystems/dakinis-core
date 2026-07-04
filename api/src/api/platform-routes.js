@@ -14,6 +14,8 @@ import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 
 const PLATFORM_CATALOG_KV_KEY = "hub_catalog";
+const HUB_DEFAULT_PRODUCTS = ["core"];
+const HUB_ECOSYSTEM_PRODUCT_IDS = ["core", "lifeflow", "streamautomator", "akoenet", "tabletop"];
 const __platformRoutesDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function dakinisReadJsonFile(filePath) {
@@ -42,6 +44,71 @@ function dakinisParseJson(rawBody) {
   } catch {
     return null;
   }
+}
+
+function dakinisParseBusinessConfig(configJson) {
+  if (!configJson) return {};
+  try {
+    return typeof configJson === "string" ? JSON.parse(configJson) : configJson;
+  } catch {
+    return {};
+  }
+}
+
+function dakinisNormalizeHubProducts(list) {
+  const set = new Set(["core"]);
+  if (Array.isArray(list)) {
+    for (const id of list) {
+      const key = String(id || "").trim();
+      if (HUB_ECOSYSTEM_PRODUCT_IDS.includes(key)) set.add(key);
+    }
+  }
+  return HUB_ECOSYSTEM_PRODUCT_IDS.filter((id) => set.has(id));
+}
+
+async function dakinisSyncHubTenantAccess(slug, products) {
+  const base = (
+    process.env.DAKINIS_INTERNAL_API_URL ||
+    process.env.HUB_INTERNAL_URL ||
+    ""
+  ).replace(/\/$/, "");
+  const key =
+    process.env.DAKINIS_INTERNAL_SERVICE_KEY || process.env.DAKINIS_INTERNAL_API_KEY || "";
+  if (!base || !key) {
+    console.warn("[platform] hub tenant sync skipped: missing internal API URL/key");
+    return;
+  }
+  const normalized = dakinisNormalizeHubProducts(products);
+  try {
+    const res = await fetch(`${base}/hub/tenant-access/${encodeURIComponent(slug)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ products: normalized }),
+    });
+    if (!res.ok) {
+      console.warn("[platform] hub tenant sync failed", slug, res.status);
+    }
+  } catch (err) {
+    console.warn("[platform] hub tenant sync error", slug, err);
+  }
+}
+
+function dakinisBusinessRowPublic(row) {
+  if (!row) return row;
+  const config = dakinisParseBusinessConfig(row.config_json);
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    type: row.type,
+    plan: row.plan,
+    created_at: row.created_at,
+    hubProducts: dakinisNormalizeHubProducts(config.hubProducts || HUB_DEFAULT_PRODUCTS),
+  };
 }
 
 export async function dakinisHandlePlatformBusinessCreate(rawBody) {
@@ -104,8 +171,8 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
   await dakinisWithTransaction(async (tx) => {
     await tx.run(
       `INSERT INTO business (id, slug, name, type, plan, config_json)
-       VALUES (?, ?, ?, ?, ?, NULL)`,
-      [id, slug, name, type, planParsed]
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, slug, name, type, planParsed, JSON.stringify({ hubProducts: HUB_DEFAULT_PRODUCTS })]
     );
     if (uid && passwordHash) {
       await tx.run(
@@ -125,7 +192,7 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
   }
 
   const row = await dakinisQueryOne(
-    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
+    "SELECT id, slug, name, type, plan, config_json, created_at FROM business WHERE id = ?",
     [id]
   );
 
@@ -135,10 +202,13 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     name,
     type,
     plan: planParsed,
-    ownerUserId: uid ?? null
+    ownerUserId: uid ?? null,
+    hubProducts: HUB_DEFAULT_PRODUCTS,
   });
 
-  return dakinisJsonSuccess({ business: row, initialUser }, "platform", {});
+  await dakinisSyncHubTenantAccess(slug, HUB_DEFAULT_PRODUCTS);
+
+  return dakinisJsonSuccess({ business: dakinisBusinessRowPublic(row), initialUser }, "platform", {});
 }
 
 export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
@@ -199,16 +269,19 @@ export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
       ? dakinisParseCommercialPlanForStorage(plan)
       : existing.plan;
 
-  await dakinisRun(`UPDATE business SET name = ?, slug = ?, type = ?, plan = ? WHERE id = ?`, [
-    nextName,
-    nextSlug,
-    nextType,
-    nextPlan,
-    id
-  ]);
+  const config = dakinisParseBusinessConfig(existing.config_json);
+  if (Array.isArray(body.hubProducts)) {
+    config.hubProducts = dakinisNormalizeHubProducts(body.hubProducts);
+  }
+  const nextConfigJson = JSON.stringify(config);
+
+  await dakinisRun(
+    `UPDATE business SET name = ?, slug = ?, type = ?, plan = ?, config_json = ? WHERE id = ?`,
+    [nextName, nextSlug, nextType, nextPlan, nextConfigJson, id]
+  );
 
   const row = await dakinisQueryOne(
-    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
+    "SELECT id, slug, name, type, plan, config_json, created_at FROM business WHERE id = ?",
     [id]
   );
 
@@ -216,20 +289,27 @@ export async function dakinisHandlePlatformBusinessUpdate(businessId, rawBody) {
     tenantId: id,
     slug: nextSlug,
     type: nextType,
-    plan: nextPlan
+    plan: nextPlan,
+    hubProducts: config.hubProducts || HUB_DEFAULT_PRODUCTS,
   });
 
-  return dakinisJsonSuccess({ business: row }, "platform", {});
+  await dakinisSyncHubTenantAccess(nextSlug, config.hubProducts || HUB_DEFAULT_PRODUCTS);
+
+  return dakinisJsonSuccess({ business: dakinisBusinessRowPublic(row) }, "platform", {});
 }
 
 export async function dakinisHandlePlatformBusinesses() {
   const orderName = dakinisSqlOrderEmail("name");
   const rows = await dakinisQueryAll(
-    `SELECT id, slug, name, type, plan, created_at
+    `SELECT id, slug, name, type, plan, config_json, created_at
        FROM business
        ORDER BY ${orderName}`
   );
-  return dakinisJsonSuccess({ businesses: rows }, "platform", {});
+  return dakinisJsonSuccess(
+    { businesses: rows.map(dakinisBusinessRowPublic) },
+    "platform",
+    {}
+  );
 }
 
 export async function dakinisHandlePlatformUsers() {
@@ -332,4 +412,59 @@ export async function dakinisHandlePlatformTelemetrySummary(searchParams) {
   return dakinisJsonSuccess({
     telemetry: { periodDays, tenants }
   });
+}
+
+export async function dakinisHandlePlatformBusinessHubProductsGet(businessId) {
+  const id = typeof businessId === "string" ? businessId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de negocio invalido");
+  }
+  const row = await dakinisQueryOne("SELECT slug, config_json FROM business WHERE id = ?", [id]);
+  if (!row) {
+    return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
+  }
+  const config = dakinisParseBusinessConfig(row.config_json);
+  return dakinisJsonSuccess(
+    {
+      businessId: id,
+      slug: row.slug,
+      hubProducts: dakinisNormalizeHubProducts(config.hubProducts || HUB_DEFAULT_PRODUCTS),
+    },
+    "platform",
+    {}
+  );
+}
+
+export async function dakinisHandlePlatformBusinessHubProductsPatch(businessId, rawBody) {
+  const id = typeof businessId === "string" ? businessId.trim() : "";
+  if (!id) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "id de negocio invalido");
+  }
+  const body = dakinisParseJson(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+  if (!Array.isArray(body.hubProducts)) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "hubProducts debe ser un array");
+  }
+  const existing = await dakinisQueryOne("SELECT slug, config_json FROM business WHERE id = ?", [id]);
+  if (!existing) {
+    return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
+  }
+  const config = dakinisParseBusinessConfig(existing.config_json);
+  config.hubProducts = dakinisNormalizeHubProducts(body.hubProducts);
+  await dakinisRun("UPDATE business SET config_json = ? WHERE id = ?", [
+    JSON.stringify(config),
+    id,
+  ]);
+  await dakinisSyncHubTenantAccess(existing.slug, config.hubProducts);
+  return dakinisJsonSuccess(
+    {
+      businessId: id,
+      slug: existing.slug,
+      hubProducts: config.hubProducts,
+    },
+    "platform",
+    {}
+  );
 }
