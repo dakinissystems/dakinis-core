@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   dakinisIsValidBusinessTypeKey,
   dakinisNormalizeBusinessTypeKey
@@ -9,6 +12,29 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } 
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
+
+const PLATFORM_CATALOG_KV_KEY = "hub_catalog";
+const __platformRoutesDir = path.dirname(fileURLToPath(import.meta.url));
+
+async function dakinisReadJsonFile(filePath) {
+  try {
+    return JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+async function dakinisDefaultCatalogPayload() {
+  const brandRoot = path.join(__platformRoutesDir, "../../packages/shared-brand/src");
+  const products = (await dakinisReadJsonFile(path.join(brandRoot, "products.json"))) || [];
+  const hubModules = (await dakinisReadJsonFile(path.join(brandRoot, "hub-modules.json"))) || [];
+  return {
+    products,
+    hubModules,
+    source: "repo",
+    updatedAt: null
+  };
+}
 
 function dakinisParseJson(rawBody) {
   try {
@@ -217,4 +243,93 @@ export async function dakinisHandlePlatformUsers() {
        ORDER BY ${orderBiz}, ${orderEmail}`
   );
   return dakinisJsonSuccess({ users: rows }, "platform", {});
+}
+
+export async function dakinisHandlePlatformCatalogGet() {
+  try {
+    const row = await dakinisQueryOne(
+      "SELECT value_json, updated_at FROM platform_kv WHERE key = ?",
+      [PLATFORM_CATALOG_KV_KEY]
+    );
+    if (row?.value_json) {
+      const parsed = JSON.parse(row.value_json);
+      return dakinisJsonSuccess({
+        products: parsed.products || [],
+        hubModules: parsed.hubModules || [],
+        source: "database",
+        updatedAt: row.updated_at || null
+      });
+    }
+  } catch {
+    /* platform_kv puede no existir en SQLite dev */
+  }
+  const defaults = await dakinisDefaultCatalogPayload();
+  return dakinisJsonSuccess(defaults);
+}
+
+export async function dakinisHandlePlatformCatalogPut(rawBody) {
+  const body = dakinisParseJson(rawBody);
+  if (body === null) {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+  if (!Array.isArray(body.products)) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "products debe ser un array");
+  }
+  const payload = {
+    products: body.products,
+    hubModules: Array.isArray(body.hubModules) ? body.hubModules : []
+  };
+  const valueJson = JSON.stringify(payload);
+  const updatedAt = new Date().toISOString();
+  const existing = await dakinisQueryOne("SELECT key FROM platform_kv WHERE key = ?", [
+    PLATFORM_CATALOG_KV_KEY
+  ]);
+  if (existing) {
+    await dakinisRun("UPDATE platform_kv SET value_json = ?, updated_at = ? WHERE key = ?", [
+      valueJson,
+      updatedAt,
+      PLATFORM_CATALOG_KV_KEY
+    ]);
+  } else {
+    await dakinisRun("INSERT INTO platform_kv (key, value_json, updated_at) VALUES (?, ?, ?)", [
+      PLATFORM_CATALOG_KV_KEY,
+      valueJson,
+      updatedAt
+    ]);
+  }
+  const row = await dakinisQueryOne(
+    "SELECT value_json, updated_at FROM platform_kv WHERE key = ?",
+    [PLATFORM_CATALOG_KV_KEY]
+  );
+  const parsed = row?.value_json ? JSON.parse(row.value_json) : payload;
+  return dakinisJsonSuccess({
+    products: parsed.products || [],
+    hubModules: parsed.hubModules || [],
+    source: "database",
+    updatedAt: row?.updated_at || null
+  });
+}
+
+export async function dakinisHandlePlatformTelemetrySummary(searchParams) {
+  const daysRaw = Number(searchParams.get("days") || 30);
+  const periodDays = Number.isFinite(daysRaw) && daysRaw > 0 ? Math.min(daysRaw, 365) : 30;
+  const orderName = dakinisSqlOrderEmail("name");
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, type, plan, created_at
+       FROM business
+       WHERE lower(type) != 'platform'
+       ORDER BY ${orderName}`
+  );
+  const tenants = rows.map((b) => ({
+    businessId: b.id,
+    slug: b.slug,
+    name: b.name,
+    type: b.type,
+    plan: b.plan,
+    featureSessions: 0,
+    adoptionScore: 0
+  }));
+  return dakinisJsonSuccess({
+    telemetry: { periodDays, tenants }
+  });
 }

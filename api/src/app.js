@@ -4,7 +4,10 @@ import {
   dakinisHandlePlatformBusinessCreate,
   dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
-  dakinisHandlePlatformUsers
+  dakinisHandlePlatformUsers,
+  dakinisHandlePlatformCatalogGet,
+  dakinisHandlePlatformCatalogPut,
+  dakinisHandlePlatformTelemetrySummary
 } from "./api/platform-routes.js";
 import {
   dakinisHandleAuthLoginRequest,
@@ -63,25 +66,40 @@ export async function dakinisDispatch(req, rawBody, url) {
   const path = url.pathname;
 
   if (path === "/api/platform/businesses" && req.method === "GET") {
-    const authErr = dakinisRequirePlatformAdmin(req);
+    const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinesses();
   }
   if (path === "/api/platform/businesses" && req.method === "POST") {
-    const authErr = dakinisRequirePlatformAdmin(req);
+    const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinessCreate(rawBody);
   }
   const platformBizPatchMatch = /^\/api\/platform\/businesses\/([^/]+)$/.exec(path);
   if (platformBizPatchMatch && req.method === "PATCH") {
-    const authErr = dakinisRequirePlatformAdmin(req);
+    const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformBusinessUpdate(platformBizPatchMatch[1], rawBody);
   }
   if (path === "/api/platform/users" && req.method === "GET") {
-    const authErr = dakinisRequirePlatformAdmin(req);
+    const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformUsers();
+  }
+  if (path === "/api/platform/catalog" && req.method === "GET") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformCatalogGet();
+  }
+  if (path === "/api/platform/catalog" && req.method === "PUT") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformCatalogPut(rawBody);
+  }
+  if (path === "/api/platform/telemetry/summary" && req.method === "GET") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformTelemetrySummary(url.searchParams);
   }
 
   if (path === "/api/health" && req.method === "GET") {

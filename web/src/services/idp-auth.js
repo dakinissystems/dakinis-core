@@ -6,7 +6,9 @@ const IDP_REFRESH_KEY = "dakinis_idp_refresh_token";
 
 export function getIdpAuthUrl() {
   const raw =
-    import.meta.env.VITE_DAKINIS_AUTH_URL || import.meta.env.VITE_AUTH_URL || "";
+    import.meta.env.VITE_DAKINIS_AUTH_URL ||
+    import.meta.env.VITE_AUTH_URL ||
+    (import.meta.env.PROD ? "https://auth.dakinissystems.com/auth" : "");
   return String(raw).replace(/\/$/, "");
 }
 
@@ -68,19 +70,29 @@ export function dakinisTenantRefFromIdpLogin(idpData) {
   const payload = dakinisDecodeIdpJwtPayload(idpData?.token);
   if (!payload || typeof payload !== "object") return "";
   const raw =
+    payload.tenantId ||
     payload.tenant ||
     payload.tenant_slug ||
     payload.tenantSlug ||
     payload.business_slug ||
     payload.businessSlug ||
     "";
-  return String(raw).trim();
+  return dakinisNormalizeTenantSlug(raw);
+}
+
+/** Limpia slug manual (evita pegar el placeholder "dakinis-platform · restaurante-demo"). */
+export function dakinisNormalizeTenantSlug(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const first = s.split(/[·•|,;]/)[0].trim();
+  return first.replace(/\s+/g, "-").toLowerCase();
 }
 
 /** Slugs demo / producción cuando el JWT IdP no trae tenant. */
 const DEMO_SLUG_BY_EMAIL = {
   "admin@dakinissystems.com": "dakinis-platform",
   "admin@dakinis-platform.local": "dakinis-platform",
+  "christiandvillar@gmail.com": "dakinis-platform",
   "admin@clinica-demo.local": "clinica-demo",
   "admin@peluqueria-demo.local": "peluqueria-demo",
   "admin@restaurante-demo.local": "restaurante-demo",
@@ -88,7 +100,7 @@ const DEMO_SLUG_BY_EMAIL = {
 };
 
 export function dakinisResolveExchangeTenantRef(email, idpData, businessField) {
-  const manual = String(businessField || "").trim();
+  const manual = dakinisNormalizeTenantSlug(businessField);
   if (manual) return manual;
 
   const fromJwt = dakinisTenantRefFromIdpLogin(idpData);

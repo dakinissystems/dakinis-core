@@ -17,8 +17,16 @@ export function dakinisIsPlatformIdpPayload(payload) {
 
 function dakinisMapPlatformRoleToCoreRole(platformRole) {
   const r = String(platformRole || "user").toLowerCase();
-  if (r === "platform_admin" || r === "admin" || r === "owner") return "admin";
-  return "admin";
+  if (r === "platform_admin") return "platform_admin";
+  if (r === "admin" || r === "owner" || r === "tenant_admin") return "admin";
+  return "member";
+}
+
+async function dakinisSyncUserRoleFromIdp(user, payload) {
+  const mapped = dakinisMapPlatformRoleToCoreRole(payload.role);
+  if (mapped === user.role) return user;
+  await dakinisRun("UPDATE users SET role = ? WHERE id = ?", [mapped, user.id]);
+  return dakinisQueryOne("SELECT * FROM users WHERE id = ?", [user.id]);
 }
 
 /**
@@ -49,6 +57,7 @@ export async function dakinisResolveCoreUserFromPlatformToken(payload, targetBus
       await dakinisRun("UPDATE users SET platform_user_id = ? WHERE id = ?", [platformSub, user.id]);
       user = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [user.id]);
     }
+    user = await dakinisSyncUserRoleFromIdp(user, payload);
     return user;
   }
 

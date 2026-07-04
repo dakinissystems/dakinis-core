@@ -78,10 +78,11 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.LOGIN_STARTED, { via: "idp" });
+    let tenantRef = "";
     try {
       const idp = await loginViaIdp(email.trim(), password);
       if (idp.refreshToken) setIdpRefreshToken(idp.refreshToken);
-      const tenantRef = dakinisResolveExchangeTenantRef(email, idp, businessSlug);
+      tenantRef = dakinisResolveExchangeTenantRef(email, idp, businessSlug);
       if (!tenantRef) {
         throw new Error(t("login.errors.idpTenant"));
       }
@@ -99,7 +100,13 @@ export default function LoginPage() {
         refreshToken: idp.refreshToken || null
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.errors.generic"));
+      if (err instanceof DakinisApiError && err.code === "UNKNOWN_TENANT") {
+        setError(
+          `Negocio "${tenantRef}" no existe en Core. Ejecuta el seed dakinis-platform en Supabase o usa un slug válido.`
+        );
+      } else {
+        setError(err instanceof Error ? err.message : t("login.errors.generic"));
+      }
     } finally {
       setLoading(false);
     }
@@ -209,7 +216,7 @@ export default function LoginPage() {
                 type="text"
                 value={businessSlug}
                 onChange={(ev) => setBusinessSlug(ev.target.value)}
-                placeholder="dakinis-platform · restaurante-demo"
+                placeholder="dakinis-platform"
                 autoComplete="organization"
               />
             </label>
