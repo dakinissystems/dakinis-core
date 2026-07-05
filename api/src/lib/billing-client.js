@@ -69,6 +69,14 @@ export async function dakinisBillingGetCheckoutSession(sessionId) {
   return dakinisBillingRequest(`/v1/checkout/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+/** @param {string} sessionId */
+export async function dakinisBillingSyncCheckoutSession(sessionId) {
+  return dakinisBillingRequest(`/v1/checkout/sessions/${encodeURIComponent(sessionId)}/sync`, {
+    method: "POST",
+    body: "{}",
+  });
+}
+
 /** @param {string} businessId */
 export async function dakinisBillingGetSubscription(businessId) {
   return dakinisBillingRequest(`/v1/subscriptions/${encodeURIComponent(businessId)}`);

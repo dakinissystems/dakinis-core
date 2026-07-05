@@ -5,6 +5,7 @@ import { dakinisDecodeTenantFromJwt } from "../middleware/auth.js";
 import {
   dakinisBillingCreateCheckout,
   dakinisBillingGetCheckoutSession,
+  dakinisBillingSyncCheckoutSession,
   dakinisBillingPlans,
 } from "../lib/billing-client.js";
 
@@ -66,10 +67,21 @@ export async function dakinisHandlePublicStripeCheckoutSession(req, rawBody) {
     jwtIdentity?.userId ||
     undefined;
 
+  const headerBusinessId = String(req.headers["x-business-id"] || "").trim();
+  const resolvedBusinessId = businessId || headerBusinessId || undefined;
+
+  if (!resolvedBusinessId) {
+    return dakinisJsonError(
+      400,
+      "MISSING_TENANT",
+      "businessId requerido — JWT con tenantId o header x-business-id"
+    );
+  }
+
   const proxied = await dakinisBillingCreateCheckout({
     plan: planParsed,
     email,
-    businessId,
+    businessId: resolvedBusinessId,
     userId,
   });
 
@@ -90,7 +102,7 @@ export async function dakinisHandlePublicStripeCheckoutSession(req, rawBody) {
   );
 }
 
-export async function dakinisHandlePublicStripeSessionLookup(sessionId) {
+export async function dakinisHandlePublicStripeSessionLookup(req, sessionId) {
   const id = typeof sessionId === "string" ? sessionId.trim() : "";
   if (!id) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "session_id requerido");
@@ -105,12 +117,30 @@ export async function dakinisHandlePublicStripeSessionLookup(sessionId) {
     );
   }
 
+  const session = proxied.data || {};
+  let syncResult = null;
+
+  const paid = session.paymentStatus === "paid" || session.status === "complete";
+  if (paid && session.businessId) {
+    const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
+    const headerBusinessId = String(req.headers["x-business-id"] || "").trim();
+    const tenantId = jwtIdentity?.tenantId || headerBusinessId || "";
+    if (tenantId && tenantId === session.businessId) {
+      const synced = await dakinisBillingSyncCheckoutSession(id);
+      if (synced.ok) {
+        syncResult = synced.data;
+      }
+    }
+  }
+
   return dakinisJsonSuccess(
     {
-      plan: proxied.data?.plan,
-      paymentStatus: proxied.data?.paymentStatus,
-      status: proxied.data?.status,
-      businessId: proxied.data?.businessId,
+      plan: session.plan,
+      paymentStatus: session.paymentStatus,
+      status: session.status,
+      businessId: session.businessId,
+      synced: syncResult?.ok === true,
+      sync: syncResult,
     },
     "custom"
   );

@@ -147,7 +147,7 @@ export async function dakinisDispatch(req, rawBody, url) {
   }
   const stripeSessionMatch = /^\/api\/public\/stripe\/session$/.exec(path);
   if (stripeSessionMatch && req.method === "GET") {
-    return dakinisHandlePublicStripeSessionLookup(url.searchParams.get("session_id"));
+    return dakinisHandlePublicStripeSessionLookup(req, url.searchParams.get("session_id"));
   }
 
   if (path === "/api/internal/billing/sync" && req.method === "POST") {
