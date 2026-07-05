@@ -21,6 +21,7 @@ import { dakinisPostgresSchema } from "../db/schema-config.js";
 import { dakinisIsSupabasePoolerUrl } from "../db/postgres-connection.js";
 import { dakinisValidateDatabaseUrl, dakinisMaskDatabaseUrl } from "../db/validate-database-url.js";
 import { dakinisPlanModuleDenialOrNull } from "./plan-access.js";
+import { dakinisWhatsappSendOutbound } from "./tenant-whatsapp-inbox.js";
 
 function dakinisParseJsonSafely(rawBody) {
   if (!rawBody || !String(rawBody).trim()) return {};
@@ -226,7 +227,10 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
         config: modules.config,
         plan: business.plan,
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        accessState: business.access_state || "active",
+        accessReason: business.access_reason || null,
+        entitledPlan: business.entitled_plan || business.plan,
       },
       adapterKey,
       metaBase
@@ -269,24 +273,36 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
     return dakinisJsonSuccess({ timeline }, adapterKey, metaBase);
   }
 
+  if (req.method === "POST" && url.pathname === "/api/whatsapp/preview") {
+    const message = modules.whatsapp.dakinisPreviewEventMessage(payload);
+    return dakinisJsonSuccess({ message }, adapterKey, metaBase);
+  }
+
   if (req.method === "POST" && url.pathname === "/api/whatsapp/confirmation") {
     const message = modules.whatsapp.dakinisFormatBookingConfirmedMessage(payload);
+    const phone = payload.phone || payload.clientPhone;
+    const delivery = phone ? await dakinisWhatsappSendOutbound(business, phone, message) : null;
     await dakinisPublishEvent("message.sent", {
       tenantId: business.id,
       channel: "whatsapp",
-      kind: "confirmation"
+      kind: "confirmation",
+      deliveryStatus: delivery?.status || "preview-only"
     });
-    return dakinisJsonSuccess({ message }, adapterKey, metaBase);
+    return dakinisJsonSuccess({ message, delivery }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/reminder") {
     const message = modules.whatsapp.dakinisFormatAppointmentReminderMessage(payload);
-    return dakinisJsonSuccess({ message }, adapterKey, metaBase);
+    const phone = payload.phone || payload.clientPhone;
+    const delivery = phone ? await dakinisWhatsappSendOutbound(business, phone, message) : null;
+    return dakinisJsonSuccess({ message, delivery }, adapterKey, metaBase);
   }
 
   if (req.method === "POST" && url.pathname === "/api/whatsapp/reactivation") {
     const message = modules.whatsapp.dakinisFormatWinBackMessage(payload);
-    return dakinisJsonSuccess({ message }, adapterKey, metaBase);
+    const phone = payload.phone || payload.clientPhone;
+    const delivery = phone ? await dakinisWhatsappSendOutbound(business, phone, message) : null;
+    return dakinisJsonSuccess({ message, delivery }, adapterKey, metaBase);
   }
 
   if (req.method === "GET" && url.pathname === "/api/whatsapp/rules") {

@@ -1,17 +1,31 @@
 export function dakinisCreateWhatsAppModule(config) {
+  function dakinisResolveCustomerName(payload = {}) {
+    return String(payload.customerName || payload.clientName || "Cliente");
+  }
+
   /** Texto listo para enviar tras confirmar la cita. */
-  function dakinisFormatBookingConfirmedMessage({ customerName, date, time }) {
-    return `Hola ${customerName}, tu cita en Dakinis está confirmada para ${date} a las ${time}.`;
+  function dakinisFormatBookingConfirmedMessage(payload = {}) {
+    const customerName = dakinisResolveCustomerName(payload);
+    const businessName = String(payload.businessName || "Dakinis");
+    const date = payload.date || "próximamente";
+    const time = payload.time || "—";
+    return `Hola ${customerName}, tu cita en ${businessName} está confirmada para ${date} a las ${time}.`;
   }
 
   /** Texto de recordatorio antes de la cita. */
-  function dakinisFormatAppointmentReminderMessage({ customerName, date, time, hoursBefore }) {
+  function dakinisFormatAppointmentReminderMessage(payload = {}) {
+    const customerName = dakinisResolveCustomerName(payload);
+    const date = payload.date || "próximamente";
+    const time = payload.time || "—";
+    const hoursBefore = payload.hoursBefore ?? 24;
     return `Hola ${customerName}, te recordamos tu cita el ${date} a las ${time} (faltan ${hoursBefore}h).`;
   }
 
   /** Mensaje para reactivar clientes inactivos. */
-  function dakinisFormatWinBackMessage({ customerName }) {
-    return `Hola ${customerName}, hace tiempo que no te vemos. ¿Quieres reservar nuevamente en Dakinis?`;
+  function dakinisFormatWinBackMessage(payload = {}) {
+    const customerName = dakinisResolveCustomerName(payload);
+    const businessName = String(payload.businessName || "Dakinis");
+    return `Hola ${customerName}, hace tiempo que no te vemos. ¿Quieres reservar nuevamente en ${businessName}?`;
   }
 
   function dakinisFormatOrderReadyMessage({ customerName, orderRef, table }) {

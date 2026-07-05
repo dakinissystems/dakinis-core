@@ -15,8 +15,60 @@ function dakinisParseJson(rawBody) {
   }
 }
 
-function dakinisNormalizePhone(phone) {
+export function dakinisNormalizeWhatsappPhone(phone) {
   return String(phone || "").replace(/\D/g, "");
+}
+
+function dakinisNormalizePhone(phone) {
+  return dakinisNormalizeWhatsappPhone(phone);
+}
+
+/**
+ * Persiste mensaje saliente y envía por Meta Cloud API cuando está configurado.
+ * @param {{ id: string; type?: string }} business
+ * @param {string} phone
+ * @param {string} message
+ */
+export async function dakinisWhatsappSendOutbound(business, phone, message) {
+  const normalizedPhone = dakinisNormalizePhone(phone);
+  const body = typeof message === "string" ? message.trim() : "";
+  if (!normalizedPhone || !body) {
+    return { ok: false, error: "invalid_phone_or_message" };
+  }
+
+  const id = `wam_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
+  let status = "queued";
+  let wamid = null;
+  let deliveryError = null;
+
+  if (dakinisWhatsappMetaConfigured()) {
+    const sent = await dakinisWhatsappMetaSendText(normalizedPhone, body);
+    if (sent.ok) {
+      status = "sent";
+      wamid = sent.wamid;
+    } else {
+      status = "failed";
+      deliveryError = sent.error;
+    }
+  }
+
+  await dakinisRun(
+    `INSERT INTO tenant_whatsapp_messages (id, business_id, direction, wamid, peer_phone, body_text, msg_type)
+     VALUES (?, ?, 'outbound', ?, ?, ?, 'text')`,
+    [id, business.id, wamid, normalizedPhone, body]
+  );
+  await dakinisUpsertWhatsappContactInline(business.id, normalizedPhone, null);
+
+  return {
+    ok: status !== "failed",
+    id,
+    phone: normalizedPhone,
+    message: body,
+    status,
+    wamid,
+    provider: dakinisWhatsappMetaConfigured() ? "meta-cloud-api" : "local-only",
+    error: deliveryError || undefined,
+  };
 }
 
 function dakinisWhatsappForbiddenPlatform(business) {
@@ -150,49 +202,28 @@ export async function dakinisHandleWhatsappInbox(req, rawBody, url) {
       return dakinisJsonError(400, "VALIDATION_ERROR", "message es obligatorio");
     }
 
-    const id = `wam_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
-    let status = "queued";
-    let wamid = null;
-    let deliveryError = null;
-
-    if (dakinisWhatsappMetaConfigured()) {
-      const sent = await dakinisWhatsappMetaSendText(phone, message);
-      if (sent.ok) {
-        status = "sent";
-        wamid = sent.wamid;
-      } else {
-        status = "failed";
-        deliveryError = sent.error;
-      }
-    }
-
-    await dakinisRun(
-      `INSERT INTO tenant_whatsapp_messages (id, business_id, direction, wamid, peer_phone, body_text, msg_type)
-       VALUES (?, ?, 'outbound', ?, ?, ?, 'text')`,
-      [id, business.id, wamid, phone, message]
-    );
-    await dakinisUpsertWhatsappContact(business.id, phone);
-
-    if (status === "failed") {
+    const sent = await dakinisWhatsappSendOutbound(business, phone, message);
+    if (!sent.ok && sent.status === "failed") {
       return dakinisJsonError(
         502,
         "WHATSAPP_SEND_FAILED",
-        deliveryError || "No se pudo enviar por Meta Cloud API",
-        { id, phone, status }
+        sent.error || "No se pudo enviar por Meta Cloud API",
+        { id: sent.id, phone: sent.phone, status: sent.status }
       );
     }
 
     return dakinisJsonSuccess(
       {
-        id,
-        phone,
-        message,
-        status,
-        wamid,
-        provider: dakinisWhatsappMetaConfigured() ? "meta-cloud-api" : "local-only",
-        note: dakinisWhatsappMetaConfigured()
-          ? undefined
-          : "Mensaje guardado en inbox; configura WHATSAPP_ACCESS_TOKEN y WHATSAPP_PHONE_NUMBER_ID para envío real.",
+        id: sent.id,
+        phone: sent.phone,
+        message: sent.message,
+        status: sent.status,
+        wamid: sent.wamid,
+        provider: sent.provider,
+        note:
+          sent.provider === "local-only"
+            ? "Mensaje guardado en inbox; configura WHATSAPP_ACCESS_TOKEN y WHATSAPP_PHONE_NUMBER_ID para envío real."
+            : undefined,
         direction: "outbound",
       },
       business.type,

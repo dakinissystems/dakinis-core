@@ -15,6 +15,7 @@ export function dakinisHandleWhatsappRoute(req, rawBody, url) {
     "POST /api/v1/whatsapp/confirmation": "/api/whatsapp/confirmation",
     "POST /api/v1/whatsapp/reminder": "/api/whatsapp/reminder",
     "POST /api/v1/whatsapp/reactivation": "/api/whatsapp/reactivation",
+    "POST /api/v1/whatsapp/preview": "/api/whatsapp/preview",
     "GET /api/v1/whatsapp/rules": "/api/whatsapp/rules"
   };
 
