@@ -6,9 +6,14 @@ let started = false;
 
 /**
  * Consume billing events from Redis list (published by dakinis-billing).
+ * Omitido cuando DAKINIS_EVENT_BUS=bullmq (usa event-bus-bullmq-consumer).
  */
 export function dakinisStartBillingRedisConsumer() {
   if (started) return;
+  if (String(process.env.DAKINIS_EVENT_BUS || "").toLowerCase() === "bullmq") {
+    dakinisStructuredLog({ level: "info", msg: "billing_redis_consumer_skipped", reason: "bullmq_mode" });
+    return;
+  }
   started = true;
 
   const url = String(process.env.REDIS_URL || "").trim();

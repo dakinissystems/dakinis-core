@@ -6,11 +6,13 @@
     "start": "node server.js",
     "dev": "node server.js",
     "start:fastify": "USE_FASTIFY=true node server.js",
+    "worker:events": "node worker-events.js",
     "test": "node --test test/*.test.js",
     "seed:dumpling-house": "node scripts/seed-dumpling-house.mjs"
   },
   "dependencies": {
     "@dakinis/shared": "*",
+    "@dakinis/shared-ai": "file:../../../packages/shared-ai",
     "@sentry/node": "^9.30.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
@@ -18,6 +20,7 @@
     "jsonwebtoken": "^9.0.3",
     "otplib": "^12.0.1",
     "pg": "^8.16.0",
-    "redis": "^5.5.6"
+    "redis": "^5.5.6",
+    "bullmq": "^5.41.0"
   }
 }

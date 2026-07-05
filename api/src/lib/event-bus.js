@@ -23,6 +23,15 @@ export async function dakinisPublishEvent(type, payload = {}) {
     }
   }
 
+  if (String(process.env.DAKINIS_EVENT_BUS || "").toLowerCase() === "bullmq") {
+    try {
+      const { publishPlatformEvent } = await import("@dakinis/shared-ai/event-bus");
+      await publishPlatformEvent(type, payload, { source: "core" });
+    } catch (err) {
+      console.warn("[event-bus] bullmq publish failed:", err instanceof Error ? err.message : err);
+    }
+  }
+
   const handlers = listeners.get(event.type) || [];
   for (const fn of handlers) {
     try {
