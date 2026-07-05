@@ -73,10 +73,12 @@ export function dakinisTenantBenchmarkReal(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/benchmark/real", session);
 }
 
-export function dakinisTenantCopilot(session, question) {
+export function dakinisTenantCopilot(session, question, context) {
+  const body = { question };
+  if (context && typeof context === "object") body.context = context;
   return dakinisTenantJsonFetch("/api/v1/tenant/copilot", session, {
     method: "POST",
-    body: JSON.stringify({ question })
+    body: JSON.stringify(body)
   });
 }
 

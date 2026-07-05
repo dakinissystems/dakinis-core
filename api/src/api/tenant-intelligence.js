@@ -79,6 +79,8 @@ async function dakinisHandleIntelligenceAsk(req, rawBody) {
   const userId = req.dakinisAuth.userId || req.dakinisAuth.sub || null;
   const { signals, healthScore, heuristics } = await dakinisBuildAdvisorContext(business);
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
+  const extraContext =
+    body.context && typeof body.context === "object" && !Array.isArray(body.context) ? body.context : {};
 
   const quota = await dakinisAiAssertQuota(business.id, business.plan);
   if (!quota.ok) {
@@ -121,7 +123,8 @@ async function dakinisHandleIntelligenceAsk(req, rawBody) {
       businessType: business.type,
       plan: planTier,
       signals,
-      healthScore: { score: healthScore.score, status: healthScore.status }
+      healthScore: { score: healthScore.score, status: healthScore.status },
+      ...extraContext,
     },
     heuristicTips: heuristics.slice(0, 4),
     locale: body.locale || "es"

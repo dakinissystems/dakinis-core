@@ -73,7 +73,7 @@ export default function WhatsappHubPage({ navigate }) {
             <WhatsappTemplatesTab t={t} businessName={businessName} />
           ) : null}
           {activeTab === "automations" ? <WhatsappAutomationsTab t={t} /> : null}
-          {activeTab === "ai" ? <WhatsappAiTab t={t} /> : null}
+          {activeTab === "ai" ? <WhatsappAiTab t={t} session={session} /> : null}
         </div>
 
         <p className="kpi-label" style={{ marginTop: "1rem" }}>
