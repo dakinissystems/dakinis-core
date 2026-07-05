@@ -65,6 +65,7 @@ import {
   dakinisHandleTenantBillingPortal,
   dakinisHandleTenantBillingSubscription,
 } from "./api/billing-routes.js";
+import { dakinisHandleSearchQuery } from "./api/search-routes.js";
 import { dakinisAuthenticateRequest } from "./middleware/auth.js";
 import { dakinisResolveTenant } from "./middleware/tenant.js";
 
@@ -175,6 +176,9 @@ export async function dakinisDispatch(req, rawBody, url) {
   }
   if (path === "/api/billing/portal" && req.method === "POST") {
     return dakinisHandleTenantBillingPortal(req, rawBody);
+  }
+  if (path === "/api/search/query" && req.method === "GET") {
+    return dakinisHandleSearchQuery(req, url);
   }
 
   const intelligenceResult = await dakinisHandleTenantIntelligenceRoute(req, rawBody, path);

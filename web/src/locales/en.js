@@ -458,10 +458,12 @@ export default {
   },
   cmdk: {
     title: "Search and commands",
-    placeholder: "Search customers, open apps, ask AI…",
+    placeholder: "Search customers, docs, open apps, ask AI…",
     noResults: "No results — try another term",
+    searchLoading: "Searching…",
+    searchResult: "Result",
     hintNavigate: "↑↓ navigate · Enter run · Esc close",
-    hintAi: "Ask Dakinis AI via «Ask Dakinis AI»"
+    hintAi: "Help and docs in the «Help & docs» scope"
   },
   footer: {
     navAria: "Footer links",

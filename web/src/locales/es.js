@@ -459,10 +459,12 @@ export default {
   },
   cmdk: {
     title: "Buscar y comandos",
-    placeholder: "Buscar clientes, abrir apps, preguntar a IA…",
+    placeholder: "Buscar clientes, docs, abrir apps, preguntar a IA…",
     noResults: "Sin resultados — prueba otro término",
+    searchLoading: "Buscando…",
+    searchResult: "Resultado",
     hintNavigate: "↑↓ navegar · Enter ejecutar · Esc cerrar",
-    hintAi: "Pregunta a Dakinis AI desde «Preguntar a Dakinis AI»"
+    hintAi: "Ayuda y docs en el scope «Ayuda y docs»"
   },
   footer: {
     navAria: "Enlaces pie de página",

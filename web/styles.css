@@ -6263,6 +6263,30 @@ section {
   background: rgba(124, 58, 237, 0.12);
 }
 
+.dakinis-cmdk__item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.dakinis-cmdk__snippet {
+  font-size: 0.72rem;
+  color: var(--dakinis-muted, #b8c6d9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dakinis-cmdk__item--search .dakinis-cmdk__group {
+  color: var(--dakinis-accent, #5eb8ff);
+}
+
+.dakinis-cmdk__loading {
+  font-style: italic;
+}
+
 .dakinis-cmdk__group {
   font-size: 0.72rem;
   color: var(--dakinis-muted, #b8c6d9);

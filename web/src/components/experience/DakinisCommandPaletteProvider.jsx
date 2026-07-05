@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommandPalette, { useCommandPaletteShortcut } from "@dakinis/shared-ux/react/CommandPalette.jsx";
+import { resolveSearchHitPath } from "@dakinis/shared-ux/command-palette";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { dakinisOpenEcosystemProduct } from "../../utils/ecosystemSso.js";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
+import { dakinisFetchSearchHits } from "../../services/search.js";
 
 export default function DakinisCommandPaletteProvider() {
   const [open, setOpen] = useState(false);
@@ -20,6 +22,14 @@ export default function DakinisCommandPaletteProvider() {
     return () => window.removeEventListener("dakinis:open-command-palette", handler);
   }, []);
 
+  const fetchSearchHits = useCallback(
+    (query, scope, signal) => {
+      if (!session?.token) return Promise.resolve([]);
+      return dakinisFetchSearchHits(session, query, scope, { signal });
+    },
+    [session]
+  );
+
   function runCommand(cmd) {
     const id = cmd?.id;
     if (id === "open-hub") navigate("/hub");
@@ -35,11 +45,22 @@ export default function DakinisCommandPaletteProvider() {
     else if (id === "search") setOpen(true);
   }
 
+  function handleSearchHit(hit) {
+    const path = resolveSearchHitPath(hit);
+    if (path.startsWith("http")) {
+      window.open(path, "_blank", "noopener,noreferrer");
+      return;
+    }
+    navigate(path);
+  }
+
   return (
     <CommandPalette
       open={open}
       onClose={() => setOpen(false)}
       onRun={runCommand}
+      fetchSearchHits={fetchSearchHits}
+      onSelectSearchHit={handleSearchHit}
       t={(key) => {
         const map = {
           "cmdk.title": t("cmdk.title"),
@@ -47,6 +68,8 @@ export default function DakinisCommandPaletteProvider() {
           "cmdk.noResults": t("cmdk.noResults"),
           "cmdk.hintNavigate": t("cmdk.hintNavigate"),
           "cmdk.hintAi": t("cmdk.hintAi"),
+          "cmdk.searchLoading": t("cmdk.searchLoading"),
+          "cmdk.searchResult": t("cmdk.searchResult"),
         };
         return map[key] || key;
       }}
