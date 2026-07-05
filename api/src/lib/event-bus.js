@@ -3,10 +3,29 @@
 const listeners = new Map();
 
 /**
- * Bus de eventos in-process (fase 1). Sustituible por Redis Streams vía DAKINIS_EVENT_BUS=redis.
+ * Ejecuta handlers in-process sin republicar a Redis/BullMQ.
+ * Usado por el consumer BullMQ para evitar bucles.
  * @param {string} type
  * @param {Record<string, unknown>} payload
  */
+export async function dakinisDispatchEventLocally(type, payload = {}) {
+  const event = {
+    type: String(type),
+    payload,
+    ts: new Date().toISOString(),
+  };
+
+  const handlers = listeners.get(event.type) || [];
+  for (const fn of handlers) {
+    try {
+      await fn(event);
+    } catch (err) {
+      console.error("[event-bus] handler error:", event.type, err);
+    }
+  }
+  return event;
+}
+
 export async function dakinisPublishEvent(type, payload = {}) {
   const event = {
     type: String(type),
@@ -32,15 +51,7 @@ export async function dakinisPublishEvent(type, payload = {}) {
     }
   }
 
-  const handlers = listeners.get(event.type) || [];
-  for (const fn of handlers) {
-    try {
-      await fn(event);
-    } catch (err) {
-      console.error("[event-bus] handler error:", event.type, err);
-    }
-  }
-  return event;
+  return dakinisDispatchEventLocally(type, payload);
 }
 
 /** @param {string} type @param {(event: DakinisDomainEvent) => void | Promise<void>} handler */

@@ -36,3 +36,22 @@ export async function dakinisResolveBusinessFromHeader(businessIdHeader) {
     await dakinisQueryBusinessWithAccess("lower(b.slug) = lower(?)", [raw])
   );
 }
+
+/**
+ * Campos de acceso comercial para respuestas auth (/login, /me, /exchange).
+ * @param {{ id: string; slug?: string; name?: string; type?: string; plan?: string; [key: string]: unknown }} business
+ */
+export function dakinisBusinessAuthPayload(business) {
+  if (!business) return null;
+  return {
+    id: business.id,
+    slug: business.slug,
+    name: business.name,
+    type: business.type,
+    plan: business.plan,
+    accessState: business.access_state || "active",
+    accessReason: business.access_reason || null,
+    entitledPlan: business.entitled_plan || business.plan || null,
+    subscriptionStatus: business.subscription_status || null,
+  };
+}

@@ -836,6 +836,51 @@ a.link-btn {
   line-height: 1.5;
 }
 
+.billing-access-banner {
+  border-bottom: 1px solid rgba(251, 191, 36, 0.35);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.14), rgba(251, 191, 36, 0.06));
+}
+
+.billing-access-banner__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+}
+
+.billing-access-banner__copy strong {
+  display: block;
+  color: #fde68a;
+  margin-bottom: 0.25rem;
+}
+
+.billing-access-banner__copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.billing-access-banner__plan {
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+  color: #fef3c7;
+}
+
+.billing-access-banner__error {
+  margin: 0.35rem 0 0;
+  color: #fecaca;
+  font-size: 0.88rem;
+}
+
+.billing-access-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .pricing-impl-grid .pricing-impl-card {
   display: flex;
   flex-direction: column;

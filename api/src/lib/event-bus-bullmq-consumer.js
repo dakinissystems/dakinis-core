@@ -1,4 +1,4 @@
-import { dakinisPublishEvent } from "./event-bus.js";
+import { dakinisDispatchEventLocally } from "./event-bus.js";
 import { dakinisStructuredLog } from "../api/structured-logger.js";
 
 let started = false;
@@ -29,7 +29,7 @@ export async function dakinisStartBullMqEventsConsumer() {
     worker = await createPlatformWorker("default", async (event) => {
       const type = event?.event || event?.type;
       if (!type) return;
-      await dakinisPublishEvent(String(type), event.payload || {});
+      await dakinisDispatchEventLocally(String(type), event.payload || {});
     });
     dakinisStructuredLog({ level: "info", msg: "bullmq_consumer_started", queue: "dakinis.events" });
   } catch (err) {

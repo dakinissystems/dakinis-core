@@ -7,7 +7,7 @@ import {
 import { dakinisQueryOne } from "../db/query.js";
 import { dakinisSignUserToken, dakinisGetJwtSecret } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
-import { dakinisResolveBusinessFromHeader } from "./business-context.js";
+import { dakinisResolveBusinessFromHeader, dakinisBusinessAuthPayload } from "./business-context.js";
 import {
   dakinisVerifyPlatformAccessTokenOnly,
   dakinisResolveCoreUserFromPlatformToken
@@ -61,7 +61,7 @@ export async function dakinisHandleAuthLogin(rawBody) {
     }
   }
 
-  const business = await dakinisQueryOne("SELECT * FROM business WHERE id = ?", [user.business_id]);
+  const business = await dakinisResolveBusinessFromHeader(user.business_id);
   if (!business) {
     return dakinisJsonError(500, "INTERNAL_ERROR", "Negocio asociado no encontrado");
   }
@@ -87,11 +87,7 @@ export async function dakinisHandleAuthLogin(rawBody) {
         role: user.role
       },
       business: {
-        id: business.id,
-        slug: business.slug,
-        name: business.name,
-        type: business.type,
-        plan: business.plan,
+        ...dakinisBusinessAuthPayload(business),
         planTier,
         modulesEnabled
       }
@@ -116,10 +112,7 @@ export async function dakinisHandleMe(req) {
     return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado");
   }
 
-  const business = await dakinisQueryOne(
-    "SELECT id, slug, name, type, plan, created_at FROM business WHERE id = ?",
-    [user.business_id]
-  );
+  const business = await dakinisResolveBusinessFromHeader(user.business_id);
   if (!business) {
     return dakinisJsonError(404, "NOT_FOUND", "Negocio no encontrado");
   }
@@ -131,7 +124,7 @@ export async function dakinisHandleMe(req) {
     {
       user,
       business: {
-        ...business,
+        ...dakinisBusinessAuthPayload(business),
         planTier,
         modulesEnabled
       }
@@ -230,11 +223,7 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
         role: user.role
       },
       business: {
-        id: business.id,
-        slug: business.slug,
-        name: business.name,
-        type: business.type,
-        plan: business.plan,
+        ...dakinisBusinessAuthPayload(business),
         planTier,
         modulesEnabled
       }

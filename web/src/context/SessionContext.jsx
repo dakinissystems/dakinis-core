@@ -32,12 +32,15 @@ export function DakinisSessionProvider({ children }) {
   }, []);
 
   const setSession = useCallback((next) => {
-    setSessionState(next);
-    if (!next) {
-      sessionStorage.removeItem(DAKINIS_STORAGE_KEY);
-    } else {
-      sessionStorage.setItem(DAKINIS_STORAGE_KEY, JSON.stringify(next));
-    }
+    setSessionState((prev) => {
+      const resolved = typeof next === "function" ? next(prev) : next;
+      if (!resolved) {
+        sessionStorage.removeItem(DAKINIS_STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(DAKINIS_STORAGE_KEY, JSON.stringify(resolved));
+      }
+      return resolved;
+    });
   }, []);
 
   /** Clears session only — UI should use `useDakinisLogout()` for redirect. */

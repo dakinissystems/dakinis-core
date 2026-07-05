@@ -1736,6 +1736,16 @@ export default {
     loginRequired: "Sign in to view your business panel.",
     goLogin: "Go to login",
     apiError: "Could not complete the action. Please try again.",
+    billing: {
+      degradedTitle: "Payment pending",
+      degradedLead:
+        "Your subscription has a past-due payment. Some Pro features are limited until the invoice is settled.",
+      entitledPlan: "Subscribed plan: {plan}",
+      openPortal: "Manage billing",
+      viewPlans: "View plans",
+      portalError: "Could not open the billing portal",
+      portalLoading: "Opening portal…"
+    },
     dashboard: {
       title: "Business overview",
       kicker: "{name}",

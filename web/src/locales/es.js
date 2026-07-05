@@ -1732,6 +1732,16 @@ export default {
     loginRequired: "Inicia sesión para ver el panel de tu negocio.",
     goLogin: "Ir a login",
     apiError: "No se pudo completar la acción. Inténtalo de nuevo.",
+    billing: {
+      degradedTitle: "Pago pendiente",
+      degradedLead:
+        "Tu suscripción tiene un impago. Algunas funciones Pro están limitadas hasta regularizar la factura.",
+      entitledPlan: "Plan contratado: {plan}",
+      openPortal: "Gestionar facturación",
+      viewPlans: "Ver planes",
+      portalError: "No se pudo abrir el portal de facturación",
+      portalLoading: "Abriendo portal…"
+    },
     dashboard: {
       title: "Resumen del negocio",
       kicker: "{name}",

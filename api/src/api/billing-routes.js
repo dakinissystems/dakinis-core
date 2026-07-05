@@ -44,7 +44,10 @@ export async function dakinisHandleInternalBillingSync(req, rawBody) {
   const event = body.event || body.type;
   const payload = body.payload || body;
   const mode =
-    event === "billing.payment_succeeded" || payload.status === "active" || payload.status === "trialing"
+    event === "billing.payment_succeeded" ||
+    event === "billing.checkout.completed" ||
+    payload.status === "active" ||
+    payload.status === "trialing"
       ? "activate"
       : "degrade";
 
@@ -59,13 +62,19 @@ export async function dakinisHandleInternalBillingSync(req, rawBody) {
 export async function dakinisHandleTenantBillingSubscription(req) {
   const business = req.dakinisBusiness;
   const proxied = await dakinisBillingGetSubscription(business.id);
+  const accessState = business.access_state || "active";
+  const entitledPlan = business.entitled_plan || business.plan;
+
   if (!proxied.ok) {
     return dakinisJsonSuccess(
       {
         subscription: {
           businessId: business.id,
           planId: business.plan,
-          status: "unknown",
+          status: business.subscription_status || "unknown",
+          accessState,
+          accessReason: business.access_reason || null,
+          entitledPlan,
           source: "core",
         },
       },
@@ -82,6 +91,9 @@ export async function dakinisHandleTenantBillingSubscription(req) {
         status: proxied.data?.status,
         currentPeriodEnd: proxied.data?.currentPeriodEnd,
         stripeSubscriptionId: proxied.data?.stripeSubscriptionId,
+        accessState,
+        accessReason: business.access_reason || null,
+        entitledPlan,
         source: "billing",
       },
     },

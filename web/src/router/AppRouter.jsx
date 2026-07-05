@@ -40,7 +40,8 @@ import { ReportesPage } from "../app/reportes/index.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
-import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
+import BillingAccessBanner from "../components/BillingAccessBanner.jsx";
+import { useBillingSessionRefresh } from "../hooks/useBillingSessionRefresh.js";
 import DakinisCommandPaletteProvider from "../components/experience/DakinisCommandPaletteProvider.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
 import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
@@ -52,6 +53,7 @@ function Shell({ children }) {
   const location = useLocation();
   const { session } = useDakinisSession();
   const signOut = useDakinisLogout();
+  useBillingSessionRefresh();
 
   const navigateCompat = (pathname) => navigate(pathname);
 
@@ -65,6 +67,7 @@ function Shell({ children }) {
         onSignOut={signOut}
         currentPath={location.pathname}
       />
+      <BillingAccessBanner />
       <main className="app-main">{children}</main>
       <AppFooter navigate={navigateCompat} />
       <DakinisCommandPaletteProvider />
