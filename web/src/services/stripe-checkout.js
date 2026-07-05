@@ -30,13 +30,17 @@ export function dakinisStripePaymentLinkUrl(paymentLink, { email } = {}) {
   }
 }
 
-export async function dakinisStartStripeCheckout({ plan, email, businessId } = {}) {
+export async function dakinisStartStripeCheckout({ plan, email, businessId, userId, token } = {}) {
   const base = dakinisApiBaseUrl();
   const prefix = base ? `${base}/api` : "/api";
+  const headers = { "Content-Type": "application/json" };
+  if (token && String(token).trim()) {
+    headers.Authorization = `Bearer ${String(token).trim()}`;
+  }
   const res = await fetch(`${prefix}/public/stripe/checkout-session`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan, email, businessId })
+    headers,
+    body: JSON.stringify({ plan, email, businessId, userId })
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {

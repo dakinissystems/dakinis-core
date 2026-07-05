@@ -142,7 +142,7 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandlePublicStripePlans();
   }
   if (path === "/api/public/stripe/checkout-session" && req.method === "POST") {
-    return dakinisHandlePublicStripeCheckoutSession(rawBody);
+    return dakinisHandlePublicStripeCheckoutSession(req, rawBody);
   }
   const stripeSessionMatch = /^\/api\/public\/stripe\/session$/.exec(path);
   if (stripeSessionMatch && req.method === "GET") {

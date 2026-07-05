@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
+import { useDakinisSession } from "../context/SessionContext.jsx";
 import { DAKINIS_CONTACT_EMAIL } from "../config/contact-urls.js";
 import {
   DAKINIS_PLAN_SELECTED_EVENT,
@@ -27,7 +28,7 @@ import {
 } from "../services/stripe-checkout.js";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 
-function PlanStripeSubscribeButton({ plan, t, locale, stripePlans }) {
+function PlanStripeSubscribeButton({ plan, t, locale, stripePlans, session }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,14 +43,23 @@ function PlanStripeSubscribeButton({ plan, t, locale, stripePlans }) {
     dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.SIGNUP_STARTED, {
       plan: plan.key,
       priceEur: plan.priceEur,
-      via: "stripe"
+      via: "stripe",
+      hasSession: Boolean(session?.token),
     });
     try {
       if (planConfig.paymentLink) {
-        window.location.href = dakinisStripePaymentLinkUrl(planConfig.paymentLink);
+        window.location.href = dakinisStripePaymentLinkUrl(planConfig.paymentLink, {
+          email: session?.user?.email,
+        });
         return;
       }
-      await dakinisStartStripeCheckout({ plan: plan.key });
+      await dakinisStartStripeCheckout({
+        plan: plan.key,
+        email: session?.user?.email,
+        businessId: session?.business?.id,
+        userId: session?.user?.id,
+        token: session?.token,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("pricing.stripeError"));
       setLoading(false);
@@ -139,6 +149,7 @@ export default function PricingHybridSection({
   sectionId = "precios"
 }) {
   const { locale, t } = useLocale();
+  const { session } = useDakinisSession();
   const showProjects = variant === "full";
   const [planRevision, setPlanRevision] = useState(0);
   const [stripePlans, setStripePlans] = useState(null);
@@ -277,7 +288,13 @@ export default function PricingHybridSection({
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-              <PlanStripeSubscribeButton plan={plan} t={t} locale={locale} stripePlans={stripePlans} />
+              <PlanStripeSubscribeButton
+                plan={plan}
+                t={t}
+                locale={locale}
+                stripePlans={stripePlans}
+                session={session}
+              />
             </article>
           ))}
         </div>

@@ -1,6 +1,7 @@
 import { dakinisParseCommercialPlanForStorage } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import { dakinisDecodeTenantFromJwt } from "../middleware/auth.js";
 import {
   dakinisBillingCreateCheckout,
   dakinisBillingGetCheckoutSession,
@@ -38,11 +39,13 @@ export async function dakinisHandlePublicStripePlans() {
   );
 }
 
-export async function dakinisHandlePublicStripeCheckoutSession(rawBody) {
+export async function dakinisHandlePublicStripeCheckoutSession(req, rawBody) {
   const body = dakinisParseJson(rawBody);
   if (body === null) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
+
+  const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
 
   const plan = typeof body.plan === "string" ? body.plan.trim() : "";
   const planParsed = dakinisParseCommercialPlanForStorage(plan);
@@ -50,9 +53,18 @@ export async function dakinisHandlePublicStripeCheckoutSession(rawBody) {
     return dakinisJsonError(400, "INVALID_PLAN", "plan debe ser starter, growth o pro");
   }
 
-  const email = typeof body.email === "string" ? body.email.trim() : undefined;
-  const businessId = typeof body.businessId === "string" ? body.businessId.trim() : undefined;
-  const userId = typeof body.userId === "string" ? body.userId.trim() : undefined;
+  const email =
+    (typeof body.email === "string" ? body.email.trim() : "") ||
+    jwtIdentity?.email ||
+    undefined;
+  const businessId =
+    (typeof body.businessId === "string" ? body.businessId.trim() : "") ||
+    jwtIdentity?.tenantId ||
+    undefined;
+  const userId =
+    (typeof body.userId === "string" ? body.userId.trim() : "") ||
+    jwtIdentity?.userId ||
+    undefined;
 
   const proxied = await dakinisBillingCreateCheckout({
     plan: planParsed,

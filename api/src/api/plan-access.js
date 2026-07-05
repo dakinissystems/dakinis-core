@@ -37,18 +37,39 @@ export function dakinisTenantApiPathRequiredModule(pathname) {
 }
 
 /**
- * @param {{ plan?: string }} business
+ * @param {{ plan?: string; access_state?: string; access_reason?: string; entitled_plan?: string }} business
  * @param {string} pathname
  * @returns {ReturnType<typeof dakinisJsonError>|null}
  */
 export function dakinisPlanModuleDenialOrNull(business, pathname) {
+  const accessState = String(business.access_state || "active").toLowerCase();
+  if (accessState === "suspended" || accessState === "closed") {
+    return dakinisJsonError(403, "ACCESS_SUSPENDED", "Acceso suspendido — contacta con soporte", {
+      accessState,
+      accessReason: business.access_reason || null,
+    });
+  }
+
   const mod = dakinisTenantApiPathRequiredModule(pathname);
   if (!mod) return null;
+
   const tier = dakinisNormalizeCommercialPlan(business.plan);
   if (dakinisPlanHasModule(tier, mod)) return null;
+
+  if (accessState === "degraded") {
+    return dakinisJsonError(403, "ACCESS_DEGRADED", "Pago pendiente — funciones Pro limitadas hasta regularizar", {
+      module: mod,
+      plan: tier,
+      accessState,
+      accessReason: business.access_reason || "payment_past_due",
+      entitledPlan: business.entitled_plan || tier,
+      upgradeTo: dakinisSuggestUpgradeForModule(mod),
+    });
+  }
+
   return dakinisJsonError(403, "PLAN_MODULE_DENIED", "Tu plan no incluye este modulo de producto", {
     module: mod,
     plan: tier,
-    upgradeTo: dakinisSuggestUpgradeForModule(mod)
+    upgradeTo: dakinisSuggestUpgradeForModule(mod),
   });
 }
