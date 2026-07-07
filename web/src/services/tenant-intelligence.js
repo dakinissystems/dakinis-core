@@ -12,7 +12,7 @@ export function dakinisTenantHealthScore(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/health-score", session);
 }
 
-export function dakinisTenantOnboarding(session) {
+function dakinisTenantOnboarding(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/onboarding", session);
 }
 
@@ -50,7 +50,7 @@ export function dakinisTenantRecommendations(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/recommendations", session);
 }
 
-export function dakinisTenantIntelligenceAsk(session, question) {
+function dakinisTenantIntelligenceAsk(session, question) {
   return dakinisTenantJsonFetch("/api/v1/tenant/intelligence/ask", session, {
     method: "POST",
     body: JSON.stringify({ question })
@@ -69,7 +69,7 @@ export function dakinisTenantAiUsage(session, days = 30) {
   return dakinisTenantJsonFetch(`/api/v1/tenant/ai/usage?days=${days}`, session);
 }
 
-export function dakinisTenantBenchmarkReal(session) {
+function dakinisTenantBenchmarkReal(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/benchmark/real", session);
 }
 
@@ -118,6 +118,6 @@ export function dakinisTenantTelemetryAdoption(session, days = 30) {
   return dakinisTenantJsonFetch(`/api/v1/tenant/telemetry/adoption?days=${days}&recent=1`, session);
 }
 
-export function dakinisPublicIndustryTemplates() {
+function dakinisPublicIndustryTemplates() {
   return fetch("/api/public/industry-templates").then((r) => r.json());
 }

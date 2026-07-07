@@ -60,7 +60,7 @@ export default function HubPage() {
     if (session?.token) {
       dakinisPersistEcosystemSession(session);
     }
-  }, [session?.token]);
+  }, [session]);
 
   const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
 

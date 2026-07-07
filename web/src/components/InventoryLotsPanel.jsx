@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import {
   dakinisLotQrUrl,
   dakinisIsLotLabelCode
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
-import StockBarcodeScanner from "./StockBarcodeScanner.jsx";
+import { INVENTORY_LOTS_INITIAL, inventoryLotsReducer } from "./inventoryLotsReducer.js";
+import {
+  InventoryLotsFridgesTab,
+  InventoryLotsGuideTab,
+  InventoryLotsReceiveTab,
+  InventoryLotsScanTab,
+  InventoryLotsSummaryTab,
+  InventoryLotsTableTab
+} from "./InventoryLotsTabBody.jsx";
 
 const DEMO_LOCATIONS = [
   { id: "demo-nevera-1", slug: "nevera-1", name: "Nevera 1", kind: "fridge" },
@@ -87,23 +95,40 @@ function LotLabelCard({ lot, t, onPrint }) {
 
 export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, activeSystemKey }) {
   const { t } = useLocale();
-  const [tab, setTab] = useState("summary");
-  const [locations, setLocations] = useState([]);
-  const [lots, setLots] = useState([]);
-  const [summary, setSummary] = useState({ critical: 0, warning: 0, ok: 0, expired: 0 });
-  const [byLocation, setByLocation] = useState({});
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [lastLabel, setLastLabel] = useState(null);
-  const [scanResult, setScanResult] = useState(null);
+  const [state, dispatch] = useReducer(inventoryLotsReducer, INVENTORY_LOTS_INITIAL);
+  const {
+    tab,
+    locations,
+    lots,
+    summary,
+    byLocation,
+    error,
+    busy,
+    lastLabel,
+    scanResult,
+    productBarcode,
+    productName,
+    supplierLot,
+    expiryDate,
+    quantity,
+    locationId,
+    supplier
+  } = state;
 
-  const [productBarcode, setProductBarcode] = useState("");
-  const [productName, setProductName] = useState("");
-  const [supplierLot, setSupplierLot] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [locationId, setLocationId] = useState("");
-  const [supplier, setSupplier] = useState("");
+  const setTab = (value) => dispatch({ type: "setTab", tab: value });
+  const setError = (value) => dispatch({ type: "setError", error: value });
+  const setBusy = (value) => dispatch({ type: "setBusy", busy: value });
+  const setLastLabel = (value) => dispatch({ type: "setLastLabel", lastLabel: value });
+  const setScanResult = (value) => dispatch({ type: "setScanResult", scanResult: value });
+  const setProductBarcode = (value) => dispatch({ type: "setField", field: "productBarcode", value });
+  const setProductName = (value) => dispatch({ type: "setField", field: "productName", value });
+  const setSupplierLot = (value) => dispatch({ type: "setField", field: "supplierLot", value });
+  const setExpiryDate = (value) => dispatch({ type: "setField", field: "expiryDate", value });
+  const setQuantity = (value) => dispatch({ type: "setField", field: "quantity", value });
+  const setLocationId = (value) => dispatch({ type: "setField", field: "locationId", value });
+  const setSupplier = (value) => dispatch({ type: "setField", field: "supplier", value });
+  const setLots = (value) =>
+    dispatch({ type: "setField", field: "lots", value: typeof value === "function" ? value(lots) : value });
 
   const isDemo = !apiSession?.token;
   const fetchOpts = useMemo(
@@ -116,15 +141,18 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
 
   const loadDemo = useCallback(() => {
     const demoLots = dakinisDemoLots();
-    setLocations(DEMO_LOCATIONS);
-    setLots(demoLots);
-    setSummary({ critical: 1, warning: 1, ok: 1, expired: 0 });
-    setByLocation({
-      "Nevera 1": [demoLots[0]],
-      "Nevera 2": [demoLots[1]],
-      Congelador: [demoLots[2]]
+    dispatch({
+      type: "loadedDemo",
+      locations: DEMO_LOCATIONS,
+      lots: demoLots,
+      summary: { critical: 1, warning: 1, ok: 1, expired: 0 },
+      byLocation: {
+        "Nevera 1": [demoLots[0]],
+        "Nevera 2": [demoLots[1]],
+        Congelador: [demoLots[2]]
+      },
+      locationId: locationId || DEMO_LOCATIONS[0]?.id || ""
     });
-    if (!locationId && DEMO_LOCATIONS[0]) setLocationId(DEMO_LOCATIONS[0].id);
   }, [locationId]);
 
   const reload = useCallback(async () => {
@@ -132,20 +160,23 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
       loadDemo();
       return;
     }
-    setError("");
+    dispatch({ type: "setError", error: "" });
     try {
       const [locRes, sumRes] = await Promise.all([
         dakinisTenantJsonFetch("/api/tenant/inventory/locations", apiSession, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/inventory/summary", apiSession, fetchOpts)
       ]);
       const locs = locRes?.data?.locations ?? [];
-      setLocations(locs);
-      setLots(sumRes?.data?.lots ?? []);
-      setSummary(sumRes?.data?.summary ?? { critical: 0, warning: 0, ok: 0, expired: 0 });
-      setByLocation(sumRes?.data?.byLocation ?? {});
-      if (!locationId && locs[0]) setLocationId(locs[0].id);
+      dispatch({
+        type: "loadedApi",
+        locations: locs,
+        lots: sumRes?.data?.lots ?? [],
+        summary: sumRes?.data?.summary ?? { critical: 0, warning: 0, ok: 0, expired: 0 },
+        byLocation: sumRes?.data?.byLocation ?? {},
+        locationId: locationId || locs[0]?.id || ""
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("inventoryLots.loadError"));
+      dispatch({ type: "setError", error: e instanceof Error ? e.message : t("inventoryLots.loadError") });
       loadDemo();
     }
   }, [apiSession, fetchOpts, isDemo, loadDemo, locationId, t]);
@@ -170,13 +201,12 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         expirySeverity: "ok",
         daysUntilExpiry: 14
       };
-      setLots((prev) => [lot, ...prev]);
-      setLastLabel(lot);
+      dispatch({ type: "prependLot", lot });
       return;
     }
 
-    setBusy(true);
-    setError("");
+    dispatch({ type: "setBusy", busy: true });
+    dispatch({ type: "setError", error: "" });
     try {
       const json = await dakinisTenantJsonFetch("/api/tenant/inventory/receive", apiSession, {
         ...fetchOpts,
@@ -192,16 +222,13 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         }
       });
       const lot = json?.data?.lot;
-      setLastLabel(lot);
-      setProductBarcode("");
-      setSupplierLot("");
-      setExpiryDate("");
-      setQuantity("1");
+      dispatch({ type: "setLastLabel", lastLabel: lot });
+      dispatch({ type: "resetReceiveForm" });
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("inventoryLots.receiveError"));
+      dispatch({ type: "setError", error: err instanceof Error ? err.message : t("inventoryLots.receiveError") });
     } finally {
-      setBusy(false);
+      dispatch({ type: "setBusy", busy: false });
     }
   }
 
@@ -229,7 +256,7 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
     }
 
     setProductBarcode(normalized);
-    if (tab !== "receive") setTab("receive");
+    if (tab !== "receive") dispatch({ type: "setTab", tab: "receive" });
   }
 
   function printLabel(lot) {
@@ -289,216 +316,45 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         </p>
       ) : null}
 
-      {tab === "summary" ? (
-        <div className="inventory-lots-summary">
-          <div className="inventory-lots-summary__kpis">
-            <article className="card inventory-lot-severity--critical">
-              <p className="kpi-label">{t("inventoryLots.expire3d")}</p>
-              <p className="kpi-value">{summary.critical ?? 0}</p>
-            </article>
-            <article className="card inventory-lot-severity--warning">
-              <p className="kpi-label">{t("inventoryLots.expire7d")}</p>
-              <p className="kpi-value">{summary.warning ?? 0}</p>
-            </article>
-            <article className="card inventory-lot-severity--ok">
-              <p className="kpi-label">{t("inventoryLots.stockOk")}</p>
-              <p className="kpi-value">{summary.ok ?? 0}</p>
-            </article>
-          </div>
-          <p className="kpi-label">{t("inventoryLots.fifoNote")}</p>
-        </div>
-      ) : null}
+      {tab === "summary" ? <InventoryLotsSummaryTab summary={summary} t={t} /> : null}
 
       {tab === "receive" ? (
-        <form className="inventory-lots-receive" onSubmit={handleReceive}>
-          <p className="lead" style={{ fontSize: "0.9rem" }}>
-            {t("inventoryLots.receiveLead")}
-          </p>
-          <div className="inventory-lots-receive__grid">
-            <label className="mockup-field">
-              <span>{t("inventoryLots.productBarcode")}</span>
-              <input
-                value={productBarcode}
-                onChange={(e) => setProductBarcode(e.target.value)}
-                placeholder="8412345678901"
-              />
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.productName")}</span>
-              <input
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                placeholder={t("inventoryLots.productNamePlaceholder")}
-                required
-              />
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.supplierLot")}</span>
-              <input value={supplierLot} onChange={(e) => setSupplierLot(e.target.value)} placeholder="A245" />
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.expiry")}</span>
-              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} required />
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.quantity")}</span>
-              <input
-                type="number"
-                min="0.01"
-                step="any"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-              />
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.location")}</span>
-              <select value={locationId} onChange={(e) => setLocationId(e.target.value)} required>
-                {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="mockup-field">
-              <span>{t("inventoryLots.supplier")}</span>
-              <input value={supplier} onChange={(e) => setSupplier(e.target.value)} />
-            </label>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
-            <button type="submit" className="btn" disabled={busy}>
-              {t("inventoryLots.receiveCta")}
-            </button>
-          </div>
-          {lastLabel ? (
-            <div style={{ marginTop: "1rem" }}>
-              <LotLabelCard lot={lastLabel} t={t} onPrint={() => printLabel(lastLabel)} />
-            </div>
-          ) : null}
-        </form>
+        <InventoryLotsReceiveTab
+          t={t}
+          busy={busy}
+          lastLabel={lastLabel}
+          LotLabelCard={LotLabelCard}
+          printLabel={printLabel}
+          handleReceive={handleReceive}
+          locations={locations}
+          productBarcode={productBarcode}
+          setProductBarcode={setProductBarcode}
+          productName={productName}
+          setProductName={setProductName}
+          supplierLot={supplierLot}
+          setSupplierLot={setSupplierLot}
+          expiryDate={expiryDate}
+          setExpiryDate={setExpiryDate}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          locationId={locationId}
+          setLocationId={setLocationId}
+          supplier={supplier}
+          setSupplier={setSupplier}
+        />
       ) : null}
 
       {tab === "fridges" ? (
-        <div className="inventory-fridge-map">
-          {Object.entries(byLocation).length === 0 ? (
-            <p className="lead">{t("inventoryLots.noLots")}</p>
-          ) : (
-            Object.entries(byLocation).map(([locName, locLots]) => (
-              <article key={locName} className="card inventory-fridge-map__zone">
-                <h4 style={{ marginTop: 0 }}>{locName}</h4>
-                <ul className="inventory-fridge-map__list">
-                  {(locLots || []).map((lot) => (
-                    <li key={lot.id || lot.labelCode}>
-                      <strong>{lot.productName}</strong>
-                      <span className="kpi-label">
-                        {lot.supplierLot ? `${lot.supplierLot} · ` : ""}
-                        {t("inventoryLots.expiry")} {lot.expiryDate}
-                      </span>
-                      <SeverityBadge severity={lot.expirySeverity} t={t} />
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))
-          )}
-        </div>
+        <InventoryLotsFridgesTab byLocation={byLocation} SeverityBadge={SeverityBadge} t={t} />
       ) : null}
 
-      {tab === "lots" ? (
-        <div className="mockup-table-card">
-          <table className="mockup-table">
-            <thead>
-              <tr>
-                <th>{t("inventoryLots.colCode")}</th>
-                <th>{t("inventoryLots.colProduct")}</th>
-                <th>{t("inventoryLots.colLot")}</th>
-                <th>{t("inventoryLots.colExpiry")}</th>
-                <th>{t("inventoryLots.colQty")}</th>
-                <th>{t("inventoryLots.colLocation")}</th>
-                <th>{t("inventoryLots.colStatus")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lots.map((lot) => (
-                <tr key={lot.id || lot.labelCode}>
-                  <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{lot.labelCode}</td>
-                  <td>{lot.productName}</td>
-                  <td>{lot.supplierLot || "—"}</td>
-                  <td>{lot.expiryDate}</td>
-                  <td>{lot.quantityRemaining}</td>
-                  <td>{lot.locationName || "—"}</td>
-                  <td>
-                    <SeverityBadge severity={lot.expirySeverity} t={t} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+      {tab === "lots" ? <InventoryLotsTableTab lots={lots} SeverityBadge={SeverityBadge} t={t} /> : null}
 
       {tab === "scan" ? (
-        <div>
-          <p className="lead" style={{ fontSize: "0.9rem" }}>
-            {t("inventoryLots.scanLead")}
-          </p>
-          <StockBarcodeScanner onScan={handleScanCode} t={t} hint={t("inventoryLots.scanHint")} />
-          {scanResult ? (
-            <article className="card" style={{ marginTop: "1rem" }}>
-              {scanResult.error ? (
-                <p>{scanResult.error}</p>
-              ) : (
-                <>
-                  <strong>{scanResult.productName}</strong>
-                  <p className="kpi-label">{scanResult.labelCode}</p>
-                  <p>
-                    {t("inventoryLots.supplierLot")}: {scanResult.supplierLot || "—"} · {t("inventoryLots.expiry")}:{" "}
-                    {scanResult.expiryDate}
-                  </p>
-                  <p>
-                    {t("inventoryLots.quantity")}: {scanResult.quantityRemaining} · {scanResult.locationName}
-                  </p>
-                  {scanResult.daysUntilExpiry != null ? (
-                    <SeverityBadge severity={scanResult.expirySeverity} t={t} />
-                  ) : null}
-                </>
-              )}
-            </article>
-          ) : null}
-        </div>
+        <InventoryLotsScanTab t={t} scanResult={scanResult} SeverityBadge={SeverityBadge} handleScanCode={handleScanCode} />
       ) : null}
 
-      {tab === "guide" ? (
-        <div className="inventory-lots-guide">
-          <article className="card">
-            <h4 style={{ marginTop: 0 }}>{t("inventoryLots.guideQrTitle")}</h4>
-            <p className="lead" style={{ fontSize: "0.9rem" }}>{t("inventoryLots.guideQrLead")}</p>
-            <ul>
-              {(t("inventoryLots.guideQrBullets") || []).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </article>
-          <article className="card">
-            <h4 style={{ marginTop: 0 }}>{t("inventoryLots.guideCostTitle")}</h4>
-            <p className="lead" style={{ fontSize: "0.9rem" }}>{t("inventoryLots.guideCostLead")}</p>
-            <ul>
-              {(t("inventoryLots.guideCostBullets") || []).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </article>
-          <article className="card">
-            <h4 style={{ marginTop: 0 }}>{t("inventoryLots.guideFridgeTitle")}</h4>
-            <p className="lead" style={{ fontSize: "0.9rem" }}>{t("inventoryLots.guideFridgeLead")}</p>
-          </article>
-          <article className="card">
-            <h4 style={{ marginTop: 0 }}>{t("inventoryLots.guideFifoTitle")}</h4>
-            <p className="lead" style={{ fontSize: "0.9rem" }}>{t("inventoryLots.guideFifoLead")}</p>
-          </article>
-        </div>
-      ) : null}
+      {tab === "guide" ? <InventoryLotsGuideTab t={t} /> : null}
     </section>
   );
 }

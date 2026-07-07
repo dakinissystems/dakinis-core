@@ -4,7 +4,7 @@
 
 const IDP_REFRESH_KEY = "dakinis_idp_refresh_token";
 
-export function getIdpAuthUrl() {
+function getIdpAuthUrl() {
   const raw =
     import.meta.env.VITE_DAKINIS_AUTH_URL ||
     import.meta.env.VITE_AUTH_URL ||
@@ -19,7 +19,7 @@ export function isIdpAuthEnabled() {
   return true;
 }
 
-export function getIdpRefreshToken() {
+function getIdpRefreshToken() {
   try {
     return sessionStorage.getItem(IDP_REFRESH_KEY);
   } catch {
@@ -55,7 +55,7 @@ export async function loginViaIdp(email, password) {
 }
 
 /** @param {string} token JWT del IdP (sin verificar firma; solo hints). */
-export function dakinisDecodeIdpJwtPayload(token) {
+function dakinisDecodeIdpJwtPayload(token) {
   try {
     const part = String(token || "").split(".")[1];
     if (!part) return null;
@@ -66,7 +66,7 @@ export function dakinisDecodeIdpJwtPayload(token) {
   }
 }
 
-export function dakinisTenantRefFromIdpLogin(idpData) {
+function dakinisTenantRefFromIdpLogin(idpData) {
   const payload = dakinisDecodeIdpJwtPayload(idpData?.token);
   if (!payload || typeof payload !== "object") return "";
   const raw =
@@ -81,7 +81,7 @@ export function dakinisTenantRefFromIdpLogin(idpData) {
 }
 
 /** Limpia slug manual (evita pegar el placeholder "dakinis-platform · restaurante-demo"). */
-export function dakinisNormalizeTenantSlug(raw) {
+function dakinisNormalizeTenantSlug(raw) {
   const s = String(raw || "").trim();
   if (!s) return "";
   const first = s.split(/[·•|,;]/)[0].trim();

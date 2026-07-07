@@ -9,22 +9,19 @@ import {
   dakinisCrmMeta
 } from "../../services/crm.js";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
-import CrmPipelineBoard from "../../components/business/CrmPipelineBoard.jsx";
-import EmptyState from "@dakinis/shared-ux/react/EmptyState.jsx";
 import AiContextualHint from "@dakinis/shared-ux/react/AiContextualHint.jsx";
 import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
+import CrmLoginGate from "./CrmLoginGate.jsx";
+import CrmDemoView from "./CrmDemoView.jsx";
+import CrmContactList from "./CrmContactList.jsx";
+import CrmContactDetail from "./CrmContactDetail.jsx";
 
 const DAKINIS_CRM_JOURNEY_KEYS = ["client", "booking", "order", "invoice", "whatsapp", "followUp"];
-const DAKINIS_ACTIVITY_TYPES = ["note", "call", "whatsapp", "email", "meeting", "booking", "order"];
-
-function dakinisContactLabel(c) {
-  const name = [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
-  return name || c.displayName || c.phone || c.email || c.id;
-}
 
 export default function CrmPage({ navigate }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
+  const hasToken = Boolean(session?.token);
   const isDemo = dakinisIsBusinessDemoSession(session);
   const isBusinessFacing = dakinisIsBusinessFacingSession(session);
   const [contacts, setContacts] = useState([]);
@@ -42,21 +39,8 @@ export default function CrmPage({ navigate }) {
   const [noteText, setNoteText] = useState("");
   const [saving, setSaving] = useState(false);
 
-  if (!session?.token) {
-    return (
-      <section className="modules">
-        <div className="container">
-          <h2>{t("app.crm.title")}</h2>
-          <p className="lead">{t("app.crm.loginLead")}</p>
-          <button className="btn" type="button" onClick={() => navigate("/login")}>
-            {t("app.goLogin")}
-          </button>
-        </div>
-      </section>
-    );
-  }
-
   const loadContacts = useCallback(async () => {
+    if (!hasToken) return;
     setLoading(true);
     setError("");
     try {
@@ -65,18 +49,23 @@ export default function CrmPage({ navigate }) {
       const json = await dakinisCrmListContacts(search, 200);
       const list = json?.data?.contacts || [];
       setContacts(list);
-      if (!selectedId && list.length) setSelectedId(list[0].id);
+      if (!selectedId && list.length) {
+        const firstId = list[0].id;
+        setSelectedId(firstId);
+        const timelineJson = await dakinisCrmContactTimeline(firstId);
+        setTimeline(timelineJson?.data || null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("app.crm.error"));
       setContacts([]);
     } finally {
       setLoading(false);
     }
-  }, [search, t]);
+  }, [hasToken, search, selectedId, t]);
 
   const loadTimeline = useCallback(
     async (contactId) => {
-      if (!contactId) {
+      if (!hasToken || !contactId) {
         setTimeline(null);
         return;
       }
@@ -89,18 +78,21 @@ export default function CrmPage({ navigate }) {
         setTimeline(null);
       }
     },
-    [t]
+    [hasToken, t]
+  );
+
+  const handleSelectContact = useCallback(
+    (contactId) => {
+      setSelectedId(contactId);
+      void loadTimeline(contactId);
+    },
+    [loadTimeline]
   );
 
   useEffect(() => {
-    if (isDemo) return;
+    if (!hasToken || isDemo) return;
     loadContacts();
-  }, [isDemo, loadContacts]);
-
-  useEffect(() => {
-    if (isDemo) return;
-    if (selectedId) loadTimeline(selectedId);
-  }, [isDemo, selectedId, loadTimeline]);
+  }, [hasToken, isDemo, loadContacts]);
 
   async function handleCreateContact(e) {
     e.preventDefault();
@@ -146,41 +138,16 @@ export default function CrmPage({ navigate }) {
     }
   }
 
-  const selected = contacts.find((c) => c.id === selectedId);
-  const journeySteps = DAKINIS_CRM_JOURNEY_KEYS.map((key) => t(`app.crm.journey.${key}`));
+  if (!hasToken) {
+    return <CrmLoginGate t={t} navigate={navigate} />;
+  }
 
   if (isDemo) {
-    return (
-      <section className="modules business-app-page">
-        <div className="container">
-          {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
-          <p className="kicker">{t("businessDemo.clients.kicker")}</p>
-          <h2>{t("businessDemo.clients.title")}</h2>
-          <p className="lead">{t("businessDemo.clients.lead")}</p>
-          <span className="mockup-badge">{t("commercial.executive.demoBadge")}</span>
-
-          <div className="crm-demo-pipeline" style={{ marginTop: "1.25rem" }}>
-            <h3 style={{ marginTop: 0 }}>{t("businessDemo.pipeline.sectionTitle")}</h3>
-            <CrmPipelineBoard />
-          </div>
-
-          <p className="lead crm-demo-hint">{t("businessDemo.clients.demoHint")}</p>
-
-          <div className="commercial-business-dashboard__actions">
-            <button type="button" className="btn" onClick={() => navigate("/app/ventas")}>
-              {t("businessDemo.dashboard.ctaPipeline")}
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
-              {t("businessDemo.dashboard.ctaWhatsapp")}
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/dashboard")}>
-              {t("businessDemo.hub.ctaButton")}
-            </button>
-          </div>
-        </div>
-      </section>
-    );
+    return <CrmDemoView t={t} navigate={navigate} isBusinessFacing={isBusinessFacing} />;
   }
+
+  const selected = contacts.find((c) => c.id === selectedId);
+  const journeySteps = DAKINIS_CRM_JOURNEY_KEYS.map((key) => t(`app.crm.journey.${key}`));
 
   return (
     <section className="modules business-app-page">
@@ -200,31 +167,27 @@ export default function CrmPage({ navigate }) {
           </p>
         ) : null}
 
-        {!isDemo ? (
-          <div className="crm-journey card" aria-label={t("app.crm.journeyAria")}>
-            {journeySteps.map((label, index) => (
-              <span key={DAKINIS_CRM_JOURNEY_KEYS[index]} className="crm-journey__step">
-                {label}
-                {index < journeySteps.length - 1 ? (
-                  <span className="crm-journey__arrow" aria-hidden>
-                    →
-                  </span>
-                ) : null}
-              </span>
-            ))}
-          </div>
-        ) : null}
+        <div className="crm-journey card" aria-label={t("app.crm.journeyAria")}>
+          {journeySteps.map((label, index) => (
+            <span key={DAKINIS_CRM_JOURNEY_KEYS[index]} className="crm-journey__step">
+              {label}
+              {index < journeySteps.length - 1 ? (
+                <span className="crm-journey__arrow" aria-hidden>
+                  →
+                </span>
+              ) : null}
+            </span>
+          ))}
+        </div>
 
-        {!isDemo ? (
-          <div className="crm-quick-links">
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
-              {t("app.crm.linkCommunications")}
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
-              {t("appNav.hub")}
-            </button>
-          </div>
-        ) : null}
+        <div className="crm-quick-links">
+          <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
+            {t("app.crm.linkCommunications")}
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
+            {t("appNav.hub")}
+          </button>
+        </div>
 
         {error ? (
           <p className="lead" style={{ color: "#f97316" }}>
@@ -232,132 +195,44 @@ export default function CrmPage({ navigate }) {
           </p>
         ) : null}
 
-        {!isDemo ? (
-          <AiContextualHint
-            message={t("app.crm.aiHintInactive")}
-            actionLabel={t("app.crm.aiHintAction")}
-            onAction={() => navigate("/app/dashboard")}
-          />
-        ) : null}
+        <AiContextualHint
+          message={t("app.crm.aiHintInactive")}
+          actionLabel={t("app.crm.aiHintAction")}
+          onAction={() => navigate("/app/dashboard")}
+        />
 
         <div className="wa-conv-layout" style={{ marginTop: "1.25rem" }}>
-          <aside className="wa-conv-list card">
-            <label className="mockup-field">
-              <span>{t("app.crm.search")}</span>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && loadContacts()}
-                placeholder={t("app.crm.searchPlaceholder")}
-              />
-            </label>
-            <button type="button" className="btn btn-outline" onClick={loadContacts} disabled={loading}>
-              {loading ? t("app.crm.loading") : t("app.crm.refresh")}
-            </button>
-            <ul className="wa-thread-list" role="list">
-              {contacts.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    className={`wa-thread-btn${c.id === selectedId ? " wa-thread-btn--active" : ""}`}
-                    onClick={() => setSelectedId(c.id)}
-                  >
-                    <strong>{dakinisContactLabel(c)}</strong>
-                    {c.phone ? <span className="kpi-label">{c.phone}</span> : null}
-                    {c.source ? <span className="kpi-label">{c.source}</span> : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {!loading && contacts.length === 0 ? (
-              <EmptyState
-                product="core"
-                stateKey="noCustomers"
-                onPrimary={() => document.querySelector(".crm-new-contact-form")?.scrollIntoView({ behavior: "smooth" })}
-              />
-            ) : null}
-
-            <form className="mockup-form crm-new-contact-form" onSubmit={handleCreateContact} style={{ marginTop: "1rem" }}>
-              <p className="kpi-label">{t("app.crm.newContact")}</p>
-              <label className="mockup-field">
-                <span>{t("app.crm.firstName")}</span>
-                <input value={newFirst} onChange={(e) => setNewFirst(e.target.value)} />
-              </label>
-              <label className="mockup-field">
-                <span>{t("app.crm.lastName")}</span>
-                <input value={newLast} onChange={(e) => setNewLast(e.target.value)} />
-              </label>
-              <label className="mockup-field">
-                <span>{t("app.crm.phone")}</span>
-                <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
-              </label>
-              <label className="mockup-field">
-                <span>{t("app.crm.email")}</span>
-                <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-              </label>
-              <button type="submit" className="btn" disabled={saving}>
-                {t("app.crm.saveContact")}
-              </button>
-            </form>
-          </aside>
-
-          <div className="wa-conv-thread card">
-            {selected ? (
-              <>
-                <h3>{dakinisContactLabel(selected)}</h3>
-                <p className="kpi-label">
-                  {[selected.phone, selected.email, selected.source].filter(Boolean).join(" · ")}
-                </p>
-                <ul className="wa-messages" role="list">
-                  {(timeline?.timeline || []).map((item) => (
-                    <li
-                      key={`${item.kind}-${item.id}`}
-                      className={`wa-msg wa-msg--${item.direction || item.type || "note"}`}
-                    >
-                      <span className="kpi-label">
-                        {item.kind === "whatsapp"
-                          ? t("app.crm.timelineWhatsapp")
-                          : t(`app.crm.activity.${item.type || "note"}`)}
-                        {item.direction ? ` (${item.direction})` : ""}
-                      </span>
-                      <p>{item.notes || item.body || "—"}</p>
-                      <time className="kpi-label">{item.createdAt}</time>
-                    </li>
-                  ))}
-                  {!timeline?.timeline?.length ? (
-                    <li className="kpi-label">{t("app.crm.emptyTimeline")}</li>
-                  ) : null}
-                </ul>
-                <form className="mockup-form" onSubmit={handleAddActivity} style={{ marginTop: "1rem" }}>
-                  <label className="mockup-field">
-                    <span>{t("app.crm.activityType")}</span>
-                    <select value={noteType} onChange={(e) => setNoteType(e.target.value)}>
-                      {DAKINIS_ACTIVITY_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {t(`app.crm.activity.${type}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="mockup-field">
-                    <span>{t("app.crm.activityNotes")}</span>
-                    <textarea
-                      rows={3}
-                      value={noteText}
-                      onChange={(e) => setNoteText(e.target.value)}
-                      placeholder={t("app.crm.activityNotesPlaceholder")}
-                    />
-                  </label>
-                  <button type="submit" className="btn" disabled={saving || !noteText.trim()}>
-                    {t("app.crm.addActivity")}
-                  </button>
-                </form>
-              </>
-            ) : (
-              <p className="lead">{t("app.crm.selectContact")}</p>
-            )}
-          </div>
+          <CrmContactList
+            t={t}
+            contacts={contacts}
+            selectedId={selectedId}
+            search={search}
+            loading={loading}
+            saving={saving}
+            newFirst={newFirst}
+            newLast={newLast}
+            newPhone={newPhone}
+            newEmail={newEmail}
+            onSearchChange={setSearch}
+            onLoadContacts={loadContacts}
+            onSelectContact={handleSelectContact}
+            onNewFirstChange={setNewFirst}
+            onNewLastChange={setNewLast}
+            onNewPhoneChange={setNewPhone}
+            onNewEmailChange={setNewEmail}
+            onCreateContact={handleCreateContact}
+          />
+          <CrmContactDetail
+            t={t}
+            selected={selected}
+            timeline={timeline}
+            noteType={noteType}
+            noteText={noteText}
+            saving={saving}
+            onNoteTypeChange={setNoteType}
+            onNoteTextChange={setNoteText}
+            onAddActivity={handleAddActivity}
+          />
         </div>
       </div>
     </section>

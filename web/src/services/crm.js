@@ -18,7 +18,7 @@ export function dakinisCrmCreateContact(payload) {
   });
 }
 
-export function dakinisCrmGetContact(contactId) {
+function dakinisCrmGetContact(contactId) {
   return api(`/api/v1/crm/contacts/${encodeURIComponent(contactId)}`);
 }
 
@@ -33,11 +33,11 @@ export function dakinisCrmCreateActivity(contactId, payload) {
   });
 }
 
-export function dakinisCrmListCompanies() {
+function dakinisCrmListCompanies() {
   return api("/api/v1/crm/companies");
 }
 
-export function dakinisCrmCreateCompany(payload) {
+function dakinisCrmCreateCompany(payload) {
   return api("/api/v1/crm/companies", {
     method: "POST",
     body: JSON.stringify(payload)
@@ -45,14 +45,14 @@ export function dakinisCrmCreateCompany(payload) {
 }
 
 /** Demo legacy (segmentación en memoria del adaptador). */
-export function dakinisCrmSegment(client) {
+function dakinisCrmSegment(client) {
   return api("/api/v1/crm/segment", {
     method: "POST",
     body: JSON.stringify({ client })
   });
 }
 
-export function dakinisCrmTimeline(client) {
+function dakinisCrmTimeline(client) {
   return api("/api/v1/crm/timeline", {
     method: "POST",
     body: JSON.stringify({ client })

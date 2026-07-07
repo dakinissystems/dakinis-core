@@ -30,7 +30,7 @@ export default function AnalyticsBusinessDemo({ benchmark: benchmarkProp = null 
       { key: "avgTicket", value: base.kpis.avgTicket, trendKey: "businessDemo.analytics.trends.avgTicket" },
       { key: "conversion", value: base.kpis.conversion, trendKey: "businessDemo.analytics.trends.conversion" }
     ];
-  }, [base.kpis, base.kpis.orders, scale]);
+  }, [base, scale]);
 
   return (
     <div className="analytics-demo">

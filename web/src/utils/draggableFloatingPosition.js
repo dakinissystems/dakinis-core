@@ -5,7 +5,7 @@ const PRESET_POSITIONS = {
   "top-left": { x: 8, y: 8 }
 };
 
-export function dakinisParseFloatingPosition(value, fallback = PRESET_POSITIONS["bottom-right"]) {
+function dakinisParseFloatingPosition(value, fallback = PRESET_POSITIONS["bottom-right"]) {
   if (!value) return { ...fallback };
   if (typeof value === "object" && typeof value.x === "number" && typeof value.y === "number") {
     return {

@@ -1,6 +1,10 @@
 import FerminaPrintLogo from "./FerminaPrintLogo.jsx";
 import { ferminaFormatOrderPlacedAt } from "../utils/ferminaPrintFormat.js";
 
+function ferminaPrintLineTotal(line) {
+  return (line.qty * line.unitPrice).toFixed(2);
+}
+
 /**
  * Ticket / PDF de comanda o factura.
  * @param {object} props
@@ -26,7 +30,6 @@ export default function FerminaPrintSheet({
   showLogo = false
 }) {
   const isComanda = kind === "comanda";
-  const lineTotal = (l) => (l.qty * l.unitPrice).toFixed(2);
 
   const label = (key, fallback) => (t ? t(key) : fallback);
 
@@ -102,11 +105,11 @@ export default function FerminaPrintSheet({
           </tr>
         </thead>
         <tbody>
-          {(doc.lines || []).map((l, i) => (
-            <tr key={i}>
+          {(doc.lines || []).map((l) => (
+            <tr key={l.menuId || l.name || `${l.qty}-${l.unitPrice}`}>
               <td>{l.name}</td>
               <td>{l.qty}</td>
-              <td>{lineTotal(l)} €</td>
+              <td>{ferminaPrintLineTotal(l)} €</td>
             </tr>
           ))}
         </tbody>

@@ -12,7 +12,7 @@ export async function dakinisOpenBillingPortal(session, { returnUrl } = {}) {
   window.location.href = url;
 }
 
-export async function dakinisFetchTenantBillingSubscription(session) {
+async function dakinisFetchTenantBillingSubscription(session) {
   const json = await dakinisTenantJsonFetch("/api/billing/subscription", session);
   return json?.data?.subscription || null;
 }

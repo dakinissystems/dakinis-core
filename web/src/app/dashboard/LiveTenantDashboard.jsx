@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import { dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
@@ -11,16 +11,15 @@ import {
   dakinisTenantRecommendations,
   dakinisTenantFinanceSummary
 } from "../../services/tenant-intelligence.js";
+import {
+  LIVE_TENANT_DASHBOARD_INITIAL,
+  liveTenantDashboardReducer
+} from "./liveTenantDashboardReducer.js";
 
 export default function LiveTenantDashboard({ session, navigate }) {
   const { t } = useLocale();
-  const [industryDash, setIndustryDash] = useState(null);
-  const [health, setHealth] = useState(null);
-  const [aiTips, setAiTips] = useState(null);
-  const [benchmark, setBenchmark] = useState(null);
-  const [growth, setGrowth] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
-  const [finance, setFinance] = useState(null);
+  const [data, dispatch] = useReducer(liveTenantDashboardReducer, LIVE_TENANT_DASHBOARD_INITIAL);
+  const { industryDash, health, aiTips, benchmark, growth, recommendations, finance } = data;
 
   useEffect(() => {
     if (!session?.token) return undefined;
@@ -36,19 +35,24 @@ export default function LiveTenantDashboard({ session, navigate }) {
     ])
       .then(([dashJson, healthJson, aiJson, benchJson, growthJson, recJson, finJson]) => {
         if (cancelled) return;
-        setIndustryDash(dashJson?.data?.dashboard || null);
-        setHealth(healthJson?.data?.health || null);
-        setAiTips(aiJson?.data || null);
-        setBenchmark(benchJson?.data?.benchmark || null);
-        setGrowth(growthJson?.data?.growth || null);
-        setRecommendations(recJson?.data?.recommendations || []);
-        setFinance(finJson?.data?.summary || null);
+        dispatch({
+          type: "loaded",
+          payload: {
+            industryDash: dashJson?.data?.dashboard || null,
+            health: healthJson?.data?.health || null,
+            aiTips: aiJson?.data || null,
+            benchmark: benchJson?.data?.benchmark || null,
+            growth: growthJson?.data?.growth || null,
+            recommendations: recJson?.data?.recommendations || [],
+            finance: finJson?.data?.summary || null
+          }
+        });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [session?.token, session?.business?.id]);
+  }, [session]);
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
   const businessFacing = dakinisIsBusinessFacingSession(session);

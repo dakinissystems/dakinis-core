@@ -1,24 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useState } from "react";
 import { dakinisWhatsappContacts } from "../../services/whatsapp.js";
 
+function dakinisContactsResource(refreshKey) {
+  return dakinisWhatsappContacts()
+    .then((json) => ({
+      contacts: json?.data?.contacts || [],
+      error: ""
+    }))
+    .catch((err) => ({
+      contacts: [],
+      error: err instanceof Error ? err.message : "Error"
+    }));
+}
+
+const contactsCache = new Map();
+
+function getContactsPromise(refreshKey) {
+  if (!contactsCache.has(refreshKey)) {
+    contactsCache.set(refreshKey, dakinisContactsResource(refreshKey));
+  }
+  return contactsCache.get(refreshKey);
+}
+
 export default function WhatsappContactsTab({ t }) {
-  const [contacts, setContacts] = useState([]);
-  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { contacts, error } = use(getContactsPromise(refreshKey));
 
-  const load = useCallback(async () => {
-    setError("");
-    try {
-      const json = await dakinisWhatsappContacts();
-      setContacts(json?.data?.contacts || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("app.whatsapp.error"));
-      setContacts([]);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const load = useCallback(() => {
+    contactsCache.delete(refreshKey);
+    setRefreshKey((key) => key + 1);
+  }, [refreshKey]);
 
   return (
     <div className="wa-tab">

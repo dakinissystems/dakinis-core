@@ -1,21 +1,9 @@
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useParams } from "react-router-dom";
+import { useClientPortal } from "../hooks/useClientPortal.js";
 
-export default function ClientPortalPage() {
-  const { slug } = useParams();
-  const [portal, setPortal] = useState(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!slug) return;
-    fetch(`/api/public/portal/${encodeURIComponent(slug)}`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (!json?.ok) throw new Error(json?.error?.message || "Portal no disponible");
-        setPortal(json.data?.portal || null);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Error"));
-  }, [slug]);
+function ClientPortalContent({ slug }) {
+  const { portal, error } = useClientPortal(slug);
 
   if (error) {
     return (
@@ -32,7 +20,7 @@ export default function ClientPortalPage() {
     return (
       <section className="modules">
         <div className="container">
-          <p className="lead">Cargando portal…</p>
+          <p className="lead">Portal no disponible</p>
         </div>
       </section>
     );
@@ -53,11 +41,38 @@ export default function ClientPortalPage() {
           </ul>
           <p className="lead" style={{ marginTop: "1rem" }}>
             Reservas, pedidos y facturas: próximamente en esta URL pública (
-            <code>cliente.{portal.slug}.dakinissystems.com</code> o{" "}
-            <code>/portal/{portal.slug}</code>).
+            <code>cliente.{portal.slug}.dakinissystems.com</code> o <code>/portal/{portal.slug}</code>).
           </p>
         </div>
       </div>
     </section>
+  );
+}
+
+export default function ClientPortalPage() {
+  const { slug } = useParams();
+
+  if (!slug) {
+    return (
+      <section className="modules">
+        <div className="container">
+          <p className="lead">Portal no disponible</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <Suspense
+      fallback={
+        <section className="modules">
+          <div className="container">
+            <p className="lead">Cargando portal…</p>
+          </div>
+        </section>
+      }
+    >
+      <ClientPortalContent slug={slug} />
+    </Suspense>
   );
 }

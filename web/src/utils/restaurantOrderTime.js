@@ -1,4 +1,4 @@
-export function dakinisKitchenElapsedSeconds(createdAt, nowMs = Date.now()) {
+function dakinisKitchenElapsedSeconds(createdAt, nowMs = Date.now()) {
   const sent = new Date(createdAt).getTime();
   if (!Number.isFinite(sent)) return 0;
   return Math.max(0, Math.floor((nowMs - sent) / 1000));

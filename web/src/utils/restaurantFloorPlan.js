@@ -9,17 +9,20 @@ export function dakinisTableLabel(tables, tableId) {
 }
 
 export function dakinisTableCartLines(cart, menu, channelId = "salon") {
-  return Object.entries(cart || {})
-    .filter(([, qty]) => qty > 0)
-    .map(([menuId, qty]) => {
-      const item = menu.find((m) => m.id === menuId);
-      return {
-        menuId,
-        name: item?.nameEs || item?.name || menuId,
-        qty,
-        unitPrice: item?.priceEur ?? 0
-      };
+  void channelId;
+  const menuById = new Map(menu.map((m) => [m.id, m]));
+  const lines = [];
+  for (const [menuId, qty] of Object.entries(cart || {})) {
+    if (qty <= 0) continue;
+    const item = menuById.get(menuId);
+    lines.push({
+      menuId,
+      name: item?.nameEs || item?.name || menuId,
+      qty,
+      unitPrice: item?.priceEur ?? 0
     });
+  }
+  return lines;
 }
 
 export function dakinisTableCartTotal(cart, menu) {
@@ -30,7 +33,7 @@ export function dakinisTableItemCount(cart) {
   return Object.values(cart || {}).reduce((n, q) => n + (q > 0 ? q : 0), 0);
 }
 
-export function dakinisNextTableId(tables, zone = "salon") {
+function dakinisNextTableId(tables, zone = "salon") {
   let n = 1;
   while (tables.some((t) => t.id === `${zone}-${n}`)) n += 1;
   return `${zone}-${n}`;

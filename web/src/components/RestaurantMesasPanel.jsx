@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import {
   dakinisTableCartLines,
@@ -8,6 +8,8 @@ import {
 } from "../utils/restaurantFloorPlan.js";
 import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisRestaurantPaymentLabel } from "../utils/restaurantOrderMeta.js";
+
+const EMPTY_TABLE_CART = Object.freeze({});
 
 function RestaurantMesaModal({
   tableLabel,
@@ -27,21 +29,30 @@ function RestaurantMesaModal({
   onPay,
   onClear
 }) {
+  const dialogRef = useRef(null);
+
   useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === "Escape") onClose();
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    function onCancel(e) {
+      e.preventDefault();
+      onClose();
     }
-    document.addEventListener("keydown", onKeyDown);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prev;
-    };
+    dialog.addEventListener("cancel", onCancel);
+    return () => dialog.removeEventListener("cancel", onCancel);
   }, [onClose]);
 
   return (
-    <div className="restaurant-mesa-modal" role="dialog" aria-modal="true" aria-labelledby="restaurant-mesa-modal-title">
+    <dialog
+      ref={dialogRef}
+      className="restaurant-mesa-modal"
+      aria-labelledby="restaurant-mesa-modal-title"
+    >
       <button
         type="button"
         className="restaurant-mesa-modal__backdrop"
@@ -128,7 +139,7 @@ function RestaurantMesaModal({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -152,12 +163,21 @@ export default function RestaurantMesasPanel({
   onMesaClosePaymentChange
 }) {
   const session = selectedTableId ? sessions[selectedTableId] : null;
-  const mesaCart = session?.cart ?? {};
   const mesaNotes = session?.notes ?? "";
 
-  const mesaLines = useMemo(() => dakinisTableCartLines(mesaCart, menu, "salon"), [mesaCart, menu]);
-  const mesaTotal = useMemo(() => dakinisTableCartTotal(mesaCart, menu), [mesaCart, menu]);
-  const mesaItemCount = useMemo(() => dakinisTableItemCount(mesaCart), [mesaCart]);
+  const mesaLines = useMemo(
+    () => dakinisTableCartLines(session?.cart ?? EMPTY_TABLE_CART, menu, "salon"),
+    [session, menu]
+  );
+  const mesaTotal = useMemo(
+    () => dakinisTableCartTotal(session?.cart ?? EMPTY_TABLE_CART, menu),
+    [session, menu]
+  );
+  const mesaItemCount = useMemo(
+    () => dakinisTableItemCount(session?.cart ?? EMPTY_TABLE_CART),
+    [session]
+  );
+  const mesaCart = session?.cart ?? EMPTY_TABLE_CART;
 
   const selectedTableLabel = useMemo(() => {
     if (!selectedTableId) return "";

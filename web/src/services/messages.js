@@ -21,7 +21,7 @@ export function dakinisMessageReactivation(payload) {
   });
 }
 
-export function dakinisWhatsappRules() {
+function dakinisWhatsappRules() {
   return api("/api/v1/whatsapp/rules");
 }
 

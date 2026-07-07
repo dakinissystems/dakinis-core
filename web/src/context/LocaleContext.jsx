@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 import es from "../locales/es.js";
 import en from "../locales/en.js";
 
@@ -75,14 +75,13 @@ export function LocaleProvider({ children }) {
 }
 
 export function useLocale() {
-  const ctx = useContext(LocaleContext);
+  const ctx = use(LocaleContext);
   if (!ctx) {
     throw new Error("useLocale must be used within LocaleProvider");
   }
   return ctx;
 }
 
-/** Optional: use in components that may render outside provider (e.g. tests). */
-export function useLocaleOptional() {
-  return useContext(LocaleContext);
+function useLocaleOptional() {
+  return use(LocaleContext);
 }

@@ -143,9 +143,10 @@ export default function TenantTeamSection({
             required
           />
         </label>
-        <label className="mockup-field">
+        <label className="mockup-field" htmlFor="tenant-new-password">
           <span>Contraseña inicial (mín. 8 caracteres)</span>
           <PasswordInput
+            id="tenant-new-password"
             value={newPassword}
             onChange={(ev) => setNewPassword(ev.target.value)}
             autoComplete="new-password"
@@ -185,6 +186,7 @@ export default function TenantTeamSection({
                   {editingUserId === u.id ? (
                     <input
                       type="email"
+                      aria-label={`Editar email de ${u.email}`}
                       value={editEmail}
                       onChange={(ev) => setEditEmail(ev.target.value)}
                     />

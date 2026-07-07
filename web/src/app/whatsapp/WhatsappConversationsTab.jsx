@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useState } from "react";
 import {
   dakinisWhatsappConversations,
   dakinisWhatsappSend,
@@ -6,30 +6,41 @@ import {
 } from "../../services/whatsapp.js";
 import WhatsappBusinessDemo from "../../components/business/WhatsappBusinessDemo.jsx";
 
+function dakinisThreadsResource(refreshKey) {
+  return dakinisWhatsappConversations(50)
+    .then((json) => ({
+      threads: json?.data?.threads || json?.data?.conversations || [],
+      error: ""
+    }))
+    .catch((err) => ({
+      threads: [],
+      error: err instanceof Error ? err.message : "Error"
+    }));
+}
+
+const threadsCache = new Map();
+
+function getThreadsPromise(refreshKey) {
+  if (!threadsCache.has(refreshKey)) {
+    threadsCache.set(refreshKey, dakinisThreadsResource(refreshKey));
+  }
+  return threadsCache.get(refreshKey);
+}
+
 export default function WhatsappConversationsTab({ t, demoMode = false }) {
-  const [threads, setThreads] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { threads, error: threadsError } = use(getThreadsPromise(refreshKey));
   const [selectedPhone, setSelectedPhone] = useState("");
   const [messages, setMessages] = useState([]);
-  const [sendPhone, setSendPhone] = useState("");
+  const [phoneDraft, setPhoneDraft] = useState("");
   const [sendText, setSendText] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const loadThreads = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const json = await dakinisWhatsappConversations(50);
-      const list = json?.data?.threads || json?.data?.conversations || [];
-      setThreads(list);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("app.whatsapp.error"));
-      setThreads([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const loadThreads = useCallback(() => {
+    threadsCache.delete(refreshKey);
+    setRefreshKey((key) => key + 1);
+  }, [refreshKey]);
 
   const loadThread = useCallback(
     async (phone) => {
@@ -46,16 +57,16 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
     [t]
   );
 
-  useEffect(() => {
-    loadThreads();
-  }, [loadThreads]);
+  const selectThread = useCallback(
+    (phone) => {
+      setSelectedPhone(phone);
+      setPhoneDraft("");
+      void loadThread(phone);
+    },
+    [loadThread]
+  );
 
-  useEffect(() => {
-    if (selectedPhone) {
-      setSendPhone(selectedPhone);
-      loadThread(selectedPhone);
-    }
-  }, [selectedPhone, loadThread]);
+  const sendPhone = phoneDraft || selectedPhone;
 
   async function handleSend(e) {
     e.preventDefault();
@@ -65,7 +76,7 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
     try {
       await dakinisWhatsappSend({ phone: sendPhone.trim(), message: sendText.trim() });
       setSendText("");
-      await loadThreads();
+      loadThreads();
       if (selectedPhone) await loadThread(selectedPhone);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("app.whatsapp.sendError"));
@@ -74,88 +85,69 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
     }
   }
 
-  if (demoMode && !loading && threads.length === 0) {
-    return (
-      <div className="wa-tab">
-        <p className="kpi-label">{t("businessDemo.whatsapp.lead")}</p>
-        <WhatsappBusinessDemo />
-      </div>
-    );
+  if (demoMode) {
+    return <WhatsappBusinessDemo />;
   }
+
+  const displayError = error || threadsError;
 
   return (
     <div className="wa-tab">
-      <p className="kpi-label">{demoMode ? t("businessDemo.whatsapp.lead") : t("app.whatsapp.conversationsLead")}</p>
-      {loading ? <p className="kpi-label">{t("app.whatsapp.loading")}</p> : null}
-      <div className="wa-conv-layout">
-        <aside className="wa-thread-list card">
-          <h4 className="comm-subtitle">{t("app.whatsapp.threadList")}</h4>
-          {threads.length === 0 ? (
-            <p className="kpi-label">{t("app.whatsapp.noThreads")}</p>
-          ) : (
-            <ul className="comm-auto-list">
-              {threads.map((th) => (
-                <li key={th.peerPhone}>
+      <div className="wa-tab__toolbar">
+        <button type="button" className="btn btn-outline" onClick={loadThreads}>
+          {t("app.whatsapp.refresh")}
+        </button>
+      </div>
+      <div className="wa-conversations">
+        <aside className="wa-conversations__list">
+          <ul>
+            {threads.map((thread) => {
+              const phone = thread.phone || thread.contact_phone;
+              return (
+                <li key={phone}>
                   <button
                     type="button"
-                    className={`link-btn${selectedPhone === th.peerPhone ? " is-active" : ""}`}
-                    onClick={() => setSelectedPhone(th.peerPhone)}
+                    className={`wa-thread${selectedPhone === phone ? " is-active" : ""}`}
+                    onClick={() => selectThread(phone)}
                   >
-                    +{th.peerPhone}
+                    +{phone}
                   </button>
-                  <span className="demo-tenant-label">{th.lastBody || "—"}</span>
                 </li>
-              ))}
-            </ul>
-          )}
-          <button type="button" className="btn btn-outline" style={{ marginTop: "0.75rem" }} onClick={loadThreads}>
-            {t("app.whatsapp.refresh")}
-          </button>
+              );
+            })}
+          </ul>
         </aside>
-
-        <section className="wa-thread-view card">
-          <h4 className="comm-subtitle">
-            {selectedPhone ? `+${selectedPhone}` : t("app.whatsapp.selectThread")}
-          </h4>
-          <ul className="wa-message-list">
-            {messages.map((m) => (
-              <li
-                key={m.id}
-                className={`wa-message wa-message--${m.direction === "outbound" ? "out" : "in"}`}
-              >
-                <span className="wa-message__body">{m.body || m.body_text || "—"}</span>
-                <span className="kpi-label">{m.createdAt || m.storedAt || ""}</span>
+        <section className="wa-conversations__panel">
+          <form onSubmit={handleSend}>
+            <label className="mockup-field">
+              <span>{t("app.whatsapp.phone")}</span>
+              <input
+                value={phoneDraft || selectedPhone}
+                onChange={(e) => setPhoneDraft(e.target.value)}
+                placeholder="+34…"
+              />
+            </label>
+            <label className="mockup-field">
+              <span>{t("app.whatsapp.message")}</span>
+              <textarea value={sendText} onChange={(e) => setSendText(e.target.value)} rows={3} />
+            </label>
+            <button type="submit" className="btn" disabled={sending}>
+              {t("app.whatsapp.send")}
+            </button>
+          </form>
+          <ul className="wa-messages">
+            {messages.map((msg) => (
+              <li key={msg.id || `${msg.created_at}-${msg.body}`}>
+                <strong>{msg.direction === "out" ? t("app.whatsapp.out") : t("app.whatsapp.in")}</strong>
+                <p>{msg.body || msg.text}</p>
               </li>
             ))}
           </ul>
-          <form className="wa-send-form" onSubmit={handleSend}>
-            <label className="kpi-label">
-              {t("app.whatsapp.sendPhone")}
-              <input
-                className="input"
-                value={sendPhone}
-                onChange={(e) => setSendPhone(e.target.value)}
-                placeholder="34600111222"
-              />
-            </label>
-            <label className="kpi-label">
-              {t("app.whatsapp.sendMessage")}
-              <textarea
-                className="input"
-                rows={3}
-                value={sendText}
-                onChange={(e) => setSendText(e.target.value)}
-              />
-            </label>
-            <button type="submit" className="btn" disabled={sending}>
-              {sending ? t("app.whatsapp.sending") : t("app.whatsapp.send")}
-            </button>
-          </form>
         </section>
       </div>
-      {error ? (
+      {displayError ? (
         <p className="lead" style={{ color: "#f97316", marginTop: "1rem" }}>
-          {error}
+          {displayError}
         </p>
       ) : null}
     </div>

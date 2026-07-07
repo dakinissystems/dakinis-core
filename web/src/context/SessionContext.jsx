@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 import { DAKINIS_AUTH_EXPIRED_EVENT } from "../services/auth-events.js";
 
 const DAKINIS_STORAGE_KEY = "dakinis_session_v1";
@@ -54,7 +54,7 @@ export function DakinisSessionProvider({ children }) {
 }
 
 export function useDakinisSession() {
-  const ctx = useContext(SessionContext);
+  const ctx = use(SessionContext);
   if (!ctx) {
     throw new Error("useDakinisSession debe usarse dentro de DakinisSessionProvider");
   }

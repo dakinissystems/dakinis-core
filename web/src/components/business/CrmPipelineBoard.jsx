@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { DAKINIS_CRM_PIPELINE_STAGES } from "../../data/businessDemoContent.js";
 import BusinessDemoOptionsMenu from "./BusinessDemoOptionsMenu.jsx";
@@ -8,16 +8,17 @@ export default function CrmPipelineBoard({ draggable = true }) {
   const [stages, setStages] = useState(() =>
     DAKINIS_CRM_PIPELINE_STAGES.map((s) => ({ ...s, cards: [...s.cards] }))
   );
-  const [dragCard, setDragCard] = useState(null);
+  const dragCardRef = useRef(null);
 
   function onDragStart(stageId, cardName) {
     if (!draggable) return;
-    setDragCard({ stageId, cardName });
+    dragCardRef.current = { stageId, cardName };
   }
 
   function onDrop(targetStageId) {
+    const dragCard = dragCardRef.current;
     if (!dragCard || dragCard.stageId === targetStageId) {
-      setDragCard(null);
+      dragCardRef.current = null;
       return;
     }
     setStages((prev) => {
@@ -33,7 +34,7 @@ export default function CrmPipelineBoard({ draggable = true }) {
       to.count = to.cards.length;
       return next;
     });
-    setDragCard(null);
+    dragCardRef.current = null;
   }
 
   return (

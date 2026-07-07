@@ -1,5 +1,7 @@
 /** Sub-navegación del flujo comandas (tarifa → pedido → cobro → operación). */
-export function FerminaComandasSubnav({ views, activeId, onSelect, badges = {} }) {
+const EMPTY_COMANDA_BADGES = Object.freeze({});
+
+export function FerminaComandasSubnav({ views, activeId, onSelect, badges = EMPTY_COMANDA_BADGES }) {
   return (
     <nav
       className="fermina-comandas-tabs"

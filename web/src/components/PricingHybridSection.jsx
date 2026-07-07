@@ -166,9 +166,9 @@ export default function PricingHybridSection({
     return () => window.removeEventListener(DAKINIS_PLAN_SELECTED_EVENT, onPlanSelected);
   }, []);
 
-  const selectedPlan = useMemo(() => dakinisReadSelectedPlan(), [planRevision]);
+  const selectedPlan = useMemo(() => dakinisReadSelectedPlan(planRevision), [planRevision]);
   const contactWhatsappHref = useMemo(
-    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t }),
+    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t, planRevision }),
     [locale, t, planRevision]
   );
   const contactMessage = useMemo(() => dakinisPlanContactMessage(t, selectedPlan), [t, selectedPlan]);

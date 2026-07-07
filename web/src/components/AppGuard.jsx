@@ -41,7 +41,7 @@ export default function AppGuard({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [session?.token, session?.business?.id, logout]);
+  }, [session, logout]);
 
   if (!session?.token) {
     return <Navigate to="/login" replace />;

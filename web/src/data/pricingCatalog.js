@@ -12,7 +12,7 @@ import {
   DAKINIS_WHATSAPP_OVERAGE_EUR_PER_500_MESSAGES
 } from "@dakinis/shared/catalog/bos-pricing.js";
 
-export const DAKINIS_BOS_PLAN_KEYS = Object.freeze(["starter", "growth", "pro"]);
+const DAKINIS_BOS_PLAN_KEYS = Object.freeze(["starter", "growth", "pro"]);
 
 /** Implantación inicial recomendada por plan (pago único, no mensualidad). */
 export const DAKINIS_PLAN_IMPLEMENTATION_KEYS = Object.freeze(["starter", "growth", "pro"]);
@@ -32,11 +32,11 @@ export const dakinisBosOverage = Object.freeze({
   whatsappEurPer500: DAKINIS_WHATSAPP_OVERAGE_EUR_PER_500_MESSAGES
 });
 
-export const dakinisImplementationTiers = DAKINIS_IMPLEMENTATION_TIERS_EUR;
+const dakinisImplementationTiers = DAKINIS_IMPLEMENTATION_TIERS_EUR;
 
 export const dakinisProfessionalServices = DAKINIS_PROFESSIONAL_SERVICES;
 
-export const dakinisPricingIntro = {
+const dakinisPricingIntro = {
   title: "Paquetes claros",
   subtitle:
     "No vendemos horas sueltas: eliges un alcance con precio y plazo cerrados. En la llamada te recomiendo un pack concreto dentro de estos rangos — sin “depende” ni “ya veremos”.",
@@ -98,7 +98,7 @@ export const dakinisPackAdvanced = {
   ]
 };
 
-export const dakinisMaintenanceTiers = DAKINIS_PROFESSIONAL_SERVICES.maintenance.map((tier) => ({
+const dakinisMaintenanceTiers = DAKINIS_PROFESSIONAL_SERVICES.maintenance.map((tier) => ({
   key: tier.key,
   name: tier.name,
   price: `${tier.priceEur} €/mes`,
@@ -108,5 +108,5 @@ export const dakinisMaintenanceTiers = DAKINIS_PROFESSIONAL_SERVICES.maintenance
       : "Prioridad en soporte y hueco mensual para mejoras pequeñas encaminadas."
 }));
 
-export const dakinisMaintenancePitch =
+const dakinisMaintenancePitch =
   "Después del desarrollo puedes mantenerlo y mejorarlo poco a poco — sin sorpresas.";

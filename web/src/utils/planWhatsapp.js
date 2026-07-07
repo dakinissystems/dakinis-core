@@ -16,7 +16,8 @@ export function dakinisPersistSelectedPlan(plan) {
   }
 }
 
-export function dakinisReadSelectedPlan() {
+export function dakinisReadSelectedPlan(planRevision) {
+  void planRevision;
   if (typeof sessionStorage === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(PLAN_STORAGE_KEY);
@@ -29,7 +30,7 @@ export function dakinisReadSelectedPlan() {
   }
 }
 
-export function dakinisPlanWhatsappMessage(t, { name, priceEur }) {
+function dakinisPlanWhatsappMessage(t, { name, priceEur }) {
   return t("pricing.planWhatsappMessage", { plan: name, price: priceEur });
 }
 
@@ -38,8 +39,8 @@ export function dakinisPlanWhatsappUrl({ locale, t, plan }) {
   return dakinisContactWhatsappUrl(locale, { text });
 }
 
-export function dakinisWhatsappUrlWithOptionalPlan({ locale, t }) {
-  const selected = dakinisReadSelectedPlan();
+export function dakinisWhatsappUrlWithOptionalPlan({ locale, t, planRevision }) {
+  const selected = dakinisReadSelectedPlan(planRevision);
   if (selected?.key) {
     const planName = t(`pricing.bos.plans.${selected.key}.name`);
     const text = dakinisPlanWhatsappMessage(t, { name: planName, priceEur: selected.priceEur });

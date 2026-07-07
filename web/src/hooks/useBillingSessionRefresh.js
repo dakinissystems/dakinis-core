@@ -33,5 +33,5 @@ export function useBillingSessionRefresh() {
     return () => {
       cancelled = true;
     };
-  }, [session?.token, session?.user?.role, setSession]);
+  }, [session, setSession]);
 }

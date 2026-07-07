@@ -36,8 +36,8 @@ export default function WhatsappBusinessDemo() {
               <BusinessDemoOptionsMenu context="whatsapp" subjectName={thread.name} />
             </header>
             <ul className="wa-business-demo__messages" role="list">
-              {thread.messages.map((msg, i) => (
-                <li key={i} className={`wa-business-demo__msg wa-business-demo__msg--${msg.from}`}>
+              {thread.messages.map((msg) => (
+                <li key={`${thread.id}-${msg.from}-${msg.text}`} className={`wa-business-demo__msg wa-business-demo__msg--${msg.from}`}>
                   <p>{msg.text}</p>
                 </li>
               ))}

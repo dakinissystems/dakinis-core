@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 
+const EMPTY_ALLERGENS = [];
+
 /**
  * Tabla pública de alérgenos marcados como presentes (vista QR / cartel).
  * @param {Array<{ catalogId?: string, id?: string, name: string, category?: string, notes?: string, hint?: string }>} allergens
  */
-export default function AllergenPublicTable({ allergens = [], emptyMessage }) {
+export default function AllergenPublicTable({ allergens = EMPTY_ALLERGENS, emptyMessage }) {
   const rows = useMemo(
     () =>
-      [...allergens].sort(
+      allergens.toSorted(
         (a, b) =>
           (a.category || "").localeCompare(b.category || "", "es") ||
           (a.name || "").localeCompare(b.name || "", "es")

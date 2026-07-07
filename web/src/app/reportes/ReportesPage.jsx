@@ -26,7 +26,7 @@ export default function ReportesPage({ navigate }) {
     return () => {
       cancelled = true;
     };
-  }, [session?.token, isDemo]);
+  }, [session, isDemo]);
 
   if (!session?.token) {
     return (

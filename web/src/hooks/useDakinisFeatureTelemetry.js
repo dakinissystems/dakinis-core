@@ -28,19 +28,22 @@ function dakinisStartTelemetrySession(session, pathname) {
  */
 export function useDakinisFeatureTelemetry(session, pathname) {
   const activeRef = useRef({ sessionId: null, path: null });
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   useEffect(() => {
-    if (!session?.token || !pathname.startsWith("/app/")) return undefined;
-    if (dakinisIsBusinessDemoSession(session)) return undefined;
+    const currentSession = sessionRef.current;
+    if (!currentSession?.token || !pathname.startsWith("/app/")) return undefined;
+    if (dakinisIsBusinessDemoSession(currentSession)) return undefined;
 
     const prev = activeRef.current;
     if (prev.sessionId && prev.path !== pathname) {
-      dakinisEndTelemetrySession(session, prev.sessionId);
+      dakinisEndTelemetrySession(currentSession, prev.sessionId);
       activeRef.current = { sessionId: null, path: null };
     }
 
     let cancelled = false;
-    dakinisStartTelemetrySession(session, pathname).then((sessionId) => {
+    dakinisStartTelemetrySession(currentSession, pathname).then((sessionId) => {
       if (cancelled || !sessionId) return;
       activeRef.current = { sessionId, path: pathname };
     });
@@ -48,7 +51,7 @@ export function useDakinisFeatureTelemetry(session, pathname) {
     const onHide = () => {
       const current = activeRef.current;
       if (current.sessionId) {
-        dakinisEndTelemetrySession(session, current.sessionId);
+        dakinisEndTelemetrySession(sessionRef.current, current.sessionId);
         activeRef.current = { sessionId: null, path: null };
       }
     };
@@ -59,7 +62,7 @@ export function useDakinisFeatureTelemetry(session, pathname) {
       document.removeEventListener("visibilitychange", onHide);
       const current = activeRef.current;
       if (current.sessionId && current.path === pathname) {
-        dakinisEndTelemetrySession(session, current.sessionId);
+        dakinisEndTelemetrySession(sessionRef.current, current.sessionId);
         activeRef.current = { sessionId: null, path: null };
       }
     };

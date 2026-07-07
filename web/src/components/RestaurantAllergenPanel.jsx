@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   DAKINIS_MUSHROOM_INFO_ROW_ID,
   DAKINIS_RESTAURANT_MUSHROOM_OPTIONS,
@@ -24,7 +24,16 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
     Boolean(dakinisFindMushroomInfoRow(profile?.customAllergies ?? []))
   );
 
-  useEffect(() => {
+  const profileSyncKey = [
+    profile?.updatedAt,
+    profile?.publicToken,
+    profile?.allergenChecklist?.length,
+    profile?.customAllergies?.length
+  ].join("|");
+  const [syncedProfileKey, setSyncedProfileKey] = useState(profileSyncKey);
+
+  if (profileSyncKey !== syncedProfileKey) {
+    setSyncedProfileKey(profileSyncKey);
     if (profile?.allergenChecklist?.length) setChecklist(profile.allergenChecklist);
     if (profile?.customAllergies) {
       setCustomAllergies(profile.customAllergies);
@@ -34,7 +43,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
       );
       setMushroomSectionOpen(Boolean(hit));
     }
-  }, [profile?.allergenChecklist, profile?.customAllergies, profile?.updatedAt, profile?.publicToken]);
+  }
 
   const presentCount = useMemo(
     () => checklist.filter((a) => a.present).length + customAllergies.filter((a) => a.present).length,
@@ -147,6 +156,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                         <input
                           className="allergen-row__notes"
                           type="text"
+                          aria-label={`${t("allergens.notesPlaceholder")} — ${item.name}`}
                           placeholder={t("allergens.notesPlaceholder")}
                           value={item.notes || ""}
                           onChange={(e) => dakinisUpdateCatalogNotes(item.catalogId, e.target.value)}
@@ -212,6 +222,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                   {t("allergens.customPresent")}
                 </label>
                 <input
+                  aria-label={t("allergens.customName")}
                   placeholder={t("allergens.customName")}
                   value={c.name}
                   onChange={(e) => {
@@ -221,6 +232,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
                   }}
                 />
                 <input
+                  aria-label={t("allergens.customNotes")}
                   placeholder={t("allergens.customNotes")}
                   value={c.notes || ""}
                   onChange={(e) => {

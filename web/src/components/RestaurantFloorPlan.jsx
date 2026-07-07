@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAKINIS_RESTAURANT_FLOOR_ZONES } from "@dakinis/shared/catalog/restaurant-floor.js";
 
 const DRAG_THRESHOLD_PX = 5;
 const SNAP_PERCENT = 4;
+const EMPTY_FLOOR_SESSIONS = Object.freeze({});
 
 function dakinisClampPercent(n) {
   return Math.min(94, Math.max(6, n));
@@ -17,7 +18,7 @@ function dakinisSnapPercent(n) {
  */
 export default function RestaurantFloorPlan({
   tables,
-  sessions = {},
+  sessions = EMPTY_FLOOR_SESSIONS,
   selectedTableId,
   onSelectTable,
   onTablesChange,
@@ -41,9 +42,16 @@ export default function RestaurantFloorPlan({
     liveTablesRef.current = liveTables;
   }, [liveTables]);
 
-  useEffect(() => {
-    if (!draggingId) setLiveTables(tables);
-  }, [tables, draggingId]);
+  const tablesLayoutKey = useMemo(
+    () => tables.map((tbl) => `${tbl.id}:${tbl.x}:${tbl.y}`).join("|"),
+    [tables]
+  );
+  const [syncedTablesKey, setSyncedTablesKey] = useState(tablesLayoutKey);
+
+  if (!draggingId && tablesLayoutKey !== syncedTablesKey) {
+    setSyncedTablesKey(tablesLayoutKey);
+    setLiveTables(tables);
+  }
 
   const canMove = Boolean(positionEditable && onTablesChange);
   const canAdd = Boolean((layoutEditable || positionEditable) && onAddTable);
@@ -228,19 +236,14 @@ export default function RestaurantFloorPlan({
             const dragging = draggingId === tbl.id;
 
             return (
-              <div
+              <button
                 key={tbl.id}
-                role="button"
-                tabIndex={0}
+                type="button"
                 className={`restaurant-floor__table${selected ? " is-selected" : ""}${busy ? " is-busy" : ""}${dragging ? " is-dragging" : ""}${canMove ? " is-draggable" : ""}`}
                 style={{ left: `${tbl.x}%`, top: `${tbl.y}%` }}
                 title={canMove ? `${tbl.label} — ${label("restaurant.floorDragTitle", "Arrastrar para mover")}` : tbl.label}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelectTable(tbl.id);
-                  }
-                }}
+                aria-label={tbl.label}
+                aria-pressed={selected}
                 onPointerDown={(e) => handlePointerDown(tbl.id, e)}
                 onPointerMove={canMove ? handlePointerMove : undefined}
                 onPointerUp={(e) => handlePointerUp(tbl.id, e)}
@@ -251,7 +254,7 @@ export default function RestaurantFloorPlan({
                 {busy && total > 0 ? (
                   <span className="restaurant-floor__table-total">{total.toFixed(0)} €</span>
                 ) : null}
-              </div>
+              </button>
             );
           })}
         </div>

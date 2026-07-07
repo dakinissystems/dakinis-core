@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
@@ -9,11 +9,14 @@ export default function InventarioPage({ navigate }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
   const isDemo = dakinisIsBusinessDemoSession(session);
+  const restaurantRedirect =
+    session?.token && !isDemo && session.business?.type === "restaurante"
+      ? `/sistema/${encodeURIComponent(session.business.type)}`
+      : null;
 
-  useEffect(() => {
-    if (!session?.token || isDemo || session.business?.type !== "restaurante") return;
-    navigate(`/sistema/${encodeURIComponent(session.business.type)}`);
-  }, [session, isDemo, navigate]);
+  if (restaurantRedirect) {
+    return <Navigate to={restaurantRedirect} replace />;
+  }
 
   if (!session?.token) {
     return (
@@ -30,13 +33,7 @@ export default function InventarioPage({ navigate }) {
   }
 
   if (!isDemo && session.business?.type === "restaurante") {
-    return (
-      <section className="modules">
-        <div className="container">
-          <p className="lead">{t("businessDemo.inventory.redirecting")}</p>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (

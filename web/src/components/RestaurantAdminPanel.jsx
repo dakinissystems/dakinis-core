@@ -158,6 +158,7 @@ export default function RestaurantAdminPanel({
                       step="0.01"
                       min="0"
                       style={{ width: "6rem" }}
+                      aria-label={`${t("restaurant.priceEur")} — ${item.nameEs || item.name}`}
                       value={menuDraft[item.id] ?? ""}
                       onChange={(e) =>
                         setMenuDraft((prev) => ({ ...prev, [item.id]: e.target.value }))
@@ -213,7 +214,7 @@ export default function RestaurantAdminPanel({
         apiSession={apiSession}
         tenantSlugForVertical={tenantSlugForVertical}
         activeSystemKey={activeSystemKey}
-        role="admin"
+        staffRole="admin"
       />
     </div>
   );

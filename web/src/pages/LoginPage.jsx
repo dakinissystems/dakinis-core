@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
@@ -14,6 +14,18 @@ import {
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import PasswordInput from "../components/PasswordInput.jsx";
 
+function dakinisReadExpiredSessionMessage() {
+  try {
+    if (sessionStorage.getItem("dakinis_session_expired") === "1") {
+      sessionStorage.removeItem("dakinis_session_expired");
+      return "Tu sesión expiró. Inicia sesión de nuevo.";
+    }
+  } catch {
+    /* ignore */
+  }
+  return "";
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { t } = useLocale();
@@ -23,20 +35,9 @@ export default function LoginPage() {
   const [businessSlug, setBusinessSlug] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [needsTotp, setNeedsTotp] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(dakinisReadExpiredSessionMessage);
   const [loading, setLoading] = useState(false);
   const idpEnabled = isIdpAuthEnabled();
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem("dakinis_session_expired") === "1") {
-        sessionStorage.removeItem("dakinis_session_expired");
-        setError("Tu sesión expiró. Inicia sesión de nuevo.");
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   function dakinisApplySession(payload, idpExtra) {
     const { token, user, business } = payload;

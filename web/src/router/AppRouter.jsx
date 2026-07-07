@@ -30,19 +30,20 @@ import {
   CookiesPage,
   RefundsPage
 } from "../pages/StaticInfoPages.jsx";
-import { DashboardPage } from "../app/dashboard/index.js";
-import { CrmPage } from "../app/crm/index.js";
-import { WhatsappHubPage } from "../app/whatsapp/index.js";
-import { SettingsPage } from "../app/settings/index.js";
-import { VentasPage } from "../app/ventas/index.js";
-import { InventarioPage } from "../app/inventario/index.js";
-import { ReportesPage } from "../app/reportes/index.js";
+import DashboardPage from "../app/dashboard/DashboardPage.jsx";
+import CrmPage from "../app/crm/CrmPage.jsx";
+import WhatsappHubPage from "../app/whatsapp/WhatsappHubPage.jsx";
+import SettingsPage from "../app/settings/SettingsPage.jsx";
+import VentasPage from "../app/ventas/VentasPage.jsx";
+import InventarioPage from "../app/inventario/InventarioPage.jsx";
+import ReportesPage from "../app/reportes/ReportesPage.jsx";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
 import BillingAccessBanner from "../components/BillingAccessBanner.jsx";
 import { useBillingSessionRefresh } from "../hooks/useBillingSessionRefresh.js";
 import DakinisCommandPaletteProvider from "../components/experience/DakinisCommandPaletteProvider.jsx";
+import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
 import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 

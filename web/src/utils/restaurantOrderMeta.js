@@ -30,7 +30,7 @@ export function dakinisRestaurantPaymentLabel(payment, t) {
   return key ? t(key) : id;
 }
 
-export function dakinisRestaurantIsAppChannel(channelId) {
+function dakinisRestaurantIsAppChannel(channelId) {
   const id = dakinisNormalizeRestaurantChannel(channelId);
   return id === "glovo" || id === "uber";
 }

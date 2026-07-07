@@ -61,7 +61,7 @@ export const DAKINIS_INVENTORY_DEMO_PRODUCTS = [
   { name: "Café grano arabica", sku: "CAF-AR", stock: 15, unit: "kg", status: "ok" }
 ];
 
-export const DAKINIS_REPORTS_DEMO_SERIES = [
+const DAKINIS_REPORTS_DEMO_SERIES = [
   { label: "Ene", value: 62 },
   { label: "Feb", value: 71 },
   { label: "Mar", value: 68 },

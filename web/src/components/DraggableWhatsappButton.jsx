@@ -27,7 +27,7 @@ export default function DraggableWhatsappButton() {
   }, []);
 
   const href = useMemo(
-    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t }),
+    () => dakinisWhatsappUrlWithOptionalPlan({ locale, t, planRevision }),
     [locale, t, planRevision]
   );
 

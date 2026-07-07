@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useLocale } from "../context/LocaleContext.jsx";
+import { useMemo, useState } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 
@@ -20,21 +19,27 @@ export default function PlatformHubAccessPanel({
   initialProducts = ["core"],
   onSaved,
 }) {
-  const { t } = useLocale();
   const { session } = useDakinisSession();
-  const [selected, setSelected] = useState(() => new Set(initialProducts));
+  const normalizedInitial = useMemo(() => {
+    const products = initialProducts?.length ? initialProducts : ["core"];
+    return new Set(businessId ? products : products);
+  }, [businessId, initialProducts]);
+  const [localSelected, setLocalSelected] = useState(null);
+  const [syncBusinessId, setSyncBusinessId] = useState(businessId);
+  if (businessId !== syncBusinessId) {
+    setSyncBusinessId(businessId);
+    setLocalSelected(null);
+  }
+  const selected = localSelected ?? normalizedInitial;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  useEffect(() => {
-    setSelected(new Set(initialProducts?.length ? initialProducts : ["core"]));
-  }, [businessId, initialProducts]);
-
   function toggleProduct(id) {
     if (id === "core") return;
-    setSelected((prev) => {
-      const next = new Set(prev);
+    setLocalSelected((prev) => {
+      const base = prev ?? normalizedInitial;
+      const next = new Set(base);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       next.add("core");
@@ -48,55 +53,51 @@ export default function PlatformHubAccessPanel({
     setSaving(true);
     setError("");
     setNotice("");
-    const hubProducts = HUB_PRODUCT_OPTIONS.map((o) => o.id).filter((id) => selected.has(id));
     try {
       await dakinisBearerJsonFetch(
         `/api/platform/businesses/${encodeURIComponent(businessId)}/hub-products`,
         session.token,
-        { method: "PATCH", body: { hubProducts } }
+        {
+          method: "PATCH",
+          body: { products: [...selected] },
+        }
       );
-      setNotice(t("admin.hubAccess.saved"));
+      setNotice("Acceso Hub actualizado.");
       onSaved?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("admin.hubAccess.saveError"));
+      setError(err instanceof Error ? err.message : "No se pudo guardar el acceso Hub.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="card" style={{ marginTop: "0.75rem", gridColumn: "1 / -1" }}>
-      <h4 style={{ marginTop: 0 }}>{t("admin.hubAccess.title")}</h4>
-      <p className="lead" style={{ marginBottom: "0.75rem" }}>
-        {t("admin.hubAccess.lead", { slug: businessSlug })}
+    <form className="card" onSubmit={handleSave} style={{ marginTop: "1rem" }}>
+      <h4>Acceso Hub · {businessSlug}</h4>
+      <p className="lead" style={{ fontSize: "0.9rem" }}>
+        Productos del ecosistema visibles para este tenant en el Hub y SSO.
       </p>
-      <form onSubmit={handleSave}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
-          {HUB_PRODUCT_OPTIONS.map((opt) => (
-            <label key={opt.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <ul className="admin-hub-products">
+        {HUB_PRODUCT_OPTIONS.map((opt) => (
+          <li key={opt.id}>
+            <label>
               <input
                 type="checkbox"
                 checked={selected.has(opt.id)}
                 disabled={opt.locked || saving}
                 onChange={() => toggleProduct(opt.id)}
               />
-              <span>{opt.label}</span>
-              {opt.locked ? (
-                <span className="kpi-label">{t("admin.hubAccess.alwaysOn")}</span>
-              ) : null}
+              {opt.label}
+              {opt.locked ? " (siempre activo)" : ""}
             </label>
-          ))}
-        </div>
-        {error ? <p className="login-form__error">{error}</p> : null}
-        {notice ? (
-          <p className="lead" style={{ color: "var(--accent, #22c55e)" }}>
-            {notice}
-          </p>
-        ) : null}
-        <button type="submit" className="btn" disabled={saving} style={{ marginTop: "0.75rem" }}>
-          {saving ? t("admin.hubAccess.saving") : t("admin.hubAccess.save")}
-        </button>
-      </form>
-    </div>
+          </li>
+        ))}
+      </ul>
+      {error ? <p className="lead" style={{ color: "#f87171" }}>{error}</p> : null}
+      {notice ? <p className="lead" style={{ color: "#86efac" }}>{notice}</p> : null}
+      <button type="submit" className="btn" disabled={saving}>
+        {saving ? "Guardando…" : "Guardar acceso Hub"}
+      </button>
+    </form>
   );
 }

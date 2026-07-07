@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dakinisEnrichPublicDishesList,
   dakinisFormatPublicDishName,
@@ -14,6 +14,10 @@ function dakinisNormalizeSearch(text = "") {
     .replace(/\p{M}/gu, "");
 }
 
+const EMPTY_DISHES = [];
+const EMPTY_INFO_ROWS = [];
+const EMPTY_CATALOG_ROWS = [];
+
 /**
  * Cartel QR: platos en rejilla; al pulsar, modal con alérgenos del plato.
  * @param {Array} presentList — presentAllergies de la API (o derivado en cliente)
@@ -22,14 +26,13 @@ function dakinisNormalizeSearch(text = "") {
  * @param {Array} [catalogRows]
  */
 export default function AllergenPublicDishes({
-  presentList = [],
+  presentList = EMPTY_DISHES,
   dishes: dishesProp,
   infoRows: infoRowsProp,
   catalogRows: catalogRowsProp,
   t
 }) {
   const [selected, setSelected] = useState(null);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const split = useMemo(() => {
@@ -44,12 +47,15 @@ export default function AllergenPublicDishes({
   }, [presentList, dishesProp, infoRowsProp, catalogRowsProp]);
 
   const { dishes, infoRows, catalogRows } = split;
+  const preferCatalogOpen = !dishes.length && !infoRows.length && catalogRows.length > 0;
+  const catalogSignature = `${dishes.length}:${infoRows.length}:${catalogRows.length}`;
+  const [catalogOpen, setCatalogOpen] = useState(preferCatalogOpen);
+  const [catalogSignatureSeen, setCatalogSignatureSeen] = useState(catalogSignature);
 
-  useEffect(() => {
-    if (!dishes.length && !infoRows.length && catalogRows.length) {
-      setCatalogOpen(true);
-    }
-  }, [dishes.length, infoRows.length, catalogRows.length]);
+  if (catalogSignature !== catalogSignatureSeen) {
+    setCatalogSignatureSeen(catalogSignature);
+    if (preferCatalogOpen) setCatalogOpen(true);
+  }
 
   const searchNorm = useMemo(() => dakinisNormalizeSearch(searchQuery.trim()), [searchQuery]);
 
@@ -64,20 +70,28 @@ export default function AllergenPublicDishes({
   }, [dishes, searchNorm]);
 
   const closeModal = useCallback(() => setSelected(null), []);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
-    if (!selected) return undefined;
-    const onKey = (e) => {
-      if (e.key === "Escape") closeModal();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [selected, closeModal]);
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (selected) {
+      if (!dialog.open) dialog.showModal();
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    function onCancel(e) {
+      e.preventDefault();
+      closeModal();
+    }
+    dialog.addEventListener("cancel", onCancel);
+    return () => dialog.removeEventListener("cancel", onCancel);
+  }, [closeModal]);
 
   if (!dishes.length && !infoRows.length && !catalogRows.length) {
     return (
@@ -193,18 +207,18 @@ export default function AllergenPublicDishes({
       ) : null}
 
       {selected ? (
-        <div
+        <dialog
+          ref={dialogRef}
           className="allergen-modal"
-          role="presentation"
-          onClick={closeModal}
+          aria-labelledby="allergen-modal-title"
         >
-          <div
-            className="allergen-modal__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="allergen-modal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <button
+            type="button"
+            className="allergen-modal__backdrop"
+            aria-label={t("allergens.modalClose")}
+            onClick={closeModal}
+          />
+          <div className="allergen-modal__panel">
             <button
               type="button"
               className="allergen-modal__close"
@@ -253,7 +267,7 @@ export default function AllergenPublicDishes({
               {t("allergens.modalClose")}
             </button>
           </div>
-        </div>
+        </dialog>
       ) : null}
     </>
   );

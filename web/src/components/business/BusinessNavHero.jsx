@@ -21,22 +21,22 @@ export default function BusinessNavHero({ navigate, compact = false, showCopilot
           {showCopilot ? <BusinessNavHeroAskAi /> : null}
         </div>
       ) : null}
-      <div className="business-nav-hero__tiles" role="list">
+      <ul className="business-nav-hero__tiles">
         {DAKINIS_BUSINESS_TILES.map((tile) => (
-          <button
-            key={tile.key}
-            type="button"
-            role="listitem"
-            className="business-nav-hero__tile"
-            onClick={() => navigate(tile.path)}
-          >
-            <span className="business-nav-hero__icon" aria-hidden>
-              {tile.icon}
-            </span>
-            <span className="business-nav-hero__label">{t(`businessDemo.hero.tiles.${tile.key}`)}</span>
-          </button>
+          <li key={tile.key}>
+            <button
+              type="button"
+              className="business-nav-hero__tile"
+              onClick={() => navigate(tile.path)}
+            >
+              <span className="business-nav-hero__icon" aria-hidden>
+                {tile.icon}
+              </span>
+              <span className="business-nav-hero__label">{t(`businessDemo.hero.tiles.${tile.key}`)}</span>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

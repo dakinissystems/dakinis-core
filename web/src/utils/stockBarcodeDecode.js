@@ -32,7 +32,7 @@ export function dakinisIsPlausibleBarcode(code) {
  * @param {(code: string) => void} onConfirmed
  * @param {{ onPreview?: (code: string) => void, minHits?: number, windowMs?: number, cooldownMs?: number }} [opts]
  */
-export function dakinisCreateStableBarcodeEmitter(onConfirmed, opts = {}) {
+function dakinisCreateStableBarcodeEmitter(onConfirmed, opts = {}) {
   const minHits = opts.minHits ?? 4;
   const windowMs = opts.windowMs ?? 500;
   const cooldownMs = opts.cooldownMs ?? 3000;

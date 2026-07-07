@@ -127,7 +127,11 @@ export default function WhatsappAiTab({ t, session }) {
       </div>
 
       <form onSubmit={onSubmit} className="wa-ai-tab__form">
+        <label className="sr-only" htmlFor="wa-ai-query">
+          {t("app.whatsapp.aiPlaceholder")}
+        </label>
         <textarea
+          id="wa-ai-query"
           rows={3}
           value={query}
           onChange={(e) => setQuery(e.target.value)}

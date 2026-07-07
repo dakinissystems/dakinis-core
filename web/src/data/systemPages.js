@@ -1,7 +1,3 @@
-import { dakinisGetSystemPageContent } from "./getSystemPageContent.js";
-
-export { dakinisGetSystemPageContent };
-
 export const DAKINIS_SYSTEM_MOCKUPS = {
   clinica: {
     entityLabel: "paciente",
