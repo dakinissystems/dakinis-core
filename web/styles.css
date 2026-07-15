@@ -3496,10 +3496,15 @@ dialog.restaurant-mesa-modal::backdrop {
   }
 
   .topbar-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.55rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.55rem 0;
+  }
+
+  .brand {
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   .topbar-brand-sub {
@@ -3507,39 +3512,47 @@ dialog.restaurant-mesa-modal::backdrop {
   }
 
   .topbar-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.4rem;
-    align-items: stretch;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    align-items: center;
   }
 
   .topbar-app-nav {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.35rem;
     overflow: visible;
-    flex-wrap: wrap;
     padding-bottom: 0;
   }
 
-  .topbar-app-nav .btn,
-  .topbar-actions > .btn,
-  .topbar-actions > .btn-outline,
-  .topbar-actions > a.btn {
+  .topbar-app-nav .btn {
     width: 100%;
     min-height: 2.5rem;
     white-space: normal;
     text-align: center;
   }
 
+  .topbar-actions > .btn,
+  .topbar-actions > .btn-outline,
+  .topbar-actions > a.btn {
+    width: auto;
+    min-height: 2.5rem;
+    white-space: nowrap;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
   .topbar-actions .lead {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
     width: 100%;
     max-width: none;
-    order: unset;
     font-size: 0.8rem;
     text-align: center;
   }
@@ -3559,22 +3572,19 @@ dialog.restaurant-mesa-modal::backdrop {
     overflow-x: clip;
   }
 
-  .topbar--demo-view .topbar-actions {
-    grid-template-columns: 1fr;
-  }
-
   .topbar-actions .lang-switch {
-    justify-self: stretch;
+    flex-shrink: 0;
   }
 
   .topbar-actions > .topbar-guest-actions {
-    grid-column: 1 / -1;
-    width: 100%;
+    width: auto;
     justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
   }
 
   .topbar-actions .copilot-bar {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
     width: 100%;
   }
 
@@ -6416,7 +6426,29 @@ dialog.dakinis-cmdk-dialog::backdrop {
 }
 
 .dakinis-hub-nav-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.82rem;
+}
+
+@media (max-width: 520px) {
+  .dakinis-hub-nav-search__label {
+    display: none;
+  }
+
+  .dakinis-hub-nav-search {
+    min-width: 2.5rem;
+    justify-content: center;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .topbar-login-btn {
+    font-size: 0.78rem;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
 }
 
 .dakinis-empty-state { text-align: center; max-width: 28rem; margin: 1rem auto; padding: 0.5rem; }

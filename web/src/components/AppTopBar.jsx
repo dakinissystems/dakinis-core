@@ -100,7 +100,10 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
             aria-label={HUB_NAV_SLOTS.search.label}
             onClick={() => window.dispatchEvent(new CustomEvent("dakinis:open-command-palette"))}
           >
-            🔍 {HUB_NAV_SLOTS.search.label}
+            <span className="dakinis-hub-nav-search__icon" aria-hidden="true">
+              🔍
+            </span>
+            <span className="dakinis-hub-nav-search__label">{HUB_NAV_SLOTS.search.label}</span>
           </button>
           {session?.user?.email ? (
             <>
