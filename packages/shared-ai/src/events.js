@@ -33,12 +33,17 @@ export const DAKINIS_EVENTS = {
 
   // StreamAutomator
   STREAM_SCHEDULED: "stream.scheduled",
+  STREAM_STARTED: "stream.started",
+  STREAM_ENDED: "stream.ended",
   STREAM_PUBLISHED: "stream.published",
   POST_PUBLISHED: "stream.post_published",
 
   // AkoeNet
   MEMBER_JOINED: "community.member_joined",
   MESSAGE_CREATED: "community.message_created",
+
+  // AkoeNet Assistant
+  AKOENET_ASSISTANT_ASK: "akoenet.assistant.ask",
 
   // Platform
   NOTIFICATION_REQUESTED: "notifications.requested",
@@ -59,21 +64,21 @@ export const EVENT_BUS_QUEUES = {
   deadLetter: { name: "dakinis.dlq", concurrency: 1, retries: 0 },
 };
 
-/** @typedef {{ event: string; payload: object; userId?: string; tenantId?: string; source: string; at?: string }} PlatformEvent */
+import { createDomainEvent } from "./event-contract.js";
 
 /**
  * @param {string} type
  * @param {object} payload
  * @param {{ userId?: string; tenantId?: string; source?: string }} [meta]
- * @returns {PlatformEvent}
+ * @returns {import('./event-contract.js').DomainEventEnvelope}
  */
 export function createPlatformEvent(type, payload, meta = {}) {
-  return {
-    event: type,
-    payload,
-    userId: meta.userId,
-    tenantId: meta.tenantId,
+  return createDomainEvent(type, payload, {
     source: meta.source || "unknown",
-    at: new Date().toISOString(),
-  };
+    tenantId: meta.tenantId,
+    actorId: meta.userId,
+    userId: meta.userId,
+  });
 }
+
+export { createDomainEvent } from "./event-contract.js";

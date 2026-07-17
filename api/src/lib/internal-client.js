@@ -1,18 +1,30 @@
 /**
- * Cliente HTTP hacia dakinis-internal-api (Hub dashboard, eventos).
+ * Cliente HTTP hacia dakinis-internal-api (Hub dashboard, eventos, tenant-access).
  */
 
-function dakinisInternalBaseUrl() {
-  const direct = (process.env.DAKINIS_INTERNAL_URL || "").replace(/\/$/, "");
+/** @returns {string} Internal API base without trailing slash */
+export function dakinisInternalBaseUrl() {
+  const direct = (
+    process.env.DAKINIS_INTERNAL_URL ||
+    process.env.DAKINIS_INTERNAL_API_URL ||
+    process.env.HUB_INTERNAL_URL ||
+    ""
+  ).replace(/\/$/, "");
   if (direct) return direct;
   const gateway = (process.env.DAKINIS_GATEWAY_URL || "").replace(/\/$/, "");
   if (gateway) return `${gateway}/internal`;
+  if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID) {
+    return "http://dakinis-internal-api.railway.internal:4083";
+  }
   return "http://dakinis-internal-api.railway.internal:4083";
 }
 
-function dakinisInternalServiceKey() {
+export function dakinisInternalServiceKey() {
   return String(
-    process.env.DAKINIS_INTERNAL_SERVICE_KEY || process.env.INTERNAL_API_KEY || ""
+    process.env.DAKINIS_INTERNAL_SERVICE_KEY ||
+      process.env.DAKINIS_INTERNAL_API_KEY ||
+      process.env.INTERNAL_API_KEY ||
+      "",
   ).trim();
 }
 
@@ -21,7 +33,7 @@ function dakinisInternalServiceKey() {
  * @param {RequestInit} [init]
  */
 export async function dakinisInternalRequest(path, init = {}) {
-  const url = `${dakinisInternalBaseUrl()}${path}`;
+  const url = `${dakinisInternalBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
   const key = dakinisInternalServiceKey();
   const headers = {
     Accept: "application/json",
@@ -39,9 +51,10 @@ export async function dakinisInternalRequest(path, init = {}) {
 export function dakinisInternalConfigured() {
   return Boolean(
     process.env.DAKINIS_INTERNAL_URL ||
+      process.env.DAKINIS_INTERNAL_API_URL ||
+      process.env.HUB_INTERNAL_URL ||
       process.env.DAKINIS_GATEWAY_URL ||
-      process.env.DAKINIS_INTERNAL_SERVICE_KEY ||
-      process.env.INTERNAL_API_KEY
+      dakinisInternalServiceKey(),
   );
 }
 

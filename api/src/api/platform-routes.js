@@ -12,6 +12,12 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } 
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
+import {
+  dakinisInternalBaseUrl,
+  dakinisInternalConfigured,
+  dakinisInternalRequest,
+  dakinisInternalServiceKey,
+} from "../lib/internal-client.js";
 
 const PLATFORM_CATALOG_KV_KEY = "hub_catalog";
 const HUB_DEFAULT_PRODUCTS = ["core"];
@@ -67,30 +73,22 @@ function dakinisNormalizeHubProducts(list) {
 }
 
 async function dakinisSyncHubTenantAccess(slug, products) {
-  const base = (
-    process.env.DAKINIS_INTERNAL_API_URL ||
-    process.env.HUB_INTERNAL_URL ||
-    ""
-  ).replace(/\/$/, "");
-  const key =
-    process.env.DAKINIS_INTERNAL_SERVICE_KEY || process.env.DAKINIS_INTERNAL_API_KEY || "";
-  if (!base || !key) {
+  if (!dakinisInternalConfigured() || !dakinisInternalServiceKey()) {
     console.warn("[platform] hub tenant sync skipped: missing internal API URL/key");
     return;
   }
   const normalized = dakinisNormalizeHubProducts(products);
   try {
-    const res = await fetch(`${base}/hub/tenant-access/${encodeURIComponent(slug)}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const { ok, status } = await dakinisInternalRequest(
+      `/hub/tenant-access/${encodeURIComponent(slug)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ products: normalized }),
       },
-      body: JSON.stringify({ products: normalized }),
-    });
-    if (!res.ok) {
-      console.warn("[platform] hub tenant sync failed", slug, res.status);
+    );
+    if (!ok) {
+      console.warn("[platform] hub tenant sync failed", slug, status, "base=", dakinisInternalBaseUrl());
     }
   } catch (err) {
     console.warn("[platform] hub tenant sync error", slug, err);
