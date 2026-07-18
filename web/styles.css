@@ -2557,9 +2557,7 @@ section {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  display: none;
   width: 100%;
   max-width: none;
   height: 100%;
@@ -2569,6 +2567,12 @@ section {
   border: none;
   background: transparent;
   animation: allergen-modal-fade 0.2s ease;
+}
+
+.allergen-modal[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 dialog.allergen-modal::backdrop {
@@ -2621,7 +2625,7 @@ dialog.allergen-modal::backdrop {
 }
 
 @media (min-width: 520px) {
-  .allergen-modal {
+  .allergen-modal[open] {
     align-items: center;
   }
 
@@ -2923,9 +2927,7 @@ dialog.allergen-modal::backdrop {
   position: fixed;
   inset: 0;
   z-index: 1250;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  display: none;
   width: 100%;
   max-width: none;
   height: 100%;
@@ -2934,6 +2936,12 @@ dialog.allergen-modal::backdrop {
   padding: clamp(0.5rem, 3vw, 1.5rem);
   border: none;
   background: transparent;
+}
+
+.restaurant-mesa-modal[open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 dialog.restaurant-mesa-modal::backdrop {
@@ -3005,7 +3013,7 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 @media (min-width: 520px) {
-  .restaurant-mesa-modal {
+  .restaurant-mesa-modal[open] {
     align-items: center;
   }
 
@@ -6210,9 +6218,9 @@ dialog.dakinis-cmdk-dialog {
   position: fixed;
   inset: 0;
   z-index: 500;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  /* Closed <dialog> must stay display:none. Author `display:flex` overrides UA
+     and leaves an invisible full-screen layer that steals all clicks. */
+  display: none;
   width: 100%;
   max-width: none;
   height: 100%;
@@ -6221,6 +6229,12 @@ dialog.dakinis-cmdk-dialog {
   padding: 12vh 1rem 1rem;
   border: none;
   background: transparent;
+}
+
+dialog.dakinis-cmdk-dialog[open] {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 dialog.dakinis-cmdk-dialog::backdrop {
