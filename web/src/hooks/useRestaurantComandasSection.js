@@ -33,7 +33,7 @@ export function useRestaurantComandasSection({
 
   const [state, dispatch] = useReducer(restaurantComandasReducer, {
     ...RESTAURANT_COMANDAS_INITIAL,
-    tables: dakinisDefaultFloorTables
+    tables: dakinisDefaultFloorTables()
   });
   const {
     menu,
@@ -141,10 +141,10 @@ export function useRestaurantComandasSection({
       ]);
       dispatch({
         type: "loaded",
-        menu: menuRes?.data?.menu ?? [],
+        menu: Array.isArray(menuRes?.data?.menu) ? menuRes.data.menu : [],
         brand: menuRes?.data?.brand ?? null,
-        orders: ordersRes?.data?.orders ?? [],
-        invoices: invRes?.data?.invoices ?? [],
+        orders: Array.isArray(ordersRes?.data?.orders) ? ordersRes.data.orders : [],
+        invoices: Array.isArray(invRes?.data?.invoices) ? invRes.data.invoices : [],
         tables: floorState.tables,
         tableSessions: floorState.sessions
       });
@@ -157,7 +157,10 @@ export function useRestaurantComandasSection({
     reload();
   }, [reload]);
 
-  const menuById = useMemo(() => new Map(menu.map((m) => [m.id, m])), [menu]);
+  const menuById = useMemo(() => {
+    const list = Array.isArray(menu) ? menu : [];
+    return new Map(list.map((m) => [m.id, m]));
+  }, [menu]);
 
   const cartLines = useMemo(() => {
     const lines = [];
@@ -179,10 +182,13 @@ export function useRestaurantComandasSection({
     [cartLines]
   );
 
-  const dayClose = useMemo(() => dakinisRestaurantDayCloseSummary(orders, t), [orders, t]);
+  const dayClose = useMemo(
+    () => dakinisRestaurantDayCloseSummary(Array.isArray(orders) ? orders : [], t),
+    [orders, t]
+  );
 
   const openOrders = useMemo(
-    () => orders.filter((o) => o.status !== "entregada" && o.status !== "cancelada"),
+    () => (Array.isArray(orders) ? orders : []).filter((o) => o.status !== "entregada" && o.status !== "cancelada"),
     [orders]
   );
 
@@ -193,7 +199,9 @@ export function useRestaurantComandasSection({
   );
 
   const occupiedTablesCount = useMemo(
-    () => tables.filter((tbl) => dakinisTableItemCount(tableSessions[tbl.id]?.cart) > 0).length,
+    () =>
+      (Array.isArray(tables) ? tables : []).filter((tbl) => dakinisTableItemCount(tableSessions[tbl.id]?.cart) > 0)
+        .length,
     [tables, tableSessions]
   );
 

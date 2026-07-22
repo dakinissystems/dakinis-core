@@ -1,6 +1,7 @@
 export default function SettingsAdoptionCard({ adoption, adoptionScores, businessValueScores }) {
-  const hasData =
-    adoption?.totals?.sessions > 0 || adoptionScores.length > 0 || businessValueScores.length > 0;
+  const scores = Array.isArray(adoptionScores) ? adoptionScores : [];
+  const valueScores = Array.isArray(businessValueScores) ? businessValueScores : [];
+  const hasData = adoption?.totals?.sessions > 0 || scores.length > 0 || valueScores.length > 0;
   if (!hasData) return null;
 
   return (
@@ -12,12 +13,12 @@ export default function SettingsAdoptionCard({ adoption, adoptionScores, busines
           {adoption.totals.totalMinutes} min totales
         </p>
       ) : null}
-      {adoptionScores.filter((r) => r.scorePct > 0).length > 0 ? (
+      {scores.filter((r) => r.scorePct > 0).length > 0 ? (
         <>
           <h4>Adoption Score</h4>
           <p className="lead">Tiempo en pantalla — qué abren y cuánto permanecen.</p>
           <ul>
-            {adoptionScores
+            {scores
               .filter((r) => r.scorePct > 0)
               .slice(0, 6)
               .map((row) => (
@@ -29,12 +30,12 @@ export default function SettingsAdoptionCard({ adoption, adoptionScores, busines
           </ul>
         </>
       ) : null}
-      {businessValueScores.filter((r) => r.scorePct > 0).length > 0 ? (
+      {valueScores.filter((r) => r.scorePct > 0).length > 0 ? (
         <>
           <h4>Business Value Score</h4>
           <p className="lead">Acciones reales — contactos, mensajes, deals, IA.</p>
           <ul>
-            {businessValueScores
+            {valueScores
               .filter((r) => r.scorePct > 0)
               .slice(0, 6)
               .map((row) => (

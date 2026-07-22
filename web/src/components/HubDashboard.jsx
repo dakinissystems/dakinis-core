@@ -29,7 +29,8 @@ function dakinisGreetingPeriod(locale) {
 }
 
 function dakinisCountApplicationTiles(tiles, session) {
-  return tiles.filter((tile) => {
+  const list = Array.isArray(tiles) ? tiles : [];
+  return list.filter((tile) => {
     if (tile.status === "roadmap") return false;
     if (tile.id === "my-business" && (!session?.business?.type || !dakinisSystemRegistry[session.business.type])) {
       return false;
