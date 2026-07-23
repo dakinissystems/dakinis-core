@@ -44,10 +44,6 @@ function dakinisTileLockReason(tile, session) {
   return null;
 }
 
-function dakinisTileDisabled(tile, session) {
-  return dakinisTileLockReason(tile, session) != null;
-}
-
 export default function HubPage() {
   const navigate = useNavigate();
   const { t, locale } = useLocale();
