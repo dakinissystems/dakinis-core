@@ -18,6 +18,12 @@ import {
   dakinisHandleApiRequest
 } from "./api/router.js";
 import {
+  dakinisHandleInventoryLocationsGet,
+  dakinisHandleInventoryLotResolveGet,
+  dakinisHandleInventoryReceivePost,
+  dakinisHandleInventorySummaryGet
+} from "./api/tenant-inventory.js";
+import {
   dakinisHandlePublicRestaurantAllergiesGet,
   dakinisHandleRestaurantFloorGet,
   dakinisHandleRestaurantFloorPatch,
@@ -197,6 +203,16 @@ export async function dakinisDispatch(req, rawBody, url) {
   const supplyAlertId = /^\/api\/tenant\/supply\/alerts\/([^/]+)$/.exec(path);
   if (supplyAlertId && req.method === "PATCH") return dakinisHandleSupplyAlertsPatch(req, supplyAlertId[1], rawBody);
   if (supplyAlertId && req.method === "DELETE") return dakinisHandleSupplyAlertsDelete(req, supplyAlertId[1]);
+
+  if (path === "/api/tenant/inventory/locations" && req.method === "GET")
+    return dakinisHandleInventoryLocationsGet(req);
+  if (path === "/api/tenant/inventory/summary" && req.method === "GET")
+    return dakinisHandleInventorySummaryGet(req);
+  if (path === "/api/tenant/inventory/receive" && req.method === "POST")
+    return dakinisHandleInventoryReceivePost(req, rawBody);
+  const inventoryLotResolve = /^\/api\/tenant\/inventory\/lots\/resolve\/([^/]+)$/.exec(path);
+  if (inventoryLotResolve && req.method === "GET")
+    return dakinisHandleInventoryLotResolveGet(req, decodeURIComponent(inventoryLotResolve[1]));
 
   if (path === "/api/tenant/restaurant/kitchen" && req.method === "GET") return dakinisHandleRestaurantKitchenGet(req);
   if (path === "/api/tenant/restaurant/floor" && req.method === "GET") return dakinisHandleRestaurantFloorGet(req);

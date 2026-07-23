@@ -171,16 +171,21 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         dakinisTenantJsonFetch("/api/tenant/inventory/locations", sess, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/inventory/summary", sess, fetchOpts)
       ]);
-      const locs = locRes?.data?.locations ?? [];
+      const locs = Array.isArray(locRes?.data?.locations) ? locRes.data.locations : [];
       dispatch({
         type: "loadedApi",
         locations: locs,
-        lots: sumRes?.data?.lots ?? [],
+        lots: Array.isArray(sumRes?.data?.lots) ? sumRes.data.lots : [],
         summary: sumRes?.data?.summary ?? { critical: 0, warning: 0, ok: 0, expired: 0 },
         byLocation: sumRes?.data?.byLocation ?? {},
         locationId: locationId || locs[0]?.id || ""
       });
     } catch (e) {
+      // API ausente o no provisionada: seed local sin ruido de error.
+      if (e?.status === 404 || e?.code === "NOT_FOUND") {
+        loadDemo();
+        return;
+      }
       dispatch({ type: "setError", error: e instanceof Error ? e.message : t("inventoryLots.loadError") });
       loadDemo();
     }
