@@ -93,6 +93,15 @@ function createNativeServer() {
         res.writeHead(result.status, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify(result.body));
       } catch (error) {
+        dakinisStructuredLog({
+          level: "error",
+          msg: "http_request",
+          server: "native",
+          method: req.method,
+          path: (req.url || "").split("?")[0],
+          status: 500,
+          error: error instanceof Error ? error.message : String(error)
+        });
         dakinisCaptureException(error, { path: req.url, method: req.method });
         res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
         res.end(
