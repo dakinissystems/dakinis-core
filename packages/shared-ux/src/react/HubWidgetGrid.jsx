@@ -1,7 +1,6 @@
 import { HUB_WIDGET_REGISTRY } from "../widgets.js";
 import { DashboardCard } from "../DashboardCard.jsx";
 import { getWidgetDisplay } from "../hub-widget-values.js";
-import { getWidgetQuickActions } from "../entity-quick-actions.js";
 import { dakinisHubProductEnabled } from "../../../shared-brand/src/hub-product-access.js";
 
 /**
@@ -13,7 +12,6 @@ export default function HubWidgetGrid({
   enabledProducts = null,
   section = null,
   onAction,
-  onQuickAction,
   t = (k) => k,
 }) {
   const safeWidgets = Array.isArray(widgets) ? widgets : HUB_WIDGET_REGISTRY;
@@ -32,7 +30,6 @@ export default function HubWidgetGrid({
     <div className="hub-widget-grid">
       {list.map((def) => {
         const display = getWidgetDisplay(def.id, widgetValues);
-        const quickActions = display.quickActions || getWidgetQuickActions(def.id);
         return (
           <DashboardCard
             key={def.id}
@@ -43,8 +40,6 @@ export default function HubWidgetGrid({
             status={display.status || def.product}
             aiHint={display.aiHint}
             actionLabel={display.actionLabel || (onAction ? t("hub.widgets.view") : undefined)}
-            quickActions={onQuickAction ? quickActions : []}
-            onQuickAction={onQuickAction ? (actionId) => onQuickAction(def.id, actionId) : undefined}
             onAction={onAction ? () => onAction(def.id) : undefined}
             onAiHintAction={onAction ? () => onAction(`${def.id}-ai`) : undefined}
           />
