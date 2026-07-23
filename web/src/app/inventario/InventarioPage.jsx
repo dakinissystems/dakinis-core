@@ -9,13 +9,10 @@ export default function InventarioPage({ navigate }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
   const isDemo = dakinisIsBusinessDemoSession(session);
-  const restaurantRedirect =
-    session?.token && !isDemo && session.business?.type === "restaurante"
-      ? `/sistema/${encodeURIComponent(session.business.type)}`
-      : null;
 
-  if (restaurantRedirect) {
-    return <Navigate to={restaurantRedirect} replace />;
+  // Restaurante: inventario operativo vive en el vertical (stock + lotes).
+  if (session?.token && !isDemo && session.business?.type === "restaurante") {
+    return <Navigate to={`/sistema/${encodeURIComponent(session.business.type)}`} replace />;
   }
 
   if (!session?.token) {
@@ -30,10 +27,6 @@ export default function InventarioPage({ navigate }) {
         </div>
       </section>
     );
-  }
-
-  if (!isDemo && session.business?.type === "restaurante") {
-    return null;
   }
 
   return (

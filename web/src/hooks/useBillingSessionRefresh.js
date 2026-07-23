@@ -9,16 +9,19 @@ export function useBillingSessionRefresh() {
   const token = session?.token;
   const isPlatformAdmin = session?.user?.role === "platform_admin";
   const refreshedForToken = useRef(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   useEffect(() => {
     if (!token || isPlatformAdmin) return undefined;
     if (refreshedForToken.current === token) return undefined;
 
     let cancelled = false;
+    const sess = sessionRef.current;
 
     (async () => {
       try {
-        const json = await dakinisTenantJsonFetch("/api/me", { token });
+        const json = await dakinisTenantJsonFetch("/api/me", sess);
         const business = json?.data?.business;
         if (!business || cancelled) return;
 

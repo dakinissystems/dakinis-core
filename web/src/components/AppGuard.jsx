@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
@@ -10,6 +10,8 @@ export default function AppGuard({ children }) {
   const [valid, setValid] = useState(false);
 
   const token = session?.token;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   useEffect(() => {
     if (!token) {
@@ -19,7 +21,9 @@ export default function AppGuard({ children }) {
     }
 
     let cancelled = false;
-    dakinisTenantJsonFetch("/api/me", { token })
+    const sess = sessionRef.current;
+
+    dakinisTenantJsonFetch("/api/me", sess)
       .then(() => {
         if (cancelled) return;
         setValid(true);
@@ -28,15 +32,23 @@ export default function AppGuard({ children }) {
       .catch((err) => {
         if (cancelled) return;
         const code = err?.code;
-        if (err?.status === 401 && (code === "UNAUTHORIZED" || code === "INVALID_TOKEN")) {
+        const isAuthFailure =
+          err?.status === 401 && (code === "UNAUTHORIZED" || code === "INVALID_TOKEN");
+
+        if (isAuthFailure) {
           try {
             sessionStorage.setItem("dakinis_session_expired", "1");
           } catch {
             /* ignore */
           }
           logout();
+          setValid(false);
+          setChecked(true);
+          return;
         }
-        setValid(false);
+
+        // 429 / red / MISSING_TENANT transitorio: no expulsar si hay JWT local.
+        setValid(true);
         setChecked(true);
       });
 
