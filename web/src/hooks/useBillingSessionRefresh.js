@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisBearerJsonFetch } from "../services/api.js";
 import { dakinisBusinessIdentityFingerprint } from "../utils/sessionIdentity.js";
 
 /** Refresca accessState/plan en sesión tras login (una vez por token; sin bucle setSession). */
@@ -9,19 +9,16 @@ export function useBillingSessionRefresh() {
   const token = session?.token;
   const isPlatformAdmin = session?.user?.role === "platform_admin";
   const refreshedForToken = useRef(null);
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
 
   useEffect(() => {
     if (!token || isPlatformAdmin) return undefined;
     if (refreshedForToken.current === token) return undefined;
 
     let cancelled = false;
-    const sess = sessionRef.current;
 
     (async () => {
       try {
-        const json = await dakinisTenantJsonFetch("/api/me", sess);
+        const json = await dakinisBearerJsonFetch("/api/me", token);
         const business = json?.data?.business;
         if (!business || cancelled) return;
 

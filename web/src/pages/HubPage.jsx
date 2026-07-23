@@ -109,10 +109,16 @@ export default function HubPage() {
       tileId: tile.id,
       kind: "module"
     });
-    if (dakinisTileDisabled(tile, session)) {
+    const lock = dakinisTileLockReason(tile, session);
+    if (lock === "login") {
       navigate("/login");
       return;
     }
+    if (lock === "plan") {
+      navigate("/precios");
+      return;
+    }
+    if (lock) return;
     const path = dakinisResolveTilePath(tile, session);
     navigate(path);
   }

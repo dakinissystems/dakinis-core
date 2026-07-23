@@ -14,11 +14,18 @@ import { HUB_NAV_SLOTS } from "@dakinis/shared-ux/hub-nav.js";
 
 const DAKINIS_BUSINESS_NAV = [
   { path: "/app/crm", labelKey: "appNav.clients" },
-  { path: "/app/inventario", labelKey: "appNav.inventory" },
+  { path: "/app/inventario", labelKey: "appNav.inventory", id: "inventory" },
   { path: "/app/ventas", labelKey: "appNav.sales" },
   { path: "/app/reportes", labelKey: "appNav.reports" },
   { path: "/app/whatsapp", labelKey: "appNav.whatsapp" }
 ];
+
+function dakinisBusinessNavPath(item, session) {
+  if (item.id === "inventory" && session?.business?.type === "restaurante") {
+    return `/sistema/${encodeURIComponent(session.business.type)}`;
+  }
+  return item.path;
+}
 
 function TopbarPackagesButton({ navigate, currentPath, t }) {
   const isActive = currentPath === "/precios" || currentPath.startsWith("/precios/");
@@ -113,16 +120,19 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               ) : null}
               {isBusinessFacing && !isSystemDemoView ? (
                 <div className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
-                  {DAKINIS_BUSINESS_NAV.map((item) => (
-                    <button
-                      key={item.path}
-                      type="button"
-                      className={`btn btn-outline${isActive(item.path) ? " is-active" : ""}`}
-                      onClick={() => navigate(item.path)}
-                    >
-                      {t(item.labelKey)}
-                    </button>
-                  ))}
+                  {DAKINIS_BUSINESS_NAV.map((item) => {
+                    const path = dakinisBusinessNavPath(item, session);
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        className={`btn btn-outline${isActive(path) || isActive(item.path) ? " is-active" : ""}`}
+                        onClick={() => navigate(path)}
+                      >
+                        {t(item.labelKey)}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : null}
 

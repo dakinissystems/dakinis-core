@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisBearerJsonFetch } from "../services/api.js";
 
 /** Redirige a login si no hay sesión JWT en rutas /app/*. Valida token antes de montar hijos. */
 export default function AppGuard({ children }) {
@@ -10,8 +10,6 @@ export default function AppGuard({ children }) {
   const [valid, setValid] = useState(false);
 
   const token = session?.token;
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
 
   useEffect(() => {
     if (!token) {
@@ -21,9 +19,9 @@ export default function AppGuard({ children }) {
     }
 
     let cancelled = false;
-    const sess = sessionRef.current;
 
-    dakinisTenantJsonFetch("/api/me", sess)
+    // /api/me resuelve tenant desde el JWT (tenantId); no exige x-business-id en el cliente.
+    dakinisBearerJsonFetch("/api/me", token)
       .then(() => {
         if (cancelled) return;
         setValid(true);
