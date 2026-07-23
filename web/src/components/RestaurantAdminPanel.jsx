@@ -22,9 +22,16 @@ export default function RestaurantAdminPanel({
   const [sessions, setSessions] = useState({});
   const [menu, setMenu] = useState([]);
   const [menuDraft, setMenuDraft] = useState({});
+  const [newProduct, setNewProduct] = useState({
+    nameEs: "",
+    category: "",
+    priceEur: "",
+    description: ""
+  });
   const [floorBusy, setFloorBusy] = useState(false);
   const [menuBusy, setMenuBusy] = useState(false);
   const [error, setError] = useState("");
+  const [menuNotice, setMenuNotice] = useState("");
   const [selectedTableId, setSelectedTableId] = useState(null);
 
   const fetchOpts = useMemo(
@@ -85,6 +92,7 @@ export default function RestaurantAdminPanel({
   async function saveMenuPrices() {
     setMenuBusy(true);
     setError("");
+    setMenuNotice("");
     try {
       const items = menu.map((it) => ({
         id: it.id,
@@ -95,11 +103,56 @@ export default function RestaurantAdminPanel({
         method: "PATCH",
         body: { items }
       });
-      const next = json?.data?.menu ?? items;
+      const next = Array.isArray(json?.data?.menu) ? json.data.menu : menu;
       setMenu(next);
       setMenuDraft(Object.fromEntries(next.map((it) => [it.id, String(it.priceEur ?? "")])));
+      setMenuNotice(t("restaurant.adminPricesSaved"));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("restaurant.menuSaveError"));
+    } finally {
+      setMenuBusy(false);
+    }
+  }
+
+  async function addMenuProduct(event) {
+    event.preventDefault();
+    const nameEs = String(newProduct.nameEs || "").trim();
+    if (!nameEs) {
+      setError(t("restaurant.adminProductNameRequired"));
+      return;
+    }
+    const priceEur = Number(newProduct.priceEur);
+    if (!Number.isFinite(priceEur) || priceEur < 0) {
+      setError(t("restaurant.adminProductPriceRequired"));
+      return;
+    }
+
+    setMenuBusy(true);
+    setError("");
+    setMenuNotice("");
+    try {
+      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, {
+        ...fetchOpts,
+        method: "PATCH",
+        body: {
+          create: [
+            {
+              nameEs,
+              name: nameEs,
+              category: String(newProduct.category || "").trim() || t("restaurant.adminProductCategoryDefault"),
+              priceEur,
+              description: String(newProduct.description || "").trim()
+            }
+          ]
+        }
+      });
+      const next = Array.isArray(json?.data?.menu) ? json.data.menu : menu;
+      setMenu(next);
+      setMenuDraft(Object.fromEntries(next.map((it) => [it.id, String(it.priceEur ?? "")])));
+      setNewProduct({ nameEs: "", category: "", priceEur: "", description: "" });
+      setMenuNotice(t("restaurant.adminProductAdded", { name: nameEs }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("restaurant.adminProductAddError"));
     } finally {
       setMenuBusy(false);
     }
@@ -143,6 +196,7 @@ export default function RestaurantAdminPanel({
 
       <article className="card" style={{ marginTop: "1rem" }}>
         <h4 style={{ marginTop: 0 }}>{t("restaurant.adminPricesTitle")}</h4>
+        <p className="kpi-label">{t("restaurant.adminPricesLead")}</p>
         {menu.length === 0 ? (
           <p className="lead">{t("restaurant.adminPricesEmpty")}</p>
         ) : (
@@ -150,6 +204,7 @@ export default function RestaurantAdminPanel({
             <thead>
               <tr>
                 <th>{t("fermina.colItem")}</th>
+                <th>{t("restaurant.adminProductCategory")}</th>
                 <th>{t("restaurant.priceEur")}</th>
               </tr>
             </thead>
@@ -157,6 +212,7 @@ export default function RestaurantAdminPanel({
               {menu.map((item) => (
                 <tr key={item.id}>
                   <td>{item.nameEs || item.name}</td>
+                  <td>{item.category || "—"}</td>
                   <td>
                     <input
                       type="number"
@@ -183,8 +239,82 @@ export default function RestaurantAdminPanel({
           disabled={menuBusy || !menu.length}
           onClick={saveMenuPrices}
         >
-          {t("restaurant.adminPricesSave")}
+          {menuBusy ? t("restaurant.saving") : t("restaurant.adminPricesSave")}
         </button>
+        {menuNotice ? (
+          <p className="kpi-label" style={{ marginTop: "0.5rem", color: "#86efac" }}>
+            {menuNotice}
+          </p>
+        ) : null}
+      </article>
+
+      <article className="card" style={{ marginTop: "1rem" }}>
+        <h4 style={{ marginTop: 0 }}>{t("restaurant.adminProductAddTitle")}</h4>
+        <p className="kpi-label">{t("restaurant.adminProductAddLead")}</p>
+        <form className="restaurant-admin__add-product" onSubmit={addMenuProduct}>
+          <div
+            style={{
+              display: "grid",
+              gap: "0.75rem",
+              gridTemplateColumns: "repeat(auto-fit, minmax(11rem, 1fr))",
+              marginTop: "0.75rem"
+            }}
+          >
+            <label className="kpi-label">
+              {t("restaurant.adminProductName")}
+              <input
+                type="text"
+                required
+                value={newProduct.nameEs}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, nameEs: e.target.value }))}
+                placeholder={t("restaurant.adminProductNamePlaceholder")}
+                style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+              />
+            </label>
+            <label className="kpi-label">
+              {t("restaurant.adminProductCategory")}
+              <input
+                type="text"
+                value={newProduct.category}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, category: e.target.value }))}
+                placeholder={t("restaurant.adminProductCategoryPlaceholder")}
+                list="restaurant-menu-categories"
+                style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+              />
+              <datalist id="restaurant-menu-categories">
+                {[...new Set(menu.map((it) => it.category).filter(Boolean))].map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
+            </label>
+            <label className="kpi-label">
+              {t("restaurant.priceEur")}
+              <input
+                type="number"
+                required
+                step="0.01"
+                min="0"
+                value={newProduct.priceEur}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, priceEur: e.target.value }))}
+                placeholder="0.00"
+                style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+              />
+            </label>
+          </div>
+          <label className="kpi-label" style={{ display: "block", marginTop: "0.75rem" }}>
+            {t("restaurant.adminProductDescription")}
+            <input
+              type="text"
+              value={newProduct.description}
+              onChange={(e) => setNewProduct((prev) => ({ ...prev, description: e.target.value }))}
+              placeholder={t("restaurant.adminProductDescriptionPlaceholder")}
+              style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+            />
+          </label>
+          <button type="submit" className="btn" style={{ marginTop: "0.75rem" }} disabled={menuBusy}>
+            {menuBusy ? t("restaurant.saving") : t("restaurant.adminProductAddSave")}
+          </button>
+        </form>
       </article>
 
       {suppliers ? (

@@ -3,6 +3,7 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
 import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { dakinisSlugFromName } from "@dakinis/shared/catalog/stock-barcodes.js";
 
 const ENTITY_ORDER = "restaurant_order";
 const ENTITY_INVOICE = "restaurant_invoice";
@@ -78,6 +79,105 @@ export async function dakinisHandleRestaurantMenuGet(req) {
       brand,
       menu,
       isFermina: biz?.slug === DAKINIS_FERMINA_HOUSE_SLUG
+    },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
+function dakinisNormalizeMenuPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n * 100) / 100;
+}
+
+function dakinisUniqueMenuItemId(baseId, existingIds) {
+  let id = baseId || dakinisNewId("dish");
+  if (!existingIds.has(id)) return id;
+  let i = 2;
+  while (existingIds.has(`${id}-${i}`)) i += 1;
+  return `${id}-${i}`;
+}
+
+/** PATCH: actualizar precios y/o crear platos en config_json.menu.items */
+export async function dakinisHandleRestaurantMenuPatch(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const businessId = req.dakinisBusiness.id;
+  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
+  let config = {};
+  try {
+    config = JSON.parse(biz?.config_json || "{}");
+  } catch {
+    config = {};
+  }
+
+  const menuRoot = config.menu && typeof config.menu === "object" ? { ...config.menu } : {};
+  const items = Array.isArray(menuRoot.items) ? menuRoot.items.map((it) => ({ ...it })) : [];
+  const byId = new Map(items.map((it) => [it.id, it]));
+
+  const priceUpdates = Array.isArray(body.items) ? body.items : [];
+  for (const patch of priceUpdates) {
+    const id = typeof patch?.id === "string" ? patch.id.trim() : "";
+    if (!id || !byId.has(id)) continue;
+    if (patch.priceEur === undefined && patch.price === undefined) continue;
+    const price = dakinisNormalizeMenuPrice(patch.priceEur ?? patch.price);
+    if (price === null) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", `Precio invalido para ${id}`);
+    }
+    byId.get(id).priceEur = price;
+  }
+
+  const createList = Array.isArray(body.create) ? body.create : body.create ? [body.create] : [];
+  const existingIds = new Set(byId.keys());
+
+  for (const raw of createList) {
+    const nameEs = String(raw?.nameEs || raw?.name || "").trim();
+    if (!nameEs) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", "Cada producto necesita un nombre");
+    }
+    const price = dakinisNormalizeMenuPrice(raw?.priceEur ?? raw?.price ?? 0);
+    if (price === null) {
+      return dakinisJsonError(400, "VALIDATION_ERROR", `Precio invalido para ${nameEs}`);
+    }
+    const category = String(raw?.category || "Otros").trim() || "Otros";
+    const description = String(raw?.description || "").trim();
+    const requestedId =
+      typeof raw?.id === "string" && raw.id.trim()
+        ? raw.id.trim()
+        : dakinisSlugFromName(nameEs) || dakinisNewId("dish");
+    const id = dakinisUniqueMenuItemId(requestedId, existingIds);
+    existingIds.add(id);
+
+    const item = {
+      id,
+      name: String(raw?.name || nameEs).trim(),
+      nameEs,
+      category,
+      priceEur: price
+    };
+    if (description) item.description = description;
+    items.push(item);
+    byId.set(id, item);
+  }
+
+  menuRoot.items = items;
+  config.menu = menuRoot;
+
+  await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
+
+  return dakinisJsonSuccess(
+    {
+      venueName: req.dakinisBusiness.name,
+      slug: req.dakinisBusiness.slug,
+      brand: menuRoot.brand ?? config.brand ?? null,
+      menu: items
     },
     req.dakinisBusiness.type,
     dakinisMeta(req)

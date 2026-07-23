@@ -37,6 +37,7 @@ import {
   dakinisHandleRestaurantInvoicesList,
   dakinisHandleRestaurantInvoicesPost,
   dakinisHandleRestaurantMenuGet,
+  dakinisHandleRestaurantMenuPatch,
   dakinisHandleRestaurantOrdersList,
   dakinisHandleRestaurantOrdersPatch,
   dakinisHandleRestaurantOrdersPost
@@ -227,6 +228,8 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/profile" && req.method === "PATCH")
     return dakinisHandleRestaurantProfilePatch(req, rawBody);
   if (path === "/api/tenant/restaurant/menu" && req.method === "GET") return dakinisHandleRestaurantMenuGet(req);
+  if (path === "/api/tenant/restaurant/menu" && req.method === "PATCH")
+    return dakinisHandleRestaurantMenuPatch(req, rawBody);
   if (path === "/api/tenant/restaurant/orders" && req.method === "GET") return dakinisHandleRestaurantOrdersList(req);
   if (path === "/api/tenant/restaurant/orders" && req.method === "POST")
     return dakinisHandleRestaurantOrdersPost(req, rawBody);
