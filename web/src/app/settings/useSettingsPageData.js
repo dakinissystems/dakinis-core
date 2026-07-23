@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dakinisTenantJsonFetch } from "../../services/api.js";
 import {
   dakinisTenantProfile,
@@ -8,6 +8,7 @@ import {
   dakinisTenantPortalSettings,
   dakinisTenantTelemetryAdoption
 } from "../../services/tenant-intelligence.js";
+import { dakinisTenantFetchKey } from "../../utils/sessionIdentity.js";
 
 export default function useSettingsPageData(session) {
   const [allergiesUrl, setAllergiesUrl] = useState("");
@@ -21,50 +22,76 @@ export default function useSettingsPageData(session) {
   const [adoptionScores, setAdoptionScores] = useState([]);
   const [businessValueScores, setBusinessValueScores] = useState([]);
 
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const fetchKey = dakinisTenantFetchKey(session);
+
   useEffect(() => {
-    if (!session?.token) return;
-    dakinisTenantProfile(session)
+    const sess = sessionRef.current;
+    if (!sess?.token) return undefined;
+    let cancelled = false;
+
+    dakinisTenantProfile(sess)
       .then((json) => {
+        if (cancelled) return;
         setSettings(json?.data?.settings || null);
         setBranches(json?.data?.branches || []);
         setOnboarding(json?.data?.onboarding || null);
       })
       .catch(() => {});
-    dakinisTenantBillingSummary(session).then((j) => setBilling(j?.data?.billing || null)).catch(() => {});
-    dakinisTenantAiUsage(session).then((j) => setAiUsage(j?.data?.usage || null)).catch(() => {});
-    dakinisTenantTelemetryAdoption(session)
+    dakinisTenantBillingSummary(sess)
       .then((j) => {
+        if (!cancelled) setBilling(j?.data?.billing || null);
+      })
+      .catch(() => {});
+    dakinisTenantAiUsage(sess)
+      .then((j) => {
+        if (!cancelled) setAiUsage(j?.data?.usage || null);
+      })
+      .catch(() => {});
+    dakinisTenantTelemetryAdoption(sess)
+      .then((j) => {
+        if (cancelled) return;
         setAdoption(j?.data?.adoption || null);
         setAdoptionScores(j?.data?.adoptionScores || []);
         setBusinessValueScores(j?.data?.businessValueScores || []);
       })
       .catch(() => {});
-    dakinisTenantPortalSettings(session)
-      .then((j) =>
+    dakinisTenantPortalSettings(sess)
+      .then((j) => {
+        if (cancelled) return;
         setPortal({
           ...(j?.data?.portal || {}),
           suggestedFeatures: j?.data?.suggestedFeatures || []
-        })
-      )
-      .catch(() => {});
-    if (session?.business?.type !== "restaurante") return;
-    dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", session)
-      .then((json) => {
-        const token = json?.data?.profile?.publicToken;
-        if (token) setAllergiesUrl(`${window.location.origin}/alergenos/${token}`);
+        });
       })
       .catch(() => {});
-  }, [session]);
+    if (sess?.business?.type === "restaurante") {
+      dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", sess)
+        .then((json) => {
+          if (cancelled) return;
+          const token = json?.data?.profile?.publicToken;
+          if (token) setAllergiesUrl(`${window.location.origin}/alergenos/${token}`);
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchKey]);
 
   async function refreshBranches() {
-    if (!session?.token) return;
-    const json = await dakinisTenantBranches(session);
+    const sess = sessionRef.current;
+    if (!sess?.token) return;
+    const json = await dakinisTenantBranches(sess);
     setBranches(json?.data?.branches || []);
   }
 
   async function refreshOnboarding() {
-    if (!session?.token) return;
-    const json = await dakinisTenantProfile(session);
+    const sess = sessionRef.current;
+    if (!sess?.token) return;
+    const json = await dakinisTenantProfile(sess);
     setOnboarding(json?.data?.onboarding || null);
   }
 

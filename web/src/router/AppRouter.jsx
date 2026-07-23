@@ -122,7 +122,7 @@ function AppRoutes() {
     if (dakinisIsPlatformAdminSession(session) && location.pathname.startsWith("/sistema/")) {
       navigate("/admin", { replace: true });
     }
-  }, [session, location.pathname, navigate]);
+  }, [session?.token, session?.user?.role, location.pathname, navigate]);
 
   useDakinisFeatureTelemetry(session, location.pathname);
 

@@ -13,8 +13,10 @@ export default function ReportesPage({ navigate }) {
   const [benchmark, setBenchmark] = useState(null);
   const [benchmarkError, setBenchmarkError] = useState(false);
 
+  const sessionToken = session?.token;
+
   useEffect(() => {
-    if (!session?.token || isDemo) return;
+    if (!sessionToken || isDemo) return undefined;
     let cancelled = false;
     dakinisTenantBenchmark(session)
       .then((json) => {
@@ -26,7 +28,8 @@ export default function ReportesPage({ navigate }) {
     return () => {
       cancelled = true;
     };
-  }, [session, isDemo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- token identity only
+  }, [sessionToken, isDemo]);
 
   if (!session?.token) {
     return (

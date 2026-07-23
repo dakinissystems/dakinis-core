@@ -27,7 +27,7 @@ export default function DakinisCommandPaletteProvider() {
       if (!session?.token) return Promise.resolve([]);
       return dakinisFetchSearchHits(session, query, scope, { signal });
     },
-    [session]
+    [session?.token]
   );
 
   function runCommand(cmd) {

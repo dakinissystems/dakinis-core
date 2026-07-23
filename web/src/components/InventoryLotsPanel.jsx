@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   dakinisLotQrUrl,
   dakinisIsLotLabelCode
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 import { INVENTORY_LOTS_INITIAL, inventoryLotsReducer } from "./inventoryLotsReducer.js";
 import {
   InventoryLotsFridgesTab,
@@ -138,6 +139,9 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
     }),
     [tenantSlugForVertical, activeSystemKey]
   );
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+  const fetchKey = dakinisTenantFetchKey(apiSession, [tenantSlugForVertical, activeSystemKey]);
 
   const loadDemo = useCallback(() => {
     const demoLots = dakinisDemoLots();
@@ -160,11 +164,12 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
       loadDemo();
       return;
     }
+    const sess = apiSessionRef.current;
     dispatch({ type: "setError", error: "" });
     try {
       const [locRes, sumRes] = await Promise.all([
-        dakinisTenantJsonFetch("/api/tenant/inventory/locations", apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/inventory/summary", apiSession, fetchOpts)
+        dakinisTenantJsonFetch("/api/tenant/inventory/locations", sess, fetchOpts),
+        dakinisTenantJsonFetch("/api/tenant/inventory/summary", sess, fetchOpts)
       ]);
       const locs = locRes?.data?.locations ?? [];
       dispatch({
@@ -179,7 +184,7 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
       dispatch({ type: "setError", error: e instanceof Error ? e.message : t("inventoryLots.loadError") });
       loadDemo();
     }
-  }, [apiSession, fetchOpts, isDemo, loadDemo, locationId, t]);
+  }, [fetchKey, fetchOpts, isDemo, loadDemo, locationId, t]);
 
   useEffect(() => {
     reload();

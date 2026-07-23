@@ -31,7 +31,7 @@ export default function ProductHomePage() {
     if (session.business?.type && session.business.type !== "platform") {
       navigate("/app/dashboard", { replace: true });
     }
-  }, [session, navigate]);
+  }, [session?.token, session?.user?.role, session?.business?.type, navigate]);
 
   useEffect(() => {
     dakinisTrackEvent(DAKINIS_ANALYTICS_EVENTS.CORE_PAGE_VIEW, { surface: "product_home" });

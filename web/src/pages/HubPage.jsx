@@ -60,7 +60,8 @@ export default function HubPage() {
     if (session?.token) {
       dakinisPersistEcosystemSession(session);
     }
-  }, [session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- persist once per token
+  }, [session?.token]);
 
   const returnUrl = typeof window !== "undefined" ? window.location.href : undefined;
 

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 
 function dakinisSeverityStyle(severity) {
   if (severity === "warning") return { color: "#fb923c", fontWeight: 600 };
@@ -45,6 +46,9 @@ export function useSupplyDeliveriesAndAlerts({
   fallbackAlerts = EMPTY_STRING_LIST
 }) {
   const canMutate = Boolean(apiSession?.token);
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+  const supplyFetchKey = dakinisTenantFetchKey(apiSession, [tenantSlugForVertical, activeSystemKey]);
 
   const [deliveries, setDeliveries] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -55,7 +59,8 @@ export function useSupplyDeliveriesAndAlerts({
 
   const loadSupply = useCallback(
     async (signal) => {
-      if (!apiSession?.token) {
+      const sess = apiSessionRef.current;
+      if (!sess?.token) {
         setLoadError("");
         setLoading(false);
         setDeliveries(
@@ -72,12 +77,12 @@ export function useSupplyDeliveriesAndAlerts({
       setLoading(true);
       try {
         const [dJson, aJson] = await Promise.all([
-          dakinisTenantJsonFetch("/api/tenant/supply/deliveries", apiSession, {
+          dakinisTenantJsonFetch("/api/tenant/supply/deliveries", sess, {
             signal,
             businessId: tenantSlugForVertical,
             businessTypeHeader: activeSystemKey
           }),
-          dakinisTenantJsonFetch("/api/tenant/supply/alerts", apiSession, {
+          dakinisTenantJsonFetch("/api/tenant/supply/alerts", sess, {
             signal,
             businessId: tenantSlugForVertical,
             businessTypeHeader: activeSystemKey
@@ -102,7 +107,7 @@ export function useSupplyDeliveriesAndAlerts({
         setLoading(false);
       }
     },
-    [apiSession, tenantSlugForVertical, activeSystemKey, fallbackDeliveries, fallbackAlerts]
+    [supplyFetchKey, tenantSlugForVertical, activeSystemKey, fallbackDeliveries, fallbackAlerts]
   );
 
   useEffect(() => {

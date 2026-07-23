@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import {
@@ -11,6 +11,7 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisReadRestaurantRole, dakinisWriteRestaurantRole } from "../utils/restaurantRoleStorage.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
+import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
@@ -48,6 +49,10 @@ export function useSystemPage(activeSystemKey) {
     };
   }, [session, tenantSlugForVertical, activeSystemKey]);
 
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+  const recordsFetchKey = dakinisTenantFetchKey(apiSession, [tenantSlugForVertical, activeSystemKey, entityName]);
+
   const [records, setRecords] = useState(() => [...activeMockup.initialRecords]);
   const [recordsError, setRecordsError] = useState("");
   const [recordsSynced, setRecordsSynced] = useState(false);
@@ -75,11 +80,12 @@ export function useSystemPage(activeSystemKey) {
 
   const reloadRecordsFromApi = useCallback(
     async (signal) => {
+      const sess = apiSessionRef.current;
       setRecordsError("");
       try {
         const json = await dakinisTenantJsonFetch(
           `/api/tenant/mock-records?entity=${encodeURIComponent(entityName)}`,
-          apiSession,
+          sess,
           {
             signal,
             businessId: tenantSlugForVertical,
@@ -97,7 +103,7 @@ export function useSystemPage(activeSystemKey) {
         setRecordsSynced(false);
       }
     },
-    [apiSession, entityName, tenantSlugForVertical, activeSystemKey, t]
+    [recordsFetchKey, entityName, tenantSlugForVertical, activeSystemKey, t]
   );
 
   useEffect(() => {

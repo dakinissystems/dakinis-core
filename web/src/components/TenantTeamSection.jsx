@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 import PasswordInput from "./PasswordInput.jsx";
 
 function dakinisRoleLabel(role) {
@@ -29,13 +30,22 @@ export default function TenantTeamSection({
   const [editEmail, setEditEmail] = useState("");
   const [teamMsg, setTeamMsg] = useState("");
 
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+  const teamFetchKey = dakinisTenantFetchKey(apiSession, [
+    tenantSlugForVertical,
+    activeSystemKey,
+    session?.user?.role
+  ]);
+
   const loadTeam = useCallback(
     async (signal) => {
       if (!canManage) return;
+      const sess = apiSessionRef.current;
       setTeamLoading(true);
       setTeamError("");
       try {
-        const json = await dakinisTenantJsonFetch("/api/tenant/users", apiSession, {
+        const json = await dakinisTenantJsonFetch("/api/tenant/users", sess, {
           signal,
           businessId: tenantSlugForVertical,
           businessTypeHeader: activeSystemKey
@@ -49,7 +59,7 @@ export default function TenantTeamSection({
         setTeamLoading(false);
       }
     },
-    [canManage, apiSession, tenantSlugForVertical, activeSystemKey]
+    [canManage, teamFetchKey, tenantSlugForVertical, activeSystemKey]
   );
 
   useEffect(() => {

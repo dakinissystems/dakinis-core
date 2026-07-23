@@ -70,7 +70,7 @@ export default function PublicAllergiesPage({ token, navigate }) {
     } catch (e) {
       setEditError(e instanceof Error ? e.message : t("allergens.editorLoadError"));
     }
-  }, [canEdit, session, data?.businessSlug, fetchOpts, t]);
+  }, [canEdit, session?.token, session?.business?.slug, data?.businessSlug, fetchOpts, t]);
 
   useEffect(() => {
     reloadEditProfile();

@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
 import { DAKINIS_AUTH_EXPIRED_EVENT } from "../services/auth-events.js";
+import { dakinisSessionIdentityFingerprint } from "../utils/sessionIdentity.js";
 
 const DAKINIS_STORAGE_KEY = "dakinis_session_v1";
 
@@ -36,9 +37,15 @@ export function DakinisSessionProvider({ children }) {
       const resolved = typeof next === "function" ? next(prev) : next;
       if (!resolved) {
         sessionStorage.removeItem(DAKINIS_STORAGE_KEY);
-      } else {
-        sessionStorage.setItem(DAKINIS_STORAGE_KEY, JSON.stringify(resolved));
+        return null;
       }
+      if (
+        prev &&
+        dakinisSessionIdentityFingerprint(prev) === dakinisSessionIdentityFingerprint(resolved)
+      ) {
+        return prev;
+      }
+      sessionStorage.setItem(DAKINIS_STORAGE_KEY, JSON.stringify(resolved));
       return resolved;
     });
   }, []);

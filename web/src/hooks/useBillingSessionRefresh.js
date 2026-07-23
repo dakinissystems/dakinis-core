@@ -1,21 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
-
-function dakinisBusinessBillingFingerprint(business) {
-  if (!business || typeof business !== "object") return "";
-  return [
-    business.id,
-    business.slug,
-    business.plan,
-    business.type,
-    business.accessState,
-    business.subscriptionStatus,
-    business.trialEndsAt
-  ]
-    .map((v) => String(v ?? ""))
-    .join("|");
-}
+import { dakinisBusinessIdentityFingerprint } from "../utils/sessionIdentity.js";
 
 /** Refresca accessState/plan en sesión tras login (una vez por token; sin bucle setSession). */
 export function useBillingSessionRefresh() {
@@ -40,15 +26,16 @@ export function useBillingSessionRefresh() {
 
         setSession((prev) => {
           if (!prev?.token) return prev;
-          const prevFp = dakinisBusinessBillingFingerprint(prev.business);
-          const nextFp = dakinisBusinessBillingFingerprint({ ...prev.business, ...business });
-          if (prevFp === nextFp) return prev;
+          const nextBusiness = { ...prev.business, ...business };
+          if (
+            dakinisBusinessIdentityFingerprint(prev.business) ===
+            dakinisBusinessIdentityFingerprint(nextBusiness)
+          ) {
+            return prev;
+          }
           return {
             ...prev,
-            business: {
-              ...prev.business,
-              ...business
-            }
+            business: nextBusiness
           };
         });
       } catch {
