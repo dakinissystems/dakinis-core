@@ -6,29 +6,23 @@ function dakinisNormalizeFloorPayload(data) {
   const sessions = data?.sessions ?? {};
   return {
     tables: Array.isArray(tables) && tables.length ? tables : dakinisDefaultFloorTables(),
-    sessions
+    sessions: sessions && typeof sessions === "object" && !Array.isArray(sessions) ? sessions : {}
   };
 }
 
 /**
- * Plano de mesas: primero `floor` en GET /kitchen (evita 404 en APIs sin ruta /floor),
- * luego GET /floor, luego mesas por defecto.
+ * Plano de mesas: GET /floor (ligero). Si falla, mesas por defecto.
+ * No usa /kitchen (evita duplicar carga y 429).
  */
 export async function dakinisFetchRestaurantFloor(apiSession, fetchOpts) {
-  try {
-    const kitchen = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", apiSession, fetchOpts);
-    if (kitchen?.data?.floor?.tables) {
-      return dakinisNormalizeFloorPayload(kitchen.data.floor);
-    }
-  } catch {
-    /* kitchen no disponible */
-  }
-
   try {
     const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/floor", apiSession, fetchOpts);
     return dakinisNormalizeFloorPayload(json?.data);
   } catch (err) {
-    if (err instanceof DakinisApiError && (err.status === 404 || err.code === "NOT_FOUND")) {
+    if (
+      err instanceof DakinisApiError &&
+      (err.status === 404 || err.status === 429 || err.code === "NOT_FOUND" || err.code === "RATE_LIMIT_EXCEEDED")
+    ) {
       return { tables: dakinisDefaultFloorTables(), sessions: {} };
     }
     throw err;

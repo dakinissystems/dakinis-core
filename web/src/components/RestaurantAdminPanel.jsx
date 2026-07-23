@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
@@ -35,23 +35,28 @@ export default function RestaurantAdminPanel({
     [effectiveSlug, activeSystemKey]
   );
 
+  const sessionToken = apiSession?.token;
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+
   const reload = useCallback(async () => {
-    if (!apiSession?.token) return;
+    const sess = apiSessionRef.current;
+    if (!sessionToken || !sess?.token) return;
     setError("");
     try {
       const [floorState, menuRes] = await Promise.all([
-        dakinisFetchRestaurantFloor(apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, fetchOpts)
+        dakinisFetchRestaurantFloor(sess, fetchOpts),
+        dakinisTenantJsonFetch("/api/tenant/restaurant/menu", sess, fetchOpts)
       ]);
       setTables(floorState.tables);
       setSessions(floorState.sessions);
-      const items = menuRes?.data?.menu ?? [];
+      const items = Array.isArray(menuRes?.data?.menu) ? menuRes.data.menu : [];
       setMenu(items);
       setMenuDraft(Object.fromEntries(items.map((it) => [it.id, String(it.priceEur ?? "")])));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("fermina.loadError"));
     }
-  }, [apiSession, fetchOpts, t]);
+  }, [sessionToken, fetchOpts, t]);
 
   useEffect(() => {
     reload();

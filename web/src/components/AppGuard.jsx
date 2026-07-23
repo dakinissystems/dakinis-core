@@ -9,15 +9,17 @@ export default function AppGuard({ children }) {
   const [checked, setChecked] = useState(false);
   const [valid, setValid] = useState(false);
 
+  const token = session?.token;
+
   useEffect(() => {
-    if (!session?.token) {
+    if (!token) {
       setChecked(true);
       setValid(false);
       return undefined;
     }
 
     let cancelled = false;
-    dakinisTenantJsonFetch("/api/me", session)
+    dakinisTenantJsonFetch("/api/me", { token })
       .then(() => {
         if (cancelled) return;
         setValid(true);
@@ -41,7 +43,7 @@ export default function AppGuard({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [session, logout]);
+  }, [token, logout]);
 
   if (!session?.token) {
     return <Navigate to="/login" replace />;

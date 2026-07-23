@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dakinisResolveStockItemSlug } from "@dakinis/shared/catalog/stock-barcodes.js";
 import {
   DAKINIS_DUMPLING_DEMO_PRODUCTION,
@@ -65,9 +65,14 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     return map;
   }, [kitchen?.items]);
 
+  const sessionToken = apiSession?.token;
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+
   const reload = useCallback(
     async (signal) => {
-      if (!apiSession?.token) {
+      const sess = apiSessionRef.current;
+      if (!sessionToken || !sess?.token) {
         setKitchen(null);
         setError("");
         setSimulation(null);
@@ -75,7 +80,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
       }
       setError("");
       try {
-        const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", apiSession, {
+        const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", sess, {
           ...fetchOpts,
           signal
         });
@@ -86,7 +91,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
         setError(e instanceof Error ? e.message : t("kitchen.loadError"));
       }
     },
-    [apiSession, fetchOpts, t]
+    [sessionToken, fetchOpts, t]
   );
 
   useEffect(() => {

@@ -21,8 +21,10 @@ export default function LiveTenantDashboard({ session, navigate }) {
   const [data, dispatch] = useReducer(liveTenantDashboardReducer, LIVE_TENANT_DASHBOARD_INITIAL);
   const { industryDash, health, aiTips, benchmark, growth, recommendations, finance } = data;
 
+  const sessionToken = session?.token;
+
   useEffect(() => {
-    if (!session?.token) return undefined;
+    if (!sessionToken) return undefined;
     let cancelled = false;
     Promise.all([
       dakinisTenantIndustryDashboard(session),
@@ -52,7 +54,9 @@ export default function LiveTenantDashboard({ session, navigate }) {
     return () => {
       cancelled = true;
     };
-  }, [session]);
+    // Intentionally token-only: billing refresh must not re-fire this fan-out.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- session object identity churns
+  }, [sessionToken]);
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
   const businessFacing = dakinisIsBusinessFacingSession(session);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
@@ -129,15 +129,20 @@ export function useRestaurantComandasSection({
     [effectiveSlug, activeSystemKey]
   );
 
+  const sessionToken = apiSession?.token;
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+
   const reload = useCallback(async () => {
-    if (!apiSession?.token) return;
+    const sess = apiSessionRef.current;
+    if (!sessionToken || !sess?.token) return;
     dispatch({ type: "setError", error: "" });
     try {
       const [menuRes, ordersRes, invRes, floorState] = await Promise.all([
-        dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/orders", apiSession, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", apiSession, fetchOpts),
-        dakinisFetchRestaurantFloor(apiSession, fetchOpts)
+        dakinisTenantJsonFetch("/api/tenant/restaurant/menu", sess, fetchOpts),
+        dakinisTenantJsonFetch("/api/tenant/restaurant/orders", sess, fetchOpts),
+        dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", sess, fetchOpts),
+        dakinisFetchRestaurantFloor(sess, fetchOpts)
       ]);
       dispatch({
         type: "loaded",
@@ -151,7 +156,7 @@ export function useRestaurantComandasSection({
     } catch (e) {
       dispatch({ type: "setError", error: e instanceof Error ? e.message : t("fermina.loadError") });
     }
-  }, [apiSession, fetchOpts, t]);
+  }, [sessionToken, fetchOpts, t]);
 
   useEffect(() => {
     reload();
