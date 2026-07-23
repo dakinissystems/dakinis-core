@@ -19,6 +19,8 @@ import {
 } from "./api/router.js";
 import {
   dakinisHandlePublicRestaurantAllergiesGet,
+  dakinisHandleRestaurantFloorGet,
+  dakinisHandleRestaurantFloorPatch,
   dakinisHandleRestaurantKitchenGet,
   dakinisHandleRestaurantProductionPost,
   dakinisHandleRestaurantProductionSimulatePost,
@@ -197,6 +199,9 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (supplyAlertId && req.method === "DELETE") return dakinisHandleSupplyAlertsDelete(req, supplyAlertId[1]);
 
   if (path === "/api/tenant/restaurant/kitchen" && req.method === "GET") return dakinisHandleRestaurantKitchenGet(req);
+  if (path === "/api/tenant/restaurant/floor" && req.method === "GET") return dakinisHandleRestaurantFloorGet(req);
+  if (path === "/api/tenant/restaurant/floor" && req.method === "PATCH")
+    return dakinisHandleRestaurantFloorPatch(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
     return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
   if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")

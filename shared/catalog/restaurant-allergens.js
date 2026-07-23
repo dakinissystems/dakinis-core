@@ -38,14 +38,36 @@ export const DAKINIS_RESTAURANT_FULL_CATALOG = [
 ];
 
 /**
- * @param {Array} saved — filas guardadas en allergies_json
- * @returns {Array} checklist con present true/false
+ * Normaliza allergies_json: array de filas, o `{ checklist, dishes|custom }` (seeds legacy).
+ * @param {unknown} saved
+ * @returns {Array}
+ */
+export function dakinisNormalizeSavedAllergies(saved) {
+  if (Array.isArray(saved)) return saved;
+  if (saved && typeof saved === "object") {
+    const checklist = Array.isArray(saved.checklist) ? saved.checklist : [];
+    const extra = Array.isArray(saved.dishes)
+      ? saved.dishes
+      : Array.isArray(saved.customAllergies)
+        ? saved.customAllergies
+        : Array.isArray(saved.custom)
+          ? saved.custom
+          : [];
+    return [...checklist, ...extra];
+  }
+  return [];
+}
+
+/**
+ * @param {Array|object} saved — filas guardadas en allergies_json
+ * @returns {{ checklist: Array, customAllergies: Array }}
  */
 export function dakinisMergeAllergenChecklist(saved = []) {
+  const rows = dakinisNormalizeSavedAllergies(saved);
   const byCatalog = new Map();
   const custom = [];
 
-  for (const row of saved) {
+  for (const row of rows) {
     if (!row || typeof row !== "object") continue;
     if (row.catalogId) {
       byCatalog.set(row.catalogId, row);

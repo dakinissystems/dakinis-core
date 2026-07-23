@@ -28,6 +28,7 @@ import {
   dakinisRestaurantPlanOutputs,
   dakinisRestaurantValidatePlan
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
+import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
 
@@ -220,14 +221,30 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
        ORDER BY ${dakinisSqlOrderCreatedAtDesc("created_at")} LIMIT 20`,
       [businessId]
     )
-  ).map((b) => ({
-    id: b.id,
-    label: b.label,
-    plan: JSON.parse(b.plan_json || "[]"),
-    outputs: JSON.parse(b.outputs_json || "[]"),
-    notes: b.notes,
-    createdAt: b.created_at
-  }));
+  ).map((b) => {
+    let plan = [];
+    let outputs = [];
+    try {
+      plan = JSON.parse(b.plan_json || "[]");
+    } catch {
+      plan = [];
+    }
+    try {
+      outputs = JSON.parse(b.outputs_json || "[]");
+    } catch {
+      outputs = [];
+    }
+    return {
+      id: b.id,
+      label: b.label,
+      plan: Array.isArray(plan) ? plan : [],
+      outputs: Array.isArray(outputs) ? outputs : [],
+      notes: b.notes,
+      createdAt: b.created_at
+    };
+  });
+
+  const floor = await dakinisLoadRestaurantFloor(businessId);
 
   return dakinisJsonSuccess(
     {
@@ -235,6 +252,7 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
       recipes,
       maxPerRecipe,
       productionHistory: batches,
+      floor,
       profile: profile
         ? {
             publicToken: profile.public_token,
@@ -258,6 +276,68 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
     req.dakinisBusiness.type,
     dakinisMeta(req)
   );
+}
+
+async function dakinisLoadRestaurantFloor(businessId) {
+  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
+  let config = {};
+  try {
+    config = JSON.parse(biz?.config_json || "{}");
+  } catch {
+    config = {};
+  }
+  const tables = Array.isArray(config?.floor?.tables) && config.floor.tables.length
+    ? config.floor.tables
+    : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
+  const sessions =
+    config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
+      ? config.floor.sessions
+      : {};
+  return { tables, sessions };
+}
+
+export async function dakinisHandleRestaurantFloorGet(req) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const floor = await dakinisLoadRestaurantFloor(req.dakinisBusiness.id);
+  return dakinisJsonSuccess(floor, req.dakinisBusiness.type, dakinisMeta(req));
+}
+
+export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const businessId = req.dakinisBusiness.id;
+  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
+  let config = {};
+  try {
+    config = JSON.parse(biz?.config_json || "{}");
+  } catch {
+    config = {};
+  }
+
+  const prev = config.floor && typeof config.floor === "object" ? config.floor : {};
+  const nextTables = Array.isArray(body.tables) ? body.tables : prev.tables;
+  const nextSessions =
+    body.sessions && typeof body.sessions === "object" && !Array.isArray(body.sessions)
+      ? body.sessions
+      : prev.sessions || {};
+
+  config.floor = {
+    tables:
+      Array.isArray(nextTables) && nextTables.length
+        ? nextTables
+        : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t })),
+    sessions: nextSessions
+  };
+
+  await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
+  return dakinisJsonSuccess(config.floor, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {

@@ -78,6 +78,17 @@ export async function dakinisCreateFastifyServer() {
       }
       return reply.code(result.status).send(result.body);
     } catch (error) {
+      const ms = Date.now() - started;
+      dakinisStructuredLog({
+        level: "error",
+        msg: "http_request",
+        server: "fastify",
+        method: req.method,
+        path: url.pathname,
+        status: 500,
+        ms,
+        error: error instanceof Error ? error.message : String(error)
+      });
       dakinisCaptureException(error, { path: url.pathname, method: req.method });
       return reply.code(500).send({
         ok: false,
