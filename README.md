@@ -1,25 +1,36 @@
-# Dakinis Core
+# Dakinis Core (Dakinis One)
 
-Core modular que impulsa Dakinis Systems.
+ERP / Business OS multi-tenant — [core.dakinissystems.com](https://core.dakinissystems.com)
 
-Diseñado para construir aplicaciones escalables, sistemas en tiempo real y plataformas SaaS multi-tenant sin rehacer lógica.
+> Nombre comercial **Dakinis One** · código **Core**. Gateway `/core/`.
 
-## Estructura del repo
+## Estructura
 
-- **`web/`** — SPA (Vite + React), build en `web/dist`.
-- **`api/`** — Servidor Node REST (`api/server.js`).
-- **`shared/`** — Paquete `@dakinis/shared` (motor y catálogo de verticales).
+- `web/` — SPA (Vite + React)
+- `api/` — Node REST
+- `shared/` — verticales
 
-Raíz con **npm workspaces**: `npm run dev` (frontend), `npm run start:api` (API). Detalle en `DAKINIS_ARCHITECTURE.md` y `.env.example` para despliegues separados (p. ej. Render).
+```bash
+npm install
+npm run dev
+npm run start:api
+```
 
-## Legal (base docs)
+Health: `https://api.dakinissystems.com/core/api/health`
 
-Se añadió paquete legal base en `docs/legal/` (ES/EN) para unificar políticas del ecosistema:
+## Legal
 
-- `PRIVACIDAD(.en).md`
-- `TERMINOS_Y_CONDICIONES(.en).md`
-- `POLITICA_COOKIES(.en).md`
-- `PROTECCION_LEGAL(.en).md`
-- `MODERACION_CONTENIDOS(.en).md`
-- `ACCOUNT_DELETION(.en).md`
-- `CHILD_SAFETY(.en).md`
+[dakinis-systems/docs/legal](https://github.com/dakinissystems/dakinis-systems/tree/main/docs/legal)
+
+## Documentación del ecosistema
+
+Canónica en [dakinis-systems/docs](https://github.com/dakinissystems/dakinis-systems/tree/main/docs):
+
+| Doc | Contenido |
+|-----|-----------|
+| [Índice](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/README.md) | Source of truth |
+| [SYSTEMS](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/SYSTEMS.md) | Mapa productos / plataforma |
+| [STATUS](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/STATUS.md) | Estado / go-live |
+| [OPERATIONS](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/OPERATIONS.md) | Deploy, health, monitorización |
+| [SECURITY](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/SECURITY.md) | Checklist seguridad P0–P1 |
+| [ARCHITECTURE](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/ARCHITECTURE.md) | Arquitectura |
