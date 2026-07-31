@@ -321,7 +321,7 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
       </div>
 
       {error ? (
-        <p className="lead" style={{ color: "#fdba74", marginTop: "0.75rem" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)", marginTop: "0.75rem" }}>
           {error}
         </p>
       ) : null}

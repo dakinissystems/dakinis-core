@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
         "@dakinis/shared-brand": path.resolve(__dirname, "../packages/shared-brand/src"),
+        "@dakinis/shared-foundation": path.resolve(__dirname, "../packages/shared-foundation/src"),
+        "@dakinis/shared-theme": path.resolve(__dirname, "../packages/shared-theme/src"),
+        "@dakinis/shared-layouts": path.resolve(__dirname, "../packages/shared-layouts/src"),
         "@dakinis/shared-ux": path.resolve(__dirname, "../packages/shared-ux/src"),
         "@dakinis/shared-loading": path.resolve(__dirname, "../packages/shared-loading/src"),
         "@dakinis/shared-illustrations": path.resolve(__dirname, "../packages/shared-illustrations/src"),

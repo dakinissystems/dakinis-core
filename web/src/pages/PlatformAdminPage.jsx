@@ -51,7 +51,7 @@ export default function PlatformAdminPage({ navigate }) {
 
         {loading ? <p className="lead">Cargando…</p> : null}
         {error ? (
-          <p className="lead" style={{ color: "#f97316" }}>
+          <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
             {error}
           </p>
         ) : null}

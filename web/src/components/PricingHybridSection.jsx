@@ -13,9 +13,11 @@ import {
 } from "../utils/planWhatsapp.js";
 import {
   dakinisBuildBosPlanCards,
+  dakinisBuildEnterpriseCard,
   dakinisBosOverage,
   DAKINIS_PLAN_IMPLEMENTATION_KEYS,
   dakinisProfessionalServices,
+  dakinisPlanImplementationEur,
   dakinisPackMvp,
   dakinisPackPro,
   dakinisPackAdvanced
@@ -116,9 +118,30 @@ const DAKINIS_PACK_KEYS = ["mvp", "pro", "advanced"];
 const DAKINIS_PACK_BASE = [dakinisPackMvp, dakinisPackPro, dakinisPackAdvanced];
 
 function PricingPlanQuotas({ plan, t }) {
-  if (!plan.includedWa && !plan.includedAi) return null;
+  const limits = [];
+  if (plan.includedUsers != null) {
+    limits.push(t("pricing.quotaUsersFootnote", { count: plan.includedUsers }));
+  } else if (plan.key === "pro" || plan.key === "enterprise") {
+    limits.push(t("pricing.quotaUsersUnlimited"));
+  }
+  if (plan.includedStorageGb) {
+    limits.push(t("pricing.quotaStorageFootnote", { count: plan.includedStorageGb }));
+  }
+
   return (
     <div className="pricing-plan-quotas">
+      {plan.hoursSaved ? (
+        <p className="pricing-plan-card__hours-saved">
+          {t("pricing.hoursSaved", { count: plan.hoursSaved })}
+        </p>
+      ) : null}
+      {limits.length ? (
+        <ul className="pricing-plan-limits">
+          {limits.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      ) : null}
       {plan.includedWa > 0 ? (
         <div className="pricing-quota-block">
           <p className="pricing-quota-block__lead">{t("pricing.quotaWaLead")}</p>
@@ -192,6 +215,19 @@ export default function PricingHybridSection({
       }),
     [t]
   );
+
+  const enterprisePlan = useMemo(() => {
+    const card = dakinisBuildEnterpriseCard();
+    const includes = t("pricing.bos.plans.enterprise.includes");
+    return {
+      ...card,
+      name: t("pricing.bos.plans.enterprise.name"),
+      tagline: t("pricing.bos.plans.enterprise.tagline"),
+      audience: t("pricing.bos.plans.enterprise.audience"),
+      outcome: t("pricing.bos.plans.enterprise.outcome"),
+      includes: Array.isArray(includes) ? includes : []
+    };
+  }, [t]);
 
   const localizedPacks = useMemo(
     () =>
@@ -299,6 +335,39 @@ export default function PricingHybridSection({
           ))}
         </div>
 
+        <article className="card pricing-enterprise-card">
+          <div className="pricing-enterprise-card__copy">
+            <p className="kicker">{t("pricing.bos.plans.enterprise.kicker")}</p>
+            <h3>{enterprisePlan.name}</h3>
+            <p className="pricing-enterprise-card__price">
+              {t("pricing.bos.plans.enterprise.fromPrice", { price: enterprisePlan.priceEur })}
+            </p>
+            <p className="pricing-plan-card__tagline">{enterprisePlan.tagline}</p>
+            <p className="pricing-plan-card__outcome">{enterprisePlan.outcome}</p>
+            <PricingPlanQuotas plan={enterprisePlan} t={t} />
+            <ul className="pack-includes pricing-includes-list">
+              {enterprisePlan.includes.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+          <a
+            href={dakinisPlanWhatsappUrl({
+              locale,
+              t,
+              plan: { name: enterprisePlan.name, priceEur: enterprisePlan.priceEur }
+            })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            onClick={() =>
+              dakinisPersistSelectedPlan({ key: "enterprise", priceEur: enterprisePlan.priceEur })
+            }
+          >
+            {t("pricing.bos.plans.enterprise.cta")}
+          </a>
+        </article>
+
         <p className="pricing-impl-bridge lead">{t("pricing.implBridge")}</p>
 
         <PricingComparisonTable />
@@ -308,7 +377,8 @@ export default function PricingHybridSection({
           <p>
             {t("pricing.bos.overageLead", {
               aiRate: dakinisBosOverage.aiEurPer1k,
-              waRate: dakinisBosOverage.whatsappEurPer500
+              waRate: dakinisBosOverage.whatsappEurPer500,
+              userRate: dakinisBosOverage.extraUserEur
             })}
           </p>
         </aside>
@@ -321,7 +391,9 @@ export default function PricingHybridSection({
               <article key={planKey} className="card price-card pricing-impl-card">
                 <h4>{t(`pricing.implementationByPlan.${planKey}.label`)}</h4>
                 <p className="price pricing-impl-card__price">
-                  {t(`pricing.implementationByPlan.${planKey}.range`)}
+                  {t("pricing.implementationByPlan.priceFormat", {
+                    amount: dakinisPlanImplementationEur[planKey]
+                  })}
                 </p>
                 <p className="setup pricing-impl-card__desc">
                   {t(`pricing.implementationByPlan.${planKey}.description`)}

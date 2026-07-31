@@ -62,7 +62,7 @@ export function RestaurantStockScanPanel({
           style={{
             fontSize: "0.9rem",
             margin: "0.5rem 0 0",
-            color: unknownBarcode ? "#fdba74" : "#86efac"
+            color: unknownBarcode ? "var(--dakinis-warning)" : "var(--dakinis-success)"
           }}
         >
           {scanMessage}
@@ -167,7 +167,7 @@ export function RestaurantStockInventoryGrid({
                   </td>
                   <td
                     data-label={t("kitchen.stock")}
-                    style={item.quantity < item.minQuantity ? { color: "#fdba74" } : undefined}
+                    style={item.quantity < item.minQuantity ? { color: "var(--dakinis-warning)" } : undefined}
                   >
                     {dakinisFormatQty(item.quantity, item.unit)}
                   </td>
@@ -229,14 +229,14 @@ export function RestaurantStockInventoryGrid({
         {simulation ? (
           <div style={{ marginTop: "0.75rem" }}>
             {simulation.validation?.ok ? (
-              <p className="lead" style={{ color: "#86efac" }}>
+              <p className="lead" style={{ color: "var(--dakinis-success)" }}>
                 {t("kitchen.planOk")}{" "}
                 {simulation.outputs?.map((o) => `${o.totalOutput} ${o.outputLabel}`).join(" · ")}
               </p>
             ) : (
               <ul>
                 {simulation.validation?.shortages?.map((s) => (
-                  <li key={s.itemSlug} style={{ color: "#fdba74" }}>
+                  <li key={s.itemSlug} style={{ color: "var(--dakinis-warning)" }}>
                     {t("kitchen.shortage", {
                       item: itemNames[s.itemSlug] || s.itemSlug,
                       needed: s.needed,

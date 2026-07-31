@@ -24,7 +24,7 @@ export default function RestaurantStockSection(props) {
       <h3>{t("kitchen.title")}</h3>
       <p className="lead">{t(leadKey)}</p>
       {error ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {error}
         </p>
       ) : null}

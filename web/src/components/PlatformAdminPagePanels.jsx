@@ -424,7 +424,7 @@ export function PlatformAdminUsersPanel({
   return (
     <>
       {userActionMsg ? (
-        <p className="lead" style={{ color: "#5eead4", marginTop: "1rem" }}>
+        <p className="lead" style={{ color: "var(--dakinis-accent)", marginTop: "1rem" }}>
           {userActionMsg}
         </p>
       ) : null}

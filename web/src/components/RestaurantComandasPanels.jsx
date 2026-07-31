@@ -79,7 +79,7 @@ export default function RestaurantComandasPanels({ ctx }) {
       <p className="lead">{t("fermina.leadGeneric")}</p>
 
       {error ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {error}
         </p>
       ) : null}

@@ -1,19 +1,12 @@
 :root {
-  --bg: #08111d;
-  --bg-soft: #122840;
-  --card: #17344e;
-  --text: #f0f4f9;
-  --muted: #b8c6d9;
-  --brand: #2dd4bf;
-  --brand-dark: #14b8a6;
-  --line: #23415f;
-  --dakinis-ai: #7c3aed;
-  --dakinis-ai-soft: #a855f7;
-  --dakinis-ai-glow: rgba(124, 58, 237, 0.22);
-  --dakinis-ai-border: rgba(168, 85, 247, 0.45);
-  --dakinis-radius-card: 16px;
-  --dakinis-duration: 180ms;
-  --dakinis-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --bg: var(--dakinis-surface-0);
+  --bg-soft: var(--dakinis-surface-1);
+  --card: var(--dakinis-surface-2);
+  --text: var(--dakinis-text);
+  --muted: var(--dakinis-muted);
+  --brand: var(--dakinis-accent);
+  --brand-dark: var(--dakinis-accent-dark);
+  --line: var(--dakinis-line);
 }
 
 * {
@@ -22,7 +15,7 @@
 
 body {
   margin: 0;
-  font-family: "Inter", Arial, sans-serif;
+  font-family: var(--dakinis-font-sans, "Inter", Arial, sans-serif);
   background: linear-gradient(160deg, var(--bg), #091a2c 40%, #0a2237);
   color: var(--text);
   line-height: 1.45;
@@ -151,7 +144,7 @@ body {
   display: block;
   margin-top: 0.35rem;
   font-size: 0.78rem;
-  color: var(--muted, #94a3b8);
+  color: var(--muted, var(--dakinis-neutral));
 }
 
 .topbar-app-nav {
@@ -418,7 +411,7 @@ a.link-btn {
 
 .pricing-hero__lead {
   font-size: 1.08rem;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .pricing-hero__intro {
@@ -518,7 +511,51 @@ a.link-btn {
   margin: 0.5rem 0 0;
   font-size: 0.92rem;
   line-height: 1.5;
-  color: #c8d9ea;
+  color: var(--dakinis-muted);
+}
+
+.pricing-plan-card__hours-saved {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--dakinis-accent, #2dd4bf);
+}
+
+.pricing-plan-limits {
+  list-style: none;
+  margin: 0.35rem 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--dakinis-muted);
+}
+
+.pricing-enterprise-card {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  align-items: end;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--dakinis-accent, #2dd4bf) 35%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--dakinis-accent, #2dd4bf) 8%, transparent),
+    transparent 60%
+  );
+}
+
+@media (min-width: 840px) {
+  .pricing-enterprise-card {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.pricing-enterprise-card__price {
+  margin: 0.35rem 0;
+  font-size: 1.35rem;
+  font-weight: 700;
 }
 
 .pricing-page-intro__value {
@@ -530,7 +567,7 @@ a.link-btn {
 
 .pricing-page-intro__subvalue {
   font-size: 1.05rem;
-  color: #b8cfe4;
+  color: var(--dakinis-muted);
   max-width: 52ch;
   margin-top: 0.35rem;
 }
@@ -576,7 +613,7 @@ a.link-btn {
   padding-left: 1.35rem;
   font-size: 0.95rem;
   line-height: 1.45;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .product-home__hero-outcomes li::before {
@@ -626,7 +663,7 @@ a.link-btn {
   padding-left: 1.35rem;
   font-size: 0.92rem;
   line-height: 1.45;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .pricing-problems-solved__list li::before {
@@ -660,7 +697,7 @@ a.link-btn {
   margin: 0 0 0.3rem;
   font-size: 0.86rem;
   line-height: 1.45;
-  color: #c8d9ea;
+  color: var(--dakinis-muted);
 }
 
 .pricing-quota-chip {
@@ -711,7 +748,7 @@ a.link-btn {
 .pricing-compare__table th[scope="row"] {
   text-align: left;
   font-weight: 600;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .pricing-compare__table thead th {
@@ -753,7 +790,7 @@ a.link-btn {
   margin-top: 0.5rem;
   max-width: 58ch;
   font-size: 0.95rem;
-  color: #b8cfe4;
+  color: var(--dakinis-muted);
 }
 
 .sr-only {
@@ -826,7 +863,7 @@ a.link-btn {
 .pricing-callout strong {
   display: block;
   margin-bottom: 0.35rem;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .pricing-callout p {
@@ -983,7 +1020,7 @@ a.link-btn {
 
 .contact-lead {
   font-size: 1.05rem;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
   max-width: 48ch;
 }
 
@@ -996,7 +1033,7 @@ a.link-btn {
 }
 
 .hero-benefit {
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
   font-weight: 500;
 }
 
@@ -1056,7 +1093,7 @@ a.link-btn {
 .pack-pitch {
   margin: 0.35rem 0 0;
   font-style: italic;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
   font-size: 0.98rem;
 }
 
@@ -1455,7 +1492,7 @@ section {
 
 .quote {
   font-size: 1.05rem;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
   font-weight: 600;
 }
 
@@ -2790,7 +2827,7 @@ dialog.allergen-modal::backdrop {
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
+  color: var(--dakinis-surface-0);
   font-size: 0.78rem;
   line-height: 1.2;
   cursor: pointer;
@@ -2832,7 +2869,7 @@ dialog.allergen-modal::backdrop {
 }
 
 .restaurant-floor__table.is-busy {
-  border-color: #f59e0b;
+  border-color: var(--dakinis-warning);
   background: rgba(245, 158, 11, 0.2);
 }
 
@@ -2902,7 +2939,7 @@ dialog.allergen-modal::backdrop {
 }
 
 .restaurant-floor__swatch--busy {
-  border-color: #f59e0b;
+  border-color: var(--dakinis-warning);
   background: rgba(245, 158, 11, 0.35);
 }
 
@@ -2912,7 +2949,7 @@ dialog.allergen-modal::backdrop {
 }
 
 .restaurant-floor__swatch--drag {
-  border-color: #94a3b8;
+  border-color: var(--dakinis-neutral);
   background: rgba(148, 163, 184, 0.35);
 }
 
@@ -3201,7 +3238,7 @@ dialog.restaurant-mesa-modal::backdrop {
   padding: 0.65rem 0.75rem;
   border: 1px solid #ddd;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--dakinis-surface-0);
 }
 
 .fermina-print-sheet__meta-row {
@@ -3353,7 +3390,7 @@ dialog.restaurant-mesa-modal::backdrop {
   }
 
   .fermina-print-sheet__meta {
-    background: #f8fafc !important;
+    background: var(--dakinis-surface-0) !important;
     border-color: #ccc !important;
   }
 
@@ -4028,7 +4065,7 @@ dialog.restaurant-mesa-modal::backdrop {
   width: 100%;
   padding: 0.55rem 0.65rem;
   border-radius: 8px;
-  border: 1px solid var(--line, #23415f);
+  border: 1px solid var(--line, var(--dakinis-line));
   background: var(--surface-0, #0b1220);
   color: var(--text, #e2e8f0);
 }
@@ -4056,7 +4093,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin-top: 1.25rem;
   padding: 1rem;
   border-radius: 10px;
-  border: 1px solid var(--line, #23415f);
+  border: 1px solid var(--line, var(--dakinis-line));
   background: rgba(45, 212, 191, 0.06);
 }
 
@@ -4071,7 +4108,7 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 .wa-ai-tab__error {
-  color: #f87171;
+  color: var(--dakinis-danger);
 }
 
 .wa-ai-tab__context-hint {
@@ -4300,7 +4337,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0.75rem 0 0;
   font-size: 0.98rem;
   font-weight: 600;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .commercial-simulator__cta {
@@ -4318,7 +4355,7 @@ dialog.restaurant-mesa-modal::backdrop {
 .commercial-trust-card__experience {
   margin: 0 0 0.35rem;
   font-size: 1.02rem;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .commercial-trust-card__subtitle {
@@ -4401,7 +4438,7 @@ dialog.restaurant-mesa-modal::backdrop {
   text-align: center;
   font-size: 1rem;
   font-weight: 700;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .getting-started__reassurance {
@@ -4420,7 +4457,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0;
   padding-left: 1.1rem;
   font-size: 0.88rem;
-  color: #b8cfe4;
+  color: var(--dakinis-muted);
 }
 
 .getting-started__reassurance li::before {
@@ -4464,7 +4501,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0 0 1rem;
   font-size: 0.95rem;
   line-height: 1.55;
-  color: #b8cfe4;
+  color: var(--dakinis-muted);
   max-width: 62ch;
 }
 
@@ -4614,7 +4651,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
 }
 
 .product-video__placeholder-note {
@@ -4639,7 +4676,7 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.45;
-  color: #c8d9ea;
+  color: var(--dakinis-muted);
   text-align: left;
 }
 
@@ -4682,7 +4719,7 @@ dialog.restaurant-mesa-modal::backdrop {
   background: rgba(255, 255, 255, 0.03);
   font-size: 0.95rem;
   font-style: italic;
-  color: #d6eaff;
+  color: var(--dakinis-accent-soft);
   text-align: left;
 }
 
@@ -4845,7 +4882,7 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .executive-dashboard__alert--warning {
   background: rgba(251, 191, 36, 0.12);
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid var(--dakinis-warning);
 }
 
 .executive-dashboard__alert--info {
@@ -5196,19 +5233,19 @@ dialog.restaurant-mesa-modal::backdrop {
   bottom: 0;
   width: 3px;
   border-radius: 3px 0 0 3px;
-  background: var(--brand, #6366f1);
+  background: var(--brand, var(--dakinis-info));
 }
 
 .commercial-kpi-card--clients::before {
-  background: #6366f1;
+  background: var(--dakinis-info);
 }
 
 .commercial-kpi-card--sales::before {
-  background: #22c55e;
+  background: var(--dakinis-success);
 }
 
 .commercial-kpi-card--products::before {
-  background: #f59e0b;
+  background: var(--dakinis-warning);
 }
 
 .commercial-kpi-card--conversion::before {
@@ -5216,11 +5253,11 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 .commercial-kpi-card--inventory::before {
-  background: #f59e0b;
+  background: var(--dakinis-warning);
 }
 
 .commercial-kpi-card--reports::before {
-  background: #22c55e;
+  background: var(--dakinis-success);
 }
 
 .commercial-kpi-card .kpi-label {
@@ -5244,7 +5281,7 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 .commercial-kpi-card__trend--up {
-  color: #4ade80;
+  color: var(--dakinis-success);
 }
 
 .commercial-business-dashboard__alerts h3,
@@ -5635,7 +5672,7 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .inventory-status--ok {
   background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  color: var(--dakinis-success);
 }
 
 .inventory-status--low {
@@ -5645,7 +5682,7 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .inventory-status--expiry {
   background: rgba(248, 113, 113, 0.15);
-  color: #f87171;
+  color: var(--dakinis-danger);
 }
 
 .reports-business-demo__kpis {
@@ -5711,14 +5748,14 @@ dialog.restaurant-mesa-modal::backdrop {
 .reports-chart__value {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #a5b4fc;
+  color: var(--dakinis-info);
 }
 
 .reports-chart__bar {
   width: 100%;
   max-width: 48px;
   border-radius: 0.35rem 0.35rem 0 0;
-  background: linear-gradient(180deg, #818cf8, #6366f1);
+  background: linear-gradient(180deg, var(--dakinis-info), var(--dakinis-info));
   min-height: 8px;
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
@@ -5826,13 +5863,13 @@ dialog.restaurant-mesa-modal::backdrop {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #6366f1, #22c55e);
+  background: linear-gradient(90deg, var(--dakinis-info), var(--dakinis-success));
 }
 
 .analytics-channel-list__pct {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #a5b4fc;
+  color: var(--dakinis-info);
 }
 
 .analytics-funnel {
@@ -5862,7 +5899,7 @@ dialog.restaurant-mesa-modal::backdrop {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #818cf8, #6366f1);
+  background: linear-gradient(90deg, var(--dakinis-info), var(--dakinis-info));
 }
 
 .analytics-benchmark-list {
@@ -5895,11 +5932,11 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 .analytics-benchmark-list__delta--up {
-  color: #4ade80;
+  color: var(--dakinis-success);
 }
 
 .analytics-benchmark-list__delta--down {
-  color: #f87171;
+  color: var(--dakinis-danger);
 }
 
 .analytics-benchmark-list__values {
@@ -6256,8 +6293,8 @@ dialog.dakinis-cmdk-dialog::backdrop {
   position: relative;
   z-index: 1;
   width: min(36rem, 100%);
-  background: var(--dakinis-panel, #17344e);
-  border: 1px solid var(--dakinis-line, #23415f);
+  background: var(--dakinis-panel, var(--dakinis-surface-2));
+  border: 1px solid var(--dakinis-line, var(--dakinis-line));
   border-radius: var(--dakinis-radius-lg, 16px);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
   overflow: hidden;
@@ -6268,22 +6305,22 @@ dialog.dakinis-cmdk-dialog::backdrop {
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--dakinis-line, #23415f);
+  border-bottom: 1px solid var(--dakinis-line, var(--dakinis-line));
 }
 
 .dakinis-cmdk__kbd {
   font-size: 0.72rem;
-  color: var(--dakinis-muted, #b8c6d9);
+  color: var(--dakinis-muted, var(--dakinis-muted));
   padding: 0.15rem 0.4rem;
   border-radius: 6px;
-  border: 1px solid var(--dakinis-line, #23415f);
+  border: 1px solid var(--dakinis-line, var(--dakinis-line));
 }
 
 .dakinis-cmdk__input {
   flex: 1;
   background: transparent;
   border: none;
-  color: var(--dakinis-text, #f0f4f9);
+  color: var(--dakinis-text, var(--dakinis-text));
   font-size: 1rem;
   outline: none;
 }
@@ -6293,22 +6330,22 @@ dialog.dakinis-cmdk-dialog::backdrop {
   flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--dakinis-line, #23415f);
+  border-bottom: 1px solid var(--dakinis-line, var(--dakinis-line));
 }
 
 .dakinis-cmdk__scope {
   font-size: 0.75rem;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  border: 1px solid var(--dakinis-line, #23415f);
+  border: 1px solid var(--dakinis-line, var(--dakinis-line));
   background: transparent;
-  color: var(--dakinis-muted, #b8c6d9);
+  color: var(--dakinis-muted, var(--dakinis-muted));
   cursor: pointer;
 }
 
 .dakinis-cmdk__scope.is-active {
   border-color: var(--dakinis-ai-border, rgba(168, 85, 247, 0.45));
-  color: var(--dakinis-ai-soft, #a855f7);
+  color: var(--dakinis-ai-soft, var(--dakinis-ai-soft));
 }
 
 .dakinis-cmdk__list {
@@ -6329,7 +6366,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--dakinis-text, #f0f4f9);
+  color: var(--dakinis-text, var(--dakinis-text));
   text-align: left;
   cursor: pointer;
 }
@@ -6348,7 +6385,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
 
 .dakinis-cmdk__snippet {
   font-size: 0.72rem;
-  color: var(--dakinis-muted, #b8c6d9);
+  color: var(--dakinis-muted, var(--dakinis-muted));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6364,12 +6401,12 @@ dialog.dakinis-cmdk-dialog::backdrop {
 
 .dakinis-cmdk__group {
   font-size: 0.72rem;
-  color: var(--dakinis-muted, #b8c6d9);
+  color: var(--dakinis-muted, var(--dakinis-muted));
 }
 
 .dakinis-cmdk__empty {
   padding: 1rem;
-  color: var(--dakinis-muted, #b8c6d9);
+  color: var(--dakinis-muted, var(--dakinis-muted));
   font-size: 0.88rem;
 }
 
@@ -6379,8 +6416,8 @@ dialog.dakinis-cmdk-dialog::backdrop {
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   font-size: 0.72rem;
-  color: var(--dakinis-muted, #b8c6d9);
-  border-top: 1px solid var(--dakinis-line, #23415f);
+  color: var(--dakinis-muted, var(--dakinis-muted));
+  border-top: 1px solid var(--dakinis-line, var(--dakinis-line));
 }
 
 .hub-widget-grid {
@@ -6393,7 +6430,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
 .hub-dashboard__subtitle {
   margin: 0.25rem 0 0.5rem;
   font-size: 0.92rem;
-  color: var(--muted, #b8c6d9);
+  color: var(--muted, var(--dakinis-muted));
 }
 
 .hub-dashboard__grid-2 {
@@ -6423,7 +6460,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
   gap: 0.5rem;
   align-items: baseline;
   padding: 0.4rem 0;
-  border-bottom: 1px solid var(--line, #23415f);
+  border-bottom: 1px solid var(--line, var(--dakinis-line));
   font-size: 0.85rem;
 }
 
@@ -6436,7 +6473,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
 }
 
 .hub-activity__item--ai {
-  color: var(--dakinis-ai-soft, #a855f7);
+  color: var(--dakinis-ai-soft, var(--dakinis-ai-soft));
 }
 
 .dakinis-hub-nav-search {
@@ -6467,12 +6504,12 @@ dialog.dakinis-cmdk-dialog::backdrop {
 
 .dakinis-empty-state { text-align: center; max-width: 28rem; margin: 1rem auto; padding: 0.5rem; }
 .dakinis-empty-state__title { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.35rem; }
-.dakinis-empty-state__hint { color: var(--muted, #b8c6d9); margin: 0 0 0.85rem; font-size: 0.88rem; }
+.dakinis-empty-state__hint { color: var(--muted, var(--dakinis-muted)); margin: 0 0 0.85rem; font-size: 0.88rem; }
 .dakinis-empty-state__actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
 .dakinis-illustration {
   display: flex; align-items: center; justify-content: center;
   width: 4rem; height: 4rem; margin: 0 auto 0.65rem; border-radius: 50%;
-  background: var(--card, #122840); border: 1px solid var(--line, #23415f); font-size: 1.75rem;
+  background: var(--card, var(--dakinis-surface-1)); border: 1px solid var(--line, var(--dakinis-line)); font-size: 1.75rem;
 }
 .dakinis-illustration--ai { border-color: var(--dakinis-ai-border); box-shadow: var(--dakinis-shadow-ai); }
 .dakinis-ai-hint {
@@ -6484,7 +6521,7 @@ dialog.dakinis-cmdk-dialog::backdrop {
 }
 .dakinis-ai-hint__action {
   margin-left: auto; font-size: 0.78rem; font-weight: 600;
-  color: var(--dakinis-ai-soft, #a855f7); background: none; border: none; cursor: pointer;
+  color: var(--dakinis-ai-soft, var(--dakinis-ai-soft)); background: none; border: none; cursor: pointer;
 }
 
 .dev-sentry-error-btn {

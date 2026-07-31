@@ -170,7 +170,7 @@ export default function RestaurantAdminPanel({
       </header>
 
       {error ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {error}
         </p>
       ) : null}
@@ -242,7 +242,7 @@ export default function RestaurantAdminPanel({
           {menuBusy ? t("restaurant.saving") : t("restaurant.adminPricesSave")}
         </button>
         {menuNotice ? (
-          <p className="kpi-label" style={{ marginTop: "0.5rem", color: "#86efac" }}>
+          <p className="kpi-label" style={{ marginTop: "0.5rem", color: "var(--dakinis-success)" }}>
             {menuNotice}
           </p>
         ) : null}

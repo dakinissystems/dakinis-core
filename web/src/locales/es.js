@@ -617,13 +617,17 @@ export default {
     selectPlanHint: "Pulsa «Quiero este plan» en una tarjeta y el mensaje de email y WhatsApp se adaptará automáticamente.",
     contactWhatsappCta: "Escribir por WhatsApp",
     recommendedBadge: "Más elegido",
-    quotaWaLead: "WhatsApp integrado para responder clientes desde el mismo panel.",
-    quotaWaFootnote: "Hasta {count} mensajes mensuales incluidos.",
+    quotaWaLead: "WhatsApp incluido para atender clientes desde el mismo panel.",
+    quotaWaFootnote: "Hasta {count} conversaciones/mes incluidas.",
     quotaAiLead:
-      "Asistente IA para ayudarte a responder clientes, redactar mensajes y gestionar información.",
-    quotaAiFootnote: "Hasta {count} interacciones mensuales incluidas.",
+      "Asistente IA para responder clientes, redactar mensajes y ejecutar acciones del día a día.",
+    quotaAiFootnote: "Hasta {count} respuestas IA/mes incluidas.",
+    quotaUsersFootnote: "Hasta {count} usuarios incluidos.",
+    quotaUsersUnlimited: "Usuarios ilimitados.",
+    quotaStorageFootnote: "{count} GB de almacenamiento incluidos.",
+    hoursSaved: "Ahorra unas {count} horas al mes.",
     implBridge:
-      "La mensualidad es tu suscripción al software. La implantación es un pago único al inicio, adaptada al plan que elijas.",
+      "La mensualidad es tu suscripción al software. La implantación es consultoría (pago único) acorde al plan que elijas.",
     problemsSolved: {
       title: "¿Te suena familiar?",
       items: [
@@ -635,35 +639,42 @@ export default {
     },
     compare: {
       title: "Comparación de planes",
-      lead: "Todo lo esencial en una tabla para ver de un vistazo qué incluye cada plan.",
+      lead: "Tabla completa para ver de un vistazo por qué Growth y Pro capturan más valor.",
       featureCol: "Función",
       included: "Incluido",
       notIncluded: "No incluido",
       rows: {
-        crm: { label: "Clientes y ventas", starter: true, growth: true, pro: true },
+        crm: { label: "CRM / clientes y ventas", starter: true, growth: true, pro: true },
         agenda: { label: "Agenda y citas", starter: true, growth: true, pro: true },
         reservations: { label: "Reservas online", starter: true, growth: true, pro: true },
         inventory: { label: "Inventario y stock", starter: false, growth: true, pro: true },
-        whatsapp: { label: "WhatsApp en el panel", starter: false, growth: true, pro: true },
-        analytics: { label: "Reportes automáticos", starter: false, growth: true, pro: true },
-        ai: { label: "Asistente avanzado", starter: false, growth: false, pro: true },
-        automations: { label: "Recordatorios automáticos", starter: false, growth: false, pro: true }
+        billing: { label: "Facturación", starter: false, growth: true, pro: true },
+        excel: { label: "Exportar Excel", starter: true, growth: true, pro: true },
+        roles: { label: "Roles y permisos", starter: false, growth: true, pro: true },
+        backups: { label: "Backups", starter: true, growth: true, pro: true },
+        reports: { label: "Reportes", starter: false, growth: true, pro: true },
+        whatsapp: { label: "WhatsApp", starter: false, growth: true, pro: true },
+        analytics: { label: "Analytics / benchmark", starter: false, growth: true, pro: true },
+        ai: { label: "IA / Copilot", starter: false, growth: false, pro: true },
+        automations: { label: "Automatizaciones", starter: false, growth: false, pro: true },
+        multiuser: { label: "Multiusuario", starter: true, growth: true, pro: true },
+        multitenant: { label: "Multiempresa", starter: false, growth: false, pro: false },
+        api: { label: "API", starter: false, growth: false, pro: false },
+        integrations: { label: "Integraciones", starter: false, growth: true, pro: true }
       }
     },
     implementationByPlan: {
+      priceFormat: "{amount} €",
       starter: {
         label: "Implantación Starter",
-        range: "199 € – 300 €",
         description: "Configuración básica, datos iniciales y formación del equipo en una sesión."
       },
       growth: {
         label: "Implantación Growth",
-        range: "500 €",
         description: "Migración de clientes y citas, inventario inicial y puesta en marcha acompañada."
       },
       pro: {
         label: "Implantación Pro",
-        range: "1.000 €+",
         description: "Migración completa, automatizaciones y conexiones según tu operativa real."
       }
     },
@@ -684,15 +695,15 @@ export default {
       perMonth: "/mes",
       recommended: "recomendado",
       overageLead:
-        "Exceso de consumo: {aiRate} € / 1.000 consultas IA extra (plan Pro) · {waRate} € / 500 mensajes WhatsApp extra.",
-      implementationTitle: "Implantación inicial (pago único)",
+        "Exceso: {aiRate} € / 1.000 respuestas IA extra · {waRate} € / 500 conversaciones WhatsApp extra · {userRate} €/usuario adicional/mes.",
+      implementationTitle: "Implantación inicial (pago único · consultoría)",
       implementationLead:
-        "Cada plan tiene su rango de implantación. No pagas 500 € si empiezas con Starter: el coste de arranque va acorde al plan que elijas.",
+        "La implantación no es software: es configuración, migración y formación. El precio va acorde al plan.",
       projectsHint:
-        "¿Necesitas desarrollo a medida o integraciones especiales? Consulta los paquetes de proyecto en el sitio corporativo o contáctanos.",
+        "¿Necesitas desarrollo a medida o integraciones especiales? Consulta los paquetes de proyecto o contáctanos.",
       servicesTitle: "Servicios profesionales",
-      servicesLead: "Tarifa orientativa: {hourly} €/h para personalización, integraciones y automatizaciones.",
-      bundlesLead: "Paquetes cerrados habituales: {bundles} € según alcance.",
+      servicesLead: "Tarifa: {hourly} €/h para personalización, integraciones y automatizaciones.",
+      bundlesLead: "Paquetes cerrados: {bundles} € según alcance.",
       examples: [
         "Migración de datos",
         "Personalización vertical",
@@ -702,7 +713,7 @@ export default {
       plans: {
         starter: {
           name: "Starter",
-          tagline: "Tu primer paso digital",
+          tagline: "Empiezo",
           audience: "Para negocios que empiezan a ordenar clientes y citas",
           outcome:
             "Ideal si hoy vives entre WhatsApp, papel y Excel: centralizas agenda, clientes y reservas sin pagar por funciones que aún no necesitas.",
@@ -710,37 +721,58 @@ export default {
             "CRM con historial de clientes",
             "Agenda y calendario del equipo",
             "Reservas y recordatorios",
-            "Portal para que el cliente reserve solo"
+            "Portal para que el cliente reserve solo",
+            "Hasta 2 usuarios · 5 GB"
           ]
         },
         growth: {
           name: "Growth",
-          tagline: "Operación completa del día a día",
+          tagline: "Ya tengo negocio",
           audience: "Para negocios con stock, equipo y comunicación activa",
           outcome:
-            "Cuando ya no basta con la agenda: controlas inventario, ves métricas del negocio y respondes clientes por WhatsApp con cuota mensual incluida.",
+            "Cuando ya no basta con la agenda: controlas inventario, ves métricas y atiendes WhatsApp con cuota de conversaciones incluida.",
           includes: [
             "Todo lo del Starter",
             "Inventario y alertas de stock",
             "CRM avanzado y pipeline comercial",
             "Analytics y comparativa con tu sector",
-            "WhatsApp integrado (cuota mensual incluida)"
+            "WhatsApp incluido (conversaciones/mes)",
+            "Hasta 8 usuarios · 50 GB"
           ]
         },
         pro: {
           name: "Pro",
-          tagline: "Menos trabajo manual cada día",
+          tagline: "Quiero automatizar",
           audience: "Para negocios con mucho volumen que no pueden seguir a mano",
           outcome:
             "Automatizas recordatorios, centralizas WhatsApp y ganas tiempo sin contratar más personal administrativo.",
           valueAnchor:
-            "Valorado normalmente en más de 250 €/mes si contrataras varias herramientas sueltas. Todo integrado en una sola plataforma.",
+            "Valorado normalmente en más de 300 €/mes si contrataras varias herramientas sueltas. Todo integrado en una sola plataforma.",
           includes: [
             "Todo lo del Growth",
-            "Asistente IA integrado",
+            "Asistente IA integrado (respuestas incluidas)",
             "Automatizaciones y flujos personalizados",
             "WhatsApp avanzado con mayor cuota",
+            "Usuarios ilimitados · 200 GB",
             "Acceso al ecosistema Dakinis Network"
+          ]
+        },
+        enterprise: {
+          kicker: "Ancla Enterprise",
+          name: "Enterprise",
+          tagline: "Operación multiempresa con SLA",
+          audience: "Cadenas, grupos y operativas exigentes",
+          outcome:
+            "Multiempresa, API, integraciones, SLA y consultoría. Hace que Pro se sienta barato — y cubre casos reales de escala.",
+          fromPrice: "Desde {price} €/mes",
+          cta: "Hablar de Enterprise",
+          includes: [
+            "Todo lo del Pro",
+            "Multiempresa y permisos avanzados",
+            "SLA y soporte prioritario",
+            "API e integraciones a medida",
+            "Cuotas ampliadas de IA y WhatsApp",
+            "Consultoría incluida"
           ]
         }
       }
@@ -805,12 +837,19 @@ export default {
       priceFormat: "{amount} €/mes",
       basic: {
         name: "Soporte básico",
-        description: "Incidencias, pequeños ajustes y que el sistema siga vivo en producción."
+        description: "Incidencias, pequeños ajustes y 1 h/mes incluida."
+      },
+      priority: {
+        name: "Soporte prioridad",
+        description: "Canal prioritario y 3 h/mes incluidas para mejoras pequeñas."
+      },
+      premium: {
+        name: "Soporte premium",
+        description: "SLA preferente, 6 h/mes incluidas y atención directa del equipo."
       },
       plus: {
-        name: "Soporte + mejoras",
-        description:
-          "Prioridad en soporte y hueco mensual para mejoras pequeñas encaminadas."
+        name: "Soporte prioridad",
+        description: "Canal prioritario y 3 h/mes incluidas para mejoras pequeñas."
       }
     },
     implementation: {
@@ -1439,7 +1478,7 @@ export default {
     scanPlaceholder: "Vista previa cámara / foto",
     scanCode: "Código leído",
     scanCodePlaceholder: "Escanea un código…",
-    scanStabilizing: "Enfocando código… mantén el móvil quieto un instante.",
+    scanStabilizing: "Detectando… mantén el código a la vista.",
     scanCodeCol: "Código",
     scanQtyLabel: "Cantidad por escaneo",
     scanDirection: "Movimiento",
@@ -1944,6 +1983,7 @@ export default {
       businessName: "Negocio:",
       plan: "Plan:",
       user: "Usuario:",
+      appearance: "Apariencia",
       role: "Rol:",
       tenant: "Tenant:",
       type: "Tipo:",
