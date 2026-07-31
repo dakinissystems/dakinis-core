@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { AppShell as DesAppShell } from "@dakinis/shared-layouts";
 import AppTopBar from "../components/AppTopBar.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -20,6 +21,10 @@ import VistaMockupPage from "../pages/VistaMockupPage.jsx";
 import SystemPage from "../pages/SystemPage.jsx";
 import PublicAllergiesPage from "../pages/PublicAllergiesPage.jsx";
 import CheckoutSuccessPage from "../pages/CheckoutSuccessPage.jsx";
+import DesMotionPage from "../pages/DesMotionPage.jsx";
+import DesPatternsPage from "../pages/DesPatternsPage.jsx";
+import DesThemePage from "../pages/DesThemePage.jsx";
+import DesIndexPage from "../pages/DesIndexPage.jsx";
 import {
   FaqPage,
   LegalNoticePage,
@@ -61,19 +66,28 @@ function Shell({ children }) {
   const showWhatsappFab = dakinisShouldShowPublicWhatsappFab(location.pathname);
 
   return (
-    <div className="app-shell">
-      <AppTopBar
-        navigate={navigateCompat}
-        session={session}
-        onSignOut={signOut}
-        currentPath={location.pathname}
-      />
-      <BillingAccessBanner />
-      <main className="app-main">{children}</main>
-      <AppFooter navigate={navigateCompat} />
+    <DesAppShell
+      product="core"
+      theme="auto"
+      layout="stack"
+      className="app-shell"
+      header={
+        <>
+          <AppTopBar
+            navigate={navigateCompat}
+            session={session}
+            onSignOut={signOut}
+            currentPath={location.pathname}
+          />
+          <BillingAccessBanner />
+        </>
+      }
+      footer={<AppFooter navigate={navigateCompat} />}
+    >
+      {children}
       <DakinisCommandPaletteProvider />
       {showWhatsappFab ? <DraggableWhatsappButton /> : null}
-    </div>
+    </DesAppShell>
   );
 }
 
@@ -144,6 +158,14 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {import.meta.env.DEV ? (
+        <>
+          <Route path="/__des" element={<DesIndexPage />} />
+          <Route path="/__des/motion" element={<DesMotionPage />} />
+          <Route path="/__des/patterns" element={<DesPatternsPage />} />
+          <Route path="/__des/theme" element={<DesThemePage />} />
+        </>
+      ) : null}
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/portal/:slug" element={<ClientPortalPage />} />

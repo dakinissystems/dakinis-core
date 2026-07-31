@@ -99,7 +99,7 @@ export default function PlatformCatalogPanel() {
           />
         </label>
         {error ? <p className="login-form__error">{error}</p> : null}
-        {notice ? <p className="lead" style={{ color: "var(--accent, #22c55e)" }}>{notice}</p> : null}
+        {notice ? <p className="lead" style={{ color: "var(--dakinis-accent, var(--accent))" }}>{notice}</p> : null}
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.75rem" }}>
           <button type="submit" className="btn" disabled={saving}>
             {saving ? t("admin.catalog.saving") : t("admin.catalog.save")}

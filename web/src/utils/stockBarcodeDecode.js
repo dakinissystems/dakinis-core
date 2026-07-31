@@ -33,9 +33,9 @@ export function dakinisIsPlausibleBarcode(code) {
  * @param {{ onPreview?: (code: string) => void, minHits?: number, windowMs?: number, cooldownMs?: number }} [opts]
  */
 function dakinisCreateStableBarcodeEmitter(onConfirmed, opts = {}) {
-  const minHits = opts.minHits ?? 4;
-  const windowMs = opts.windowMs ?? 500;
-  const cooldownMs = opts.cooldownMs ?? 3000;
+  const minHits = opts.minHits ?? 2;
+  const windowMs = opts.windowMs ?? 320;
+  const cooldownMs = opts.cooldownMs ?? 1200;
   const onPreview = opts.onPreview;
 
   /** @type {{ code: string, t: number }[]} */
@@ -106,12 +106,10 @@ async function dakinisTryDecodeWithZXing(dataUrl) {
 
 async function dakinisQuaggaDecodeSingle(src) {
   const Quagga = (await import("@ericblade/quagga2")).default;
+  // Pocos intentos primero (rápido); fallbacks solo si fallan
   const configs = [
+    { size: 800, patchSize: "medium", halfSample: true, singleChannel: false },
     { size: 1200, patchSize: "large", halfSample: false, singleChannel: false },
-    { size: 1200, patchSize: "medium", halfSample: false, singleChannel: true },
-    { size: 800, patchSize: "large", halfSample: true, singleChannel: false },
-    { size: 1600, patchSize: "large", halfSample: false, singleChannel: false },
-    { size: 800, patchSize: "medium", halfSample: false, singleChannel: false },
     { size: 600, patchSize: "medium", halfSample: true, singleChannel: true }
   ];
 
@@ -133,28 +131,23 @@ async function dakinisQuaggaDecodeSingle(src) {
   return null;
 }
 
-/** Decodifica imagen (foto o captura): Quagga multi-config + ZXing (QR y 1D). */
+/** Decodifica imagen (foto o captura): ZXing primero (rápido) + Quagga reducido. */
 export async function dakinisDecodeBarcodeFromImage(dataUrl) {
-  let code = await dakinisQuaggaDecodeSingle(dataUrl);
+  let code = await dakinisTryDecodeWithZXing(dataUrl);
   if (code) return code;
 
-  const scaled1200 = await dakinisScaleImageToDataUrl(dataUrl, 1200);
-  if (scaled1200 !== dataUrl) {
-    code = await dakinisQuaggaDecodeSingle(scaled1200);
-    if (code) return code;
-  }
+  code = await dakinisQuaggaDecodeSingle(dataUrl);
+  if (code) return code;
 
   const scaled800 = await dakinisScaleImageToDataUrl(dataUrl, 800);
   if (scaled800 !== dataUrl) {
+    code = await dakinisTryDecodeWithZXing(scaled800);
+    if (code) return code;
     code = await dakinisQuaggaDecodeSingle(scaled800);
     if (code) return code;
   }
 
-  code = await dakinisTryDecodeWithZXing(dataUrl);
-  if (code) return code;
-  code = await dakinisTryDecodeWithZXing(scaled1200 || dataUrl);
-  if (code) return code;
-  return dakinisTryDecodeWithZXing(scaled800 || dataUrl);
+  return null;
 }
 
 /** @typedef {"environment"|"user"} DakinisCameraFacing */
@@ -170,9 +163,9 @@ export async function dakinisStartLiveBarcodeScanner(videoEl, onCode, opts = {})
   const Quagga = (await import("@ericblade/quagga2")).default;
   const stable = dakinisCreateStableBarcodeEmitter(onCode, {
     onPreview: opts.onPreview,
-    minHits: opts.minHits ?? 4,
-    windowMs: opts.windowMs ?? 500,
-    cooldownMs: opts.cooldownMs ?? 3000
+    minHits: opts.minHits ?? 2,
+    windowMs: opts.windowMs ?? 320,
+    cooldownMs: opts.cooldownMs ?? 1200
   });
 
   const facingMode = opts.facingMode === "user" ? "user" : "environment";
@@ -214,7 +207,7 @@ export async function dakinisStartLiveBarcodeScanner(videoEl, onCode, opts = {})
       multiple: false
     },
     locate: true,
-    frequency: 4,
+    frequency: 10,
     numOfWorkers: typeof navigator !== "undefined" && navigator.hardwareConcurrency > 2 ? 2 : 0
   };
 

@@ -140,7 +140,7 @@ export default function DakinisCopilotPanel({ variant = "inline", className = ""
         </div>
 
         {error ? (
-          <p className="lead" style={{ color: "#f97316", marginTop: "0.65rem" }}>
+          <p className="lead" style={{ color: "var(--dakinis-warning)", marginTop: "0.65rem" }}>
             {error}
           </p>
         ) : null}

@@ -3,9 +3,9 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 
 function dakinisSeverityStyle(severity) {
-  if (severity === "warning") return { color: "#fb923c", fontWeight: 600 };
-  if (severity === "critical") return { color: "#f87171", fontWeight: 600 };
-  return { color: "#94a3b8" };
+  if (severity === "warning") return { color: "var(--dakinis-warning)", fontWeight: 600 };
+  if (severity === "critical") return { color: "var(--dakinis-danger)", fontWeight: 600 };
+  return { color: "var(--dakinis-muted)" };
 }
 
 function dakinisSeverityLabel(severity) {

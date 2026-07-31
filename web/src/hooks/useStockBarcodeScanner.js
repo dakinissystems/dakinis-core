@@ -13,6 +13,7 @@ export function useStockBarcodeScanner({ onScan, t }) {
   const wedgeFlushRef = useRef(null);
   const stopRef = useRef(null);
   const confirmedRef = useRef("");
+  const lastConfirmAtRef = useRef(0);
   const previewTimerRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
   const [facingMode, setFacingMode] = useState("environment");
@@ -27,8 +28,11 @@ export function useStockBarcodeScanner({ onScan, t }) {
     (code, { fromCamera = false } = {}) => {
       const trimmed = dakinisNormalizeScanReading(code);
       if (!trimmed) return;
-      if (trimmed === confirmedRef.current) return;
+      const now = Date.now();
+      // Mismo código: permitir re-escaneo tras cooldown (varios bultos del mismo EAN)
+      if (trimmed === confirmedRef.current && now - lastConfirmAtRef.current < 1200) return;
       confirmedRef.current = trimmed;
+      lastConfirmAtRef.current = now;
       setPreviewCode("");
       setConfirmedCode(trimmed);
       setDecodeError("");
@@ -124,9 +128,9 @@ export function useStockBarcodeScanner({ onScan, t }) {
         {
           facingMode: face,
           onPreview: handlePreview,
-          minHits: 4,
-          windowMs: 500,
-          cooldownMs: 3500
+          minHits: 2,
+          windowMs: 320,
+          cooldownMs: 1200
         }
       );
       stopRef.current = stop;

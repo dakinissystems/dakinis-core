@@ -26,12 +26,12 @@ export function SupplyDeliveriesSection({
 
       {loading ? <p className="lead">Cargando entregas…</p> : null}
       {loadError ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {loadError} (mostrando vista offline si hay datos locales de ejemplo).
         </p>
       ) : null}
       {actionError ? (
-        <p className="lead" style={{ color: "#f97316" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {actionError}
         </p>
       ) : null}

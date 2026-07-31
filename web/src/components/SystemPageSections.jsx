@@ -268,7 +268,7 @@ export function SystemPageRecordsSection({
     <>
       <h3>{showDemoWelcome ? t("system.dataSectionDemo") : t("system.dataLoad")}</h3>
       {recordsError ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {showDemoWelcome ? t("system.recordsErrorFriendly") : t("system.recordsError", { error: recordsError })}
         </p>
       ) : recordsSynced ? (
