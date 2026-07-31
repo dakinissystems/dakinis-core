@@ -514,6 +514,50 @@ a.link-btn {
   color: var(--dakinis-muted);
 }
 
+.pricing-plan-card__hours-saved {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--dakinis-accent, #2dd4bf);
+}
+
+.pricing-plan-limits {
+  list-style: none;
+  margin: 0.35rem 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--dakinis-muted);
+}
+
+.pricing-enterprise-card {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  align-items: end;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--dakinis-accent, #2dd4bf) 35%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--dakinis-accent, #2dd4bf) 8%, transparent),
+    transparent 60%
+  );
+}
+
+@media (min-width: 840px) {
+  .pricing-enterprise-card {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.pricing-enterprise-card__price {
+  margin: 0.35rem 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
 .pricing-page-intro__value {
   font-size: 1.2rem;
   color: #e8f4ff;

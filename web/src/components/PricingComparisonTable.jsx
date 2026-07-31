@@ -5,10 +5,19 @@ const DAKINIS_COMPARE_ROW_KEYS = [
   "agenda",
   "reservations",
   "inventory",
+  "billing",
+  "excel",
+  "roles",
+  "backups",
+  "reports",
   "whatsapp",
   "analytics",
   "ai",
-  "automations"
+  "automations",
+  "multiuser",
+  "multitenant",
+  "api",
+  "integrations",
 ];
 
 const DAKINIS_PLAN_COLUMNS = ["starter", "growth", "pro"];

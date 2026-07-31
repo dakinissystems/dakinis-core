@@ -616,13 +616,17 @@ export default {
     selectPlanHint: "Click «I want this plan» on a card and the email and WhatsApp message will update automatically.",
     contactWhatsappCta: "Message on WhatsApp",
     recommendedBadge: "Most popular",
-    quotaWaLead: "Integrated WhatsApp so you can reply to customers from the same panel.",
-    quotaWaFootnote: "Up to {count} messages per month included.",
+    quotaWaLead: "WhatsApp included so you can help customers from the same panel.",
+    quotaWaFootnote: "Up to {count} conversations per month included.",
     quotaAiLead:
-      "AI assistant to help you reply to customers, draft messages and manage information.",
-    quotaAiFootnote: "Up to {count} interactions per month included.",
+      "AI assistant to reply to customers, draft messages and run day-to-day actions.",
+    quotaAiFootnote: "Up to {count} AI responses per month included.",
+    quotaUsersFootnote: "Up to {count} users included.",
+    quotaUsersUnlimited: "Unlimited users.",
+    quotaStorageFootnote: "{count} GB storage included.",
+    hoursSaved: "Save about {count} hours per month.",
     implBridge:
-      "The monthly fee is your software subscription. Setup is a one-time payment at the start, matched to the plan you choose.",
+      "The monthly fee is your software subscription. Setup is consulting (one-time) matched to the plan you choose.",
     problemsSolved: {
       title: "Sound familiar?",
       items: [
@@ -634,35 +638,42 @@ export default {
     },
     compare: {
       title: "Plan comparison",
-      lead: "Everything essential in one table so you can see what each plan includes at a glance.",
+      lead: "A fuller table so Growth and Pro clearly show more value at a glance.",
       featureCol: "Feature",
       included: "Included",
       notIncluded: "Not included",
       rows: {
-        crm: { label: "Clients and sales", starter: true, growth: true, pro: true },
+        crm: { label: "CRM / clients and sales", starter: true, growth: true, pro: true },
         agenda: { label: "Schedule and appointments", starter: true, growth: true, pro: true },
         reservations: { label: "Online booking", starter: true, growth: true, pro: true },
         inventory: { label: "Inventory and stock", starter: false, growth: true, pro: true },
-        whatsapp: { label: "WhatsApp in the panel", starter: false, growth: true, pro: true },
-        analytics: { label: "Automatic reports", starter: false, growth: true, pro: true },
-        ai: { label: "Advanced assistant", starter: false, growth: false, pro: true },
-        automations: { label: "Automatic reminders", starter: false, growth: false, pro: true }
+        billing: { label: "Invoicing", starter: false, growth: true, pro: true },
+        excel: { label: "Excel export", starter: true, growth: true, pro: true },
+        roles: { label: "Roles and permissions", starter: false, growth: true, pro: true },
+        backups: { label: "Backups", starter: true, growth: true, pro: true },
+        reports: { label: "Reports", starter: false, growth: true, pro: true },
+        whatsapp: { label: "WhatsApp", starter: false, growth: true, pro: true },
+        analytics: { label: "Analytics / benchmark", starter: false, growth: true, pro: true },
+        ai: { label: "AI / Copilot", starter: false, growth: false, pro: true },
+        automations: { label: "Automations", starter: false, growth: false, pro: true },
+        multiuser: { label: "Multi-user", starter: true, growth: true, pro: true },
+        multitenant: { label: "Multi-business", starter: false, growth: false, pro: false },
+        api: { label: "API", starter: false, growth: false, pro: false },
+        integrations: { label: "Integrations", starter: false, growth: true, pro: true }
       }
     },
     implementationByPlan: {
+      priceFormat: "€{amount}",
       starter: {
         label: "Starter setup",
-        range: "€199 – €300",
         description: "Basic configuration, initial data and one team training session."
       },
       growth: {
         label: "Growth setup",
-        range: "€500",
         description: "Client and appointment migration, initial inventory and guided go-live."
       },
       pro: {
         label: "Pro setup",
-        range: "€1,000+",
         description: "Full migration, automations and connections tailored to how you operate."
       }
     },
@@ -683,15 +694,15 @@ export default {
       perMonth: "/month",
       recommended: "recommended",
       overageLead:
-        "Overage: €{aiRate} / 1,000 extra AI queries (Pro plan) · €{waRate} / 500 extra WhatsApp messages.",
-      implementationTitle: "Initial implementation (one-time)",
+        "Overage: €{aiRate} / 1,000 extra AI responses · €{waRate} / 500 extra WhatsApp conversations · €{userRate}/extra user/month.",
+      implementationTitle: "Initial implementation (one-time · consulting)",
       implementationLead:
-        "Each plan has its own setup range. You don't pay €500 if you start on Starter — the upfront cost matches the plan you choose.",
+        "Setup is consulting, not software: configuration, migration and training. Price matches the plan you choose.",
       projectsHint:
-        "Need bespoke development or special integrations? See project packages on the corporate site or contact us.",
+        "Need bespoke development or special integrations? See project packages or contact us.",
       servicesTitle: "Professional services",
-      servicesLead: "Indicative rate: €{hourly}/h for customization, integrations and automations.",
-      bundlesLead: "Typical fixed bundles: €{bundles} depending on scope.",
+      servicesLead: "Rate: €{hourly}/h for customization, integrations and automations.",
+      bundlesLead: "Fixed packages: €{bundles} depending on scope.",
       examples: [
         "Data migration",
         "Vertical customization",
@@ -701,7 +712,7 @@ export default {
       plans: {
         starter: {
           name: "Starter",
-          tagline: "Your first digital step",
+          tagline: "I'm getting started",
           audience: "For businesses starting to organise clients and bookings",
           outcome:
             "Ideal if you juggle WhatsApp, paper and spreadsheets today: centralise schedule, clients and reservations without paying for features you don't need yet.",
@@ -709,37 +720,58 @@ export default {
             "CRM with client history",
             "Team calendar and scheduling",
             "Bookings and reminders",
-            "Client self-service booking portal"
+            "Client self-service booking portal",
+            "Up to 2 users · 5 GB"
           ]
         },
         growth: {
           name: "Growth",
-          tagline: "Full daily operations",
+          tagline: "I already have a business",
           audience: "For businesses with stock, a team and active communication",
           outcome:
-            "When scheduling alone isn't enough: control inventory, see business metrics and reach customers on WhatsApp with a monthly quota included.",
+            "When scheduling alone isn't enough: control inventory, see metrics and handle WhatsApp with conversations included.",
           includes: [
             "Everything in Starter",
             "Inventory and stock alerts",
             "Advanced CRM and sales pipeline",
             "Analytics and sector benchmarks",
-            "Integrated WhatsApp (monthly quota included)"
+            "WhatsApp included (conversations/month)",
+            "Up to 8 users · 50 GB"
           ]
         },
         pro: {
           name: "Pro",
-          tagline: "Less manual work every day",
+          tagline: "I want to automate",
           audience: "For high-volume businesses that can't keep doing everything by hand",
           outcome:
             "Automate reminders, centralise WhatsApp and save time without hiring more admin staff.",
           valueAnchor:
-            "Typically worth over €250/month if you bought several separate tools. Everything integrated in one platform.",
+            "Typically worth over €300/month if you bought several separate tools. Everything integrated in one platform.",
           includes: [
             "Everything in Growth",
-            "Integrated AI assistant",
+            "Integrated AI assistant (responses included)",
             "Automations and custom workflows",
             "Advanced WhatsApp with higher quota",
+            "Unlimited users · 200 GB",
             "Access to the Dakinis Network ecosystem"
+          ]
+        },
+        enterprise: {
+          kicker: "Enterprise anchor",
+          name: "Enterprise",
+          tagline: "Multi-business ops with SLA",
+          audience: "Chains, groups and demanding operations",
+          outcome:
+            "Multi-business, API, integrations, SLA and consulting. Makes Pro feel affordable — and covers real scale cases.",
+          fromPrice: "From €{price}/month",
+          cta: "Talk about Enterprise",
+          includes: [
+            "Everything in Pro",
+            "Multi-business and advanced permissions",
+            "SLA and priority support",
+            "API and custom integrations",
+            "Expanded AI and WhatsApp quotas",
+            "Consulting included"
           ]
         }
       }
@@ -804,11 +836,19 @@ export default {
       priceFormat: "€{amount}/month",
       basic: {
         name: "Basic support",
-        description: "Incidents, small tweaks and keeping the system healthy in production."
+        description: "Incidents, small tweaks and 1 h/month included."
+      },
+      priority: {
+        name: "Priority support",
+        description: "Priority channel and 3 h/month included for small improvements."
+      },
+      premium: {
+        name: "Premium support",
+        description: "Preferred SLA, 6 h/month included and direct access to the team."
       },
       plus: {
-        name: "Support + improvements",
-        description: "Priority support and monthly capacity for small, guided improvements."
+        name: "Priority support",
+        description: "Priority channel and 3 h/month included for small improvements."
       }
     },
     implementation: {
