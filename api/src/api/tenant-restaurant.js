@@ -93,9 +93,34 @@ async function dakinisSaveBusinessConfig(businessId, config) {
   await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
 }
 
+/** Solo claves slug seguras (evita prototype / remote property injection). */
+const DAKINIS_SAFE_STOCK_SLUG_RE = /^[a-z0-9-]{1,64}$/;
+
+function dakinisIsSafeStockSlug(slug) {
+  const key = String(slug || "");
+  return DAKINIS_SAFE_STOCK_SLUG_RE.test(key) && !["__proto__", "constructor", "prototype"].includes(key);
+}
+
 function dakinisStockBarcodesFromConfig(config) {
   const map = config?.stockBarcodes;
-  return map && typeof map === "object" && !Array.isArray(map) ? map : {};
+  if (!map || typeof map !== "object" || Array.isArray(map)) return {};
+  const out = Object.create(null);
+  for (const key of Object.keys(map)) {
+    if (!dakinisIsSafeStockSlug(key)) continue;
+    const val = map[key];
+    if (typeof val === "string" && val.trim()) out[key] = val.trim();
+  }
+  return out;
+}
+
+function dakinisPutStockBarcode(barcodes, slug, barcode) {
+  if (!dakinisIsSafeStockSlug(slug)) return barcodes;
+  const value = String(barcode || "").trim();
+  if (!value) return barcodes;
+  // Map evita asignar propiedades dinámicas sobre un Object heredado.
+  const next = new Map(Object.entries(barcodes || {}));
+  next.set(slug, value);
+  return Object.fromEntries(next);
 }
 
 async function dakinisMaybeCreateLotOnReceive(businessId, { productName, productBarcode, expiryDate, quantity }) {
@@ -441,7 +466,9 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
   await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
   const slug = dakinisSlugFromBarcode(barcode) || dakinisSlugFromName(name);
-  if (!slug) return dakinisJsonError(400, "VALIDATION_ERROR", "No se pudo generar slug");
+  if (!slug || !dakinisIsSafeStockSlug(slug)) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "No se pudo generar slug valido");
+  }
 
   const existing = await dakinisQueryOne(
     `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
@@ -471,8 +498,7 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
   }
 
   const config = await dakinisLoadBusinessConfig(businessId);
-  const barcodes = dakinisStockBarcodesFromConfig(config);
-  barcodes[slug] = barcode;
+  const barcodes = dakinisPutStockBarcode(dakinisStockBarcodesFromConfig(config), slug, barcode);
   await dakinisSaveBusinessConfig(businessId, { ...config, stockBarcodes: barcodes });
 
   if (expiryDate) {
