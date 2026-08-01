@@ -4,7 +4,8 @@ export {
   dakinisIsResendConfigured,
   dakinisSendResendEmail,
   dakinisOnboardingEmailHtml,
-  dakinisPasswordResetEmailHtml
+  dakinisPasswordResetEmailHtml,
+  dakinisOpsAlertEmailHtml
 } from "./resend-mail.js";
 
 export function dakinisEmailAdapter() {

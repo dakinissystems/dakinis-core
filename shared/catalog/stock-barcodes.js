@@ -37,8 +37,11 @@ export function dakinisResolveStockItemSlug(scanCode, items) {
   const norm = dakinisNormalizeStockScanCode(scanCode);
   if (!norm || !Array.isArray(items)) return null;
 
+  const barcodeSlug = dakinisSlugFromBarcode(norm);
+
   for (const item of items) {
     const slug = item.slug;
+    if (barcodeSlug && slug === barcodeSlug) return slug;
     const barcode = item.barcode || dakinisStockDemoBarcode(slug);
     const aliases = [
       barcode,

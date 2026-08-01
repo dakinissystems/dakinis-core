@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
+import { dakinisNotifyOpsOfSupplyAlert } from "../lib/ops-alerts.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 const SEVERITIES = new Set(["info", "warning", "critical"]);
@@ -214,7 +215,16 @@ export async function dakinisHandleSupplyAlertsPost(req, rawBody) {
   );
 
   const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_alerts WHERE id = ?`, [id]);
-  return dakinisJsonSuccess({ alert: dakinisRowAlert(row) }, req.dakinisBusiness.type, dakinisMeta(req));
+  const alert = dakinisRowAlert(row);
+  try {
+    await dakinisNotifyOpsOfSupplyAlert({
+      business: req.dakinisBusiness,
+      alert
+    });
+  } catch {
+    // La alerta ya está persistida; el email no debe tumbar el POST.
+  }
+  return dakinisJsonSuccess({ alert }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {

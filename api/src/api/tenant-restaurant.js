@@ -29,6 +29,17 @@ import {
   dakinisRestaurantValidatePlan
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
+import {
+  dakinisNormalizeStockScanCode,
+  dakinisResolveStockItemSlug,
+  dakinisSlugFromBarcode,
+  dakinisSlugFromName
+} from "@dakinis/shared/catalog/stock-barcodes.js";
+import {
+  DAKINIS_DEFAULT_STOCK_LOCATIONS,
+  dakinisDaysUntilExpiry,
+  dakinisExpirySeverity
+} from "@dakinis/shared/catalog/inventory-lots.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt } from "./tenant-supply.js";
 
@@ -56,7 +67,7 @@ function dakinisNewId(prefix) {
   return `${prefix}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
 }
 
-function dakinisRowStockItem(r) {
+function dakinisRowStockItem(r, barcode) {
   return {
     id: r.id,
     slug: r.slug,
@@ -64,8 +75,72 @@ function dakinisRowStockItem(r) {
     unit: r.unit,
     quantity: r.quantity,
     minQuantity: r.min_quantity,
+    barcode: barcode || undefined,
     updatedAt: r.updated_at
   };
+}
+
+async function dakinisLoadBusinessConfig(businessId) {
+  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
+  try {
+    return JSON.parse(biz?.config_json || "{}");
+  } catch {
+    return {};
+  }
+}
+
+async function dakinisSaveBusinessConfig(businessId, config) {
+  await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
+}
+
+function dakinisStockBarcodesFromConfig(config) {
+  const map = config?.stockBarcodes;
+  return map && typeof map === "object" && !Array.isArray(map) ? map : {};
+}
+
+async function dakinisMaybeCreateLotOnReceive(businessId, { productName, productBarcode, expiryDate, quantity }) {
+  const expiry = String(expiryDate || "").trim();
+  if (!expiry) return null;
+
+  const config = await dakinisLoadBusinessConfig(businessId);
+  const inv = config.inventory && typeof config.inventory === "object" ? config.inventory : {};
+  const locations =
+    Array.isArray(inv.locations) && inv.locations.length
+      ? inv.locations
+      : DAKINIS_DEFAULT_STOCK_LOCATIONS.map((loc, i) => ({
+          id: `loc_${loc.slug}`,
+          slug: loc.slug,
+          name: loc.name,
+          kind: loc.kind,
+          sortOrder: loc.sortOrder ?? i + 1
+        }));
+  const lots = Array.isArray(inv.lots) ? [...inv.lots] : [];
+  const loc = locations[0];
+  const year = new Date().getFullYear();
+  const seq = String(Math.floor(Math.random() * 999999)).padStart(6, "0");
+  const lot = {
+    id: dakinisNewId("lot"),
+    labelCode: `LOT-${year}-${seq}`,
+    productName: String(productName || "Producto").trim() || "Producto",
+    productBarcode: String(productBarcode || "").trim(),
+    supplierLot: "",
+    supplier: "",
+    expiryDate: expiry,
+    quantityRemaining: Number(quantity) > 0 ? Number(quantity) : 1,
+    locationId: loc?.id || null,
+    locationName: loc?.name || "Almacén"
+  };
+  const daysUntilExpiry = dakinisDaysUntilExpiry(lot.expiryDate);
+  const enriched = {
+    ...lot,
+    daysUntilExpiry,
+    expirySeverity: dakinisExpirySeverity(lot.expiryDate)
+  };
+  await dakinisSaveBusinessConfig(businessId, {
+    ...config,
+    inventory: { ...inv, locations, lots: [enriched, ...lots] }
+  });
+  return enriched;
 }
 
 function dakinisRowRecipe(r) {
@@ -184,13 +259,16 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
   const businessId = req.dakinisBusiness.id;
   await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
 
+  const config = await dakinisLoadBusinessConfig(businessId);
+  const barcodes = dakinisStockBarcodesFromConfig(config);
+
   const items = (
     await dakinisQueryAll(
       `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
        FROM tenant_stock_items WHERE business_id = ? ORDER BY name`,
       [businessId]
     )
-  ).map(dakinisRowStockItem);
+  ).map((r) => dakinisRowStockItem(r, barcodes[r.slug]));
 
   const recipes = await dakinisListRecipes(businessId);
   const stockBySlug = await dakinisStockMapBySlug(businessId);
@@ -338,6 +416,145 @@ export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {
 
   await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
   return dakinisJsonSuccess(config.floor, req.dakinisBusiness.type, dakinisMeta(req));
+}
+
+export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const barcode = dakinisNormalizeStockScanCode(body.barcode);
+  const unit = typeof body.unit === "string" && body.unit.trim() ? body.unit.trim() : "u";
+  const minQuantity = Number(body.minQuantity);
+  const initialQuantity = Number(body.initialQuantity);
+  const expiryDate = typeof body.expiryDate === "string" ? body.expiryDate.trim() : "";
+
+  if (!name) return dakinisJsonError(400, "VALIDATION_ERROR", "name es obligatorio");
+  if (!barcode) return dakinisJsonError(400, "VALIDATION_ERROR", "barcode es obligatorio");
+
+  const businessId = req.dakinisBusiness.id;
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
+
+  const slug = dakinisSlugFromBarcode(barcode) || dakinisSlugFromName(name);
+  if (!slug) return dakinisJsonError(400, "VALIDATION_ERROR", "No se pudo generar slug");
+
+  const existing = await dakinisQueryOne(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+       FROM tenant_stock_items WHERE business_id = ? AND slug = ?`,
+    [businessId, slug]
+  );
+  if (existing) {
+    return dakinisJsonError(409, "CONFLICT", "Ya existe un insumo con este codigo");
+  }
+
+  const id = dakinisNewId("stk");
+  const qty = Number.isFinite(initialQuantity) && initialQuantity > 0 ? initialQuantity : 0;
+  const minQ = Number.isFinite(minQuantity) && minQuantity >= 0 ? minQuantity : 0;
+
+  await dakinisRun(
+    `INSERT INTO tenant_stock_items (id, business_id, slug, name, unit, quantity, min_quantity)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, businessId, slug, name, unit, qty, minQ]
+  );
+
+  if (qty > 0) {
+    await dakinisRun(
+      `INSERT INTO tenant_stock_movements (id, business_id, stock_item_id, delta, reason, reference_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [dakinisNewId("sm"), businessId, id, qty, "alta-escaneo", null]
+    );
+  }
+
+  const config = await dakinisLoadBusinessConfig(businessId);
+  const barcodes = dakinisStockBarcodesFromConfig(config);
+  barcodes[slug] = barcode;
+  await dakinisSaveBusinessConfig(businessId, { ...config, stockBarcodes: barcodes });
+
+  if (expiryDate) {
+    await dakinisMaybeCreateLotOnReceive(businessId, {
+      productName: name,
+      productBarcode: barcode,
+      expiryDate,
+      quantity: qty > 0 ? qty : 1
+    });
+  }
+
+  const row = await dakinisQueryOne(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+       FROM tenant_stock_items WHERE id = ?`,
+    [id]
+  );
+  return dakinisJsonSuccess(
+    { item: dakinisRowStockItem(row, barcode) },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
+export async function dakinisHandleRestaurantStockScanPost(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const barcode = dakinisNormalizeStockScanCode(body.barcode);
+  const qty = Number(body.quantity);
+  const direction = String(body.direction || "in").toLowerCase() === "out" ? "out" : "in";
+  if (!barcode) return dakinisJsonError(400, "VALIDATION_ERROR", "barcode es obligatorio");
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "quantity debe ser > 0");
+  }
+
+  const businessId = req.dakinisBusiness.id;
+  await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
+
+  const config = await dakinisLoadBusinessConfig(businessId);
+  const barcodes = dakinisStockBarcodesFromConfig(config);
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+       FROM tenant_stock_items WHERE business_id = ?`,
+    [businessId]
+  );
+  const items = rows.map((r) => dakinisRowStockItem(r, barcodes[r.slug]));
+  const slug = dakinisResolveStockItemSlug(barcode, items);
+  if (!slug) {
+    return dakinisJsonError(404, "BARCODE_UNKNOWN", "Codigo no reconocido");
+  }
+
+  const row = rows.find((r) => r.slug === slug);
+  if (!row) return dakinisJsonError(404, "BARCODE_UNKNOWN", "Codigo no reconocido");
+
+  const delta = direction === "out" ? -qty : qty;
+  if (direction === "out" && Number(row.quantity) + delta < -1e-9) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "Stock insuficiente");
+  }
+
+  await dakinisAdjustStock(
+    businessId,
+    row.id,
+    delta,
+    direction === "out" ? "salida-escaneo" : "entrada-escaneo",
+    null
+  );
+
+  const updated = await dakinisQueryOne(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+       FROM tenant_stock_items WHERE id = ?`,
+    [row.id]
+  );
+  return dakinisJsonSuccess(
+    { item: dakinisRowStockItem(updated, barcodes[slug] || barcode) },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
 }
 
 export async function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {

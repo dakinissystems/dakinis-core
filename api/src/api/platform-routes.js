@@ -9,7 +9,8 @@ import {
 } from "@dakinis/shared/catalog/business-type-display.js";
 import { dakinisParseCommercialPlanForStorage } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } from "../db/query.js";
-import { dakinisSqlOrderEmail } from "../db/dialect.js";
+import { dakinisSqlOrderCreatedAtDesc, dakinisSqlOrderEmail } from "../db/dialect.js";
+import { dakinisOpsAlertEmailTo } from "../lib/ops-alerts.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 import {
@@ -409,6 +410,39 @@ export async function dakinisHandlePlatformTelemetrySummary(searchParams) {
   }));
   return dakinisJsonSuccess({
     telemetry: { periodDays, tenants }
+  });
+}
+
+/** Alertas operativas de todos los tenants (hub admin + mirror de email ops). */
+export async function dakinisHandlePlatformAlertsList(searchParams) {
+  const limitRaw = Number(searchParams?.get?.("limit") || 50);
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 200) : 50;
+  const rows = await dakinisQueryAll(
+    `SELECT a.id, a.title, a.product_ref, a.condition_text, a.severity, a.created_at,
+            b.id AS business_id, b.slug AS business_slug, b.name AS business_name, b.type AS business_type
+       FROM tenant_supply_alerts a
+       INNER JOIN business b ON b.id = a.business_id
+      WHERE lower(a.severity) IN ('warning', 'critical')
+         OR a.product_ref LIKE 'system:load-error:%'
+      ORDER BY ${dakinisSqlOrderCreatedAtDesc("a.created_at")}
+      LIMIT ?`,
+    [limit]
+  );
+  const alerts = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    productRef: r.product_ref,
+    condition: r.condition_text,
+    severity: r.severity,
+    createdAt: r.created_at,
+    businessId: r.business_id,
+    businessSlug: r.business_slug,
+    businessName: r.business_name,
+    businessType: r.business_type
+  }));
+  return dakinisJsonSuccess({
+    alerts,
+    opsEmail: dakinisOpsAlertEmailTo()
   });
 }
 

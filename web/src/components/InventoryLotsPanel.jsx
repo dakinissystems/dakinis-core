@@ -5,6 +5,7 @@ import {
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisReportTenantLoadAlert } from "../utils/reportTenantLoadAlert.js";
 import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 import { INVENTORY_LOTS_INITIAL, inventoryLotsReducer } from "./inventoryLotsReducer.js";
 import {
@@ -83,7 +84,7 @@ function LotLabelCard({ lot, t, onPrint }) {
         {t("inventoryLots.supplierLot")}: {lot.supplierLot || "—"}
       </p>
       <p className="kpi-label">
-        {t("inventoryLots.expiry")}: {lot.expiryDate}
+        {t("inventoryLots.expiry")}: {lot.expiryDate || "—"}
       </p>
       <p style={{ fontFamily: "monospace", fontWeight: 700, margin: "0.5rem 0" }}>{lot.labelCode}</p>
       {qrUrl ? <img src={qrUrl} width={160} height={160} alt="" className="inventory-lot-label__qr" /> : null}
@@ -186,10 +187,19 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         loadDemo();
         return;
       }
-      dispatch({ type: "setError", error: e instanceof Error ? e.message : t("inventoryLots.loadError") });
+      const message = e instanceof Error ? e.message : t("inventoryLots.loadError");
+      dispatch({ type: "setError", error: message });
+      void dakinisReportTenantLoadAlert({
+        apiSession: sess,
+        businessId: tenantSlugForVertical,
+        businessTypeHeader: activeSystemKey,
+        moduleKey: "inventory",
+        moduleLabel: "lotes / inventario",
+        errorMessage: message
+      });
       loadDemo();
     }
-  }, [fetchKey, fetchOpts, isDemo, loadDemo, locationId, t]);
+  }, [fetchKey, fetchOpts, isDemo, loadDemo, locationId, t, tenantSlugForVertical, activeSystemKey]);
 
   useEffect(() => {
     reload();
@@ -278,7 +288,7 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
       <style>body{font-family:sans-serif;padding:16px} .code{font-family:monospace;font-size:14px;font-weight:bold}</style></head><body>
       <strong>${lot.productName}</strong><br/>
       ${t("inventoryLots.supplierLot")}: ${lot.supplierLot || "—"}<br/>
-      ${t("inventoryLots.expiry")}: ${lot.expiryDate}<br/>
+      ${t("inventoryLots.expiry")}: ${lot.expiryDate || "—"}<br/>
       <span class="code">${lot.labelCode}</span><br/>
       <img src="${qrUrl}" width="200" height="200" alt="QR"/>
       <script>window.onload=function(){window.print()}</script></body></html>`);

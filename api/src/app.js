@@ -8,6 +8,7 @@ import {
   dakinisHandlePlatformCatalogGet,
   dakinisHandlePlatformCatalogPut,
   dakinisHandlePlatformTelemetrySummary,
+  dakinisHandlePlatformAlertsList,
   dakinisHandlePlatformBusinessHubProductsGet,
   dakinisHandlePlatformBusinessHubProductsPatch
 } from "./api/platform-routes.js";
@@ -31,7 +32,9 @@ import {
   dakinisHandleRestaurantProductionPost,
   dakinisHandleRestaurantProductionSimulatePost,
   dakinisHandleRestaurantProfilePatch,
-  dakinisHandleRestaurantStockPurchasePost
+  dakinisHandleRestaurantStockItemsPost,
+  dakinisHandleRestaurantStockPurchasePost,
+  dakinisHandleRestaurantStockScanPost
 } from "./api/tenant-restaurant.js";
 import {
   dakinisHandleRestaurantInvoicesList,
@@ -116,6 +119,11 @@ export async function dakinisDispatch(req, rawBody, url) {
     const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
     return dakinisHandlePlatformTelemetrySummary(url.searchParams);
+  }
+  if (path === "/api/platform/alerts" && req.method === "GET") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformAlertsList(url.searchParams);
   }
   const platformHubProductsMatch = /^\/api\/platform\/businesses\/([^/]+)\/hub-products$/.exec(path);
   if (platformHubProductsMatch && req.method === "GET") {
@@ -219,6 +227,10 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/floor" && req.method === "GET") return dakinisHandleRestaurantFloorGet(req);
   if (path === "/api/tenant/restaurant/floor" && req.method === "PATCH")
     return dakinisHandleRestaurantFloorPatch(req, rawBody);
+  if (path === "/api/tenant/restaurant/stock/items" && req.method === "POST")
+    return dakinisHandleRestaurantStockItemsPost(req, rawBody);
+  if (path === "/api/tenant/restaurant/stock/scan" && req.method === "POST")
+    return dakinisHandleRestaurantStockScanPost(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
     return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
   if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")

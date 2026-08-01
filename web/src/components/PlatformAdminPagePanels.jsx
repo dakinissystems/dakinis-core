@@ -364,6 +364,62 @@ export function PlatformAdminBusinessesPanel(props) {
   );
 }
 
+export function PlatformAdminAlertsPanel({ opsAlerts, opsEmail }) {
+  return (
+    <>
+      <h3 style={{ marginTop: "1.5rem" }}>Alertas del hub</h3>
+      <p className="lead" style={{ fontSize: "0.9rem" }}>
+        Errores de carga y alertas críticas de tenants. También se envían por email a{" "}
+        <code>{opsEmail || "dakinissystems@gmail.com"}</code> cuando Resend está configurado.
+      </p>
+      <article className="card" style={{ overflow: "auto" }}>
+        {opsAlerts.length === 0 ? (
+          <p className="lead">Sin alertas operativas recientes.</p>
+        ) : (
+          <table className="mockup-table">
+            <thead>
+              <tr>
+                <th>Cuándo</th>
+                <th>Negocio</th>
+                <th>Severidad</th>
+                <th>Título</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {opsAlerts.map((row) => (
+                <tr key={row.id}>
+                  <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>
+                    {row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"}
+                  </td>
+                  <td>
+                    {row.businessName} <code>{row.businessSlug}</code>
+                  </td>
+                  <td
+                    style={{
+                      fontWeight: 600,
+                      color:
+                        row.severity === "critical"
+                          ? "var(--dakinis-danger)"
+                          : row.severity === "warning"
+                            ? "var(--dakinis-warning)"
+                            : "var(--dakinis-muted)"
+                    }}
+                  >
+                    {row.severity}
+                  </td>
+                  <td>{row.title}</td>
+                  <td style={{ maxWidth: 320, fontSize: "0.85rem" }}>{row.condition}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </article>
+    </>
+  );
+}
+
 export function PlatformAdminTelemetryPanel({ pilotTelemetry }) {
   return (
     <>
