@@ -87,6 +87,8 @@ export function usePlatformAdminPage() {
   const [editTypeSelect, setEditTypeSelect] = useState("clinica");
   const [editTypeCustom, setEditTypeCustom] = useState("");
   const [pilotTelemetry, setPilotTelemetry] = useState([]);
+  const [opsAlerts, setOpsAlerts] = useState([]);
+  const [opsEmail, setOpsEmail] = useState("dakinissystems@gmail.com");
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserEmail, setEditUserEmail] = useState("");
   const [userActionMsg, setUserActionMsg] = useState("");
@@ -124,16 +126,21 @@ export function usePlatformAdminPage() {
     if (!session?.token || session.user?.role !== "platform_admin") return;
     setError("");
     try {
-      const [bJson, uJson, telJson] = await Promise.all([
+      const [bJson, uJson, telJson, alertsJson] = await Promise.all([
         dakinisBearerJsonFetch("/api/platform/businesses", session.token, { signal }),
         dakinisBearerJsonFetch("/api/platform/users", session.token, { signal }),
         dakinisBearerJsonFetch("/api/platform/telemetry/summary?days=30", session.token, { signal }).catch(
           () => ({ data: { telemetry: { tenants: [] } } })
-        )
+        ),
+        dakinisBearerJsonFetch("/api/platform/alerts?limit=50", session.token, { signal }).catch(() => ({
+          data: { alerts: [], opsEmail: "dakinissystems@gmail.com" }
+        }))
       ]);
       setBusinesses(bJson?.data?.businesses || []);
       setUsers(uJson?.data?.users || []);
       setPilotTelemetry(telJson?.data?.telemetry?.tenants || []);
+      setOpsAlerts(alertsJson?.data?.alerts || []);
+      setOpsEmail(alertsJson?.data?.opsEmail || "dakinissystems@gmail.com");
     } catch (e) {
       if (e?.name === "AbortError") return;
       setError(e instanceof Error ? e.message : t("admin.loadError"));
@@ -316,6 +323,8 @@ export function usePlatformAdminPage() {
     editTypeCustom,
     setEditTypeCustom,
     pilotTelemetry,
+    opsAlerts,
+    opsEmail,
     editingUserId,
     setEditingUserId,
     editUserEmail,

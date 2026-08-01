@@ -1,5 +1,6 @@
 import { usePlatformAdminPage } from "../hooks/usePlatformAdminPage.js";
 import {
+  PlatformAdminAlertsPanel,
   PlatformAdminBusinessesPanel,
   PlatformAdminCreateBusinessForm,
   PlatformAdminTelemetryPanel,
@@ -58,6 +59,7 @@ export default function PlatformAdminPage({ navigate }) {
 
         <PlatformAdminCreateBusinessForm {...admin} />
         <PlatformAdminBusinessesPanel {...admin} />
+        <PlatformAdminAlertsPanel opsAlerts={admin.opsAlerts} opsEmail={admin.opsEmail} />
         <PlatformAdminTelemetryPanel pilotTelemetry={admin.pilotTelemetry} />
         <PlatformAdminUsersPanel {...admin} />
       </div>

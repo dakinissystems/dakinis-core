@@ -12,13 +12,14 @@ export function RestaurantStockScanPanel({
   setScanDirection,
   scanMessage,
   unknownBarcode,
-  setUnknownBarcode,
   newProductName,
   setNewProductName,
   newProductUnit,
   setNewProductUnit,
   newProductMin,
   setNewProductMin,
+  newProductExpiry,
+  setNewProductExpiry,
   busy,
   dakinisCreateProductFromScan,
   setScanMessage
@@ -104,6 +105,14 @@ export function RestaurantStockScanPanel({
               onChange={(ev) => setNewProductMin(ev.target.value)}
             />
           </label>
+          <label className="mockup-field">
+            <span>{t("kitchen.scanProductExpiry")}</span>
+            <input
+              type="date"
+              value={newProductExpiry}
+              onChange={(ev) => setNewProductExpiry(ev.target.value)}
+            />
+          </label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             <button type="submit" className="btn" disabled={busy || !newProductName.trim()}>
               {t("kitchen.scanAddProduct")}
@@ -113,9 +122,11 @@ export function RestaurantStockScanPanel({
               className="btn btn-outline"
               disabled={busy}
               onClick={() => {
-                setUnknownBarcode("");
                 setNewProductName("");
-                setScanMessage("");
+                setNewProductUnit("u");
+                setNewProductMin("0");
+                setNewProductExpiry("");
+                setScanMessage(t("kitchen.scanUnknownPrompt"));
               }}
             >
               {t("kitchen.scanAddProductCancel")}

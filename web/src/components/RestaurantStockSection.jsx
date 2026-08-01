@@ -10,6 +10,25 @@ export default function RestaurantStockSection(props) {
   const stock = useRestaurantStockSection(props);
 
   if (!stock.kitchen) {
+    if (stock.error) {
+      return (
+        <section style={{ marginTop: "2rem" }}>
+          <h3>{stock.t("kitchen.title")}</h3>
+          <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
+            {stock.error}
+          </p>
+          <p className="kpi-label">{stock.t("kitchen.loadErrorAlertHint")}</p>
+          <button
+            type="button"
+            className="btn"
+            disabled={stock.busy}
+            onClick={() => stock.reload(undefined)}
+          >
+            {stock.t("kitchen.retry")}
+          </button>
+        </section>
+      );
+    }
     return (
       <p className="lead" style={{ marginTop: "1rem" }}>
         {stock.t("kitchen.loading")}

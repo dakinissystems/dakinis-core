@@ -131,7 +131,7 @@ export async function dakinisHandleInventoryReceivePost(req, rawBody) {
     productBarcode: String(body.productBarcode || "").trim(),
     supplierLot: String(body.supplierLot || "").trim(),
     supplier: String(body.supplier || "").trim(),
-    expiryDate: String(body.expiryDate || "").trim() || new Date().toISOString().slice(0, 10),
+    expiryDate: String(body.expiryDate || "").trim(),
     quantityRemaining: Number(body.quantity) > 0 ? Number(body.quantity) : 1,
     locationId: loc?.id || null,
     locationName: loc?.name || "Almacén"

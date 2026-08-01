@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisReportTenantLoadAlert } from "../utils/reportTenantLoadAlert.js";
 import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 
 function dakinisSeverityStyle(severity) {
@@ -94,7 +95,16 @@ export function useSupplyDeliveriesAndAlerts({
         setAlerts(Array.isArray(alist) ? alist.map(dakinisNormalizeAlertRow) : []);
       } catch (e) {
         if (e?.name === "AbortError") return;
-        setLoadError(e instanceof Error ? e.message : "No se pudo cargar proveedores");
+        const message = e instanceof Error ? e.message : "No se pudo cargar proveedores";
+        setLoadError(message);
+        void dakinisReportTenantLoadAlert({
+          apiSession: sess,
+          businessId: tenantSlugForVertical,
+          businessTypeHeader: activeSystemKey,
+          moduleKey: "supply",
+          moduleLabel: "proveedores / alertas",
+          errorMessage: message
+        });
         setDeliveries(
           fallbackDeliveries.map((r, i) =>
             dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` })
