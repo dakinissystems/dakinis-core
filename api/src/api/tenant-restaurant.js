@@ -103,14 +103,15 @@ function dakinisIsSafeStockSlug(slug) {
 
 function dakinisStockBarcodesFromConfig(config) {
   const map = config?.stockBarcodes;
-  if (!map || typeof map !== "object" || Array.isArray(map)) return {};
-  const out = Object.create(null);
+  if (!map || typeof map !== "object" || Array.isArray(map)) return Object.create(null);
+  // Map + allowlist: evita remote property injection al copiar claves de config.
+  const next = new Map();
   for (const key of Object.keys(map)) {
     if (!dakinisIsSafeStockSlug(key)) continue;
     const val = map[key];
-    if (typeof val === "string" && val.trim()) out[key] = val.trim();
+    if (typeof val === "string" && val.trim()) next.set(key, val.trim());
   }
-  return out;
+  return Object.assign(Object.create(null), Object.fromEntries(next));
 }
 
 function dakinisPutStockBarcode(barcodes, slug, barcode) {
@@ -120,7 +121,7 @@ function dakinisPutStockBarcode(barcodes, slug, barcode) {
   // Map evita asignar propiedades dinámicas sobre un Object heredado.
   const next = new Map(Object.entries(barcodes || {}));
   next.set(slug, value);
-  return Object.fromEntries(next);
+  return Object.assign(Object.create(null), Object.fromEntries(next));
 }
 
 async function dakinisMaybeCreateLotOnReceive(businessId, { productName, productBarcode, expiryDate, quantity }) {
