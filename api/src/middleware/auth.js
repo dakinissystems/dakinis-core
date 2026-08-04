@@ -7,8 +7,8 @@ import {
   dakinisResolveCoreUserFromPlatformToken,
   dakinisResolvePlatformTenantClaimToBusinessId
 } from "../api/platform-user-bridge.js";
+import { dakinisResolveMasterApiKey } from "../api/master-api-key.js";
 
-const DAKINIS_MASTER_API_KEY = String(process.env.DAKINIS_MASTER_API_KEY ?? "dakinis-dev-key").trim();
 const DAKINIS_WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DAKINIS_KEY_ROLE_FULL = "full-access";
 const DAKINIS_KEY_ROLE_READ_ONLY = "read-only";
@@ -33,7 +33,7 @@ function dakinisExtractCoreJwtTenantIdentity(payload) {
   return {
     userId: typeof payload.sub === "string" ? payload.sub : "",
     email: typeof payload.email === "string" ? payload.email : "",
-    role: typeof payload.role === "string" ? payload.role : "admin",
+    role: typeof payload.role === "string" ? payload.role : "member",
     tenantId
   };
 }
@@ -76,7 +76,8 @@ export async function dakinisAuthenticateRequest(req, business) {
       return dakinisJsonError(401, "UNAUTHORIZED", "Falta Authorization: Bearer o x-api-key");
     }
 
-    if (keyString === DAKINIS_MASTER_API_KEY) {
+    const masterKey = dakinisResolveMasterApiKey();
+    if (masterKey && keyString === masterKey) {
       req.dakinisAuth = {
         method: "master_key",
         role: DAKINIS_KEY_ROLE_FULL,

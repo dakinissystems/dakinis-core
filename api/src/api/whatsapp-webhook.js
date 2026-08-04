@@ -12,7 +12,10 @@ function dakinisNormalizePhone(phone) {
 
 function dakinisVerifyMetaSignature(rawBody, signatureHeader) {
   const secret = String(process.env.WHATSAPP_APP_SECRET || "").trim();
-  if (!secret || !signatureHeader?.startsWith("sha256=")) return true;
+  const isProd = process.env.NODE_ENV === "production";
+  // Fail closed in production when secret is missing (do not accept unsigned webhooks).
+  if (!secret) return !isProd;
+  if (!signatureHeader?.startsWith("sha256=")) return false;
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   const received = signatureHeader.slice("sha256=".length);
   try {

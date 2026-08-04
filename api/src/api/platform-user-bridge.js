@@ -61,6 +61,15 @@ export async function dakinisResolveCoreUserFromPlatformToken(payload, targetBus
     return user;
   }
 
+  const allowProvision =
+    String(process.env.DAKINIS_AUTH_EXCHANGE_AUTO_PROVISION || "").toLowerCase() === "true" ||
+    process.env.NODE_ENV !== "production";
+  if (!allowProvision) {
+    const err = new Error("USER_NOT_PROVISIONED");
+    err.code = "USER_NOT_PROVISIONED";
+    throw err;
+  }
+
   const newId = `usr_plat_${platformSub.replace(/-/g, "") || randomUUID().replace(/-/g, "").slice(0, 12)}`;
   const role = dakinisMapPlatformRoleToCoreRole(payload.role);
   const passwordHash = bcrypt.hashSync(SSO_PASSWORD_PLACEHOLDER, 10);

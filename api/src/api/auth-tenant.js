@@ -2,11 +2,11 @@ import jwt from "jsonwebtoken";
 import { dakinisGetDb } from "../db/index.js";
 import { dakinisJsonError } from "./responses.js";
 import { dakinisVerifyTenantAccessToken } from "./jwt-verify.js";
+import { dakinisResolveMasterApiKey } from "./master-api-key.js";
 
 import { DAKINIS_JWT_INSECURE_PLACEHOLDER } from "./jwt-config.js";
 
 const DAKINIS_JWT_SECRET = process.env.JWT_SECRET || DAKINIS_JWT_INSECURE_PLACEHOLDER;
-const DAKINIS_MASTER_API_KEY = String(process.env.DAKINIS_MASTER_API_KEY ?? "dakinis-dev-key").trim();
 const DAKINIS_WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DAKINIS_KEY_ROLE_FULL = "full-access";
 const DAKINIS_KEY_ROLE_READ_ONLY = "read-only";
@@ -67,7 +67,7 @@ export function dakinisAuthenticateTenant(req, business) {
       req.dakinisAuth = {
         method: "jwt",
         userId: typeof payload.sub === "string" ? payload.sub : "",
-        role: typeof payload.role === "string" ? payload.role : "admin",
+        role: typeof payload.role === "string" ? payload.role : "member",
         email: typeof payload.email === "string" ? payload.email : ""
       };
     } catch {
@@ -79,11 +79,12 @@ export function dakinisAuthenticateTenant(req, business) {
     const keyString = typeof candidate === "string" ? candidate.trim() : "";
     if (!keyString) {
       return dakinisJsonError(401, "UNAUTHORIZED", "API key o Bearer token ausente", {
-        hint: "Incluye header x-api-key (maestra dakinis-dev-key en dev) o Authorization Bearer tras POST /api/auth/login"
+        hint: "Incluye header x-api-key (DAKINIS_MASTER_API_KEY en prod, o dakinis-dev-key en dev) o Authorization Bearer tras POST /api/auth/login"
       });
     }
 
-    const masterMatches = keyString === DAKINIS_MASTER_API_KEY;
+    const masterKey = dakinisResolveMasterApiKey();
+    const masterMatches = Boolean(masterKey) && keyString === masterKey;
     if (masterMatches) {
       req.dakinisAuth = {
         method: "master_key",
