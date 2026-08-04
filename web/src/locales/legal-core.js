@@ -11,23 +11,24 @@ const SAFETY = "legal@dakinissystems.com";
 const HELLO = "hello@dakinissystems.com";
 const AEPD = "https://www.aepd.es";
 const CORPORATE = "https://dakinissystems.com/";
-const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/dpo";
+const PRIVACY_REQUESTS_AKOENET_ES = "https://akoenet.dakinissystems.com/legal/privacidad-solicitudes";
+const PRIVACY_REQUESTS_AKOENET_EN = "https://akoenet.dakinissystems.com/legal/privacy-requests";
 const META_BUSINESS_TOOLS_TERMS = "https://www.facebook.com/legal/terms/businesstools";
 const META_DATA_PROCESSING_TERMS = "https://www.facebook.com/legal/terms/dataprocessing";
 const WHATSAPP_BUSINESS_TERMS = "https://www.whatsapp.com/legal/business-terms";
 const AD_CHOICES = "https://www.aboutads.info/choices";
 const EU_AD_CHOICES = "https://www.youronlinechoices.eu/";
-const UPDATED_ES = "Última actualización: 19 mayo 2026";
-const UPDATED_EN = "Last updated: 19 May 2026";
+const UPDATED_ES = "Última actualización: 4 agosto 2026";
+const UPDATED_EN = "Last updated: 4 August 2026";
 const MIN_AGE = 14;
 
 const controllerEs = `Operador / Responsable: ${OWNER}. Nombre comercial: ${TRADING}. NIF: ${NIF}. Domicilio: ${ADDRESS}. País: ${COUNTRY_ES}. Privacidad: ${PRIVACY}. Legal: ${LEGAL}.`;
 const controllerEn = `Operator / Controller: ${OWNER}. Trading name: ${TRADING}. Tax ID (NIF): ${NIF}. Address: ${ADDRESS}. Country: ${COUNTRY_EN}. Privacy: ${PRIVACY}. Legal: ${LEGAL}.`;
 
 const processorsEs =
-  "Solo compartimos datos personales con encargados del tratamiento que ofrecen garantías contractuales y técnicas adecuadas conforme al RGPD (p. ej. hosting Railway, base de datos PostgreSQL/Supabase, Stripe para suscripciones).";
+  "Solo compartimos datos personales con encargados del tratamiento que ofrecen garantías contractuales y técnicas adecuadas conforme al RGPD (p. ej. hosting Railway, base de datos PostgreSQL/Supabase, Stripe para suscripciones, Resend/Cloudflare para correo).";
 const processorsEn =
-  "We only share personal data with processors that provide adequate contractual and technical safeguards under the GDPR (e.g. Railway hosting, PostgreSQL/Supabase database, Stripe for subscriptions).";
+  "We only share personal data with processors that provide adequate contractual and technical safeguards under the GDPR (e.g. Railway hosting, PostgreSQL/Supabase database, Stripe for subscriptions, Resend/Cloudflare for email).";
 
 const retentionEs =
   "Datos de cuenta: mientras la cuenta permanezca activa. Logs de seguridad: hasta 12 meses. Comunicaciones de soporte: hasta 24 meses. Registros de facturación: según obligaciones fiscales aplicables.";
@@ -38,7 +39,7 @@ const minAgeEs = `Los servicios no están dirigidos a personas menores de ${MIN_
 const minAgeEn = `The services are not directed to persons under ${MIN_AGE} years of age.`;
 
 const exportEs = `Puedes solicitar una copia de tus datos personales en un formato estructurado y de uso habitual escribiendo a ${PRIVACY} o usando nuestro canal de solicitudes de privacidad (${PRIVACY_REQUESTS_AKOENET_ES} para AkoeNet).`;
-const exportEn = `You may request a copy of your personal data in a structured, commonly used format by writing to ${PRIVACY} or using our Privacy Requests channel (${PRIVACY_REQUESTS_AKOENET_ES} for AkoeNet).`;
+const exportEn = `You may request a copy of your personal data in a structured, commonly used format by writing to ${PRIVACY} or using our Privacy Requests channel (${PRIVACY_REQUESTS_AKOENET_EN} for AkoeNet).`;
 
 const aiEs =
   "Algunas funciones pueden usar sistemas automatizados para clasificar, enrutar o procesar información. Estos sistemas asisten la toma de decisiones humana y no están destinados a producir decisiones con efectos jurídicos significativos sobre las personas usuarias sin revisión humana cuando la ley lo exija.";
@@ -73,11 +74,15 @@ export const legalCoreEs = {
       { h: "1. Responsable", p: controllerEs },
       {
         h: "2. Ámbito",
-        p: "Esta política aplica a core.dakinissystems.com (Dakinis One): login, paneles por tenant, cartel público de alérgenos y rutas /app."
+        p: "Esta política aplica a core.dakinissystems.com (Dakinis One): login, paneles por tenant, cartel público de alérgenos, inventario/stock, CRM/clientes, citas y rutas /app."
       },
       {
         h: "3. Datos que tratamos",
-        p: "Email, contraseña (hash seguro), rol, datos del negocio (slug, tipo), registros del tenant, checklist de alérgenos y datos del módulo restaurante."
+        p: "Email, contraseña (hash seguro), rol, datos del negocio (slug, tipo), registros del tenant (CRM/clientes, citas, notas), checklist de alérgenos, módulo restaurante (carta, comandas, facturas con datos fiscales del cliente cuando el tenant los introduce), inventario/stock (insumos, códigos de barras, movimientos, lotes/caducidad opcionales) y comunicaciones (p. ej. WhatsApp Business si el tenant lo activa)."
+      },
+      {
+        h: "3bis. Roles: Dakinis vs tenant",
+        p: "Dakinis Systems actúa como encargado del tratamiento respecto de los datos de clientes finales que el negocio (tenant) introduce en Dakinis One. El tenant es responsable frente a sus clientes (comensales, pacientes, etc.) y debe disponer de base legal propia. Dakinis trata esos datos solo para prestar el servicio SaaS al tenant."
       },
       {
         h: "4. Cartel público de alergias",
@@ -249,11 +254,15 @@ export const legalCoreEn = {
       { h: "1. Controller", p: controllerEn },
       {
         h: "2. Scope",
-        p: "This policy covers core.dakinissystems.com (Dakinis One): login, tenant panels, public allergy posters, and /app routes."
+        p: "This policy covers core.dakinissystems.com (Dakinis One): login, tenant panels, public allergy posters, inventory/stock, CRM/clients, appointments, and /app routes."
       },
       {
         h: "3. Data we process",
-        p: "Email, password (secure hash), role, business data (slug, type), tenant records, allergen checklist, and restaurant module data."
+        p: "Email, password (secure hash), role, business data (slug, type), tenant records (CRM/clients, appointments, notes), allergen checklist, restaurant module data (menu, orders, invoices with customer tax details when entered by the tenant), inventory/stock (items, barcodes, movements, optional lots/expiry), and communications (e.g. WhatsApp Business when the tenant enables it)."
+      },
+      {
+        h: "3bis. Roles: Dakinis vs tenant",
+        p: "Dakinis Systems acts as a processor for end-customer personal data that the business (tenant) enters into Dakinis One. The tenant is the controller toward its customers (diners, patients, etc.) and must have its own legal basis. Dakinis processes that data only to provide the SaaS service to the tenant."
       },
       {
         h: "4. Public allergy poster",
