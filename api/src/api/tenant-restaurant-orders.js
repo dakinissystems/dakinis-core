@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-import { dakinisRequireTenantJwt } from "./tenant-supply.js";
+import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
 import { DAKINIS_FERMINA_HOUSE_SLUG } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisSlugFromName } from "@dakinis/shared/catalog/stock-barcodes.js";
 
@@ -103,7 +103,7 @@ function dakinisUniqueMenuItemId(baseId, existingIds) {
 export async function dakinisHandleRestaurantMenuPatch(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -311,7 +311,7 @@ export async function dakinisHandleRestaurantInvoicesList(req) {
 export async function dakinisHandleRestaurantInvoicesPost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);

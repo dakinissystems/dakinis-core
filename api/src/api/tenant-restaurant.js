@@ -41,7 +41,7 @@ import {
   dakinisExpirySeverity
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-import { dakinisRequireTenantJwt } from "./tenant-supply.js";
+import { dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -410,7 +410,7 @@ export async function dakinisHandleRestaurantFloorGet(req) {
 export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -447,7 +447,7 @@ export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {
 export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -526,7 +526,7 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
 export async function dakinisHandleRestaurantStockScanPost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -587,7 +587,7 @@ export async function dakinisHandleRestaurantStockScanPost(req, rawBody) {
 export async function dakinisHandleRestaurantStockPurchasePost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -649,7 +649,7 @@ export async function dakinisHandleRestaurantProductionSimulatePost(req, rawBody
 export async function dakinisHandleRestaurantProductionPost(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -705,7 +705,7 @@ export async function dakinisHandleRestaurantProductionPost(req, rawBody) {
 export async function dakinisHandleRestaurantProfilePatch(req, rawBody) {
   const gate = dakinisRestaurantOnly(req.dakinisBusiness);
   if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);

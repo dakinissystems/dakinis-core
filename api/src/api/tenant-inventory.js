@@ -8,7 +8,7 @@ import {
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-import { dakinisRequireTenantJwt } from "./tenant-supply.js";
+import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -108,7 +108,7 @@ export async function dakinisHandleInventorySummaryGet(req) {
 }
 
 export async function dakinisHandleInventoryReceivePost(req, rawBody) {
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
   const business = req.dakinisBusiness;
   if (!business) return dakinisJsonError(500, "INTERNAL_ERROR", "Negocio no resuelto");

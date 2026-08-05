@@ -35,8 +35,11 @@ function dakinisSetCorsHeaders(res, req) {
       res.setHeader("Vary", "Origin");
     }
   } else {
-    const fallback = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
-    res.setHeader("Access-Control-Allow-Origin", fallback);
+    // Production: never reflect Access-Control-Allow-Origin: * (credentialed browsers + open abuse).
+    if (process.env.NODE_ENV !== "production") {
+      const fallback = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
+      res.setHeader("Access-Control-Allow-Origin", fallback);
+    }
   }
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader(

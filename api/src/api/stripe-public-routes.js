@@ -47,6 +47,9 @@ export async function dakinisHandlePublicStripeCheckoutSession(req, rawBody) {
   }
 
   const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
+  if (!jwtIdentity?.tenantId) {
+    return dakinisJsonError(401, "UNAUTHORIZED", "Authorization: Bearer con JWT de tenant requerido");
+  }
 
   const plan = typeof body.plan === "string" ? body.plan.trim() : "";
   const planParsed = dakinisParseCommercialPlanForStorage(plan);
@@ -54,29 +57,20 @@ export async function dakinisHandlePublicStripeCheckoutSession(req, rawBody) {
     return dakinisJsonError(400, "INVALID_PLAN", "plan debe ser starter, growth o pro");
   }
 
-  const email =
-    (typeof body.email === "string" ? body.email.trim() : "") ||
-    jwtIdentity?.email ||
-    undefined;
-  const businessId =
+  const claimedBusinessId =
     (typeof body.businessId === "string" ? body.businessId.trim() : "") ||
-    jwtIdentity?.tenantId ||
-    undefined;
-  const userId =
-    (typeof body.userId === "string" ? body.userId.trim() : "") ||
-    jwtIdentity?.userId ||
-    undefined;
-
-  const headerBusinessId = String(req.headers["x-business-id"] || "").trim();
-  const resolvedBusinessId = businessId || headerBusinessId || undefined;
-
-  if (!resolvedBusinessId) {
-    return dakinisJsonError(
-      400,
-      "MISSING_TENANT",
-      "businessId requerido — JWT con tenantId o header x-business-id"
-    );
+    String(req.headers["x-business-id"] || "").trim();
+  if (claimedBusinessId && claimedBusinessId !== jwtIdentity.tenantId) {
+    return dakinisJsonError(403, "TENANT_MISMATCH", "El JWT no corresponde al tenant solicitado", {
+      expectedTenantId: jwtIdentity.tenantId
+    });
   }
+
+  const email =
+    (typeof body.email === "string" ? body.email.trim() : "") || jwtIdentity.email || undefined;
+  const resolvedBusinessId = jwtIdentity.tenantId;
+  const userId =
+    (typeof body.userId === "string" ? body.userId.trim() : "") || jwtIdentity.userId || undefined;
 
   const proxied = await dakinisBillingCreateCheckout({
     plan: planParsed,
@@ -108,6 +102,11 @@ export async function dakinisHandlePublicStripeSessionLookup(req, sessionId) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "session_id requerido");
   }
 
+  const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
+  if (!jwtIdentity?.tenantId) {
+    return dakinisJsonError(401, "UNAUTHORIZED", "Authorization: Bearer con JWT de tenant requerido");
+  }
+
   const proxied = await dakinisBillingGetCheckoutSession(id);
   if (!proxied.ok) {
     return dakinisJsonError(
@@ -120,16 +119,15 @@ export async function dakinisHandlePublicStripeSessionLookup(req, sessionId) {
   const session = proxied.data || {};
   let syncResult = null;
 
+  if (session.businessId && session.businessId !== jwtIdentity.tenantId) {
+    return dakinisJsonError(403, "TENANT_MISMATCH", "La sesion no pertenece a este tenant");
+  }
+
   const paid = session.paymentStatus === "paid" || session.status === "complete";
-  if (paid && session.businessId) {
-    const jwtIdentity = await dakinisDecodeTenantFromJwt(req);
-    const headerBusinessId = String(req.headers["x-business-id"] || "").trim();
-    const tenantId = jwtIdentity?.tenantId || headerBusinessId || "";
-    if (tenantId && tenantId === session.businessId) {
-      const synced = await dakinisBillingSyncCheckoutSession(id);
-      if (synced.ok) {
-        syncResult = synced.data;
-      }
+  if (paid && session.businessId && session.businessId === jwtIdentity.tenantId) {
+    const synced = await dakinisBillingSyncCheckoutSession(id);
+    if (synced.ok) {
+      syncResult = synced.data;
     }
   }
 
