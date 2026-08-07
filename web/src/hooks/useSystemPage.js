@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import {
@@ -9,7 +10,12 @@ import { dakinisGetSystemPageContent } from "../data/getSystemPageContent.js";
 import { DAKINIS_SYSTEM_MOCKUPS, dakinisBuildDefaultFormValues } from "../data/systemPages.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTenantJsonFetch } from "../services/api.js";
-import { dakinisReadRestaurantRole, dakinisWriteRestaurantRole } from "../utils/restaurantRoleStorage.js";
+import {
+  dakinisNormalizeRestaurantTask,
+  dakinisParseRestaurantTaskQuery,
+  dakinisReadRestaurantTask,
+  dakinisWriteRestaurantTask
+} from "../utils/restaurantTaskStorage.js";
 import { dakinisIsSeedDemoTenantSession } from "../utils/demoSession.js";
 import { dakinisTenantFetchKey } from "../utils/sessionIdentity.js";
 
@@ -18,6 +24,8 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 export function useSystemPage(activeSystemKey) {
   const { session } = useDakinisSession();
   const { locale, t } = useLocale();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const hideVerticalSwitcher = Boolean(session?.token) && session?.user?.role !== "platform_admin";
   const showDemoWelcome =
@@ -57,10 +65,42 @@ export function useSystemPage(activeSystemKey) {
   const [recordsError, setRecordsError] = useState("");
   const [recordsSynced, setRecordsSynced] = useState(false);
   const [mockFormValues, setMockFormValues] = useState(() => dakinisBuildDefaultFormValues(activeMockup));
-  const [restaurantRole, setRestaurantRole] = useState(dakinisReadRestaurantRole);
+  const parsedQuery = dakinisParseRestaurantTaskQuery(searchParams.get("task"), searchParams.get("sub"));
+  const taskFromUrl = parsedQuery.task;
+  const [restaurantTask, setRestaurantTask] = useState(() => taskFromUrl || dakinisReadRestaurantTask());
+  const [showCommercialChrome, setShowCommercialChrome] = useState(
+    () => searchParams.get("mode") === "comercial" || searchParams.get("mode") === "demo"
+  );
+  const taskSub = parsedQuery.sub || searchParams.get("sub") || "";
   const hasToken = Boolean(session?.token);
   const [prevSystemKey, setPrevSystemKey] = useState(activeSystemKey);
   const [prevHasToken, setPrevHasToken] = useState(hasToken);
+
+  useEffect(() => {
+    if (taskFromUrl && taskFromUrl !== restaurantTask) {
+      setRestaurantTask(taskFromUrl);
+      dakinisWriteRestaurantTask(taskFromUrl);
+    }
+  }, [taskFromUrl, restaurantTask]);
+
+  // Canonicaliza aliases de URL (?task=stock → ?task=inventario&sub=scan)
+  useEffect(() => {
+    const raw = searchParams.get("task");
+    if (!raw || !taskFromUrl) return;
+    if (dakinisNormalizeRestaurantTask(raw) === raw && !parsedQuery.sub) return;
+    if (raw === taskFromUrl && (searchParams.get("sub") || "") === (parsedQuery.sub || "")) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("task", taskFromUrl);
+    if (parsedQuery.sub) next.set("sub", parsedQuery.sub);
+    setSearchParams(next, { replace: true });
+  }, [searchParams, taskFromUrl, parsedQuery.sub, setSearchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("mode") === "comercial" || searchParams.get("mode") === "demo") {
+      setShowCommercialChrome(true);
+    }
+  }, [searchParams]);
+
 
   if (activeSystemKey !== prevSystemKey) {
     setPrevSystemKey(activeSystemKey);
@@ -139,15 +179,39 @@ export function useSystemPage(activeSystemKey) {
     }
   }
 
-  function setRestaurantRolePersisted(next) {
-    setRestaurantRole(next);
-    dakinisWriteRestaurantRole(next);
+  function setRestaurantTaskPersisted(next) {
+    const normalized = dakinisWriteRestaurantTask(next);
+    setRestaurantTask(normalized);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("task", normalized);
+    if (normalized !== "inventario" && normalized !== "config") {
+      nextParams.delete("sub");
+    }
+    setSearchParams(nextParams, { replace: true });
   }
+
+  function openCommercialMode() {
+    setShowCommercialChrome(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("mode", "comercial");
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function closeCommercialMode() {
+    setShowCommercialChrome(false);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("mode");
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  const isRestaurantOps =
+    activeSystemKey === "restaurante" && Boolean(session?.token) && !showCommercialChrome;
 
   return {
     session,
     t,
     locale,
+    navigate,
     activeSystemKey,
     hideVerticalSwitcher,
     showDemoWelcome,
@@ -161,8 +225,13 @@ export function useSystemPage(activeSystemKey) {
     recordsError,
     recordsSynced,
     mockFormValues,
-    restaurantRole,
-    setRestaurantRole: setRestaurantRolePersisted,
+    restaurantTask,
+    setRestaurantTask: setRestaurantTaskPersisted,
+    taskSub,
+    isRestaurantOps,
+    showCommercialChrome,
+    openCommercialMode,
+    closeCommercialMode,
     dakinisHandleMockFieldChange,
     dakinisHandleMockSubmit,
     dakinisIsSeedDemoTenantSession

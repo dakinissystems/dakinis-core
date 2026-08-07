@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { useDakinisLogout } from "../../hooks/useDakinisLogout.js";
@@ -91,7 +92,7 @@ export default function SettingsPage({ navigate }) {
         <SettingsPortalCard session={session} portal={portal} setPortal={setPortal} onSaved={setMsg} />
         <SettingsMarketplaceCard session={session} onInstalled={setMsg} />
         <SettingsBranchesCard branches={branches} onRefresh={refreshBranches} />
-        {session?.business?.type === "restaurante" ? (
+        {dakinisIsHospitalityBusiness(session?.business?.type) ? (
           <SettingsRestaurantBlock t={t} navigate={navigate} allergiesUrl={allergiesUrl} />
         ) : null}
 

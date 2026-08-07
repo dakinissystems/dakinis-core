@@ -4,10 +4,23 @@ import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
 import TenantTeamSection from "./TenantTeamSection.jsx";
 import RestaurantComandasSection from "./RestaurantComandasSection.jsx";
 import RestaurantAdminPanel from "./RestaurantAdminPanel.jsx";
-import RestaurantRoleNav from "./RestaurantRoleNav.jsx";
+import RestaurantTaskDock from "./RestaurantTaskDock.jsx";
+import RestaurantOpsHeader from "./RestaurantOpsHeader.jsx";
+import RestaurantInventoryModule from "./RestaurantInventoryModule.jsx";
+import RestaurantDeliveryPanel from "./RestaurantDeliveryPanel.jsx";
 import RestaurantBusinessIntro from "./business/RestaurantBusinessIntro.jsx";
 import PasswordInput from "./PasswordInput.jsx";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
+import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
+
+const TASK_LABEL_KEYS = {
+  sala: "restaurant.taskSala",
+  cocina: "restaurant.taskCocina",
+  inventario: "restaurant.taskInventario",
+  delivery: "restaurant.taskDelivery",
+  caja: "restaurant.taskCaja",
+  config: "restaurant.taskConfig"
+};
 
 export function SystemPageHeader({
   t,
@@ -207,42 +220,115 @@ export function SystemPageRestauranteSection({
   showDemoWelcome,
   session,
   dakinisIsSeedDemoTenantSession,
-  restaurantRole,
-  setRestaurantRole,
+  restaurantTask,
+  setRestaurantTask,
+  taskSub,
+  isRestaurantOps,
+  openCommercialMode,
   apiSession,
   tenantSlugForVertical,
-  systemPageContent
+  systemPageContent,
+  t
 }) {
   if (activeSystemKey !== "restaurante") return null;
+
+  const businessName =
+    session?.business?.name || systemPageContent?.pageTitle || t("restaurant.businessKicker");
+  const crumb = ["Restaurante", t(TASK_LABEL_KEYS[restaurantTask] || "restaurant.taskSala")];
+
+  const moduleBody = (() => {
+    switch (restaurantTask) {
+      case "cocina":
+        return (
+          <RestaurantComandasSection
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+            staffRole="cocina"
+            opsMode
+          />
+        );
+      case "inventario":
+        return (
+          <RestaurantInventoryModule
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+            systemPageContent={systemPageContent}
+            initialSub={taskSub}
+          />
+        );
+      case "delivery":
+        return (
+          <RestaurantDeliveryPanel
+            apiSession={apiSession}
+            fetchOpts={{
+              businessId: dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical),
+              businessTypeHeader: activeSystemKey
+            }}
+            t={t}
+          />
+        );
+      case "caja":
+        return (
+          <RestaurantComandasSection
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+            staffRole="admin"
+            opsMode
+          />
+        );
+      case "config":
+        return (
+          <RestaurantAdminPanel
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+            systemPageContent={systemPageContent}
+            sections={
+              String(taskSub || "").toLowerCase() === "allergens" ||
+              String(taskSub || "").toLowerCase() === "alergenos"
+                ? ["allergens", "floor", "menu", "supply"]
+                : ["floor", "menu", "supply", "allergens"]
+            }
+          />
+        );
+      case "sala":
+      default:
+        return (
+          <RestaurantComandasSection
+            apiSession={apiSession}
+            tenantSlugForVertical={tenantSlugForVertical}
+            activeSystemKey={activeSystemKey}
+            staffRole="camarero"
+            opsMode
+          />
+        );
+    }
+  })();
+
+  if (isRestaurantOps) {
+    return (
+      <div className="restaurant-ops">
+        <RestaurantOpsHeader
+          businessName={businessName}
+          breadcrumb={crumb}
+          showCommercialLink={Boolean(showDemoWelcome || dakinisIsSeedDemoTenantSession?.(session))}
+          onShowCommercial={openCommercialMode}
+          stats={[]}
+        />
+        <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} />
+        <div className="restaurant-ops__module">{moduleBody}</div>
+      </div>
+    );
+  }
 
   return (
     <>
       {showDemoWelcome || dakinisIsSeedDemoTenantSession(session) ? <RestaurantBusinessIntro /> : null}
-      <RestaurantRoleNav role={restaurantRole} onRoleChange={setRestaurantRole} />
-      {restaurantRole === "admin" ? (
-        <RestaurantAdminPanel
-          apiSession={apiSession}
-          tenantSlugForVertical={tenantSlugForVertical}
-          activeSystemKey={activeSystemKey}
-          systemPageContent={systemPageContent}
-        />
-      ) : null}
-      {restaurantRole === "cocina" ? (
-        <RestaurantComandasSection
-          apiSession={apiSession}
-          tenantSlugForVertical={tenantSlugForVertical}
-          activeSystemKey={activeSystemKey}
-          staffRole="cocina"
-        />
-      ) : null}
-      {restaurantRole === "camarero" ? (
-        <RestaurantComandasSection
-          apiSession={apiSession}
-          tenantSlugForVertical={tenantSlugForVertical}
-          activeSystemKey={activeSystemKey}
-          staffRole="camarero"
-        />
-      ) : null}
+      <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} />
+      <div className="restaurant-ops__module">{moduleBody}</div>
     </>
   );
 }

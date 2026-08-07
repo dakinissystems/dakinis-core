@@ -24,7 +24,8 @@ export function useRestaurantComandasSection({
   apiSession,
   tenantSlugForVertical,
   activeSystemKey,
-  staffRole = "camarero"
+  staffRole = "camarero",
+  opsMode = false
 }) {
   const { locale, t } = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "es-ES";
@@ -99,7 +100,7 @@ export function useRestaurantComandasSection({
       facturas: { id: "facturas", label: t("fermina.viewFacturas") }
     };
     const byRole = {
-      camarero: ["mesas", "tarifa", "pedido", "cobro"],
+      camarero: ["mesas"],
       cocina: ["activas"],
       admin: ["cierre", "facturas"]
     };
@@ -365,7 +366,8 @@ export function useRestaurantComandasSection({
   }
 
   const venueName = brand?.name || t("mockupPanels.restaurante.brand");
-  const shouldRender = Boolean(apiSession?.token) && (isFermina || menu.length > 0);
+  const shouldRender =
+    Boolean(apiSession?.token) && (opsMode || isFermina || menu.length > 0 || (tables && tables.length > 0));
 
   return {
     shouldRender,
@@ -374,6 +376,7 @@ export function useRestaurantComandasSection({
       t,
       error,
       staffRole,
+      opsMode,
       comandasViews,
       comandasView,
       setComandasView,
