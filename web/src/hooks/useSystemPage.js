@@ -83,12 +83,15 @@ export function useSystemPage(activeSystemKey) {
     }
   }, [taskFromUrl, restaurantTask]);
 
-  // Canonicaliza aliases de URL (?task=stock → ?task=inventario&sub=scan)
+  // Canonicaliza aliases de URL (?task=stock → ?task=inventario&sub=scan) una sola vez.
   useEffect(() => {
     const raw = searchParams.get("task");
     if (!raw || !taskFromUrl) return;
-    if (dakinisNormalizeRestaurantTask(raw) === raw && !parsedQuery.sub) return;
-    if (raw === taskFromUrl && (searchParams.get("sub") || "") === (parsedQuery.sub || "")) return;
+    const urlSub = searchParams.get("sub") || "";
+    const needsTaskRewrite = dakinisNormalizeRestaurantTask(raw) !== raw;
+    const needsSubWrite = Boolean(parsedQuery.sub) && urlSub !== parsedQuery.sub;
+    if (!needsTaskRewrite && !needsSubWrite) return;
+    if (raw === taskFromUrl && urlSub === (parsedQuery.sub || "")) return;
     const next = new URLSearchParams(searchParams);
     next.set("task", taskFromUrl);
     if (parsedQuery.sub) next.set("sub", parsedQuery.sub);

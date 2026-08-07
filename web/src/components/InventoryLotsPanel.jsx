@@ -179,10 +179,13 @@ export default function InventoryLotsPanel({
   );
   const apiSessionRef = useRef(apiSession);
   apiSessionRef.current = apiSession;
+  const locationIdRef = useRef(locationId);
+  locationIdRef.current = locationId;
   const fetchKey = dakinisTenantFetchKey(apiSession, [tenantSlugForVertical, activeSystemKey]);
 
   const loadDemo = useCallback(() => {
     const demoLots = dakinisDemoLots();
+    const currentLoc = locationIdRef.current;
     dispatch({
       type: "loadedDemo",
       locations: DEMO_LOCATIONS,
@@ -193,9 +196,9 @@ export default function InventoryLotsPanel({
         "Nevera 2": [demoLots[1]],
         Congelador: [demoLots[2]]
       },
-      locationId: locationId || DEMO_LOCATIONS[0]?.id || ""
+      locationId: currentLoc || DEMO_LOCATIONS[0]?.id || ""
     });
-  }, [locationId]);
+  }, []);
 
   const reload = useCallback(async () => {
     if (isDemo) {
@@ -210,18 +213,27 @@ export default function InventoryLotsPanel({
         dakinisTenantJsonFetch("/api/tenant/inventory/summary", sess, fetchOpts)
       ]);
       const locs = Array.isArray(locRes?.data?.locations) ? locRes.data.locations : [];
+      const currentLoc = locationIdRef.current;
       dispatch({
         type: "loadedApi",
         locations: locs,
         lots: Array.isArray(sumRes?.data?.lots) ? sumRes.data.lots : [],
         summary: sumRes?.data?.summary ?? { critical: 0, warning: 0, ok: 0, expired: 0 },
         byLocation: sumRes?.data?.byLocation ?? {},
-        locationId: locationId || locs[0]?.id || ""
+        locationId: currentLoc || locs[0]?.id || ""
       });
     } catch (e) {
       // API ausente o no provisionada: seed local sin ruido de error.
       if (e?.status === 404 || e?.code === "NOT_FOUND") {
         loadDemo();
+        return;
+      }
+      // No spamear alertas ni reintentos ante rate limit.
+      if (e?.status === 429 || e?.code === "RATE_LIMIT_EXCEEDED") {
+        dispatch({
+          type: "setError",
+          error: t("inventoryLots.rateLimited", "Demasiadas peticiones — espera un momento y recarga.")
+        });
         return;
       }
       const message = e instanceof Error ? e.message : t("inventoryLots.loadError");
@@ -236,7 +248,7 @@ export default function InventoryLotsPanel({
       });
       loadDemo();
     }
-  }, [fetchKey, fetchOpts, isDemo, loadDemo, locationId, t, tenantSlugForVertical, activeSystemKey]);
+  }, [fetchKey, fetchOpts, isDemo, loadDemo, t, tenantSlugForVertical, activeSystemKey]);
 
   useEffect(() => {
     reload();

@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 
+const PULSE_INTERVAL_MS = 90_000;
+
 /**
  * Contadores vivos para badges del Command Dock.
  * tone: attention | warn | activity
+ * Estabilizado: deps por token/slug, un solo in-flight, intervalo largo.
  */
 export function useRestaurantOpsPulse({ apiSession, tenantSlugForVertical, activeSystemKey, enabled }) {
   const [pulse, setPulse] = useState({
@@ -17,43 +20,56 @@ export function useRestaurantOpsPulse({ apiSession, tenantSlugForVertical, activ
     loaded: false
   });
 
-  const fetchOpts = useMemo(
-    () => ({
-      businessId: dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical),
-      businessTypeHeader: activeSystemKey
-    }),
-    [apiSession, tenantSlugForVertical, activeSystemKey]
-  );
+  const token = apiSession?.token || "";
+  const slug = dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical) || "";
+  const apiSessionRef = useRef(apiSession);
+  apiSessionRef.current = apiSession;
+  const inFlightRef = useRef(false);
+  const pausedUntilRef = useRef(0);
 
   const reload = useCallback(async () => {
-    if (!enabled || !apiSession?.token) return;
+    if (!enabled || !token) return;
+    if (inFlightRef.current) return;
+    if (Date.now() < pausedUntilRef.current) return;
+
+    inFlightRef.current = true;
+    const sess = apiSessionRef.current;
+    const fetchOpts = {
+      businessId: slug,
+      businessTypeHeader: activeSystemKey
+    };
+
     try {
-      const [ordersRes, floor, dash, stockRes] = await Promise.all([
-        dakinisTenantJsonFetch("/api/tenant/restaurant/orders", apiSession, fetchOpts).catch(() => null),
-        dakinisFetchRestaurantFloor(apiSession, fetchOpts).catch(() => null),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/delivery/dashboard", apiSession, fetchOpts).catch(() => null),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", apiSession, fetchOpts).catch(() => null)
+      // Solo 2 llamadas: orders (comandas/caja) + floor (mesas). Delivery/kitchen bajo demanda.
+      const [ordersRes, floor] = await Promise.all([
+        dakinisTenantJsonFetch("/api/tenant/restaurant/orders", sess, fetchOpts),
+        dakinisFetchRestaurantFloor(sess, fetchOpts)
       ]);
 
       const orders = Array.isArray(ordersRes?.data?.orders) ? ordersRes.data.orders : [];
       const kitchenOpen = orders.filter(
-        (o) => o.status === "en_cocina" || o.status === "lista" || o.status === "recibida" || o.status === "preparando"
+        (o) =>
+          o.status === "en_cocina" ||
+          o.status === "lista" ||
+          o.status === "recibida" ||
+          o.status === "preparando" ||
+          o.status === "nueva" ||
+          o.status === "cocina"
       ).length;
       const openOrders = orders.filter((o) => o.status !== "entregada" && o.status !== "cancelada").length;
 
       const sessions = floor?.sessions && typeof floor.sessions === "object" ? floor.sessions : {};
-      const occupiedTables = Object.values(sessions).filter((s) => s && (s.items?.length > 0 || s.status === "open")).length;
+      const occupiedTables = Object.values(sessions).filter(
+        (s) => s && (s.items?.length > 0 || s.status === "open")
+      ).length;
 
-      const deliveryPending = Number(dash?.data?.pendingMarketplace ?? 0);
-      const todayCounts = dash?.data?.todayCounts || {};
-      const deliveryToday = Object.values(todayCounts).reduce((a, n) => a + Number(n || 0), 0);
-
-      const kitchenPayload = stockRes?.data?.kitchen || stockRes?.data || {};
-      const items = Array.isArray(kitchenPayload?.items) ? kitchenPayload.items : [];
-      const stockAlerts = items.filter((it) => {
-        const qty = Number(it.quantity ?? it.qty ?? 0);
-        const min = Number(it.minQuantity ?? it.min_qty ?? 0);
-        return min > 0 && qty <= min;
+      const marketplace = orders.filter((o) => {
+        const ch = String(o.channel || "").toLowerCase();
+        return (
+          (ch === "glovo" || ch === "uber" || ch === "ubereats" || ch === "justeat" || ch === "delivery") &&
+          o.status !== "entregada" &&
+          o.status !== "cancelada"
+        );
       }).length;
 
       const delivered = orders.filter((o) => o.status === "entregada");
@@ -62,22 +78,26 @@ export function useRestaurantOpsPulse({ apiSession, tenantSlugForVertical, activ
       setPulse({
         occupiedTables,
         kitchenOpen: kitchenOpen || openOrders,
-        deliveryPending: deliveryPending || deliveryToday,
-        stockAlerts,
+        deliveryPending: marketplace,
+        stockAlerts: 0,
         cashToday,
         loaded: true
       });
-    } catch {
-      /* silent — dock sigue sin badges */
+    } catch (e) {
+      if (e?.status === 429 || e?.code === "RATE_LIMIT_EXCEEDED") {
+        pausedUntilRef.current = Date.now() + 60_000;
+      }
+    } finally {
+      inFlightRef.current = false;
     }
-  }, [enabled, apiSession, fetchOpts]);
+  }, [enabled, token, slug, activeSystemKey]);
 
   useEffect(() => {
+    if (!enabled || !token) return undefined;
     reload();
-    if (!enabled) return undefined;
-    const id = window.setInterval(reload, 45000);
+    const id = window.setInterval(reload, PULSE_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [reload, enabled]);
+  }, [reload, enabled, token]);
 
   const badges = useMemo(() => {
     /** @type {Record<string, { value: string|number, tone: 'attention'|'warn'|'activity' }|null>} */

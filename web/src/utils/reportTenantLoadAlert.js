@@ -17,6 +17,7 @@ export async function dakinisReportTenantLoadAlert({
   if (!apiSession?.token || !businessId) return;
   const msg = String(errorMessage || "").trim();
   if (!msg) return;
+  if (/429|rate.?limit|demasiadas solicit/i.test(msg)) return;
 
   const key = `${businessId}:${moduleKey}:${msg}`;
   if (reportedKeys.has(key)) return;
