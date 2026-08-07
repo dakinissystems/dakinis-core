@@ -91,13 +91,13 @@ export function useRestaurantComandasSection({
 
   const comandasViews = useMemo(() => {
     const all = {
-      mesas: { id: "mesas", label: t("fermina.viewMesas") },
-      tarifa: { id: "tarifa", label: t("fermina.viewTarifa") },
-      pedido: { id: "pedido", label: t("fermina.viewPedido") },
-      cobro: { id: "cobro", label: t("fermina.viewCobro") },
-      activas: { id: "activas", label: t("fermina.viewActivas") },
-      cierre: { id: "cierre", label: t("fermina.viewCierre") },
-      facturas: { id: "facturas", label: t("fermina.viewFacturas") }
+      mesas: { id: "mesas", label: t("fermina.viewMesas", "Mesas") },
+      tarifa: { id: "tarifa", label: t("fermina.viewTarifa", "Tarifa") },
+      pedido: { id: "pedido", label: t("fermina.viewPedido", "Pedido") },
+      cobro: { id: "cobro", label: t("fermina.viewCobro", "Cobro") },
+      activas: { id: "activas", label: t("fermina.viewActivas", "Activas") },
+      cierre: { id: "cierre", label: t("fermina.viewCierre", "Cierre día") },
+      facturas: { id: "facturas", label: t("fermina.viewFacturas", "Facturas") }
     };
     const byRole = {
       camarero: ["mesas"],
@@ -365,7 +365,7 @@ export function useRestaurantComandasSection({
     }
   }
 
-  const venueName = brand?.name || t("mockupPanels.restaurante.brand");
+  const venueName = brand?.name || t("mockupPanels.restaurante.brand", "Restaurante");
   const shouldRender =
     Boolean(apiSession?.token) && (opsMode || isFermina || menu.length > 0 || (tables && tables.length > 0));
 
@@ -377,6 +377,7 @@ export function useRestaurantComandasSection({
       error,
       staffRole,
       opsMode,
+      apiSessionBusinessId: apiSession?.businessId || apiSession?.business?.id || effectiveSlug || null,
       comandasViews,
       comandasView,
       setComandasView,

@@ -5,6 +5,12 @@
  */
 export const GlovoProvider = {
   id: "glovo",
+  resilience: {
+    timeoutMs: 10_000,
+    retries: 5,
+    circuitBreaker: { failureThreshold: 5, coolDownMs: 60_000 },
+    rateLimit: { maxPerMinute: 60 }
+  },
 
   async importOrder(_ctx, rawOrder = {}) {
     const products = Array.isArray(rawOrder.products) ? rawOrder.products : [];

@@ -1,7 +1,20 @@
 /**
- * Interfaz DeliveryProvider (contrato JSDoc — sin TypeScript).
+ * Interfaz DeliveryProvider — conector de canal (Integration Platform).
  *
- * Cada marketplace implementa estos métodos. OrderService NUNCA hace if(channel==="glovo").
+ * Pipeline del core (el provider NO orquesta esto):
+ *   Channel → Import → Normalize → Validate → Create Order → Events → Sync
+ *
+ * Superficie mínima que debe conocer el proveedor:
+ *   importOrder() | updateStatus() | cancelOrder() | health()
+ *
+ * El resto (accept/reject/printFlags/mapStatus*) son helpers opcionales pero
+ * hoy se exigen para stubs homogéneos.
+ *
+ * Resiliencia (declarativa por provider — ver dakinisProviderResilience):
+ *   timeoutMs · retries · circuitBreaker · rateLimit
+ *
+ * Idempotencia (requisito del core, no del provider):
+ *   clave = provider + external_order_id
  *
  * @typedef {object} DeliveryProviderContext
  * @property {string} businessId
@@ -17,8 +30,15 @@
  * @property {string} [externalOrderId]
  * @property {object} [raw]
  *
+ * @typedef {object} ProviderResilience
+ * @property {number} [timeoutMs]
+ * @property {number} [retries]
+ * @property {{ failureThreshold?: number, coolDownMs?: number }} [circuitBreaker]
+ * @property {{ maxPerMinute?: number }} [rateLimit]
+ *
  * @typedef {object} DeliveryProvider
  * @property {string} id
+ * @property {ProviderResilience} [resilience]
  * @property {(ctx: DeliveryProviderContext, rawOrder: object) => Promise<HospitalityOrderDraft>} importOrder
  * @property {(ctx: DeliveryProviderContext, order: object) => Promise<{ok: boolean, externalStatus?: string}>} acceptOrder
  * @property {(ctx: DeliveryProviderContext, order: object, reason?: string) => Promise<{ok: boolean}>} rejectOrder
@@ -41,6 +61,42 @@ export const DAKINIS_DELIVERY_PROVIDER_METHODS = Object.freeze([
   "mapStatusOut",
   "mapStatusIn"
 ]);
+
+/** Defaults de resiliencia si el provider no declara `resilience`. */
+export const DAKINIS_PROVIDER_RESILIENCE_DEFAULTS = Object.freeze({
+  timeoutMs: 8_000,
+  retries: 5,
+  circuitBreaker: Object.freeze({ failureThreshold: 5, coolDownMs: 60_000 }),
+  rateLimit: Object.freeze({ maxPerMinute: 60 })
+});
+
+/**
+ * @param {object} provider
+ * @returns {typeof DAKINIS_PROVIDER_RESILIENCE_DEFAULTS & object}
+ */
+export function dakinisProviderResilience(provider) {
+  const r = provider?.resilience || {};
+  return {
+    timeoutMs: Number(r.timeoutMs) > 0 ? Number(r.timeoutMs) : DAKINIS_PROVIDER_RESILIENCE_DEFAULTS.timeoutMs,
+    retries: Number(r.retries) > 0 ? Number(r.retries) : DAKINIS_PROVIDER_RESILIENCE_DEFAULTS.retries,
+    circuitBreaker: {
+      failureThreshold:
+        Number(r.circuitBreaker?.failureThreshold) > 0
+          ? Number(r.circuitBreaker.failureThreshold)
+          : DAKINIS_PROVIDER_RESILIENCE_DEFAULTS.circuitBreaker.failureThreshold,
+      coolDownMs:
+        Number(r.circuitBreaker?.coolDownMs) > 0
+          ? Number(r.circuitBreaker.coolDownMs)
+          : DAKINIS_PROVIDER_RESILIENCE_DEFAULTS.circuitBreaker.coolDownMs
+    },
+    rateLimit: {
+      maxPerMinute:
+        Number(r.rateLimit?.maxPerMinute) > 0
+          ? Number(r.rateLimit.maxPerMinute)
+          : DAKINIS_PROVIDER_RESILIENCE_DEFAULTS.rateLimit.maxPerMinute
+    }
+  };
+}
 
 /**
  * Valida que un provider implemente la interfaz.

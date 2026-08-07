@@ -5,12 +5,14 @@ import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "../../../
 import {
   dakinisDeliveryDashboard,
   dakinisListDeliveryIntegrations,
+  dakinisListDeliveryProviderHealth,
   dakinisUpsertDeliveryIntegration,
   dakinisDeliverySimulateManualOrder,
   dakinisHandleProviderWebhook,
   dakinisEnsureDeliveryListeners
 } from "./DeliveryService.js";
 import { dakinisListDeliveryJobs } from "./DeliveryQueue.js";
+import { dakinisDeliveryTelemetrySnapshot } from "./DeliveryTelemetry.js";
 import {
   dakinisListPriceLists,
   dakinisUpsertPriceListItem,
@@ -69,6 +71,20 @@ export async function dakinisHandleDeliveryDashboardGet(req) {
   return dakinisJsonSuccess(data, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
+/** Health agregado de proveedores (una sola llamada para el panel). */
+export async function dakinisHandleDeliveryProvidersGet(req) {
+  const gate = dakinisHospitalityGate(req);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  const providers = await dakinisListDeliveryProviderHealth(req.dakinisBusiness.id);
+  return dakinisJsonSuccess(
+    { providers, telemetry: dakinisDeliveryTelemetrySnapshot() },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
 export async function dakinisHandleDeliveryIntegrationsGet(req) {
   const gate = dakinisHospitalityGate(req);
   if (gate) return gate;
@@ -99,9 +115,9 @@ export async function dakinisHandleDeliverySimulatePost(req, rawBody) {
     venueName: req.dakinisBusiness.name
   });
   if (result.error) return dakinisJsonError(result.error.status, result.error.code, result.error.message);
-  return dakinisJsonSuccess({ order: result.order }, req.dakinisBusiness.type, {
+  return dakinisJsonSuccess({ order: result.order, duplicate: !!result.duplicate }, req.dakinisBusiness.type, {
     ...dakinisMeta(req),
-    status: 201
+    status: result.duplicate ? 200 : 201
   });
 }
 
@@ -110,8 +126,8 @@ export async function dakinisHandleDeliveryJobsGet(req) {
   if (gate) return gate;
   const jwtErr = dakinisRequireTenantJwt(req);
   if (jwtErr) return jwtErr;
-  const jobs = await dakinisListDeliveryJobs(req.dakinisBusiness.id);
-  return dakinisJsonSuccess({ jobs }, req.dakinisBusiness.type, dakinisMeta(req));
+  const { jobs, counts } = await dakinisListDeliveryJobs(req.dakinisBusiness.id);
+  return dakinisJsonSuccess({ jobs, counts }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandlePriceListsGet(req) {
@@ -175,6 +191,13 @@ export async function dakinisHandleHospitalityDeliveryRoute(req, rawBody, path) 
     return dakinisHandleDeliveryDashboardGet(req);
   }
   if (
+    (path === "/api/tenant/restaurant/delivery/providers" ||
+      path === "/api/tenant/hospitality/delivery/providers") &&
+    req.method === "GET"
+  ) {
+    return dakinisHandleDeliveryProvidersGet(req);
+  }
+  if (
     (path === "/api/tenant/restaurant/delivery/integrations" ||
       path === "/api/tenant/hospitality/delivery/integrations") &&
     req.method === "GET"
@@ -208,7 +231,7 @@ export async function dakinisHandleHospitalityDeliveryRoute(req, rawBody, path) 
     return dakinisHandlePriceListPatch(req, plPatch[1], rawBody);
   }
 
-  const wh = /^\/api\/integrations\/(glovo|uber|ubereats|justeat|manual)\/webhook$/.exec(path);
+  const wh = /^\/api\/integrations\/(glovo|uber|ubereats|justeat|manual|failure|stress|replay)\/webhook$/.exec(path);
   if (wh && req.method === "POST") {
     const provider = wh[1] === "uber" ? "ubereats" : wh[1];
     return dakinisHandlePublicDeliveryWebhook(req, provider, rawBody);

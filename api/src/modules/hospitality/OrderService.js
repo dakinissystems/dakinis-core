@@ -43,6 +43,26 @@ export async function dakinisOrdersList(businessId) {
 }
 
 /**
+ * Idempotencia delivery: busca pedido por provider + external_order_id.
+ * @param {string} businessId
+ * @param {string} providerId
+ * @param {string} externalOrderId
+ */
+export async function dakinisOrdersFindByExternalId(businessId, providerId, externalOrderId) {
+  const ext = String(externalOrderId || "").trim();
+  if (!ext) return null;
+  const provider = String(providerId || "").toLowerCase();
+  const orders = await dakinisOrdersList(businessId);
+  return (
+    orders.find((o) => {
+      if (String(o.externalOrderId || "") !== ext) return false;
+      const p = String(o.externalProvider || o.channel || "").toLowerCase();
+      return !provider || p === provider || p === provider.replace("eats", "");
+    }) || null
+  );
+}
+
+/**
  * @param {string} businessId
  * @param {object} body
  * @param {{ venueName?: string }} [ctx]
@@ -144,11 +164,20 @@ export async function dakinisOrdersPatch(businessId, orderId, body) {
       from: prevStatus,
       to: body.status
     });
+    if (body.status === "cocina") {
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.KitchenStarted, { businessId, orderId });
+    }
     if (body.status === "lista") {
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.KitchenReady, { businessId, orderId });
     }
-    if (body.status === "entregada" || body.paid === true) {
+    if (body.status === "entregada") {
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.Delivered, { businessId, orderId });
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, { businessId, orderId });
+    } else if (body.paid === true) {
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, { businessId, orderId });
+    }
+    if (body.status === "cancelada") {
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.Cancelled, { businessId, orderId });
     }
   }
 

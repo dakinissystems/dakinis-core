@@ -2,30 +2,34 @@ import { ManualProvider } from "./ManualProvider.js";
 import { GlovoProvider } from "./GlovoProvider.js";
 import { UberEatsProvider } from "./UberEatsProvider.js";
 import { JustEatProvider } from "./JustEatProvider.js";
-import { dakinisAssertDeliveryProvider } from "../DeliveryProvider.js";
+import { FailureProvider, StressProvider, ReplayProvider } from "./QaProviders.js";
+import {
+  dakinisDeliveryRegistry,
+  dakinisGetDeliveryProvider,
+  dakinisListDeliveryProviders,
+  dakinisRegisterDeliveryProvider
+} from "../DeliveryRegistry.js";
 
-const REGISTRY = new Map();
+dakinisDeliveryRegistry.register(ManualProvider);
+dakinisDeliveryRegistry.register(GlovoProvider);
+dakinisDeliveryRegistry.register(UberEatsProvider);
+dakinisDeliveryRegistry.register(JustEatProvider);
 
-function dakinisRegister(provider) {
-  if (!dakinisAssertDeliveryProvider(provider)) {
-    throw new Error(`DeliveryProvider inválido: ${provider?.id}`);
-  }
-  REGISTRY.set(provider.id, provider);
-}
+/** QA — disponibles en registry; no aparecen en catálogo comercial salvo enable. */
+dakinisDeliveryRegistry.register(FailureProvider);
+dakinisDeliveryRegistry.register(StressProvider);
+dakinisDeliveryRegistry.register(ReplayProvider);
 
-dakinisRegister(ManualProvider);
-dakinisRegister(GlovoProvider);
-dakinisRegister(UberEatsProvider);
-dakinisRegister(JustEatProvider);
-
-export function dakinisGetDeliveryProvider(providerId) {
-  const id = String(providerId || "").toLowerCase();
-  if (id === "uber") return REGISTRY.get("ubereats");
-  return REGISTRY.get(id) || null;
-}
-
-export function dakinisListDeliveryProviders() {
-  return [...REGISTRY.values()];
-}
-
-export { ManualProvider, GlovoProvider, UberEatsProvider, JustEatProvider };
+export {
+  ManualProvider,
+  GlovoProvider,
+  UberEatsProvider,
+  JustEatProvider,
+  FailureProvider,
+  StressProvider,
+  ReplayProvider,
+  dakinisDeliveryRegistry,
+  dakinisGetDeliveryProvider,
+  dakinisListDeliveryProviders,
+  dakinisRegisterDeliveryProvider
+};

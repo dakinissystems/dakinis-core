@@ -23,6 +23,7 @@ export default function RestaurantComandasPanels({ ctx }) {
     error,
     staffRole,
     opsMode,
+    apiSessionBusinessId,
     comandasViews,
     comandasView,
     setComandasView,
@@ -107,7 +108,11 @@ export default function RestaurantComandasPanels({ ctx }) {
       ) : null}
 
       {opsMode && staffRole === "admin" ? (
-        <RestaurantCajaTpvSummary dayClose={dayClose} onJumpCierre={() => setComandasView("cierre")} />
+        <RestaurantCajaTpvSummary
+          dayClose={dayClose}
+          businessId={apiSessionBusinessId}
+          onJumpCierre={() => setComandasView("cierre")}
+        />
       ) : null}
 
       <article className="card" style={{ marginTop: opsMode ? 0 : "1rem" }}>
@@ -208,7 +213,9 @@ export default function RestaurantComandasPanels({ ctx }) {
         ) : null}
       </article>
 
-      {comandasView === "cierre" ? <RestaurantComandasCierrePanel t={t} dayClose={dayClose} /> : null}
+      {comandasView === "cierre" ? (
+        <RestaurantComandasCierrePanel t={t} dayClose={dayClose} businessId={apiSessionBusinessId} />
+      ) : null}
 
       {comandasView === "facturas" ? (
         <RestaurantComandasFacturasPanel

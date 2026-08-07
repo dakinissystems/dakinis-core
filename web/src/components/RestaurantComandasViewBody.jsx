@@ -6,6 +6,7 @@ import {
   DAKINIS_RESTAURANT_APP_CHANNEL_IDS,
   DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS
 } from "../utils/restaurantOrderMeta.js";
+import { dakinisReadCashFloat } from "../utils/restaurantCashFloat.js";
 import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const STATUS_FLOW = ["nueva", "cocina", "lista", "entregada", "cancelada"];
@@ -373,16 +374,42 @@ export function RestaurantComandasActivasView({
   );
 }
 
-export function RestaurantComandasCierrePanel({ t, dayClose }) {
+export function RestaurantComandasCierrePanel({ t, dayClose, businessId }) {
+  const opening = typeof window !== "undefined" ? dakinisReadCashFloat(businessId) : null;
+  const cashRow = Array.isArray(dayClose?.byPayment)
+    ? dayClose.byPayment.find((r) => r.id === "efectivo")
+    : null;
+  const cashSales = cashRow ? Number(cashRow.total) || 0 : 0;
+  const expectedCash = opening != null ? Math.round((opening + cashSales) * 100) / 100 : null;
+
   return (
     <article className="card" style={{ marginTop: "1rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-        <h4 style={{ margin: 0 }}>{t("fermina.dayCloseTitle")}</h4>
-        <span className="mockup-badge">{t("fermina.dayCloseDelivered", { count: dayClose.closed.length })}</span>
+        <h4 style={{ margin: 0 }}>{t("fermina.dayCloseTitle", "Cierre del día (control)")}</h4>
+        <span className="mockup-badge">
+          {t("fermina.dayCloseDelivered", "{count} entregadas", { count: dayClose.closed.length })}
+        </span>
       </div>
       <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
-        {t("fermina.dayCloseLead")}
+        {t(
+          "fermina.dayCloseLead",
+          "Totales de comandas en estado entregada — para cuadrar caja y plataformas al cerrar."
+        )}
       </p>
+      <ul className="kpi-label" style={{ margin: "0 0 1rem", paddingLeft: "1.1rem" }}>
+        <li>
+          {t("restaurant.cajaOpeningLabel", "Inicio de día")}:{" "}
+          <strong>{opening != null ? `${opening.toFixed(2)} €` : "—"}</strong>
+        </li>
+        <li>
+          {t("restaurant.cajaCashSales", "Cobros en efectivo")}:{" "}
+          <strong>{cashSales.toFixed(2)} €</strong>
+        </li>
+        <li>
+          {t("restaurant.cajaExpectedCash", "Efectivo esperado")}:{" "}
+          <strong>{expectedCash != null ? `${expectedCash.toFixed(2)} €` : "—"}</strong>
+        </li>
+      </ul>
       <div
         style={{
           display: "grid",
@@ -392,13 +419,13 @@ export function RestaurantComandasCierrePanel({ t, dayClose }) {
         }}
       >
         <div>
-          <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByPayment")}</h5>
+          <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByPayment", "Por forma de cobro")}</h5>
           <table className="mockup-table">
             <thead>
               <tr>
-                <th>{t("fermina.colPayment")}</th>
-                <th>{t("fermina.dayCloseOrdersCol")}</th>
-                <th>{t("fermina.colTotal")}</th>
+                <th>{t("fermina.colPayment", "Cobro")}</th>
+                <th>{t("fermina.dayCloseOrdersCol", "Pedidos")}</th>
+                <th>{t("fermina.colTotal", "Total")}</th>
               </tr>
             </thead>
             <tbody>
@@ -412,7 +439,7 @@ export function RestaurantComandasCierrePanel({ t, dayClose }) {
             </tbody>
             <tfoot>
               <tr>
-                <th colSpan={2}>{t("fermina.dayCloseCashTotal")}</th>
+                <th colSpan={2}>{t("fermina.dayCloseCashTotal", "Caja (entregadas)")}</th>
                 <th>{dayClose.grandTotal.toFixed(2)} €</th>
               </tr>
             </tfoot>

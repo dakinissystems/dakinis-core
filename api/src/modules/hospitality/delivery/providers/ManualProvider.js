@@ -4,6 +4,12 @@
  */
 export const ManualProvider = {
   id: "manual",
+  resilience: {
+    timeoutMs: 5_000,
+    retries: 3,
+    circuitBreaker: { failureThreshold: 10, coolDownMs: 30_000 },
+    rateLimit: { maxPerMinute: 120 }
+  },
 
   async importOrder(_ctx, rawOrder = {}) {
     const products = Array.isArray(rawOrder.products)

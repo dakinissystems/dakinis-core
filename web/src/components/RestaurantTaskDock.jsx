@@ -56,7 +56,7 @@ export default function RestaurantTaskDock({ task, onTaskChange, badges = {} }) 
                 className={`restaurant-task-dock__btn${active ? " is-active" : ""}`}
                 aria-current={active ? "page" : undefined}
                 aria-pressed={active}
-                title={`${t(meta.labelKey)} (Alt+${meta.shortcut})`}
+                title={`${t(meta.labelKey, id)} (Alt+${meta.shortcut})`}
                 onClick={() => {
                   dakinisWriteRestaurantTask(id);
                   onTaskChange(id);
@@ -65,7 +65,7 @@ export default function RestaurantTaskDock({ task, onTaskChange, badges = {} }) 
                 <span className="restaurant-task-dock__icon" aria-hidden="true">
                   {meta.icon}
                 </span>
-                <span className="restaurant-task-dock__label">{t(meta.labelKey)}</span>
+                <span className="restaurant-task-dock__label">{t(meta.labelKey, id)}</span>
                 {showBadge ? (
                   <span
                     className={`restaurant-task-dock__badge restaurant-task-dock__badge--${tone}`}

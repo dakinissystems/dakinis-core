@@ -6,11 +6,19 @@ import {
   DAKINIS_DELIVERY_PROVIDERS
 } from "@dakinis/shared/catalog/deliveryProviders.js";
 import { dakinisGetDeliveryProvider } from "./providers/index.js";
-import { dakinisOrdersCreate, dakinisOrdersPatch, dakinisOrdersList } from "../OrderService.js";
-import { dakinisApplyPriceListToLines } from "../PriceListService.js";
+import {
+  dakinisOrdersCreate,
+  dakinisOrdersPatch,
+  dakinisOrdersList,
+  dakinisOrdersFindByExternalId
+} from "../OrderService.js";
+import { dakinisPriceResolve } from "../PriceResolver.js";
 import { dakinisEnqueueDeliveryJob } from "./DeliveryQueue.js";
+import { dakinisDeliveryTelemetryRecord, dakinisDeliveryTelemetrySnapshot } from "./DeliveryTelemetry.js";
+import { dakinisProviderResilience } from "./DeliveryProvider.js";
 import {
   DAKINIS_HOSPITALITY_EVENTS,
+  dakinisHospitalityEmit,
   dakinisHospitalityOn,
   dakinisEnsureHospitalityEventDefaults
 } from "../events.js";
@@ -127,6 +135,7 @@ export async function dakinisListDeliveryIntegrations(businessId) {
  */
 export async function dakinisDeliveryDashboard(businessId) {
   const integrations = await dakinisListDeliveryIntegrations(businessId);
+  const providers = await dakinisListDeliveryProviderHealth(businessId);
   const orders = await dakinisOrdersList(businessId);
   const today = new Date().toISOString().slice(0, 10);
   const counts = {};
@@ -141,32 +150,125 @@ export async function dakinisDeliveryDashboard(businessId) {
       pending += 1;
     }
   }
-  return { integrations, todayCounts: counts, pendingMarketplace: pending };
+  return {
+    integrations,
+    providers,
+    todayCounts: counts,
+    pendingMarketplace: pending,
+    telemetry: dakinisDeliveryTelemetrySnapshot()
+  };
 }
 
 /**
- * Importa pedido externo → HospitalityOrder → OrderService.create (con PriceList).
+ * Health agregado por proveedor (una sola llamada para el panel).
+ * Shape:
+ *   [{ provider, status, lastSync, pending, resilience }]
+ */
+export async function dakinisListDeliveryProviderHealth(businessId) {
+  const integrations = await dakinisListDeliveryIntegrations(businessId);
+  const orders = await dakinisOrdersList(businessId);
+  const pendingByChannel = {};
+  for (const o of orders) {
+    if (!["nueva", "cocina", "lista"].includes(o.status)) continue;
+    const ch = String(o.channel || "");
+    pendingByChannel[ch] = (pendingByChannel[ch] || 0) + 1;
+  }
+
+  return integrations
+    .filter((row) => !["failure", "stress", "replay"].includes(row.provider) || row.enabled)
+    .map((row) => {
+      const provider = dakinisGetDeliveryProvider(row.provider);
+      const resilience = dakinisProviderResilience(provider || { id: row.provider });
+      const lastSyncAt = row.lastSyncAt || null;
+      let lastSync = null;
+      if (lastSyncAt) {
+        const ms = Date.now() - new Date(lastSyncAt).getTime();
+        if (Number.isFinite(ms) && ms >= 0) {
+          const mins = Math.round(ms / 60_000);
+          lastSync = mins <= 1 ? "1 min" : `${mins} min`;
+        }
+      }
+      const status =
+        row.status === "online" || row.status === "ok"
+          ? "connected"
+          : row.status === "stub"
+            ? "stub"
+            : row.enabled
+              ? row.status || "unknown"
+              : "disconnected";
+      return {
+        provider: row.provider,
+        label: row.label,
+        status,
+        lastSync,
+        lastSyncAt,
+        pending: pendingByChannel[row.provider] || 0,
+        healthOk: !!row.healthOk,
+        detail: row.detail || null,
+        enabled: !!row.enabled,
+        resilience
+      };
+    });
+}
+
+/**
+ * Channel Bus pipeline:
+ *   Import → Normalize → Validate → Create Order → Events → Sync
+ *
+ * Idempotencia obligatoria: provider + external_order_id.
+ *
  * @param {string} businessId
  * @param {string} providerId
  * @param {object} rawOrder
  * @param {{ venueName?: string }} [ctx]
  */
 export async function dakinisDeliveryImportOrder(businessId, providerId, rawOrder, ctx = {}) {
+  const started = Date.now();
   const provider = dakinisGetDeliveryProvider(providerId);
   if (!provider) {
     return { error: { status: 400, code: "UNKNOWN_PROVIDER", message: `Provider ${providerId} no registrado` } };
   }
 
   const integration = await dakinisLoadIntegration(businessId, providerId);
-  const draft = await provider.importOrder({ businessId, integration }, rawOrder);
 
-  // Tarifas por canal: re-precio con PriceList (force)
-  const pricedLines = await dakinisApplyPriceListToLines(
+  // 1. Import + 2. Normalize (provider)
+  const draft = await provider.importOrder({ businessId, integration }, rawOrder);
+  dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderImported, {
     businessId,
-    draft.lines || [],
-    draft.channel || providerId,
-    { force: true }
-  );
+    provider: providerId,
+    externalOrderId: draft.externalOrderId || null
+  });
+
+  // Idempotencia: mismo webhook dos veces → mismo pedido
+  const externalId = String(draft.externalOrderId || "").trim();
+  if (externalId) {
+    const existing = await dakinisOrdersFindByExternalId(businessId, providerId, externalId);
+    if (existing) {
+      dakinisDeliveryTelemetryRecord(providerId, "duplicate");
+      return { order: existing, duplicate: true };
+    }
+  }
+
+  // 3. Validate
+  if (!Array.isArray(draft.lines) || !draft.lines.length) {
+    dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderRejected, {
+      businessId,
+      provider: providerId,
+      reason: "empty_lines"
+    });
+    dakinisDeliveryTelemetryRecord(providerId, "failure");
+    return { error: { status: 400, code: "VALIDATION_ERROR", message: "Pedido sin líneas" } };
+  }
+  dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderValidated, {
+    businessId,
+    provider: providerId,
+    externalOrderId: externalId || null
+  });
+
+  // PriceResolver strategy (Base → Channel → Overrides → …)
+  const pricedLines = await dakinisPriceResolve(businessId, draft.lines || [], draft.channel || providerId, {
+    force: true
+  });
 
   const body = {
     channel: draft.channel || providerId,
@@ -177,12 +279,16 @@ export async function dakinisDeliveryImportOrder(businessId, providerId, rawOrde
     tax: 0,
     delivery: draft.delivery || null,
     payment: draft.payment || null,
-    externalOrderId: draft.externalOrderId || null,
+    externalOrderId: externalId || null,
     externalProvider: providerId
   };
 
+  // 4. Create Order
   const created = await dakinisOrdersCreate(businessId, body, ctx);
-  if (created.error) return created;
+  if (created.error) {
+    dakinisDeliveryTelemetryRecord(providerId, "failure");
+    return created;
+  }
 
   if (integration) {
     await dakinisRun(
@@ -191,7 +297,9 @@ export async function dakinisDeliveryImportOrder(businessId, providerId, rawOrde
     );
   }
 
-  // Auto-accept (enqueue; fallo no tumba el pedido)
+  dakinisDeliveryTelemetryRecord(providerId, "import", Date.now() - started);
+
+  // 5–6. Events ya emitidos por OrderService; Sync via cola (fallo no tumba el pedido)
   await dakinisEnqueueDeliveryJob(businessId, providerId, "acceptOrder", {
     orderId: created.order.id
   });
@@ -355,7 +463,12 @@ export async function dakinisHandleProviderWebhook(businessId, providerId, event
   // Nuevo pedido / update
   const result = await dakinisDeliveryImportOrder(businessId, providerId, body);
   if (result.error) return result;
-  return { ok: true, action: "imported", order: result.order };
+  return {
+    ok: true,
+    action: result.duplicate ? "duplicate" : "imported",
+    duplicate: !!result.duplicate,
+    order: result.order
+  };
 }
 
 /** Simulación rápida ManualProvider (dev / demo). */
