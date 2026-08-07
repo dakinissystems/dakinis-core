@@ -7,13 +7,16 @@ import {
 } from "./RestaurantStockBody.jsx";
 
 export default function RestaurantStockSection(props) {
+  const { parts, compact = false, autoFocusScan = false } = props;
   const stock = useRestaurantStockSection(props);
+  const showAll = !parts || parts.length === 0;
+  const show = (id) => showAll || parts.includes(id);
 
   if (!stock.kitchen) {
     if (stock.error) {
       return (
-        <section style={{ marginTop: "2rem" }}>
-          <h3>{stock.t("kitchen.title")}</h3>
+        <section style={{ marginTop: compact ? "0.75rem" : "2rem" }}>
+          {!compact ? <h3>{stock.t("kitchen.title")}</h3> : null}
           <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
             {stock.error}
           </p>
@@ -39,27 +42,35 @@ export default function RestaurantStockSection(props) {
   const { t, leadKey, error, kitchen, dateLocale } = stock;
 
   return (
-    <section style={{ marginTop: "2rem" }}>
-      <h3>{t("kitchen.title")}</h3>
-      <p className="lead">{t(leadKey)}</p>
+    <section style={{ marginTop: compact ? "0.75rem" : "2rem" }} className={compact ? "restaurant-stock--compact" : undefined}>
+      {!compact ? (
+        <>
+          <h3>{t("kitchen.title")}</h3>
+          <p className="lead">{t(leadKey)}</p>
+        </>
+      ) : null}
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
           {error}
         </p>
       ) : null}
 
-      <RestaurantStockScanPanel {...stock} />
-      <RestaurantStockInventoryGrid {...stock} kitchen={kitchen} />
-      <RestaurantStockProductionHistory t={t} kitchen={kitchen} dateLocale={dateLocale} />
-      <RestaurantStockAllergenSection
-        apiSession={stock.apiSession}
-        fetchOpts={stock.fetchOpts}
-        kitchen={kitchen}
-        reload={stock.reload}
-        busy={stock.busy}
-        setBusy={stock.setBusy}
-        setError={stock.setError}
-      />
+      {show("scan") ? <RestaurantStockScanPanel {...stock} autoFocus={autoFocusScan} /> : null}
+      {show("grid") ? <RestaurantStockInventoryGrid {...stock} kitchen={kitchen} /> : null}
+      {show("production") ? (
+        <RestaurantStockProductionHistory t={t} kitchen={kitchen} dateLocale={dateLocale} />
+      ) : null}
+      {show("allergens") ? (
+        <RestaurantStockAllergenSection
+          apiSession={stock.apiSession}
+          fetchOpts={stock.fetchOpts}
+          kitchen={kitchen}
+          reload={stock.reload}
+          busy={stock.busy}
+          setBusy={stock.setBusy}
+          setError={stock.setError}
+        />
+      ) : null}
     </section>
   );
 }

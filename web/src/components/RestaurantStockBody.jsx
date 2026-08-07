@@ -22,12 +22,13 @@ export function RestaurantStockScanPanel({
   setNewProductExpiry,
   busy,
   dakinisCreateProductFromScan,
-  setScanMessage
+  setScanMessage,
+  autoFocus = false
 }) {
   return (
     <article className="card stock-panel__scan" style={{ marginBottom: "1rem" }}>
       <h4 style={{ marginTop: 0 }}>{t("kitchen.scanTitle")}</h4>
-      <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} />
+      <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} autoFocus={autoFocus} />
       <div className="stock-scan-actions">
         <label className="mockup-field">
           <span>{t("kitchen.scanQtyLabel")}</span>
