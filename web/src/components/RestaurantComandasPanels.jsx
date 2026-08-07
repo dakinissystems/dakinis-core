@@ -1,5 +1,6 @@
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
+import RestaurantCajaTpvSummary from "./RestaurantCajaTpvSummary.jsx";
 import { dakinisTriggerFerminaPrint } from "./RestaurantComandasSection.shared.js";
 import {
   dakinisRestaurantChannelLabel,
@@ -103,6 +104,10 @@ export default function RestaurantComandasPanels({ ctx }) {
         <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.adminComandasLead")}
         </p>
+      ) : null}
+
+      {opsMode && staffRole === "admin" ? (
+        <RestaurantCajaTpvSummary dayClose={dayClose} onJumpCierre={() => setComandasView("cierre")} />
       ) : null}
 
       <article className="card" style={{ marginTop: opsMode ? 0 : "1rem" }}>

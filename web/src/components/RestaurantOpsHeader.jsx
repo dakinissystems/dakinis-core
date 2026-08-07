@@ -1,53 +1,62 @@
 import { useLocale } from "../context/LocaleContext.jsx";
 
 /**
- * Cabecera compacta de operación (sin marketing).
+ * Cabecera mínima de operación (TPV).
  * @param {{
  *   businessName: string,
- *   openLabel?: string,
+ *   open?: boolean,
  *   stats?: Array<{ label: string, value: string|number }>,
- *   breadcrumb?: string[],
+ *   statuses?: Array<{ id: string, label: string, tone: 'ok'|'warn'|'down'|'idle' }>,
+ *   crumb?: string,
+ *   quickActions?: Array<{ id: string, label: string, onClick: () => void }>,
  *   onShowCommercial?: () => void,
  *   showCommercialLink?: boolean
  * }} props
  */
 export default function RestaurantOpsHeader({
   businessName,
-  openLabel,
+  open = true,
   stats = [],
-  breadcrumb = [],
+  statuses = [],
+  crumb = "",
+  quickActions = [],
   onShowCommercial,
   showCommercialLink = false
 }) {
   const { t } = useLocale();
 
   return (
-    <header className="restaurant-ops-header">
+    <header className="restaurant-ops-header restaurant-ops-header--minimal">
       <div className="restaurant-ops-header__row">
         <div className="restaurant-ops-header__identity">
+          <span
+            className={`restaurant-ops-header__live${open ? " is-open" : " is-closed"}`}
+            title={open ? t("restaurant.opsOpen") : t("restaurant.opsClosed")}
+            aria-label={open ? t("restaurant.opsOpen") : t("restaurant.opsClosed")}
+          />
           <h2 className="restaurant-ops-header__title">{businessName}</h2>
-          {openLabel ? (
-            <span className="restaurant-ops-header__status">{openLabel}</span>
-          ) : (
-            <span className="restaurant-ops-header__status">{t("restaurant.opsOpen")}</span>
-          )}
+          {crumb ? <span className="restaurant-ops-header__crumb-inline">{crumb}</span> : null}
         </div>
-        {showCommercialLink && onShowCommercial ? (
-          <button type="button" className="btn btn-outline restaurant-ops-header__demo" onClick={onShowCommercial}>
-            {t("restaurant.opsShowCommercial")}
-          </button>
-        ) : null}
+        <div className="restaurant-ops-header__aside">
+          {statuses.length > 0 ? (
+            <ul className="restaurant-ops-header__statuses" aria-label={t("restaurant.opsStatuses")}>
+              {statuses.map((s) => (
+                <li key={s.id} title={s.label} className={`is-${s.tone}`}>
+                  <span className="restaurant-ops-header__status-dot" aria-hidden="true" />
+                  <span className="sr-only">{s.label}</span>
+                  <span className="restaurant-ops-header__status-label">{s.label}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {showCommercialLink && onShowCommercial ? (
+            <button type="button" className="btn btn-outline restaurant-ops-header__demo" onClick={onShowCommercial}>
+              {t("restaurant.opsShowCommercial")}
+            </button>
+          ) : null}
+        </div>
       </div>
-      {breadcrumb.length > 0 ? (
-        <p className="restaurant-ops-header__crumb" aria-label={t("restaurant.opsBreadcrumb")}>
-          {breadcrumb.map((part, i) => (
-            <span key={`${part}-${i}`}>
-              {i > 0 ? <span className="restaurant-ops-header__crumb-sep"> › </span> : null}
-              <span className={i === breadcrumb.length - 1 ? "is-current" : undefined}>{part}</span>
-            </span>
-          ))}
-        </p>
-      ) : null}
+
       {stats.length > 0 ? (
         <ul className="restaurant-ops-header__stats">
           {stats.map((s) => (
@@ -57,6 +66,16 @@ export default function RestaurantOpsHeader({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {quickActions.length > 0 ? (
+        <div className="restaurant-ops-header__quick" role="group" aria-label={t("restaurant.opsQuickActions")}>
+          {quickActions.map((a) => (
+            <button key={a.id} type="button" className="btn btn-outline" onClick={a.onClick}>
+              {a.label}
+            </button>
+          ))}
+        </div>
       ) : null}
     </header>
   );

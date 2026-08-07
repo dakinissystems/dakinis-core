@@ -5,9 +5,10 @@ import {
   RestaurantStockProductionHistory,
   RestaurantStockScanPanel
 } from "./RestaurantStockBody.jsx";
+import RestaurantScanToast from "./RestaurantScanToast.jsx";
 
 export default function RestaurantStockSection(props) {
-  const { parts, compact = false, autoFocusScan = false } = props;
+  const { parts, compact = false, autoFocusScan = false, showScanToast = false } = props;
   const stock = useRestaurantStockSection(props);
   const showAll = !parts || parts.length === 0;
   const show = (id) => showAll || parts.includes(id);
@@ -39,10 +40,15 @@ export default function RestaurantStockSection(props) {
     );
   }
 
-  const { t, leadKey, error, kitchen, dateLocale } = stock;
+  const { t, leadKey, error, kitchen, dateLocale, scanMessage } = stock;
+  const toastTone =
+    scanMessage && /error|invalid|no |unknown|desconoc/i.test(scanMessage) ? "warn" : "ok";
 
   return (
-    <section style={{ marginTop: compact ? "0.75rem" : "2rem" }} className={compact ? "restaurant-stock--compact" : undefined}>
+    <section
+      style={{ marginTop: compact ? "0.75rem" : "2rem" }}
+      className={compact ? "restaurant-stock--compact" : undefined}
+    >
       {!compact ? (
         <>
           <h3>{t("kitchen.title")}</h3>
@@ -54,6 +60,8 @@ export default function RestaurantStockSection(props) {
           {error}
         </p>
       ) : null}
+
+      {showScanToast ? <RestaurantScanToast message={scanMessage} tone={toastTone} /> : null}
 
       {show("scan") ? <RestaurantStockScanPanel {...stock} autoFocus={autoFocusScan} /> : null}
       {show("grid") ? <RestaurantStockInventoryGrid {...stock} kitchen={kitchen} /> : null}

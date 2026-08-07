@@ -104,15 +104,10 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
   }
 
   return (
-    <div className="restaurant-delivery" style={{ marginTop: "1.25rem" }}>
+    <div className="restaurant-delivery restaurant-delivery--ops" style={{ marginTop: "0.5rem" }}>
       <article className="card">
-        <h4 style={{ marginTop: 0 }}>{t?.("restaurant.deliveryTitle", "Delivery")}</h4>
-        <p className="kpi-label">
-          {t?.(
-            "restaurant.deliveryLead",
-            "Integraciones por adaptador (Manual para pruebas). Glovo/Uber/Just Eat quedan listos cuando haya API partner. Los precios salen de tarifas por canal."
-          )}
-        </p>
+        <h4 style={{ marginTop: 0 }}>{t?.("restaurant.deliveryOrdersTitle", "Pedidos")}</h4>
+        <p className="kpi-label">{t?.("restaurant.deliveryOrdersLead", "Lo que importa ahora: volumen por canal.")}</p>
 
         {error ? (
           <p className="lead" style={{ color: "#fdba74", fontSize: "0.9rem" }}>
@@ -125,6 +120,50 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
           </p>
         ) : null}
 
+        <ul className="restaurant-delivery__channels">
+          {Object.keys(todayCounts).length === 0 ? (
+            <li className="kpi-label">—</li>
+          ) : (
+            Object.entries(todayCounts)
+              .sort((a, b) => Number(b[1]) - Number(a[1]))
+              .map(([ch, n]) => (
+                <li key={ch}>
+                  <strong className="restaurant-delivery__ch-count">{n}</strong>
+                  <span className="restaurant-delivery__ch-name">{ch}</span>
+                </li>
+              ))
+          )}
+        </ul>
+
+        <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+          <button type="button" className="btn" disabled={busy} onClick={simulateOrder}>
+            {t?.("restaurant.deliverySimulate", "Simular pedido Manual")}
+          </button>
+          <span className="kpi-label">
+            {t?.("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
+            <strong>{dashboard?.pendingMarketplace ?? 0}</strong>
+          </span>
+        </div>
+      </article>
+
+      {jobs.length ? (
+        <article className="card" style={{ marginTop: "1rem" }}>
+          <h4 style={{ marginTop: 0 }}>{t?.("restaurant.deliveryJobs", "Cola delivery")}</h4>
+          <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
+            {jobs.slice(0, 8).map((job) => (
+              <li key={job.id}>
+                {job.provider} · {job.job_type} · {job.status}
+                {job.last_error ? ` — ${job.last_error}` : ""}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ) : null}
+
+      <details className="card restaurant-delivery__integrations" style={{ marginTop: "1rem" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          {t?.("restaurant.deliveryIntegrations", "Integraciones")}
+        </summary>
         <div style={{ display: "grid", gap: "0.5rem", marginTop: "0.75rem" }}>
           {integrations.map((row) => (
             <div
@@ -160,34 +199,13 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
             </div>
           ))}
         </div>
+      </details>
 
-        <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-          <button type="button" className="btn" disabled={busy} onClick={simulateOrder}>
-            {t?.("restaurant.deliverySimulate", "Simular pedido Manual")}
-          </button>
-          <span className="kpi-label">
-            {t?.("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
-            <strong>{dashboard?.pendingMarketplace ?? 0}</strong>
-          </span>
-        </div>
-
-        <h5 style={{ marginTop: "1.25rem" }}>{t?.("restaurant.deliveryToday", "Pedidos hoy por canal")}</h5>
-        <ul className="kpi-label" style={{ margin: "0.35rem 0 0", paddingLeft: "1.1rem" }}>
-          {Object.keys(todayCounts).length === 0 ? (
-            <li>—</li>
-          ) : (
-            Object.entries(todayCounts).map(([ch, n]) => (
-              <li key={ch}>
-                {ch}: <strong>{n}</strong>
-              </li>
-            ))
-          )}
-        </ul>
-      </article>
-
-      <article className="card" style={{ marginTop: "1rem" }}>
-        <h4 style={{ marginTop: 0 }}>{t?.("restaurant.priceListsTitle", "Tarifas por canal")}</h4>
-        <p className="kpi-label">
+      <details className="card" style={{ marginTop: "1rem" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          {t?.("restaurant.priceListsTitle", "Tarifas por canal")}
+        </summary>
+        <p className="kpi-label" style={{ marginTop: "0.5rem" }}>
           {t?.(
             "restaurant.priceListsLead",
             "Sala / takeaway / Glovo… pueden tener markup distinto. Si no hay precio fijo, se aplica la regla sobre el precio base."
@@ -211,21 +229,7 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
             </tbody>
           </table>
         </div>
-      </article>
-
-      {jobs.length ? (
-        <article className="card" style={{ marginTop: "1rem" }}>
-          <h4 style={{ marginTop: 0 }}>{t?.("restaurant.deliveryJobs", "Cola delivery")}</h4>
-          <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
-            {jobs.slice(0, 8).map((job) => (
-              <li key={job.id}>
-                {job.provider} · {job.job_type} · {job.status}
-                {job.last_error ? ` — ${job.last_error}` : ""}
-              </li>
-            ))}
-          </ul>
-        </article>
-      ) : null}
+      </details>
     </div>
   );
 }

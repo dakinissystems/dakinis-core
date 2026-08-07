@@ -3,15 +3,16 @@ import SupplyDeliveriesAndAlerts from "./SupplyDeliveriesAndAlerts.jsx";
 import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
 import TenantTeamSection from "./TenantTeamSection.jsx";
 import RestaurantComandasSection from "./RestaurantComandasSection.jsx";
-import RestaurantAdminPanel from "./RestaurantAdminPanel.jsx";
 import RestaurantTaskDock from "./RestaurantTaskDock.jsx";
 import RestaurantOpsHeader from "./RestaurantOpsHeader.jsx";
 import RestaurantInventoryModule from "./RestaurantInventoryModule.jsx";
+import RestaurantConfigModule from "./RestaurantConfigModule.jsx";
 import RestaurantDeliveryPanel from "./RestaurantDeliveryPanel.jsx";
 import RestaurantBusinessIntro from "./business/RestaurantBusinessIntro.jsx";
 import PasswordInput from "./PasswordInput.jsx";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
+import { useRestaurantOpsPulse } from "../hooks/useRestaurantOpsPulse.js";
 
 const TASK_LABEL_KEYS = {
   sala: "restaurant.taskSala",
@@ -230,11 +231,74 @@ export function SystemPageRestauranteSection({
   systemPageContent,
   t
 }) {
-  if (activeSystemKey !== "restaurante") return null;
+  const isRestaurant = activeSystemKey === "restaurante";
+  const { pulse, badges } = useRestaurantOpsPulse({
+    apiSession,
+    tenantSlugForVertical,
+    activeSystemKey,
+    enabled: Boolean(isRestaurant && isRestaurantOps && apiSession?.token)
+  });
+
+  if (!isRestaurant) return null;
 
   const businessName =
     session?.business?.name || systemPageContent?.pageTitle || t("restaurant.businessKicker");
-  const crumb = ["Restaurante", t(TASK_LABEL_KEYS[restaurantTask] || "restaurant.taskSala")];
+  const crumb = t(TASK_LABEL_KEYS[restaurantTask] || "restaurant.taskSala");
+  const stats = [];
+  if (pulse.loaded) {
+    if (pulse.kitchenOpen > 0 || pulse.occupiedTables > 0) {
+      stats.push({
+        label: t("restaurant.opsStatOrders"),
+        value: pulse.kitchenOpen || pulse.occupiedTables
+      });
+    }
+    if (pulse.stockAlerts > 0) {
+      stats.push({ label: t("restaurant.opsStatAlerts"), value: pulse.stockAlerts });
+    }
+    if (pulse.cashToday != null && pulse.cashToday > 0) {
+      stats.push({
+        label: t("restaurant.opsStatCash"),
+        value: `${pulse.cashToday.toFixed(0)} €`
+      });
+    }
+  }
+
+  const quickActions = [];
+  if (pulse.kitchenOpen > 0 && restaurantTask !== "cocina") {
+    quickActions.push({
+      id: "go-kitchen",
+      label: t("restaurant.opsQuickKitchen"),
+      onClick: () => setRestaurantTask("cocina")
+    });
+  }
+  if (pulse.stockAlerts > 0 && restaurantTask !== "inventario") {
+    quickActions.push({
+      id: "go-stock",
+      label: t("restaurant.opsQuickStock"),
+      onClick: () => setRestaurantTask("inventario")
+    });
+  }
+  if (pulse.deliveryPending > 0 && restaurantTask !== "delivery") {
+    quickActions.push({
+      id: "go-delivery",
+      label: t("restaurant.opsQuickDelivery"),
+      onClick: () => setRestaurantTask("delivery")
+    });
+  }
+
+  const statuses = [
+    { id: "api", label: "API", tone: apiSession?.token ? "ok" : "down" },
+    {
+      id: "delivery",
+      label: "Delivery",
+      tone: pulse.deliveryPending > 0 ? "warn" : "idle"
+    },
+    {
+      id: "caja",
+      label: t("restaurant.taskCaja"),
+      tone: pulse.cashToday > 0 ? "ok" : "idle"
+    }
+  ];
 
   const moduleBody = (() => {
     switch (restaurantTask) {
@@ -281,17 +345,13 @@ export function SystemPageRestauranteSection({
         );
       case "config":
         return (
-          <RestaurantAdminPanel
+          <RestaurantConfigModule
             apiSession={apiSession}
             tenantSlugForVertical={tenantSlugForVertical}
             activeSystemKey={activeSystemKey}
             systemPageContent={systemPageContent}
-            sections={
-              String(taskSub || "").toLowerCase() === "allergens" ||
-              String(taskSub || "").toLowerCase() === "alergenos"
-                ? ["allergens", "floor", "menu", "supply"]
-                : ["floor", "menu", "supply", "allergens"]
-            }
+            initialSub={taskSub}
+            onOpenDelivery={() => setRestaurantTask("delivery")}
           />
         );
       case "sala":
@@ -313,12 +373,14 @@ export function SystemPageRestauranteSection({
       <div className="restaurant-ops">
         <RestaurantOpsHeader
           businessName={businessName}
-          breadcrumb={crumb}
+          crumb={crumb}
+          stats={stats}
+          statuses={statuses}
+          quickActions={quickActions}
           showCommercialLink={Boolean(showDemoWelcome || dakinisIsSeedDemoTenantSession?.(session))}
           onShowCommercial={openCommercialMode}
-          stats={[]}
         />
-        <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} />
+        <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} badges={badges} />
         <div className="restaurant-ops__module">{moduleBody}</div>
       </div>
     );
@@ -327,7 +389,7 @@ export function SystemPageRestauranteSection({
   return (
     <>
       {showDemoWelcome || dakinisIsSeedDemoTenantSession(session) ? <RestaurantBusinessIntro /> : null}
-      <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} />
+      <RestaurantTaskDock task={restaurantTask} onTaskChange={setRestaurantTask} badges={badges} />
       <div className="restaurant-ops__module">{moduleBody}</div>
     </>
   );

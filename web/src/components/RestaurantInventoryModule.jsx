@@ -8,16 +8,24 @@ import SupplyDeliveriesAndAlerts from "./SupplyDeliveriesAndAlerts.jsx";
 import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
 import RestaurantStockSection from "./RestaurantStockSection.jsx";
 
-const INV_TABS = [
+/** Operación diaria de almacén */
+const INV_OPS = [
   { id: "scan", labelKey: "restaurant.invTabScan" },
   { id: "stock", labelKey: "restaurant.invTabStock" },
-  { id: "lots", labelKey: "restaurant.invTabLots" },
+  { id: "lots", labelKey: "restaurant.invTabLots" }
+];
+
+/** Gestión (menos frecuente) */
+const INV_MGMT = [
   { id: "production", labelKey: "restaurant.invTabProduction" },
+  { id: "recipes", labelKey: "restaurant.invTabRecipes" },
   { id: "alerts", labelKey: "restaurant.invTabAlerts" }
 ];
 
+const ALL_IDS = [...INV_OPS, ...INV_MGMT].map((t) => t.id);
+
 /**
- * Módulo Inventario a pantalla completa (sub-tabs; escáner arriba en scan).
+ * Inventario: operación diaria vs gestión, con contexto persistido.
  */
 export default function RestaurantInventoryModule({
   apiSession,
@@ -30,45 +38,63 @@ export default function RestaurantInventoryModule({
   const saved = dakinisReadRestaurantModuleContext().inventario || {};
   const [sub, setSub] = useState(() => {
     const fromUrl = String(initialSub || "").toLowerCase();
-    if (["scan", "stock", "lots", "lotes", "production", "alerts"].includes(fromUrl)) {
-      return fromUrl === "lotes" ? "lots" : fromUrl;
-    }
-    return saved.sub || "scan";
+    if (fromUrl === "lotes") return "lots";
+    if (fromUrl === "recetas" || fromUrl === "recipes") return "recipes";
+    if (ALL_IDS.includes(fromUrl)) return fromUrl;
+    return saved.sub && ALL_IDS.includes(saved.sub) ? saved.sub : "scan";
   });
+  const [lotsTab, setLotsTab] = useState(() => saved.lotsTab || "lots");
+  const [lotsFilter, setLotsFilter] = useState(() => saved.lotsFilter || "");
 
   useEffect(() => {
-    dakinisWriteRestaurantModuleContext("inventario", { sub });
-  }, [sub]);
+    dakinisWriteRestaurantModuleContext("inventario", {
+      sub,
+      lotsTab,
+      lotsFilter
+    });
+  }, [sub, lotsTab, lotsFilter]);
 
   useEffect(() => {
     if (!initialSub) return;
     const fromUrl = String(initialSub).toLowerCase();
     if (fromUrl === "lotes" || fromUrl === "lots") setSub("lots");
-    else if (["scan", "stock", "production", "alerts"].includes(fromUrl)) setSub(fromUrl);
+    else if (fromUrl === "recetas" || fromUrl === "recipes") setSub("recipes");
+    else if (ALL_IDS.includes(fromUrl)) setSub(fromUrl);
   }, [initialSub]);
 
   const suppliers = systemPageContent?.suppliersProducts;
   const stockParts = useMemo(() => {
     if (sub === "scan") return ["scan"];
     if (sub === "stock") return ["grid"];
-    if (sub === "production") return ["production"];
+    if (sub === "production" || sub === "recipes") return ["production"];
     return null;
   }, [sub]);
 
+  function renderTabBtn(tab) {
+    return (
+      <button
+        key={tab.id}
+        type="button"
+        className={`btn${sub === tab.id ? "" : " btn-outline"}`}
+        aria-pressed={sub === tab.id}
+        onClick={() => setSub(tab.id)}
+      >
+        {t(tab.labelKey)}
+      </button>
+    );
+  }
+
   return (
     <div className="restaurant-module restaurant-module--inventario">
-      <nav className="restaurant-module__subnav" aria-label={t("restaurant.invSubnav")}>
-        {INV_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`btn${sub === tab.id ? "" : " btn-outline"}`}
-            aria-pressed={sub === tab.id}
-            onClick={() => setSub(tab.id)}
-          >
-            {t(tab.labelKey)}
-          </button>
-        ))}
+      <nav className="restaurant-module__subnav restaurant-module__subnav--split" aria-label={t("restaurant.invSubnav")}>
+        <div className="restaurant-module__subnav-group" data-group="ops">
+          <span className="restaurant-module__subnav-label">{t("restaurant.invGroupOps")}</span>
+          {INV_OPS.map(renderTabBtn)}
+        </div>
+        <div className="restaurant-module__subnav-group" data-group="mgmt">
+          <span className="restaurant-module__subnav-label">{t("restaurant.invGroupMgmt")}</span>
+          {INV_MGMT.map(renderTabBtn)}
+        </div>
       </nav>
 
       {stockParts ? (
@@ -79,6 +105,7 @@ export default function RestaurantInventoryModule({
           parts={stockParts}
           compact
           autoFocusScan={sub === "scan"}
+          showScanToast={sub === "scan"}
         />
       ) : null}
 
@@ -87,6 +114,10 @@ export default function RestaurantInventoryModule({
           apiSession={apiSession}
           tenantSlugForVertical={tenantSlugForVertical}
           activeSystemKey={activeSystemKey}
+          initialTab={lotsTab}
+          onTabChange={setLotsTab}
+          filterQuery={lotsFilter}
+          onFilterQueryChange={setLotsFilter}
         />
       ) : null}
 

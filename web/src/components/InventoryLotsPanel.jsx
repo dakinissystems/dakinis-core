@@ -95,7 +95,15 @@ function LotLabelCard({ lot, t, onPrint }) {
   );
 }
 
-export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, activeSystemKey }) {
+export default function InventoryLotsPanel({
+  apiSession,
+  tenantSlugForVertical,
+  activeSystemKey,
+  initialTab,
+  onTabChange,
+  filterQuery = "",
+  onFilterQueryChange
+}) {
   const { t } = useLocale();
   const [state, dispatch] = useReducer(inventoryLotsReducer, INVENTORY_LOTS_INITIAL);
   const {
@@ -117,7 +125,10 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
     supplier
   } = state;
 
-  const setTab = (value) => dispatch({ type: "setTab", tab: value });
+  const setTab = (value) => {
+    dispatch({ type: "setTab", tab: value });
+    onTabChange?.(value);
+  };
   const setError = (value) => dispatch({ type: "setError", error: value });
   const setBusy = (value) => dispatch({ type: "setBusy", busy: value });
   const setLastLabel = (value) => dispatch({ type: "setLastLabel", lastLabel: value });
@@ -131,6 +142,32 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
   const setSupplier = (value) => dispatch({ type: "setField", field: "supplier", value });
   const setLots = (value) =>
     dispatch({ type: "setField", field: "lots", value: typeof value === "function" ? value(lots) : value });
+
+  useEffect(() => {
+    const allowed = ["summary", "receive", "fridges", "lots", "scan", "guide"];
+    if (initialTab && allowed.includes(initialTab) && initialTab !== tab) {
+      dispatch({ type: "setTab", tab: initialTab });
+    }
+    // solo al montar / cambio externo de initialTab
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTab]);
+
+  const filteredLots = useMemo(() => {
+    const q = String(filterQuery || "").trim().toLowerCase();
+    if (!q) return lots;
+    return (lots || []).filter((lot) => {
+      const hay = [lot.productName, lot.labelCode, lot.supplierLot, lot.supplier, lot.severity]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (q === "caducan" || q === "caduca" || q === "expiring") {
+        return String(lot.severity || "").toLowerCase().includes("warn") ||
+          String(lot.severity || "").toLowerCase().includes("critical") ||
+          String(lot.severity || "").toLowerCase().includes("expire");
+      }
+      return hay.includes(q);
+    });
+  }, [lots, filterQuery]);
 
   const isDemo = !apiSession?.token;
   const fetchOpts = useMemo(
@@ -330,6 +367,19 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         ))}
       </div>
 
+      {tab === "lots" && onFilterQueryChange ? (
+        <label className="mockup-field" style={{ marginTop: "0.75rem", display: "block", maxWidth: "20rem" }}>
+          <span className="kpi-label">{t("inventoryLots.filterLabel", "Filtrar lotes")}</span>
+          <input
+            type="search"
+            value={filterQuery}
+            onChange={(e) => onFilterQueryChange(e.target.value)}
+            placeholder={t("inventoryLots.filterPlaceholder", "Caducan, producto, código…")}
+            style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+          />
+        </label>
+      ) : null}
+
       {error ? (
         <p className="lead" style={{ color: "#fdba74", marginTop: "0.75rem" }}>
           {error}
@@ -368,7 +418,7 @@ export default function InventoryLotsPanel({ apiSession, tenantSlugForVertical, 
         <InventoryLotsFridgesTab byLocation={byLocation} SeverityBadge={SeverityBadge} t={t} />
       ) : null}
 
-      {tab === "lots" ? <InventoryLotsTableTab lots={lots} SeverityBadge={SeverityBadge} t={t} /> : null}
+      {tab === "lots" ? <InventoryLotsTableTab lots={filteredLots} SeverityBadge={SeverityBadge} t={t} /> : null}
 
       {tab === "scan" ? (
         <InventoryLotsScanTab t={t} scanResult={scanResult} SeverityBadge={SeverityBadge} handleScanCode={handleScanCode} />
