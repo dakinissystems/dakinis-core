@@ -1,6 +1,11 @@
 import { dakinisHandleApiRequest } from "../../api/router.js";
+import { dakinisHandleCrmApi, dakinisIsCrmApiPath } from "../../api/tenant-crm.js";
 
 export function dakinisHandleCrmRoute(req, rawBody, url) {
+  if (dakinisIsCrmApiPath(url.pathname, req.method)) {
+    return dakinisHandleCrmApi(req, rawBody, url);
+  }
+
   const legacyUrl = new URL(url.toString());
 
   const routeMap = {
