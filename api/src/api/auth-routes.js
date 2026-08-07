@@ -196,6 +196,13 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
         "El email ya esta vinculado a otro negocio en core"
       );
     }
+    if (code === "USER_NOT_PROVISIONED") {
+      return dakinisJsonError(
+        403,
+        "USER_NOT_PROVISIONED",
+        "Usuario no provisionado en este tenant. Solicita invitacion o activa DAKINIS_AUTH_EXCHANGE_AUTO_PROVISION."
+      );
+    }
     return dakinisJsonError(
       400,
       "INVALID_PLATFORM_IDENTITY",

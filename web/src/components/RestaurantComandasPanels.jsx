@@ -1,5 +1,6 @@
 import { FerminaComandasSubnav } from "./FerminaComandasSubnav.jsx";
 import FerminaPrintSheet from "./FerminaPrintSheet.jsx";
+import RestaurantCajaTpvSummary from "./RestaurantCajaTpvSummary.jsx";
 import { dakinisTriggerFerminaPrint } from "./RestaurantComandasSection.shared.js";
 import {
   dakinisRestaurantChannelLabel,
@@ -21,6 +22,8 @@ export default function RestaurantComandasPanels({ ctx }) {
     t,
     error,
     staffRole,
+    opsMode,
+    apiSessionBusinessId,
     comandasViews,
     comandasView,
     setComandasView,
@@ -74,9 +77,13 @@ export default function RestaurantComandasPanels({ ctx }) {
   } = ctx;
 
   return (
-    <section className="fermina-ops" style={{ marginTop: "2rem" }}>
-      <h3>{venueName}</h3>
-      <p className="lead">{t("fermina.leadGeneric")}</p>
+    <section className={`fermina-ops${opsMode ? " fermina-ops--compact" : ""}`} style={{ marginTop: opsMode ? "0.5rem" : "2rem" }}>
+      {!opsMode ? (
+        <>
+          <h3>{venueName}</h3>
+          <p className="lead">{t("fermina.leadGeneric")}</p>
+        </>
+      ) : null}
 
       {error ? (
         <p className="lead" style={{ color: "#fdba74" }}>
@@ -84,34 +91,46 @@ export default function RestaurantComandasPanels({ ctx }) {
         </p>
       ) : null}
 
-      {staffRole === "camarero" ? (
+      {!opsMode && staffRole === "camarero" ? (
         <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.waiterLead")}
         </p>
-      ) : staffRole === "cocina" ? (
+      ) : null}
+      {!opsMode && staffRole === "cocina" ? (
         <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.kitchenLead")}
         </p>
-      ) : (
+      ) : null}
+      {!opsMode && staffRole === "admin" ? (
         <p className="lead" style={{ fontSize: "0.9rem", marginTop: 0 }}>
           {t("restaurant.adminComandasLead")}
         </p>
-      )}
+      ) : null}
 
-      <article className="card" style={{ marginTop: "1rem" }}>
-        <FerminaComandasSubnav
-          views={comandasViews}
-          activeId={comandasView}
-          onSelect={setComandasView}
-          badges={{
-            mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
-            pedido: cartItemCount > 0 ? String(cartItemCount) : null,
-            activas:
-              (staffRole === "cocina" ? kitchenOrders.length : openOrders.length) > 0
-                ? String(staffRole === "cocina" ? kitchenOrders.length : openOrders.length)
-                : null
-          }}
+      {opsMode && staffRole === "admin" ? (
+        <RestaurantCajaTpvSummary
+          dayClose={dayClose}
+          businessId={apiSessionBusinessId}
+          onJumpCierre={() => setComandasView("cierre")}
         />
+      ) : null}
+
+      <article className="card" style={{ marginTop: opsMode ? 0 : "1rem" }}>
+        {comandasViews.length > 1 ? (
+          <FerminaComandasSubnav
+            views={comandasViews}
+            activeId={comandasView}
+            onSelect={setComandasView}
+            badges={{
+              mesas: occupiedTablesCount > 0 ? String(occupiedTablesCount) : null,
+              pedido: cartItemCount > 0 ? String(cartItemCount) : null,
+              activas:
+                (staffRole === "cocina" ? kitchenOrders.length : openOrders.length) > 0
+                  ? String(staffRole === "cocina" ? kitchenOrders.length : openOrders.length)
+                  : null
+            }}
+          />
+        ) : null}
 
         {comandasView === "mesas" ? (
           <RestaurantComandasMesasView
@@ -194,7 +213,9 @@ export default function RestaurantComandasPanels({ ctx }) {
         ) : null}
       </article>
 
-      {comandasView === "cierre" ? <RestaurantComandasCierrePanel t={t} dayClose={dayClose} /> : null}
+      {comandasView === "cierre" ? (
+        <RestaurantComandasCierrePanel t={t} dayClose={dayClose} businessId={apiSessionBusinessId} />
+      ) : null}
 
       {comandasView === "facturas" ? (
         <RestaurantComandasFacturasPanel

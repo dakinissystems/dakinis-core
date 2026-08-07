@@ -49,6 +49,10 @@ export function useSupplyDeliveriesAndAlerts({
   const canMutate = Boolean(apiSession?.token);
   const apiSessionRef = useRef(apiSession);
   apiSessionRef.current = apiSession;
+  const fallbackDeliveriesRef = useRef(fallbackDeliveries);
+  fallbackDeliveriesRef.current = fallbackDeliveries;
+  const fallbackAlertsRef = useRef(fallbackAlerts);
+  fallbackAlertsRef.current = fallbackAlerts;
   const supplyFetchKey = dakinisTenantFetchKey(apiSession, [tenantSlugForVertical, activeSystemKey]);
 
   const [deliveries, setDeliveries] = useState([]);
@@ -61,17 +65,15 @@ export function useSupplyDeliveriesAndAlerts({
   const loadSupply = useCallback(
     async (signal) => {
       const sess = apiSessionRef.current;
+      const fbDeliveries = fallbackDeliveriesRef.current;
+      const fbAlerts = fallbackAlertsRef.current;
       if (!sess?.token) {
         setLoadError("");
         setLoading(false);
         setDeliveries(
-          fallbackDeliveries.map((r, i) =>
-            dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` })
-          )
+          fbDeliveries.map((r, i) => dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` }))
         );
-        setAlerts(
-          fallbackAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` }))
-        );
+        setAlerts(fbAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` })));
         return;
       }
       setLoadError("");
@@ -95,6 +97,11 @@ export function useSupplyDeliveriesAndAlerts({
         setAlerts(Array.isArray(alist) ? alist.map(dakinisNormalizeAlertRow) : []);
       } catch (e) {
         if (e?.name === "AbortError") return;
+        if (e?.status === 429 || e?.code === "RATE_LIMIT_EXCEEDED") {
+          setLoadError("Demasiadas peticiones — espera un momento.");
+          setLoading(false);
+          return;
+        }
         const message = e instanceof Error ? e.message : "No se pudo cargar proveedores";
         setLoadError(message);
         void dakinisReportTenantLoadAlert({
@@ -106,18 +113,14 @@ export function useSupplyDeliveriesAndAlerts({
           errorMessage: message
         });
         setDeliveries(
-          fallbackDeliveries.map((r, i) =>
-            dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` })
-          )
+          fbDeliveries.map((r, i) => dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` }))
         );
-        setAlerts(
-          fallbackAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` }))
-        );
+        setAlerts(fbAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` })));
       } finally {
         setLoading(false);
       }
     },
-    [supplyFetchKey, tenantSlugForVertical, activeSystemKey, fallbackDeliveries, fallbackAlerts]
+    [supplyFetchKey, tenantSlugForVertical, activeSystemKey]
   );
 
   useEffect(() => {

@@ -3,6 +3,8 @@ import NotificationsCenter from "@dakinis/shared-ux/react/NotificationsCenter.js
 import ActivityTimeline from "@dakinis/shared-ux/react/ActivityTimeline.jsx";
 import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
+import { dakinisRestaurantTaskPath } from "../utils/restaurantTaskStorage.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 
 const dakinisSystemRegistry = dakinisGetSystemRegistry();
@@ -59,8 +61,9 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
   const canWhatsApp = dakinisPlanHasModule(plan, "whatsapp");
   const canCrm = dakinisPlanHasModule(plan, "crm");
   const vertical = session?.business?.type;
-  const inventoryPath =
-    vertical === "restaurante" ? `/sistema/${encodeURIComponent(vertical)}` : "/app/dashboard";
+  const inventoryPath = dakinisIsHospitalityBusiness(vertical)
+    ? dakinisRestaurantTaskPath(vertical, "inventario", { sub: "scan" })
+    : "/app/dashboard";
 
   const quickActions = [
     {
@@ -72,7 +75,9 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
     {
       id: "order",
       label: t("hub.dashboard.actionNewOrder"),
-      path: inventoryPath,
+      path: dakinisIsHospitalityBusiness(vertical)
+        ? dakinisRestaurantTaskPath(vertical, "sala")
+        : inventoryPath,
       disabled: false
     },
     {
@@ -85,7 +90,7 @@ export default function HubDashboard({ session, applicationTiles, marketplaceCou
       id: "inventory",
       label: t("hub.dashboard.actionOpenInventory"),
       path: inventoryPath,
-      disabled: vertical !== "restaurante"
+      disabled: !dakinisIsHospitalityBusiness(vertical) && vertical !== "restaurante"
     }
   ];
 

@@ -9,6 +9,8 @@ import {
 } from "@dakinis/shared-brand";
 import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
+import { dakinisRestaurantTaskPath } from "../utils/restaurantTaskStorage.js";
 import { dakinisPersistEcosystemSession } from "@dakinis/shared-brand/sso";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -26,10 +28,12 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 function dakinisResolveTilePath(tile, session) {
   if (tile.id === "my-business" && session?.business?.type) {
-    return `/sistema/${encodeURIComponent(session.business.type)}`;
+    return dakinisIsHospitalityBusiness(session.business.type)
+      ? dakinisRestaurantTaskPath(session.business.type, "sala")
+      : `/sistema/${encodeURIComponent(session.business.type)}`;
   }
-  if (tile.id === "inventory" && session?.business?.type === "restaurante") {
-    return `/sistema/${encodeURIComponent(session.business.type)}`;
+  if (tile.id === "inventory" && dakinisIsHospitalityBusiness(session?.business?.type)) {
+    return dakinisRestaurantTaskPath(session.business.type, "inventario", { sub: "scan" });
   }
   return tile.path;
 }
@@ -75,10 +79,10 @@ export default function HubPage() {
       return tiles.filter((tile) => tile.id !== "my-business");
     }
     const vertical = session.business?.type;
-    if (!vertical || !dakinisSystemRegistry[vertical]) {
+    if (!vertical || (!dakinisSystemRegistry[vertical] && !dakinisIsHospitalityBusiness(vertical))) {
       return tiles.filter((tile) => tile.id !== "my-business");
     }
-    if (vertical !== "restaurante") {
+    if (!dakinisIsHospitalityBusiness(vertical)) {
       tiles = tiles.filter((tile) => tile.id !== "inventory");
     }
     return tiles;

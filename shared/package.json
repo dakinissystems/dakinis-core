@@ -31,6 +31,8 @@
     "./catalog/restaurant-allergens.js": "./catalog/restaurant-allergens.js",
     "./catalog/restaurant-mushrooms.js": "./catalog/restaurant-mushrooms.js",
     "./catalog/dumpling-pdf-aliases.js": "./catalog/dumpling-pdf-aliases.js",
+    "./catalog/hospitality.js": "./catalog/hospitality.js",
+    "./catalog/deliveryProviders.js": "./catalog/deliveryProviders.js",
     "./auth/client-logout.js": "./auth/client-logout.js"
   }
 }

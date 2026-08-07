@@ -4,7 +4,8 @@ export const DAKINIS_API_CONTRACT = {
     data: {},
     meta: {
       requestId: "string",
-      adapter: "clinica|peluqueria|restaurante|inmobiliaria|custom"
+      adapter:
+        "clinica|peluqueria|restaurante|burger|pizzeria|bar|cafeteria|heladeria|foodtruck|inmobiliaria|custom"
     }
   },
   errorShape: {
@@ -24,6 +25,12 @@ export const DAKINIS_ALLOWED_ADAPTERS = [
   "clinica",
   "peluqueria",
   "restaurante",
+  "burger",
+  "pizzeria",
+  "bar",
+  "cafeteria",
+  "heladeria",
+  "foodtruck",
   "inmobiliaria",
   "platform",
   "custom"
@@ -35,6 +42,12 @@ export const DAKINIS_ENTITY_BY_BUSINESS_TYPE = {
   clinica: "paciente",
   peluqueria: "reserva",
   restaurante: "comanda",
+  burger: "comanda",
+  pizzeria: "comanda",
+  bar: "comanda",
+  cafeteria: "comanda",
+  heladeria: "comanda",
+  foodtruck: "comanda",
   inmobiliaria: "lead",
   platform: "_platform"
 };

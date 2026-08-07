@@ -124,7 +124,9 @@ export function dakinisEnsureRestaurantKitchenSeed(db, businessId) {
 
 /** Backfill: restaurantes sin perfil (p. ej. stock creado antes del módulo QR). */
 export function dakinisEnsureAllRestaurantProfiles(db) {
-  const rows = db.prepare(`SELECT id FROM business WHERE type = 'restaurante'`).all();
+  const rows = db.prepare(
+    `SELECT id FROM business WHERE type IN ('restaurante','burger','pizzeria','bar','cafeteria','heladeria','foodtruck')`
+  ).all();
   for (const row of rows) {
     dakinisEnsureRestaurantProfile(db, row.id);
   }
@@ -134,7 +136,9 @@ export function dakinisEnsureAllRestaurantProfiles(db) {
 export async function dakinisEnsureAllRestaurantProfilesAsync() {
   const { dakinisQueryAll } = await import("./query.js");
   const { dakinisEnsureRestaurantProfileAsync } = await import("./restaurant-kitchen-async.js");
-  const rows = await dakinisQueryAll(`SELECT id FROM business WHERE type = 'restaurante'`);
+  const rows = await dakinisQueryAll(
+    `SELECT id FROM business WHERE type IN ('restaurante','burger','pizzeria','bar','cafeteria','heladeria','foodtruck')`
+  );
   for (const row of rows) {
     await dakinisEnsureRestaurantProfileAsync(row.id);
   }

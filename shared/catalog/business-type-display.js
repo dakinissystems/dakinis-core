@@ -1,5 +1,6 @@
 /** Etiquetas para tipos predefinidos del catálogo (clave API en minúsculas). */
 import { DAKINIS_CORE_INDUSTRY_KEYS, DAKINIS_INDUSTRY_TEMPLATES } from "./business-templates.js";
+import { DAKINIS_HOSPITALITY_LABELS } from "./hospitality.js";
 
 const DAKINIS_KNOWN_TYPE_LABELS = {
   clinica: "Clínica",
@@ -7,6 +8,7 @@ const DAKINIS_KNOWN_TYPE_LABELS = {
   restaurante: "Restaurante",
   inmobiliaria: "Inmobiliaria",
   platform: "Plataforma",
+  ...DAKINIS_HOSPITALITY_LABELS,
   ...Object.fromEntries(
     DAKINIS_CORE_INDUSTRY_KEYS.filter((k) => !["clinica", "peluqueria", "restaurante", "inmobiliaria"].includes(k)).map(
       (k) => [k, DAKINIS_INDUSTRY_TEMPLATES[k]?.label || k]

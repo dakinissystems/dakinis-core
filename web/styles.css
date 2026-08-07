@@ -2715,16 +2715,381 @@ dialog.allergen-modal::backdrop {
   margin-top: 0.25rem;
 }
 
-/* Restaurante — roles y plano de mesas */
-.restaurant-role-nav {
+/* Restaurante — operación por tareas */
+.restaurant-role-nav,
+.restaurant-task-dock {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0 0 1.25rem;
-  padding: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.22);
   border: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.restaurant-task-dock__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.restaurant-task-dock__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.restaurant-task-dock__btn.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--line);
+}
+
+.restaurant-task-dock__icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.restaurant-task-dock__badge {
+  min-width: 1.25rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--brand, #3b82f6);
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.restaurant-ops-header {
+  margin: 0 0 0.75rem;
+}
+
+.restaurant-ops-header__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.restaurant-ops-header--minimal .restaurant-ops-header__title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.restaurant-ops-header__live {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+  background: #64748b;
+}
+
+.restaurant-ops-header__live.is-open {
+  background: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+}
+
+.restaurant-ops-header__crumb-inline {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.restaurant-ops-header__aside {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.restaurant-ops-header__statuses {
+  list-style: none;
+  display: flex;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+}
+
+.restaurant-ops-header__statuses li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.restaurant-ops-header__status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.restaurant-ops-header__statuses .is-ok .restaurant-ops-header__status-dot {
+  background: #34d399;
+}
+
+.restaurant-ops-header__statuses .is-warn .restaurant-ops-header__status-dot {
+  background: #fbbf24;
+}
+
+.restaurant-ops-header__statuses .is-down .restaurant-ops-header__status-dot {
+  background: #f87171;
+}
+
+.restaurant-ops-header__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.restaurant-task-dock__badge--attention {
+  background: #ef4444;
+}
+
+.restaurant-task-dock__badge--warn {
+  background: #f59e0b;
+}
+
+.restaurant-task-dock__badge--activity {
+  background: var(--brand, #3b82f6);
+}
+
+.restaurant-task-dock__badge {
+  animation: restaurant-badge-pop 0.35s ease;
+}
+
+@keyframes restaurant-badge-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.restaurant-module__subnav--split {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.restaurant-module__subnav-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.restaurant-module__subnav-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+  margin-right: 0.25rem;
+  min-width: 4.5rem;
+}
+
+.restaurant-scan-toast {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 30;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.92);
+  color: #042f1e;
+  font-weight: 600;
+  animation: restaurant-toast-in 0.2s ease;
+}
+
+.restaurant-scan-toast--warn {
+  background: rgba(251, 191, 36, 0.95);
+  color: #422006;
+}
+
+@keyframes restaurant-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.restaurant-delivery__channels {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+}
+
+.restaurant-delivery__channels li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.restaurant-delivery__ch-count {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.restaurant-delivery__ch-name {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  text-transform: capitalize;
+}
+
+.restaurant-caja-tpv__stats {
+  list-style: none;
+  display: flex;
+  gap: 1.25rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.restaurant-caja-tpv__value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.restaurant-caja-tpv__label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.restaurant-ops-header__status {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.restaurant-ops-header__crumb {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.restaurant-ops-header__crumb .is-current {
+  opacity: 1;
+  font-weight: 600;
+}
+
+.restaurant-ops-header__stats {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+}
+
+.restaurant-ops-header__stat-value {
+  display: block;
+  font-weight: 700;
+}
+
+.restaurant-ops-header__stat-label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.restaurant-ops-page__container {
+  padding-bottom: 5rem;
+}
+
+.restaurant-module__subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.fermina-ops--compact > .card {
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  .restaurant-task-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    margin: 0;
+    border-radius: 14px 14px 0 0;
+    padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+    z-index: 60;
+  }
+
+  .restaurant-task-dock__list {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+
+  .restaurant-task-dock__btn {
+    flex: 1;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.68rem;
+  }
+
+  .restaurant-task-dock__label {
+    max-width: 4.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Restaurante — plano de mesas (legacy role-nav kept for mockups) */
+.restaurant-role-nav {
+  /* sticky shared above */
 }
 
 .restaurant-floor__canvas-wrap {
@@ -3726,6 +4091,10 @@ dialog.restaurant-mesa-modal::backdrop {
   box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.35);
 }
 
+.stock-scanner__viewport.is-seeking {
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.45);
+}
+
 .stock-scanner__video {
   width: 100%;
   height: 100%;
@@ -3735,6 +4104,36 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .stock-scanner__viewport.is-live .stock-scanner__video {
   display: block;
+}
+
+.stock-scanner__roi {
+  position: absolute;
+  inset: 22% 18%;
+  border: 2px solid rgba(45, 212, 191, 0.85);
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: 0 0 0 999px rgba(2, 8, 16, 0.45);
+  z-index: 1;
+}
+
+.stock-scanner__status {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  margin: 0;
+  z-index: 2;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(2, 8, 16, 0.72);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.stock-scanner__confirmed {
+  color: #5eead4;
 }
 
 .stock-scanner__preview {
@@ -3753,11 +4152,6 @@ dialog.restaurant-mesa-modal::backdrop {
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
-}
-
-.stock-scanner__code-input--preview {
-  opacity: 0.7;
-  font-style: italic;
 }
 
 .stock-scanner__code-input {

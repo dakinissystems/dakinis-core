@@ -52,6 +52,161 @@ function dakinisMigrateDemoProPlan(db) {
   db.prepare(`UPDATE business SET plan = 'pro' WHERE slug = 'restaurante-demo' AND plan != 'pro'`).run();
 }
 
+function dakinisMigrateHospitalityTables(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tenant_menu_categories (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      active INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_menu_categories_business ON tenant_menu_categories(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_menu_items (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      category_id TEXT,
+      name TEXT NOT NULL,
+      name_es TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      active INTEGER NOT NULL DEFAULT 1,
+      station TEXT,
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      FOREIGN KEY (business_id) REFERENCES business(id),
+      FOREIGN KEY (category_id) REFERENCES tenant_menu_categories(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_menu_items_business ON tenant_menu_items(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_menu_prices (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      channel TEXT NOT NULL DEFAULT 'salon',
+      price_cents INTEGER NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      UNIQUE (business_id, item_id, channel),
+      FOREIGN KEY (business_id) REFERENCES business(id),
+      FOREIGN KEY (item_id) REFERENCES tenant_menu_items(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_menu_prices_business ON tenant_menu_prices(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_menu_modifiers (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      price_cents INTEGER NOT NULL DEFAULT 0,
+      allergen_tags_json TEXT NOT NULL DEFAULT '[]',
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_menu_modifiers_business ON tenant_menu_modifiers(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_menu_item_modifiers (
+      item_id TEXT NOT NULL,
+      modifier_id TEXT NOT NULL,
+      required INTEGER NOT NULL DEFAULT 0,
+      max_qty INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY (item_id, modifier_id),
+      FOREIGN KEY (item_id) REFERENCES tenant_menu_items(id),
+      FOREIGN KEY (modifier_id) REFERENCES tenant_menu_modifiers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tenant_tables (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      zone TEXT NOT NULL DEFAULT '',
+      label TEXT NOT NULL,
+      x REAL NOT NULL DEFAULT 0,
+      y REAL NOT NULL DEFAULT 0,
+      seats INTEGER NOT NULL DEFAULT 2,
+      status TEXT NOT NULL DEFAULT 'libre',
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_tables_business ON tenant_tables(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_table_sessions (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      table_id TEXT NOT NULL,
+      opened_at TEXT NOT NULL DEFAULT (datetime('now')),
+      closed_at TEXT,
+      cart_json TEXT NOT NULL DEFAULT '[]',
+      notes TEXT NOT NULL DEFAULT '',
+      waiter_user_id TEXT,
+      FOREIGN KEY (business_id) REFERENCES business(id),
+      FOREIGN KEY (table_id) REFERENCES tenant_tables(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_table_sessions_business ON tenant_table_sessions(business_id);
+    CREATE INDEX IF NOT EXISTS idx_table_sessions_open ON tenant_table_sessions(business_id, table_id, closed_at);
+
+    CREATE TABLE IF NOT EXISTS tenant_price_lists (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      key TEXT NOT NULL,
+      name TEXT NOT NULL,
+      channel TEXT NOT NULL DEFAULT '',
+      is_default INTEGER NOT NULL DEFAULT 0,
+      markup_pct REAL,
+      markup_fixed_cents INTEGER,
+      round_to_cents INTEGER,
+      active INTEGER NOT NULL DEFAULT 1,
+      UNIQUE (business_id, key),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_price_lists_business ON tenant_price_lists(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_price_list_items (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      price_list_id TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      price_cents INTEGER NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      UNIQUE (price_list_id, item_id),
+      FOREIGN KEY (business_id) REFERENCES business(id),
+      FOREIGN KEY (price_list_id) REFERENCES tenant_price_lists(id),
+      FOREIGN KEY (item_id) REFERENCES tenant_menu_items(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_price_list_items_business ON tenant_price_list_items(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_delivery_integrations (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      api_key TEXT,
+      refresh_token TEXT,
+      store_id TEXT,
+      location TEXT,
+      webhook_secret TEXT,
+      status TEXT NOT NULL DEFAULT 'disconnected',
+      last_sync_at TEXT,
+      last_error TEXT,
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      UNIQUE (business_id, provider),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_delivery_integrations_business ON tenant_delivery_integrations(business_id);
+
+    CREATE TABLE IF NOT EXISTS tenant_delivery_jobs (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      job_type TEXT NOT NULL,
+      payload_json TEXT NOT NULL DEFAULT '{}',
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_delivery_jobs_business ON tenant_delivery_jobs(business_id, status);
+  `);
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 
@@ -70,6 +225,7 @@ function dakinisInitSqlite() {
   dakinisMigrateUsersTotp(db);
   dakinisMigratePlatformUserId(db);
   dakinisMigrateAiUsage(db);
+  dakinisMigrateHospitalityTables(db);
   dakinisMigrateDemoProPlan(db);
   dakinisSeed(db);
   dakinisEnsureAllRestaurantProfiles(db);

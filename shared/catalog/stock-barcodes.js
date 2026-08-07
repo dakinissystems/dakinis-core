@@ -1,10 +1,22 @@
-/** Códigos demo EAN-13 por slug (estables para QR / barras en cocina-stock). */
+/** Check digit GTIN para códigos demo EAN-13. */
+function dakinisGtinCheckDigit(bodyWithoutCheck) {
+  const digits = String(bodyWithoutCheck)
+    .split("")
+    .map((d) => Number(d));
+  let sum = 0;
+  for (let i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+    sum += digits[i] * (pos % 2 === 0 ? 3 : 1);
+  }
+  return String((10 - (sum % 10)) % 10);
+}
+
+/** Códigos demo EAN-13 por slug (estables + checksum válido para cámara). */
 export function dakinisStockDemoBarcode(slug) {
   const s = String(slug || "");
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  const body = String(770000000000 + (h % 999999999)).padStart(9, "0");
-  return `77${body}`;
+  const body12 = `770${String(h % 1_000_000_000).padStart(9, "0")}`.slice(0, 12);
+  return `${body12}${dakinisGtinCheckDigit(body12)}`;
 }
 
 export function dakinisNormalizeStockScanCode(code) {
