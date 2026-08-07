@@ -7,17 +7,27 @@ import {
 } from "../utils/stockBarcodeDecode.js";
 import { dakinisAttachHidBarcodeWedge } from "../utils/hidBarcodeWedge.js";
 
+function dakinisFeedbackScanSuccess() {
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate(40);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export function useStockBarcodeScanner({ onScan, t }) {
   const videoRef = useRef(null);
   const wedgeInputRef = useRef(null);
   const wedgeFlushRef = useRef(null);
   const stopRef = useRef(null);
   const confirmedRef = useRef("");
-  const previewTimerRef = useRef(null);
+  const activityTimerRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
   const [facingMode, setFacingMode] = useState("environment");
   const [imageSrc, setImageSrc] = useState("");
-  const [previewCode, setPreviewCode] = useState("");
+  const [isSeeking, setIsSeeking] = useState(false);
   const [confirmedCode, setConfirmedCode] = useState("");
   const [decodeError, setDecodeError] = useState("");
 
@@ -29,9 +39,10 @@ export function useStockBarcodeScanner({ onScan, t }) {
       if (!trimmed) return;
       if (trimmed === confirmedRef.current) return;
       confirmedRef.current = trimmed;
-      setPreviewCode("");
+      setIsSeeking(false);
       setConfirmedCode(trimmed);
       setDecodeError("");
+      dakinisFeedbackScanSuccess();
       onScan?.(trimmed);
 
       if (!fromCamera) {
@@ -41,24 +52,22 @@ export function useStockBarcodeScanner({ onScan, t }) {
     [onScan]
   );
 
-  const handlePreview = useCallback((code) => {
-    const trimmed = dakinisNormalizeScanReading(code);
-    if (!trimmed || trimmed === confirmedRef.current) return;
-    setPreviewCode(trimmed);
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    previewTimerRef.current = setTimeout(() => {
-      setPreviewCode((current) => (current === trimmed ? "" : current));
-    }, 700);
+  const handleActivity = useCallback(() => {
+    setIsSeeking(true);
+    if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
+    activityTimerRef.current = setTimeout(() => {
+      setIsSeeking(false);
+    }, 900);
   }, []);
 
   const stopCameraStream = useCallback(() => {
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    if (activityTimerRef.current) clearTimeout(activityTimerRef.current);
     if (stopRef.current) {
       stopRef.current();
       stopRef.current = null;
     }
     setIsScanning(false);
-    setPreviewCode("");
+    setIsSeeking(false);
   }, []);
 
   const stopScanning = useCallback(() => {
@@ -70,7 +79,9 @@ export function useStockBarcodeScanner({ onScan, t }) {
   useEffect(() => () => stopCameraStream(), [stopCameraStream]);
 
   useEffect(() => {
-    const detach = dakinisAttachHidBarcodeWedge((code) => confirmCode(code, { fromCamera: false }));
+    const detach = dakinisAttachHidBarcodeWedge((code) => confirmCode(code, { fromCamera: false }), {
+      minLength: 8
+    });
     return detach;
   }, [confirmCode]);
 
@@ -81,7 +92,7 @@ export function useStockBarcodeScanner({ onScan, t }) {
 
   function dakinisFlushWedgeInput(el) {
     const raw = el?.value?.trim();
-    if (!raw || !dakinisIsPlausibleBarcode(raw)) return;
+    if (!raw || !dakinisIsPlausibleBarcode(raw, { requireChecksum: false })) return;
     confirmCode(raw, { fromCamera: false });
     el.value = "";
   }
@@ -111,7 +122,7 @@ export function useStockBarcodeScanner({ onScan, t }) {
   async function beginCamera(face, { resetReading = true } = {}) {
     setDecodeError("");
     if (resetReading) {
-      setPreviewCode("");
+      setIsSeeking(false);
       confirmedRef.current = "";
       setConfirmedCode("");
     }
@@ -123,10 +134,11 @@ export function useStockBarcodeScanner({ onScan, t }) {
         (code) => confirmCode(code, { fromCamera: true }),
         {
           facingMode: face,
-          onPreview: handlePreview,
-          minHits: 4,
-          windowMs: 500,
-          cooldownMs: 3500
+          onActivity: handleActivity,
+          minVotes: 4,
+          windowMs: 700,
+          cooldownMs: 1000,
+          torch: face === "environment"
         }
       );
       stopRef.current = stop;
@@ -164,7 +176,7 @@ export function useStockBarcodeScanner({ onScan, t }) {
       if (typeof dataUrl !== "string") return;
       setImageSrc(dataUrl);
       setDecodeError("");
-      setPreviewCode("");
+      setIsSeeking(false);
       try {
         const code = await dakinisDecodeBarcodeFromImage(dataUrl);
         if (code) confirmCode(code, { fromCamera: false });
@@ -184,9 +196,6 @@ export function useStockBarcodeScanner({ onScan, t }) {
     e.target.value = "";
   }
 
-  const displayCode = confirmedCode || previewCode;
-  const isStabilizing = isScanning && previewCode && previewCode !== confirmedCode;
-
   return {
     label,
     videoRef,
@@ -194,8 +203,8 @@ export function useStockBarcodeScanner({ onScan, t }) {
     isScanning,
     facingMode,
     imageSrc,
-    displayCode,
-    isStabilizing,
+    confirmedCode,
+    isSeeking,
     decodeError,
     dakinisHandleWedgeInputKeyDown,
     dakinisHandleWedgeInputChange,

@@ -27,7 +27,7 @@ function dakinisIsEditableTarget(el) {
 export function dakinisAttachHidBarcodeWedge(onScan, opts = {}) {
   const maxGapMs = opts.maxGapMs ?? 120;
   const suffixPauseMs = opts.suffixPauseMs ?? 180;
-  const minLength = opts.minLength ?? 4;
+  const minLength = opts.minLength ?? 8;
   const cooldownMs = opts.cooldownMs ?? 800;
   const enabled = opts.enabled ?? (() => true);
 
@@ -48,7 +48,7 @@ export function dakinisAttachHidBarcodeWedge(onScan, opts = {}) {
   function dakinisEmitBuffer() {
     const code = dakinisNormalizeScanReading(buffer);
     dakinisResetBuffer();
-    if (!dakinisIsPlausibleBarcode(code)) return;
+    if (!dakinisIsPlausibleBarcode(code, { requireChecksum: false })) return;
 
     const now = Date.now();
     if (code === lastEmitted && now - lastEmitAt < cooldownMs) return;
