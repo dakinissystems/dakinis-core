@@ -28,7 +28,6 @@ import {
   dakinisRestaurantPlanOutputs,
   dakinisRestaurantValidatePlan
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
-import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
 import {
   dakinisNormalizeStockScanCode,
   dakinisResolveStockItemSlug,
@@ -40,8 +39,17 @@ import {
   dakinisDaysUntilExpiry,
   dakinisExpirySeverity
 } from "@dakinis/shared/catalog/inventory-lots.js";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
+import { dakinisFloorGet } from "../modules/hospitality/FloorService.js";
+import {
+  dakinisHandleRestaurantFloorGet,
+  dakinisHandleRestaurantFloorPatch,
+  dakinisHospitalityOnly
+} from "../modules/hospitality/http.js";
+
+export { dakinisHandleRestaurantFloorGet, dakinisHandleRestaurantFloorPatch, dakinisHospitalityOnly };
 
 function dakinisParseJson(rawBody) {
   try {
@@ -52,10 +60,7 @@ function dakinisParseJson(rawBody) {
 }
 
 function dakinisRestaurantOnly(business) {
-  if (String(business.type).toLowerCase() !== "restaurante") {
-    return dakinisJsonError(403, "FORBIDDEN", "Modulo cocina/stock solo para negocios tipo restaurante");
-  }
-  return null;
+  return dakinisHospitalityOnly(business);
 }
 
 function dakinisMeta(req) {
@@ -348,7 +353,7 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
     };
   });
 
-  const floor = await dakinisLoadRestaurantFloor(businessId);
+  const floor = await dakinisFloorGet(businessId);
 
   return dakinisJsonSuccess(
     {
@@ -380,68 +385,6 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
     req.dakinisBusiness.type,
     dakinisMeta(req)
   );
-}
-
-async function dakinisLoadRestaurantFloor(businessId) {
-  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
-  let config = {};
-  try {
-    config = JSON.parse(biz?.config_json || "{}");
-  } catch {
-    config = {};
-  }
-  const tables = Array.isArray(config?.floor?.tables) && config.floor.tables.length
-    ? config.floor.tables
-    : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
-  const sessions =
-    config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
-      ? config.floor.sessions
-      : {};
-  return { tables, sessions };
-}
-
-export async function dakinisHandleRestaurantFloorGet(req) {
-  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
-  if (gate) return gate;
-  const floor = await dakinisLoadRestaurantFloor(req.dakinisBusiness.id);
-  return dakinisJsonSuccess(floor, req.dakinisBusiness.type, dakinisMeta(req));
-}
-
-export async function dakinisHandleRestaurantFloorPatch(req, rawBody) {
-  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
-  if (gate) return gate;
-  const jwtErr = dakinisRequireTenantJwtAdmin(req);
-  if (jwtErr) return jwtErr;
-
-  const body = dakinisParseJson(rawBody);
-  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
-
-  const businessId = req.dakinisBusiness.id;
-  const biz = await dakinisQueryOne(`SELECT config_json FROM business WHERE id = ?`, [businessId]);
-  let config = {};
-  try {
-    config = JSON.parse(biz?.config_json || "{}");
-  } catch {
-    config = {};
-  }
-
-  const prev = config.floor && typeof config.floor === "object" ? config.floor : {};
-  const nextTables = Array.isArray(body.tables) ? body.tables : prev.tables;
-  const nextSessions =
-    body.sessions && typeof body.sessions === "object" && !Array.isArray(body.sessions)
-      ? body.sessions
-      : prev.sessions || {};
-
-  config.floor = {
-    tables:
-      Array.isArray(nextTables) && nextTables.length
-        ? nextTables
-        : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t })),
-    sessions: nextSessions
-  };
-
-  await dakinisRun(`UPDATE business SET config_json = ? WHERE id = ?`, [JSON.stringify(config), businessId]);
-  return dakinisJsonSuccess(config.floor, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
@@ -772,7 +715,7 @@ async function dakinisProvisionPublicAllergenProfile(key) {
     [key, key]
   );
 
-  if (!biz || String(biz.type).toLowerCase() !== "restaurante") {
+  if (!biz || !dakinisIsHospitalityBusiness(biz.type)) {
     return null;
   }
 

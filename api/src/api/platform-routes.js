@@ -132,7 +132,7 @@ export async function dakinisHandlePlatformBusinessCreate(rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "slug: solo minusculas, numeros y guiones");
   }
   if (!dakinisIsValidBusinessTypeKey(type, { allowPlatform: false })) {
-    return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa clinica, peluqueria, restaurante, inmobiliaria o una clave personalizada (minusculas, numeros, guiones, 2-48 caracteres). No uses platform al crear.");
+    return dakinisJsonError(400, "VALIDATION_ERROR", "type: usa clinica, peluqueria, restaurante (u hosteleria: burger, pizzeria, bar, cafeteria, heladeria, foodtruck), inmobiliaria o una clave personalizada (minusculas, numeros, guiones, 2-48 caracteres). No uses platform al crear.");
   }
 
   const exists = await dakinisQueryOne("SELECT id FROM business WHERE lower(slug) = lower(?)", [slug]);

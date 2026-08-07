@@ -6,6 +6,7 @@ import {
   dakinisExpirySeverity,
   dakinisIsLotLabelCode
 } from "@dakinis/shared/catalog/inventory-lots.js";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
@@ -78,7 +79,7 @@ async function dakinisLoadInventoryState(businessId, businessType) {
   let lots;
   if (Array.isArray(inv.lots)) {
     lots = inv.lots.map((lot) => dakinisEnrichLot(lot));
-  } else if (String(businessType).toLowerCase() === "restaurante") {
+  } else if (dakinisIsHospitalityBusiness(businessType)) {
     lots = dakinisDemoInventoryLots();
   } else {
     lots = [];
