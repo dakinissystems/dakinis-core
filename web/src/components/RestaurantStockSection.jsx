@@ -56,7 +56,7 @@ export default function RestaurantStockSection(props) {
         </>
       ) : null}
       {error ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {error}
         </p>
       ) : null}

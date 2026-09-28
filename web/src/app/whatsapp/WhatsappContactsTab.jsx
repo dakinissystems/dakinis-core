@@ -54,7 +54,7 @@ export default function WhatsappContactsTab({ t }) {
         </ul>
       )}
       {error ? (
-        <p className="lead" style={{ color: "#f97316", marginTop: "1rem" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)", marginTop: "1rem" }}>
           {error}
         </p>
       ) : null}

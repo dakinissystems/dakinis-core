@@ -1,3 +1,5 @@
+import { DAKINIS_TENANT_PRIMARY_COLOR_FALLBACK } from "../../constants/desTenantColor.js";
+
 export default function SettingsBusinessForm({ settings, setSettings, saving, msg, onSubmit }) {
   if (!settings) return null;
 
@@ -15,7 +17,7 @@ export default function SettingsBusinessForm({ settings, setSettings, saving, ms
         <span>Color principal</span>
         <input
           type="color"
-          value={settings.primaryColor || "#1a4fd6"}
+          value={settings.primaryColor || DAKINIS_TENANT_PRIMARY_COLOR_FALLBACK}
           onChange={(ev) => setSettings((p) => ({ ...p, primaryColor: ev.target.value }))}
         />
       </label>

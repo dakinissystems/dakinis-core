@@ -12,6 +12,7 @@ import {
   setIdpRefreshToken
 } from "../services/idp-auth.js";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
+import { Button } from "@dakinis/shared-ux";
 import PasswordInput from "../components/PasswordInput.jsx";
 
 function dakinisReadExpiredSessionMessage() {
@@ -167,9 +168,9 @@ export default function LoginPage() {
         <p className="lead login-page__lead">{t("login.businessLead")}</p>
         <div className="login-demo-cta card">
           <p className="kpi-label">{t("login.tryWithoutAccount")}</p>
-          <button type="button" className="btn" onClick={() => navigate("/demo/restaurante")}>
+          <Button type="button" variant="primary" onClick={() => navigate("/demo/restaurante")}>
             {t("commercial.tryDemo")}
-          </button>
+          </Button>
         </div>
         <form className="mockup-form card login-form" onSubmit={handleSubmit}>
           <label className="mockup-field">
@@ -229,26 +230,27 @@ export default function LoginPage() {
             </button>
           </p>
           <div className="login-form__actions">
-            <button type="submit" className="btn login-form__submit" disabled={loading}>
+            <Button type="submit" variant="primary" className="login-form__submit" disabled={loading}>
               {loading
                 ? t("login.submitting")
                 : idpEnabled
                   ? t("login.submitIdp")
                   : t("login.submit")}
-            </button>
+            </Button>
             {idpEnabled && import.meta.env.DEV ? (
-              <button
+              <Button
                 type="button"
-                className="btn btn-outline"
+                variant="secondary"
+                className="btn-outline"
                 disabled={loading}
                 onClick={handleSubmitLocal}
               >
                 {loading ? t("login.submitting") : t("login.submitLocalDev")}
-              </button>
+              </Button>
             ) : null}
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/")}>
+            <Button type="button" variant="ghost" className="btn-outline" onClick={() => navigate("/")}>
               {t("login.back")}
-            </button>
+            </Button>
           </div>
         </form>
         {idpEnabled ? <p className="kpi-label login-idp-hint">{t("login.idpHint")}</p> : null}

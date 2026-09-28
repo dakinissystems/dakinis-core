@@ -93,8 +93,8 @@ export default function PlatformHubAccessPanel({
           </li>
         ))}
       </ul>
-      {error ? <p className="lead" style={{ color: "#f87171" }}>{error}</p> : null}
-      {notice ? <p className="lead" style={{ color: "#86efac" }}>{notice}</p> : null}
+      {error ? <p className="lead" style={{ color: "var(--dakinis-danger)" }}>{error}</p> : null}
+      {notice ? <p className="lead" style={{ color: "var(--dakinis-success)" }}>{notice}</p> : null}
       <button type="submit" className="btn" disabled={saving}>
         {saving ? "Guardando…" : "Guardar acceso Hub"}
       </button>

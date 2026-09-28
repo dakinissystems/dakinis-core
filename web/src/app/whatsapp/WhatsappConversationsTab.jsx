@@ -146,7 +146,7 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
         </section>
       </div>
       {displayError ? (
-        <p className="lead" style={{ color: "#f97316", marginTop: "1rem" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)", marginTop: "1rem" }}>
           {displayError}
         </p>
       ) : null}

@@ -9,8 +9,10 @@ import { getWidgetsForSection } from "../../shared-ux/src/widgets.js";
 import { getWidgetDisplay } from "../../shared-ux/src/hub-widget-values.js";
 import { dakinisResolveHubWidgetOpen, dakinisRunHubWidgetAction, dakinisRunHubRecommendedAction } from "../../shared-ux/src/hub-widget-actions.js";
 import { dakinisHubProductEnabled } from "../../shared-brand/src/hub-product-access.js";
+import { dakinisWorkspaceAddonField } from "../../shared-brand/src/workspace-addons.js";
 import { HubProductIcon } from "../../shared-ux/src/HubProductIcon.jsx";
 import HubActionsPanel from "../../shared-ux/src/react/HubActionsPanel.jsx";
+import ActivityTimeline, { mapHubTimelineEvents } from "../../shared-ux/src/react/ActivityTimeline.jsx";
 import { dakinisHubT } from "../../shared-ux/src/hub-i18n.js";
 import { dashboardCardStyles } from "../../shared-ux/src/DashboardCard.jsx";
 
@@ -27,12 +29,15 @@ export default function HubDashboardPage({
   headerExtraProps = null,
   onAppOpen = null,
   onWidgetOpen = null,
+  locale = "es",
 }) {
   const sections = getHubSectionsBeforeApps();
   const widgetValues = dashboard?.widgetValues || {};
   const apps = dashboard?.apps || [];
+  const workspaceAddons = dashboard?.workspaceAddons || [];
   const enabledProducts = dashboard?.enabledProducts || null;
   const recommendedActions = dashboard?.actions || [];
+  const timelineEvents = mapHubTimelineEvents(dashboard?.db?.timeline || []);
 
   function widgetsForSection(sectionId) {
     const widgets = getWidgetsForSection(sectionId);
@@ -71,6 +76,7 @@ export default function HubDashboardPage({
         .dakinis-hub-dashboard { display: flex; flex-direction: column; gap: 1.75rem; }
         .dakinis-hub-section__title { margin: 0 0 0.75rem; font-size: 1rem; font-weight: 600; }
         .dakinis-hub-section__grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+        .dakinis-hub-section__timeline { margin-top: 1rem; }
         .dakinis-dashboard-card--app-launcher .dakinis-dashboard-card__head { align-items: center; }
         .dakinis-dashboard-card--app-launcher .dakinis-dashboard-card__value { font-size: 1.15rem; font-weight: 600; }
       `}</style>
@@ -78,7 +84,7 @@ export default function HubDashboardPage({
         {recommendedActions.length > 0 ? (
           <HubActionsPanel
             actions={recommendedActions}
-            t={dakinisHubT}
+            t={(key) => dakinisHubT(key, locale)}
             onAction={(actionId) => dakinisRunHubRecommendedAction(actionId, { apps, onAppOpen })}
           />
         ) : null}
@@ -117,12 +123,56 @@ export default function HubDashboardPage({
                   })
                 )}
               </div>
+              {section.id === "activity" ? (
+                <div className="dakinis-hub-section__timeline">
+                  <ActivityTimeline
+                    events={timelineEvents}
+                    t={(key) => dakinisHubT(key, locale)}
+                    onAction={(actionId) =>
+                      dakinisRunHubRecommendedAction(actionId, { apps, onAppOpen })
+                    }
+                  />
+                </div>
+              ) : null}
             </section>
           );
         })}
+        {workspaceAddons.length > 0 ? (
+          <section id="workspace" className="dakinis-hub-section">
+            <h2 className="dakinis-hub-section__title">{dakinisHubT("hub.workspace.title", locale)}</h2>
+            <div className="dakinis-hub-section__grid">
+              {workspaceAddons.map((addon) => (
+                <DashboardCard
+                  key={addon.id || addon.key}
+                  className="dakinis-dashboard-card--app-launcher"
+                  icon="layout-grid"
+                  value={dakinisWorkspaceAddonField(addon, "name", locale)}
+                  status={
+                    addon.phase === "future"
+                      ? dakinisHubT("hub.workspace.roadmap", locale)
+                      : addon.category
+                  }
+                  actionLabel={dakinisHubT("hub.workspace.open", locale)}
+                  onAction={
+                    onAppOpen
+                      ? () =>
+                          onAppOpen({
+                            id: addon.id || addon.key,
+                            name: dakinisWorkspaceAddonField(addon, "name", locale),
+                            url: `https://akoenet.dakinissystems.com/workspace/${encodeURIComponent(addon.id || addon.key)}`,
+                            product: "akoenet",
+                          })
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
         <section id="apps" className="dakinis-hub-section">
           <h2 className="dakinis-hub-section__title">
-            {HUB_DASHBOARD_SECTIONS.find((s) => s.id === "apps")?.title}
+            {dakinisHubT("hub.workspace.appsTitle", locale) ||
+              HUB_DASHBOARD_SECTIONS.find((s) => s.id === "apps")?.title}
           </h2>
           <div className="dakinis-hub-section__grid">
             {apps.length > 0

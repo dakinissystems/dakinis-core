@@ -167,7 +167,7 @@ export default function CrmPage({ navigate }) {
         </p>
 
         {crmReady === false ? (
-          <p className="lead" style={{ color: "#f97316" }}>
+          <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
             {isBusinessFacing ? t("app.crm.notReadyFriendly") : t("app.crm.notReady")}
           </p>
         ) : null}
@@ -195,7 +195,7 @@ export default function CrmPage({ navigate }) {
         </div>
 
         {error ? (
-          <p className="lead" style={{ color: "#f97316" }}>
+          <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
             {error}
           </p>
         ) : null}

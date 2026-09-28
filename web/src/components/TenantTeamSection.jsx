@@ -129,12 +129,12 @@ export default function TenantTeamSection({
 
       {teamLoading ? <p className="lead">Cargando usuarios…</p> : null}
       {teamError ? (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {teamError}
         </p>
       ) : null}
       {teamMsg ? (
-        <p className="lead" style={{ color: "#5eead4" }}>
+        <p className="lead" style={{ color: "var(--dakinis-accent)" }}>
           {teamMsg}
         </p>
       ) : null}

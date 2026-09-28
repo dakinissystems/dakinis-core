@@ -294,7 +294,7 @@ export default function RestaurantAllergenPanel({ apiSession, fetchOpts, profile
           </div>
         </div>
       ) : (
-        <p className="lead" style={{ color: "#fdba74" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
           {t("allergens.saveOnceForQr")}
         </p>
       )}

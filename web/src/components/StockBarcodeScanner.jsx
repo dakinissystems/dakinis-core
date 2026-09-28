@@ -162,7 +162,7 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
       ) : null}
 
       {decodeError ? (
-        <p className="lead" style={{ color: "#fdba74", fontSize: "0.9rem", margin: "0.5rem 0 0" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)", fontSize: "0.9rem", margin: "0.5rem 0 0" }}>
           {decodeError}
         </p>
       ) : null}

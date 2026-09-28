@@ -76,7 +76,7 @@ export default function ResetPasswordPage() {
             />
           </label>
           {error ? <p className="login-form__error">{error}</p> : null}
-          {success ? <p className="lead" style={{ color: "#5eead4" }}>{success}</p> : null}
+          {success ? <p className="lead" style={{ color: "var(--dakinis-accent)" }}>{success}</p> : null}
           <div className="login-form__actions">
             <button type="submit" className="btn login-form__submit" disabled={loading || !tokenFromUrl}>
               {loading ? t("resetPassword.submitting") : t("resetPassword.submit")}

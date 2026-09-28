@@ -37,7 +37,9 @@ export function useStockBarcodeScanner({ onScan, t }) {
     (code, { fromCamera = false } = {}) => {
       const trimmed = dakinisNormalizeScanReading(code);
       if (!trimmed) return;
-      if (trimmed === confirmedRef.current) return;
+      const now = Date.now();
+      // Mismo código: permitir re-escaneo tras cooldown (varios bultos del mismo EAN)
+      if (trimmed === confirmedRef.current && now - lastConfirmAtRef.current < 1200) return;
       confirmedRef.current = trimmed;
       setIsSeeking(false);
       setConfirmedCode(trimmed);

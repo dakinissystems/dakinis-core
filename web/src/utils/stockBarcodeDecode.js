@@ -208,7 +208,9 @@ async function dakinisTryDecodeWithZXing(dataUrl) {
 
 async function dakinisQuaggaDecodeSingle(src, readers = IMAGE_BARCODE_READERS) {
   const Quagga = (await import("@ericblade/quagga2")).default;
+  // Pocos intentos primero (rápido); fallbacks solo si fallan
   const configs = [
+    { size: 800, patchSize: "medium", halfSample: true, singleChannel: false },
     { size: 1200, patchSize: "large", halfSample: false, singleChannel: false },
     { size: 1200, patchSize: "x-large", halfSample: false, singleChannel: true },
     { size: 800, patchSize: "large", halfSample: true, singleChannel: false },
@@ -237,19 +239,18 @@ async function dakinisQuaggaDecodeSingle(src, readers = IMAGE_BARCODE_READERS) {
   return null;
 }
 
-/** Decodifica imagen (foto o captura): Quagga multi-config + ZXing (QR y 1D). */
+/** Decodifica imagen (foto o captura): ZXing primero (rápido) + Quagga reducido. */
 export async function dakinisDecodeBarcodeFromImage(dataUrl) {
-  let code = await dakinisQuaggaDecodeSingle(dataUrl);
+  let code = await dakinisTryDecodeWithZXing(dataUrl);
   if (code) return code;
 
-  const scaled1200 = await dakinisScaleImageToDataUrl(dataUrl, 1200);
-  if (scaled1200 !== dataUrl) {
-    code = await dakinisQuaggaDecodeSingle(scaled1200);
-    if (code) return code;
-  }
+  code = await dakinisQuaggaDecodeSingle(dataUrl);
+  if (code) return code;
 
   const scaled800 = await dakinisScaleImageToDataUrl(dataUrl, 800);
   if (scaled800 !== dataUrl) {
+    code = await dakinisTryDecodeWithZXing(scaled800);
+    if (code) return code;
     code = await dakinisQuaggaDecodeSingle(scaled800);
     if (code) return code;
   }

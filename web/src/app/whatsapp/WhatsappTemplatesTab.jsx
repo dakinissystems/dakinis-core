@@ -67,7 +67,7 @@ export default function WhatsappTemplatesTab({ t, businessName }) {
         </pre>
       ) : null}
       {error ? (
-        <p className="lead" style={{ color: "#f97316", marginTop: "1rem" }}>
+        <p className="lead" style={{ color: "var(--dakinis-warning)", marginTop: "1rem" }}>
           {error}
         </p>
       ) : null}
