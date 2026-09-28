@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import AppTopBar from "../components/AppTopBar.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -7,7 +7,6 @@ import { useDakinisSession } from "../context/SessionContext.jsx";
 import { useDakinisLogout } from "../hooks/useDakinisLogout.js";
 import { useDakinisFeatureTelemetry } from "../hooks/useDakinisFeatureTelemetry.js";
 import { DAKINIS_AUTH_EXPIRED_EVENT } from "../services/auth-events.js";
-import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import ProductHomePage from "../pages/ProductHomePage.jsx";
 import PricingPage from "../pages/PricingPage.jsx";
 import HubPage from "../pages/HubPage.jsx";
@@ -16,9 +15,6 @@ import LoginPage from "../pages/LoginPage.jsx";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage.jsx";
 import ResetPasswordPage from "../pages/ResetPasswordPage.jsx";
 import PlatformAdminPage from "../pages/PlatformAdminPage.jsx";
-import VistaMockupPage from "../pages/VistaMockupPage.jsx";
-import SystemPage from "../pages/SystemPage.jsx";
-import PublicAllergiesPage from "../pages/PublicAllergiesPage.jsx";
 import CheckoutSuccessPage from "../pages/CheckoutSuccessPage.jsx";
 import {
   FaqPage,
@@ -30,13 +26,15 @@ import {
   CookiesPage,
   RefundsPage
 } from "../pages/StaticInfoPages.jsx";
-import DashboardPage from "../app/dashboard/DashboardPage.jsx";
-import CrmPage from "../app/crm/CrmPage.jsx";
-import WhatsappHubPage from "../app/whatsapp/WhatsappHubPage.jsx";
-import SettingsPage from "../app/settings/SettingsPage.jsx";
-import VentasPage from "../app/ventas/VentasPage.jsx";
-import InventarioPage from "../app/inventario/InventarioPage.jsx";
-import ReportesPage from "../app/reportes/ReportesPage.jsx";
+import {
+  DashboardPage,
+  CrmPage,
+  VentasPage,
+  InventarioPage,
+  ReportesPage,
+  WhatsappHubPage,
+  SettingsPage,
+} from "../modules/lazy-pages.js";
 import LegacyPathRoutes from "./LegacyPathRoutes.jsx";
 import ClientPortalPage from "../pages/ClientPortalPage.jsx";
 import AppGuard from "../components/AppGuard.jsx";
@@ -47,7 +45,33 @@ import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
 import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
 
-const dakinisSystemRegistry = dakinisGetSystemRegistry();
+function AppRouteFallback() {
+  return (
+    <div className="app-route-fallback" role="status" aria-live="polite" style={{ padding: "2rem", opacity: 0.7 }}>
+      Cargando…
+    </div>
+  );
+}
+
+function withAppGuard(Page) {
+  return function GuardedAppPage({ navigate }) {
+    return (
+      <AppGuard>
+        <Suspense fallback={<AppRouteFallback />}>
+          <Page navigate={navigate} />
+        </Suspense>
+      </AppGuard>
+    );
+  };
+}
+
+const GuardedDashboard = withAppGuard(DashboardPage);
+const GuardedCrm = withAppGuard(CrmPage);
+const GuardedVentas = withAppGuard(VentasPage);
+const GuardedInventario = withAppGuard(InventarioPage);
+const GuardedReportes = withAppGuard(ReportesPage);
+const GuardedWhatsapp = withAppGuard(WhatsappHubPage);
+const GuardedSettings = withAppGuard(SettingsPage);
 
 function Shell({ children }) {
   const navigate = useNavigate();
@@ -155,96 +179,19 @@ function AppRoutes() {
           </AdminGuard>
         }
       />
-      <Route
-        path="/app/dashboard"
-        element={
-          <AppGuard>
-            <DashboardPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/crm"
-        element={
-          <AppGuard>
-            <CrmPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/ventas"
-        element={
-          <AppGuard>
-            <VentasPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/inventario"
-        element={
-          <AppGuard>
-            <InventarioPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/reportes"
-        element={
-          <AppGuard>
-            <ReportesPage navigate={nav} />
-          </AppGuard>
-        }
-      />
+      <Route path="/app/dashboard" element={<GuardedDashboard navigate={nav} />} />
+      <Route path="/app/crm" element={<GuardedCrm navigate={nav} />} />
+      <Route path="/app/ventas" element={<GuardedVentas navigate={nav} />} />
+      <Route path="/app/inventario" element={<GuardedInventario navigate={nav} />} />
+      <Route path="/app/reportes" element={<GuardedReportes navigate={nav} />} />
       <Route path="/app/messages" element={<Navigate to="/app/whatsapp/conversations" replace />} />
       <Route path="/app/whatsapp" element={<Navigate to="/app/whatsapp/conversations" replace />} />
-      <Route
-        path="/app/whatsapp/conversations"
-        element={
-          <AppGuard>
-            <WhatsappHubPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/whatsapp/contacts"
-        element={
-          <AppGuard>
-            <WhatsappHubPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/whatsapp/templates"
-        element={
-          <AppGuard>
-            <WhatsappHubPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/whatsapp/automations"
-        element={
-          <AppGuard>
-            <WhatsappHubPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/whatsapp/ai"
-        element={
-          <AppGuard>
-            <WhatsappHubPage navigate={nav} />
-          </AppGuard>
-        }
-      />
-      <Route
-        path="/app/settings"
-        element={
-          <AppGuard>
-            <SettingsPage navigate={nav} />
-          </AppGuard>
-        }
-      />
+      <Route path="/app/whatsapp/conversations" element={<GuardedWhatsapp navigate={nav} />} />
+      <Route path="/app/whatsapp/contacts" element={<GuardedWhatsapp navigate={nav} />} />
+      <Route path="/app/whatsapp/templates" element={<GuardedWhatsapp navigate={nav} />} />
+      <Route path="/app/whatsapp/automations" element={<GuardedWhatsapp navigate={nav} />} />
+      <Route path="/app/whatsapp/ai" element={<GuardedWhatsapp navigate={nav} />} />
+      <Route path="/app/settings" element={<GuardedSettings navigate={nav} />} />
       <Route path="/hub" element={<HubPage />} />
       <Route path="/ecosystem/launch/:productId" element={<EcosystemLaunchPage />} />
       <Route path="/faq" element={<FaqPage navigate={nav} />} />

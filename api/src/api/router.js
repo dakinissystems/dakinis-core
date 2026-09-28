@@ -15,6 +15,7 @@ import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
+import { resolveTenantCapabilities } from "@dakinis/shared/catalog/product-capabilities.js";
 import { dakinisHandleAuthLogin, dakinisHandleAuthExchange, dakinisHandleMe } from "./auth-routes.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 import { dakinisPostgresSchema } from "../db/schema-config.js";
@@ -222,12 +223,16 @@ export async function dakinisHandleApiRequest(req, rawBody, url) {
   if (req.method === "GET" && url.pathname === "/api/config") {
     const planTier = dakinisNormalizeCommercialPlan(business.plan);
     const modulesEnabled = dakinisListModulesForPlan(planTier);
+    const capabilities = resolveTenantCapabilities({
+      business: { ...business, planTier, modulesEnabled, type: business.type },
+    });
     return dakinisJsonSuccess(
       {
         config: modules.config,
         plan: business.plan,
         planTier,
         modulesEnabled,
+        capabilities,
         accessState: business.access_state || "active",
         accessReason: business.access_reason || null,
         entitledPlan: business.entitled_plan || business.plan,

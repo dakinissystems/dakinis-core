@@ -13,14 +13,10 @@ import {
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
 import { HUB_NAV_SLOTS } from "@dakinis/shared-ux/hub-nav.js";
-
-const DAKINIS_BUSINESS_NAV = [
-  { path: "/app/crm", labelKey: "appNav.clients" },
-  { path: "/app/inventario", labelKey: "appNav.inventory", id: "inventory" },
-  { path: "/app/ventas", labelKey: "appNav.sales" },
-  { path: "/app/reportes", labelKey: "appNav.reports" },
-  { path: "/app/whatsapp", labelKey: "appNav.whatsapp" }
-];
+import {
+  filterCoreNavByCapabilities,
+  resolveTenantCapabilities,
+} from "@dakinis/shared/catalog/product-capabilities.js";
 
 function dakinisBusinessNavPath(item, session) {
   if (item.id === "inventory" && dakinisIsHospitalityBusiness(session?.business?.type)) {
@@ -55,6 +51,8 @@ function TopbarPackagesButton({ navigate, currentPath, t }) {
 export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
   const { t } = useLocale();
   const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
+  const capabilities = useMemo(() => resolveTenantCapabilities(session), [session]);
+  const businessNav = useMemo(() => filterCoreNavByCapabilities(capabilities), [capabilities]);
   const isPlatformAdmin = dakinisIsPlatformAdminSession(session);
   const isBusinessFacing = dakinisIsBusinessFacingSession(session);
   const isBusinessDemo = dakinisIsBusinessDemoSession(session);
@@ -122,7 +120,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               ) : null}
               {isBusinessFacing && !isSystemDemoView ? (
                 <div className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
-                  {DAKINIS_BUSINESS_NAV.map((item) => {
+                  {businessNav.map((item) => {
                     const path = dakinisBusinessNavPath(item, session);
                     return (
                       <button

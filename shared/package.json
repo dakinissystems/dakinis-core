@@ -11,6 +11,7 @@
     "./catalog/routes.js": "./catalog/routes.js",
     "./catalog/system-modules.js": "./catalog/system-modules.js",
     "./catalog/plan-modules.js": "./catalog/plan-modules.js",
+    "./catalog/product-capabilities.js": "./catalog/product-capabilities.js",
     "./catalog/business-templates.js": "./catalog/business-templates.js",
     "./catalog/business-settings.js": "./catalog/business-settings.js",
     "./catalog/tenant-modules.js": "./catalog/tenant-modules.js",

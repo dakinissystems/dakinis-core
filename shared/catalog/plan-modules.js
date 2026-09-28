@@ -6,9 +6,29 @@
 export const DAKINIS_COMMERCIAL_PLAN_KEYS = Object.freeze(["starter", "growth", "pro"]);
 
 const DAKINIS_PLAN_MODULE_SET = Object.freeze({
-  starter: new Set(["agenda", "booking", "dashboard"]),
-  growth: new Set(["agenda", "booking", "dashboard", "crm", "leads"]),
-  pro: new Set(["agenda", "booking", "dashboard", "crm", "leads", "whatsapp"])
+  starter: new Set(["agenda", "booking", "dashboard", "inventory", "sales"]),
+  growth: new Set([
+    "agenda",
+    "booking",
+    "dashboard",
+    "crm",
+    "leads",
+    "inventory",
+    "sales",
+    "reports",
+  ]),
+  pro: new Set([
+    "agenda",
+    "booking",
+    "dashboard",
+    "crm",
+    "leads",
+    "whatsapp",
+    "inventory",
+    "sales",
+    "reports",
+    "ai",
+  ]),
 });
 
 /**
@@ -41,7 +61,7 @@ export function dakinisParseCommercialPlanForStorage(planInput) {
 
 /**
  * @param {"starter"|"growth"|"pro"} normalizedPlan
- * @param {string} moduleKey agenda|booking|crm|whatsapp|leads|dashboard
+ * @param {string} moduleKey agenda|booking|crm|whatsapp|leads|dashboard|inventory|sales|reports|ai
  */
 export function dakinisPlanHasModule(normalizedPlan, moduleKey) {
   const tier = DAKINIS_PLAN_MODULE_SET[normalizedPlan] ? normalizedPlan : "starter";
