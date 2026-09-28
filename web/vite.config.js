@@ -23,8 +23,6 @@ export default defineConfig(({ mode }) => {
         "@dakinis/shared-loading": path.resolve(__dirname, "../packages/shared-loading/src"),
         "@dakinis/shared-illustrations": path.resolve(__dirname, "../packages/shared-illustrations/src"),
         "@dakinis/shared-icons": path.resolve(__dirname, "../packages/shared-icons/src"),
-        "@dakinis/design-system": path.resolve(__dirname, "../../../packages/design-system/src"),
-        "@dakinis/shared-platform": path.resolve(__dirname, "../../../packages/shared-platform/src"),
         "@modules": path.resolve(__dirname, "src/modules"),
         react: path.resolve(__dirname, "../node_modules/react"),
         "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
@@ -33,30 +31,16 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
+          // Only split node_modules. React.lazy already creates route chunks;
+          // forcing /app/* into manualChunks caused cross-chunk TDZ errors
+          // (e.g. ReferenceError: DesAppShell is not defined in prod).
           manualChunks(id) {
-            if (id.includes("node_modules")) {
-              if (id.includes("react-dom") || id.includes("/react/")) return "vendor-react";
-              if (id.includes("react-router")) return "vendor-router";
-              return "vendor";
+            if (!id.includes("node_modules")) return undefined;
+            if (id.includes("react-dom") || /node_modules[/\\]react[/\\]/.test(id)) {
+              return "vendor-react";
             }
-            if (id.includes("/web/src/modules/crm/") || id.includes("/web/src/app/crm/")) return "mod-crm";
-            if (id.includes("/web/src/modules/sales/") || id.includes("/web/src/app/ventas/")) return "mod-sales";
-            if (id.includes("/web/src/modules/inventory/") || id.includes("/web/src/app/inventario/")) {
-              return "mod-inventory";
-            }
-            if (id.includes("/web/src/modules/whatsapp/") || id.includes("/web/src/app/whatsapp/")) {
-              return "mod-whatsapp";
-            }
-            if (id.includes("/web/src/modules/reports/") || id.includes("/web/src/app/reportes/")) {
-              return "mod-reports";
-            }
-            if (id.includes("/web/src/modules/settings/") || id.includes("/web/src/app/settings/")) {
-              return "mod-settings";
-            }
-            if (id.includes("/web/src/modules/dashboard/") || id.includes("/web/src/app/dashboard/")) {
-              return "mod-dashboard";
-            }
-            return undefined;
+            if (id.includes("react-router")) return "vendor-router";
+            return "vendor";
           }
         }
       }
