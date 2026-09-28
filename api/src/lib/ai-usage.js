@@ -9,11 +9,21 @@ function dakinisCurrentYearMonth() {
 }
 
 export async function dakinisAiUsageCount(businessId, usageType = "advisor", yearMonth = dakinisCurrentYearMonth()) {
-  const row = await dakinisQueryOne(
-    `SELECT COUNT(*) AS c FROM ai_usage WHERE business_id = ? AND usage_type = ? AND year_month = ?`,
-    [businessId, usageType, yearMonth]
-  );
-  return Number(row?.c) || 0;
+  try {
+    const row = await dakinisQueryOne(
+      `SELECT COUNT(*) AS c FROM ai_usage WHERE business_id = ? AND usage_type = ? AND year_month = ?`,
+      [businessId, usageType, yearMonth]
+    );
+    return Number(row?.c) || 0;
+  } catch (err) {
+    // Prod gap: table missing until migration 055_core_ai_usage.sql is applied.
+    const msg = String(err?.message || err || "");
+    if (/ai_usage/i.test(msg) && /does not exist|no such table/i.test(msg)) {
+      console.warn("[ai-usage] table missing — apply docs/supabase/migrations/055_core_ai_usage.sql");
+      return 0;
+    }
+    throw err;
+  }
 }
 
 export function dakinisAiMonthlyLimit(plan) {

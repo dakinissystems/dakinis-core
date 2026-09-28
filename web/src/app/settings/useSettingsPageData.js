@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { dakinisTenantJsonFetch } from "../../services/api.js";
 import {
   dakinisTenantProfile,
@@ -66,7 +67,7 @@ export default function useSettingsPageData(session) {
         });
       })
       .catch(() => {});
-    if (sess?.business?.type === "restaurante") {
+    if (dakinisIsHospitalityBusiness(sess?.business?.type)) {
       dakinisTenantJsonFetch("/api/tenant/restaurant/kitchen", sess)
         .then((json) => {
           if (cancelled) return;

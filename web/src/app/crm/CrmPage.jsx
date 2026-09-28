@@ -49,19 +49,18 @@ export default function CrmPage({ navigate }) {
       const json = await dakinisCrmListContacts(search, 200);
       const list = json?.data?.contacts || [];
       setContacts(list);
-      if (!selectedId && list.length) {
-        const firstId = list[0].id;
-        setSelectedId(firstId);
-        const timelineJson = await dakinisCrmContactTimeline(firstId);
-        setTimeline(timelineJson?.data || null);
-      }
+      setSelectedId((prev) => {
+        if (prev && list.some((c) => c.id === prev)) return prev;
+        return list[0]?.id || "";
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("app.crm.error"));
       setContacts([]);
+      setCrmReady(false);
     } finally {
       setLoading(false);
     }
-  }, [hasToken, search, selectedId, t]);
+  }, [hasToken, search, t]);
 
   const loadTimeline = useCallback(
     async (contactId) => {
@@ -81,18 +80,24 @@ export default function CrmPage({ navigate }) {
     [hasToken, t]
   );
 
-  const handleSelectContact = useCallback(
-    (contactId) => {
-      setSelectedId(contactId);
-      void loadTimeline(contactId);
-    },
-    [loadTimeline]
-  );
+  const handleSelectContact = useCallback((contactId) => {
+    setSelectedId(contactId);
+  }, []);
 
   useEffect(() => {
-    if (!hasToken || isDemo) return;
+    if (!hasToken || isDemo) return undefined;
     loadContacts();
+    return undefined;
   }, [hasToken, isDemo, loadContacts]);
+
+  useEffect(() => {
+    if (!hasToken || isDemo || !selectedId) {
+      setTimeline(null);
+      return undefined;
+    }
+    void loadTimeline(selectedId);
+    return undefined;
+  }, [hasToken, isDemo, selectedId, loadTimeline]);
 
   async function handleCreateContact(e) {
     e.preventDefault();

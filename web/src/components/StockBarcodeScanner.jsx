@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { useStockBarcodeScanner } from "../hooks/useStockBarcodeScanner.js";
 
-export default function StockBarcodeScanner({ onScan, t, hint }) {
+export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false }) {
   const {
     label,
     videoRef,
@@ -8,8 +9,8 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     isScanning,
     facingMode,
     imageSrc,
-    displayCode,
-    isStabilizing,
+    confirmedCode,
+    isSeeking,
     decodeError,
     dakinisHandleWedgeInputKeyDown,
     dakinisHandleWedgeInputChange,
@@ -19,6 +20,18 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
     flipCamera,
     handleImageChange
   } = useStockBarcodeScanner({ onScan, t });
+
+  useEffect(() => {
+    if (!autoFocus) return undefined;
+    const id = window.setTimeout(() => wedgeInputRef.current?.focus?.(), 80);
+    return () => window.clearTimeout(id);
+  }, [autoFocus, wedgeInputRef]);
+
+  const statusLabel = isScanning
+    ? isSeeking
+      ? label("kitchen.scanSearchingActive", "Detectando… mantén el código en el recuadro")
+      : label("kitchen.scanSearching", "Buscando código…")
+    : null;
 
   return (
     <div className="stock-scanner">
@@ -109,7 +122,7 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
         </label>
       </div>
 
-      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}`}>
+      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}${isSeeking ? " is-seeking" : ""}`}>
         <video
           ref={videoRef}
           className="stock-scanner__video"
@@ -117,12 +130,14 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
           muted
           aria-label={label("kitchen.scanVideoAria", "Vista de cámara para escanear código de barras")}
         />
+        {isScanning ? <div className="stock-scanner__roi" aria-hidden="true" /> : null}
         {!isScanning && imageSrc ? (
           <img src={imageSrc} alt="" className="stock-scanner__preview" />
         ) : null}
         {!isScanning && !imageSrc ? (
           <p className="stock-scanner__placeholder">{label("kitchen.scanPlaceholder", "Vista previa cámara")}</p>
         ) : null}
+        {statusLabel ? <p className="stock-scanner__status">{statusLabel}</p> : null}
       </div>
 
       <label className="mockup-field stock-scanner__code-field">
@@ -130,15 +145,19 @@ export default function StockBarcodeScanner({ onScan, t, hint }) {
         <input
           type="text"
           readOnly
-          value={displayCode}
-          placeholder={label("kitchen.scanCodePlaceholder", "—")}
-          className={`stock-scanner__code-input${isStabilizing ? " stock-scanner__code-input--preview" : ""}`}
+          value={confirmedCode}
+          placeholder={
+            isScanning
+              ? label("kitchen.scanSearching", "Buscando código…")
+              : label("kitchen.scanCodePlaceholder", "—")
+          }
+          className="stock-scanner__code-input"
         />
       </label>
 
-      {isStabilizing ? (
-        <p className="kpi-label" style={{ marginTop: "0.35rem" }}>
-          {label("kitchen.scanStabilizing", "Enfocando código… mantén el móvil quieto un instante.")}
+      {confirmedCode ? (
+        <p className="kpi-label stock-scanner__confirmed" style={{ marginTop: "0.35rem" }}>
+          {label("kitchen.scanConfirmed", "Código confirmado")}
         </p>
       ) : null}
 

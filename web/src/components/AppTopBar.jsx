@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
+import { dakinisRestaurantTaskPath } from "../utils/restaurantTaskStorage.js";
 import { DAKINIS_MARKETING_SITE_URL } from "../config/product-urls.js";
 import { DAKINIS_LOGO_SIMPLE } from "../config/brand-assets.js";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -11,18 +13,14 @@ import {
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
 import { HUB_NAV_SLOTS } from "@dakinis/shared-ux/hub-nav.js";
-
-const DAKINIS_BUSINESS_NAV = [
-  { path: "/app/crm", labelKey: "appNav.clients" },
-  { path: "/app/inventario", labelKey: "appNav.inventory", id: "inventory" },
-  { path: "/app/ventas", labelKey: "appNav.sales" },
-  { path: "/app/reportes", labelKey: "appNav.reports" },
-  { path: "/app/whatsapp", labelKey: "appNav.whatsapp" }
-];
+import {
+  filterCoreNavByCapabilities,
+  resolveTenantCapabilities,
+} from "@dakinis/shared/catalog/product-capabilities.js";
 
 function dakinisBusinessNavPath(item, session) {
-  if (item.id === "inventory" && session?.business?.type === "restaurante") {
-    return `/sistema/${encodeURIComponent(session.business.type)}`;
+  if (item.id === "inventory" && dakinisIsHospitalityBusiness(session?.business?.type)) {
+    return dakinisRestaurantTaskPath(session.business.type, "inventario", { sub: "scan" });
   }
   return item.path;
 }
@@ -53,6 +51,8 @@ function TopbarPackagesButton({ navigate, currentPath, t }) {
 export default function AppTopBar({ navigate, session, onSignOut, currentPath }) {
   const { t } = useLocale();
   const systemRegistry = useMemo(() => dakinisGetSystemRegistry(), []);
+  const capabilities = useMemo(() => resolveTenantCapabilities(session), [session]);
+  const businessNav = useMemo(() => filterCoreNavByCapabilities(capabilities), [capabilities]);
   const isPlatformAdmin = dakinisIsPlatformAdminSession(session);
   const isBusinessFacing = dakinisIsBusinessFacingSession(session);
   const isBusinessDemo = dakinisIsBusinessDemoSession(session);
@@ -120,7 +120,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               ) : null}
               {isBusinessFacing && !isSystemDemoView ? (
                 <div className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
-                  {DAKINIS_BUSINESS_NAV.map((item) => {
+                  {businessNav.map((item) => {
                     const path = dakinisBusinessNavPath(item, session);
                     return (
                       <button
@@ -158,9 +158,15 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                     <button
                       type="button"
                       className="btn btn-outline"
-                      onClick={() => navigate(`/sistema/${encodeURIComponent(session.business.type)}`)}
+                      onClick={() =>
+                        navigate(
+                          dakinisIsHospitalityBusiness(session.business.type)
+                            ? dakinisRestaurantTaskPath(session.business.type, "sala")
+                            : `/sistema/${encodeURIComponent(session.business.type)}`
+                        )
+                      }
                     >
-                      {isBusinessDemo && session.business.type === "restaurante"
+                      {isBusinessDemo && dakinisIsHospitalityBusiness(session.business.type)
                         ? t("businessDemo.dashboard.ctaRestaurant")
                         : t("nav.myBusiness")}
                     </button>

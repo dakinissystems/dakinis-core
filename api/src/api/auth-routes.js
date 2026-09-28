@@ -4,6 +4,7 @@ import {
   dakinisListModulesForPlan,
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
+import { resolveTenantCapabilities } from "@dakinis/shared/catalog/product-capabilities.js";
 import { dakinisQueryOne } from "../db/query.js";
 import { dakinisSignUserToken, dakinisGetJwtSecret } from "./auth-tenant.js";
 import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
@@ -70,6 +71,9 @@ export async function dakinisHandleAuthLogin(rawBody) {
 
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+  const capabilities = resolveTenantCapabilities({
+    business: { ...business, planTier, modulesEnabled, type: business.type },
+  });
 
   await dakinisPublishEvent("user.login", {
     userId: user.id,
@@ -89,7 +93,8 @@ export async function dakinisHandleAuthLogin(rawBody) {
       business: {
         ...dakinisBusinessAuthPayload(business),
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        capabilities
       }
     },
     business.type,
@@ -119,6 +124,9 @@ export async function dakinisHandleMe(req) {
 
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+  const capabilities = resolveTenantCapabilities({
+    business: { ...business, planTier, modulesEnabled, type: business.type },
+  });
 
   return dakinisJsonSuccess(
     {
@@ -126,7 +134,8 @@ export async function dakinisHandleMe(req) {
       business: {
         ...dakinisBusinessAuthPayload(business),
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        capabilities
       }
     },
     business.type,
@@ -196,6 +205,13 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
         "El email ya esta vinculado a otro negocio en core"
       );
     }
+    if (code === "USER_NOT_PROVISIONED") {
+      return dakinisJsonError(
+        403,
+        "USER_NOT_PROVISIONED",
+        "Usuario no provisionado en este tenant. Solicita invitacion o activa DAKINIS_AUTH_EXCHANGE_AUTO_PROVISION."
+      );
+    }
     return dakinisJsonError(
       400,
       "INVALID_PLATFORM_IDENTITY",
@@ -206,6 +222,9 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
   const coreJwt = dakinisSignUserToken(user);
   const planTier = dakinisNormalizeCommercialPlan(business.plan);
   const modulesEnabled = dakinisListModulesForPlan(planTier);
+  const capabilities = resolveTenantCapabilities({
+    business: { ...business, planTier, modulesEnabled, type: business.type },
+  });
 
   await dakinisPublishEvent("user.login", {
     userId: user.id,
@@ -225,7 +244,8 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
       business: {
         ...dakinisBusinessAuthPayload(business),
         planTier,
-        modulesEnabled
+        modulesEnabled,
+        capabilities
       }
     },
     business.type,

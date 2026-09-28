@@ -3,6 +3,8 @@
  * Convierte el tenant "configurable" en perfil especializado por sector.
  */
 
+import { dakinisHospitalityLabel, dakinisIsHospitalityBusiness, dakinisHospitalityTypeOptions } from "./hospitality.js";
+
 export const DAKINIS_CORE_INDUSTRY_KEYS = Object.freeze([
   "clinica",
   "peluqueria",
@@ -244,12 +246,17 @@ export const DAKINIS_INDUSTRY_TEMPLATES = {
  */
 export function dakinisGetIndustryTemplate(type) {
   const key = String(type || "").trim().toLowerCase();
-  return DAKINIS_INDUSTRY_TEMPLATES[key] || null;
+  if (DAKINIS_INDUSTRY_TEMPLATES[key]) return DAKINIS_INDUSTRY_TEMPLATES[key];
+  if (dakinisIsHospitalityBusiness(key) && DAKINIS_INDUSTRY_TEMPLATES.restaurante) {
+    const base = DAKINIS_INDUSTRY_TEMPLATES.restaurante;
+    return { ...base, key, label: dakinisHospitalityLabel(key) };
+  }
+  return null;
 }
 
 /** Catálogo para selects de onboarding / admin plataforma. */
 export function dakinisGetIndustryTemplateCatalog() {
-  return DAKINIS_CORE_INDUSTRY_KEYS.map((key) => {
+  const base = DAKINIS_CORE_INDUSTRY_KEYS.map((key) => {
     const t = DAKINIS_INDUSTRY_TEMPLATES[key];
     return {
       key,
@@ -261,6 +268,23 @@ export function dakinisGetIndustryTemplateCatalog() {
       onboardingSteps: t.onboardingSteps
     };
   });
+  const seen = new Set(base.map((b) => b.key));
+  for (const opt of dakinisHospitalityTypeOptions()) {
+    if (seen.has(opt.value)) continue;
+    const t = dakinisGetIndustryTemplate(opt.value);
+    if (!t) continue;
+    base.push({
+      key: opt.value,
+      label: opt.label,
+      market: t.market,
+      entity: t.entity,
+      autoModules: t.autoModules,
+      featureLabels: t.featureLabels,
+      onboardingSteps: t.onboardingSteps
+    });
+    seen.add(opt.value);
+  }
+  return base;
 }
 
 /**

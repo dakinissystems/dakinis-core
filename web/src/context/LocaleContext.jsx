@@ -18,9 +18,35 @@ function dakinisGetByPath(obj, path) {
 
 function dakinisInterpolate(template, vars) {
   if (template == null || typeof template !== "string") return template;
+  if (!vars || typeof vars !== "object") return template;
   return template.replace(/\{(\w+)\}/g, (_, k) =>
-    vars && vars[k] !== undefined ? String(vars[k]) : `{${k}}`
+    vars[k] !== undefined ? String(vars[k]) : `{${k}}`
   );
+}
+
+/** Evita filtrar claves i18n tipo `fermina.viewPedido` a la UI. */
+function dakinisHumanizeI18nKey(key) {
+  const leaf = String(key || "").split(".").pop() || String(key || "");
+  const spaced = leaf.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * @param {string} key
+ * @param {string|object} [varsOrFallback] objeto de vars, o string fallback
+ * @param {object} [maybeVars] vars si el 2º arg es fallback string
+ */
+function dakinisResolveLocaleArgs(varsOrFallback, maybeVars) {
+  if (typeof varsOrFallback === "string") {
+    return {
+      fallback: varsOrFallback,
+      vars: maybeVars && typeof maybeVars === "object" ? maybeVars : undefined
+    };
+  }
+  if (varsOrFallback && typeof varsOrFallback === "object") {
+    return { fallback: undefined, vars: varsOrFallback };
+  }
+  return { fallback: undefined, vars: undefined };
 }
 
 const LocaleContext = createContext(null);
@@ -52,12 +78,17 @@ export function LocaleProvider({ children }) {
   }, []);
 
   const t = useCallback(
-    (key, vars) => {
+    (key, varsOrFallback, maybeVars) => {
+      const { fallback, vars } = dakinisResolveLocaleArgs(varsOrFallback, maybeVars);
       const fromEn = dakinisGetByPath(DAKINIS_LOCALES.en, key);
       const fromLocale = dakinisGetByPath(DAKINIS_LOCALES[locale], key);
       const fromEs = dakinisGetByPath(DAKINIS_LOCALES.es, key);
       const val = fromLocale !== undefined ? fromLocale : fromEs !== undefined ? fromEs : fromEn;
-      if (val === undefined) return key;
+      if (val === undefined) {
+        if (fallback !== undefined) return dakinisInterpolate(fallback, vars);
+        if (typeof key === "string" && key.includes(".")) return dakinisHumanizeI18nKey(key);
+        return key;
+      }
       if (Array.isArray(val)) return val;
       if (typeof val === "string") return dakinisInterpolate(val, vars);
       return val;

@@ -26,7 +26,9 @@ export function dakinisVerifyTenantAccessToken(token, secret) {
     [getPlatformJwtIssuer(), getPlatformJwtAudience()],
     [getCoreJwtIssuer(), getCoreJwtAudience()]
   ];
-  const strict = String(process.env.JWT_STRICT_ISS_AUD || "").toLowerCase() === "true";
+  const strictEnv = String(process.env.JWT_STRICT_ISS_AUD || "").toLowerCase();
+  const strict =
+    strictEnv === "true" || (strictEnv !== "false" && process.env.NODE_ENV === "production");
 
   for (const [issuer, audience] of pairs) {
     try {

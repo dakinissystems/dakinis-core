@@ -69,8 +69,8 @@ export function InventoryLotsReceiveTab({
           <input value={supplierLot} onChange={(e) => setSupplierLot(e.target.value)} placeholder="A245" />
         </label>
         <label className="mockup-field">
-          <span>{t("inventoryLots.expiry")}</span>
-          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} required />
+          <span>{t("inventoryLots.expiryOptional")}</span>
+          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
         </label>
         <label className="mockup-field">
           <span>{t("inventoryLots.quantity")}</span>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommandPalette, { useCommandPaletteShortcut } from "@dakinis/shared-ux/react/CommandPalette.jsx";
 import { resolveSearchHitPath } from "@dakinis/shared-ux/command-palette";
@@ -6,6 +6,10 @@ import { useLocale } from "../../context/LocaleContext.jsx";
 import { dakinisOpenEcosystemProduct } from "../../utils/ecosystemSso.js";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisFetchSearchHits } from "../../services/search.js";
+import {
+  dakinisHospitalityCommands,
+  dakinisHospitalitySearchHits
+} from "../../utils/hospitalityCommandPalette.js";
 
 export default function DakinisCommandPaletteProvider() {
   const [open, setOpen] = useState(false);
@@ -22,16 +26,28 @@ export default function DakinisCommandPaletteProvider() {
     return () => window.removeEventListener("dakinis:open-command-palette", handler);
   }, []);
 
+  const hospitalityCommands = useMemo(() => dakinisHospitalityCommands(session, t), [session, t]);
+
   const fetchSearchHits = useCallback(
-    (query, scope, signal) => {
-      if (!session?.token) return Promise.resolve([]);
-      return dakinisFetchSearchHits(session, query, scope, { signal });
+    async (query, scope, signal) => {
+      const local = dakinisHospitalitySearchHits(session, query, t);
+      if (!session?.token) return local;
+      try {
+        const remote = await dakinisFetchSearchHits(session, query, scope, { signal });
+        return [...local, ...(Array.isArray(remote) ? remote : [])];
+      } catch {
+        return local;
+      }
     },
-    [session?.token]
+    [session, t]
   );
 
   function runCommand(cmd) {
     const id = cmd?.id;
+    if (cmd?.path) {
+      navigate(cmd.path);
+      return;
+    }
     if (id === "open-hub") navigate("/hub");
     else if (id === "open-core") navigate("/app/dashboard");
     else if (id === "open-lifeflow") dakinisOpenEcosystemProduct("lifeflow", { session, navigate });
@@ -43,9 +59,17 @@ export default function DakinisCommandPaletteProvider() {
     else if (id === "toggle-theme") navigate("/app/settings");
     else if (id === "switch-product") navigate("/hub");
     else if (id === "search") setOpen(true);
+    else if (String(id || "").startsWith("rest-")) {
+      const match = hospitalityCommands.find((c) => c.id === id);
+      if (match?.path) navigate(match.path);
+    }
   }
 
   function handleSearchHit(hit) {
+    if (hit?.path) {
+      navigate(hit.path);
+      return;
+    }
     const path = resolveSearchHitPath(hit);
     if (path.startsWith("http")) {
       window.open(path, "_blank", "noopener,noreferrer");
@@ -59,6 +83,7 @@ export default function DakinisCommandPaletteProvider() {
       open={open}
       onClose={() => setOpen(false)}
       onRun={runCommand}
+      extraCommands={hospitalityCommands}
       fetchSearchHits={fetchSearchHits}
       onSelectSearchHit={handleSearchHit}
       t={(key) => {
@@ -69,7 +94,7 @@ export default function DakinisCommandPaletteProvider() {
           "cmdk.hintNavigate": t("cmdk.hintNavigate"),
           "cmdk.hintAi": t("cmdk.hintAi"),
           "cmdk.searchLoading": t("cmdk.searchLoading"),
-          "cmdk.searchResult": t("cmdk.searchResult"),
+          "cmdk.searchResult": t("cmdk.searchResult")
         };
         return map[key] || key;
       }}

@@ -1,7 +1,9 @@
 import { Navigate } from "react-router-dom";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
+import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import InventoryBusinessDemo from "../../components/business/InventoryBusinessDemo.jsx";
 
@@ -10,9 +12,14 @@ export default function InventarioPage({ navigate }) {
   const { session } = useDakinisSession();
   const isDemo = dakinisIsBusinessDemoSession(session);
 
-  // Restaurante: inventario operativo vive en el vertical (stock + lotes).
-  if (session?.token && !isDemo && session.business?.type === "restaurante") {
-    return <Navigate to={`/sistema/${encodeURIComponent(session.business.type)}`} replace />;
+  // Hostelería: inventario operativo vive en el vertical (stock + lotes).
+  if (session?.token && !isDemo && dakinisIsHospitalityBusiness(session.business?.type)) {
+    return (
+      <Navigate
+        to={dakinisRestaurantTaskPath(session.business.type, "inventario", { sub: "scan" })}
+        replace
+      />
+    );
   }
 
   if (!session?.token) {

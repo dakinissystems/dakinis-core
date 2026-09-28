@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import AllergenPublicDishes from "../components/AllergenPublicDishes.jsx";
 import RestaurantAllergenPanel from "../components/RestaurantAllergenPanel.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
@@ -47,7 +48,7 @@ export default function PublicAllergiesPage({ token, navigate }) {
 
   const canEdit = useMemo(() => {
     if (!session?.token || !data?.businessSlug) return false;
-    if (session.business?.type !== "restaurante") return false;
+    if (!dakinisIsHospitalityBusiness(session.business?.type)) return false;
     const slug = session.business?.slug;
     const id = session.business?.id;
     return slug === data.businessSlug || id === data.businessSlug;
@@ -56,9 +57,9 @@ export default function PublicAllergiesPage({ token, navigate }) {
   const fetchOpts = useMemo(
     () => ({
       businessId: data?.businessSlug,
-      businessTypeHeader: "restaurante"
+      businessTypeHeader: session?.business?.type || "restaurante"
     }),
-    [data?.businessSlug]
+    [data?.businessSlug, session?.business?.type]
   );
 
   const reloadEditProfile = useCallback(async () => {
@@ -98,7 +99,11 @@ export default function PublicAllergiesPage({ token, navigate }) {
             <button type="button" className="btn btn-outline" onClick={() => navigate?.("/login")}>
               {t("allergens.signIn")}
             </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate?.("/sistema/restaurante")}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => navigate?.("/sistema/restaurante?task=config&sub=allergens")}
+            >
               {t("allergens.kitchenStock")}
             </button>
           </div>

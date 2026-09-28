@@ -102,3 +102,27 @@ export function dakinisPasswordResetEmailHtml({ businessName, resetUrl }) {
     innerHtml: inner
   });
 }
+
+export function dakinisOpsAlertEmailHtml({
+  title,
+  businessName,
+  businessSlug,
+  productRef,
+  condition,
+  severity
+}) {
+  const sev = String(severity || "info").toUpperCase();
+  const inner = `
+    <p style="margin:0 0 12px;"><span style="display:inline-block;padding:4px 10px;border-radius:999px;background:#7f1d1d;color:#fecaca;font-size:12px;font-weight:700;">${escapeHtml(sev)}</span></p>
+    <p style="margin:0 0 16px;font-size:17px;font-weight:600;color:#f8fafc;">${escapeHtml(title)}</p>
+    <p style="margin:0 0 8px;"><strong>Negocio:</strong> ${escapeHtml(businessName || "—")} (<code>${escapeHtml(businessSlug || "—")}</code>)</p>
+    <p style="margin:0 0 8px;"><strong>Referencia:</strong> ${escapeHtml(productRef || "—")}</p>
+    <p style="margin:16px 0 0;padding:12px 14px;background:#0f172a;border-radius:8px;color:#cbd5e1;white-space:pre-wrap;">${escapeHtml(condition || "")}</p>
+    <p style="margin:16px 0 0;font-size:13px;color:#94a3b8;">También disponible en Platform Admin → Alertas del hub.</p>
+  `;
+  return dakinisLayoutEmail({
+    title: "Alerta operativa Dakinis",
+    innerHtml: inner,
+    footerNote: "Alerta automática de Dakinis Core. Revisar Platform Admin si el correo llega fuera de horario."
+  });
+}

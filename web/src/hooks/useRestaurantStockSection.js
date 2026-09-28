@@ -12,6 +12,7 @@ import {
 } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { DakinisApiError, dakinisTenantJsonFetch } from "../services/api.js";
+import { dakinisReportTenantLoadAlert } from "../utils/reportTenantLoadAlert.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 
 export function dakinisFormatQty(value, unit) {
@@ -50,6 +51,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("u");
   const [newProductMin, setNewProductMin] = useState("0");
+  const [newProductExpiry, setNewProductExpiry] = useState("");
 
   const fetchOpts = useMemo(
     () => ({
@@ -88,7 +90,16 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
         setKitchen(json?.data);
       } catch (e) {
         if (e?.name === "AbortError") return;
-        setError(e instanceof Error ? e.message : t("kitchen.loadError"));
+        const message = e instanceof Error ? e.message : t("kitchen.loadError");
+        setError(message);
+        void dakinisReportTenantLoadAlert({
+          apiSession: sess,
+          businessId: fetchOpts.businessId,
+          businessTypeHeader: fetchOpts.businessTypeHeader,
+          moduleKey: "kitchen",
+          moduleLabel: "cocina / stock",
+          errorMessage: message
+        });
       }
     },
     [sessionToken, fetchOpts, t]
@@ -202,7 +213,8 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
           name: newProductName.trim(),
           unit: newProductUnit.trim() || "u",
           minQuantity: Number(newProductMin) || 0,
-          initialQuantity: scanDirection === "in" ? qty : 0
+          initialQuantity: scanDirection === "in" ? qty : 0,
+          expiryDate: newProductExpiry.trim() || undefined
         }
       });
       await reload(undefined);
@@ -212,6 +224,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
         setScanMessage(t("kitchen.scanProductCreated"));
         setUnknownBarcode("");
         setNewProductName("");
+        setNewProductExpiry("");
       }
     } catch (err) {
       setScanMessage(err instanceof Error ? err.message : t("kitchen.scanCreateError"));
@@ -293,6 +306,8 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     setNewProductUnit,
     newProductMin,
     setNewProductMin,
+    newProductExpiry,
+    setNewProductExpiry,
     itemNames,
     reload,
     fetchOpts,

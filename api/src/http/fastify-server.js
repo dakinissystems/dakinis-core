@@ -36,7 +36,7 @@ export async function dakinisCreateFastifyServer() {
         reply.header("Access-Control-Allow-Credentials", "true");
         reply.header("Vary", "Origin");
       }
-    } else {
+    } else if (process.env.NODE_ENV !== "production") {
       reply.header(
         "Access-Control-Allow-Origin",
         process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*"

@@ -131,6 +131,150 @@ CREATE TABLE IF NOT EXISTS tenant_restaurant_profile (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS tenant_menu_categories (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_menu_categories_business ON tenant_menu_categories(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_menu_items (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  category_id TEXT REFERENCES tenant_menu_categories(id),
+  name TEXT NOT NULL,
+  name_es TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  active INTEGER NOT NULL DEFAULT 1,
+  station TEXT,
+  meta_json TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_menu_items_business ON tenant_menu_items(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_menu_prices (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  item_id TEXT NOT NULL REFERENCES tenant_menu_items(id),
+  channel TEXT NOT NULL DEFAULT 'salon',
+  price_cents INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'EUR',
+  UNIQUE (business_id, item_id, channel)
+);
+
+CREATE INDEX IF NOT EXISTS idx_menu_prices_business ON tenant_menu_prices(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_menu_modifiers (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  name TEXT NOT NULL,
+  price_cents INTEGER NOT NULL DEFAULT 0,
+  allergen_tags_json TEXT NOT NULL DEFAULT '[]'
+);
+
+CREATE INDEX IF NOT EXISTS idx_menu_modifiers_business ON tenant_menu_modifiers(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_menu_item_modifiers (
+  item_id TEXT NOT NULL REFERENCES tenant_menu_items(id),
+  modifier_id TEXT NOT NULL REFERENCES tenant_menu_modifiers(id),
+  required INTEGER NOT NULL DEFAULT 0,
+  max_qty INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (item_id, modifier_id)
+);
+
+CREATE TABLE IF NOT EXISTS tenant_tables (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  zone TEXT NOT NULL DEFAULT '',
+  label TEXT NOT NULL,
+  x DOUBLE PRECISION NOT NULL DEFAULT 0,
+  y DOUBLE PRECISION NOT NULL DEFAULT 0,
+  seats INTEGER NOT NULL DEFAULT 2,
+  status TEXT NOT NULL DEFAULT 'libre',
+  meta_json TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_tables_business ON tenant_tables(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_table_sessions (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  table_id TEXT NOT NULL REFERENCES tenant_tables(id),
+  opened_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at TIMESTAMPTZ,
+  cart_json TEXT NOT NULL DEFAULT '[]',
+  notes TEXT NOT NULL DEFAULT '',
+  waiter_user_id TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_table_sessions_business ON tenant_table_sessions(business_id);
+CREATE INDEX IF NOT EXISTS idx_table_sessions_open ON tenant_table_sessions(business_id, table_id, closed_at);
+
+CREATE TABLE IF NOT EXISTS tenant_price_lists (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  key TEXT NOT NULL,
+  name TEXT NOT NULL,
+  channel TEXT NOT NULL DEFAULT '',
+  is_default INTEGER NOT NULL DEFAULT 0,
+  markup_pct DOUBLE PRECISION,
+  markup_fixed_cents INTEGER,
+  round_to_cents INTEGER,
+  active INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (business_id, key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_lists_business ON tenant_price_lists(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_price_list_items (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  price_list_id TEXT NOT NULL REFERENCES tenant_price_lists(id),
+  item_id TEXT NOT NULL REFERENCES tenant_menu_items(id),
+  price_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'EUR',
+  UNIQUE (price_list_id, item_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_list_items_business ON tenant_price_list_items(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_delivery_integrations (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  provider TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 0,
+  api_key TEXT,
+  refresh_token TEXT,
+  store_id TEXT,
+  location TEXT,
+  webhook_secret TEXT,
+  status TEXT NOT NULL DEFAULT 'disconnected',
+  last_sync_at TIMESTAMPTZ,
+  last_error TEXT,
+  meta_json TEXT NOT NULL DEFAULT '{}',
+  UNIQUE (business_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_delivery_integrations_business ON tenant_delivery_integrations(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_delivery_jobs (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  provider TEXT NOT NULL,
+  job_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'pending',
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_delivery_jobs_business ON tenant_delivery_jobs(business_id, status);
+
 CREATE TABLE IF NOT EXISTS ai_usage (
   id TEXT PRIMARY KEY,
   business_id TEXT NOT NULL REFERENCES business(id),
@@ -141,6 +285,45 @@ CREATE TABLE IF NOT EXISTS ai_usage (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ai_usage_business_month ON ai_usage(business_id, usage_type, year_month);
+
+CREATE TABLE IF NOT EXISTS tenant_crm_companies (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  name TEXT NOT NULL,
+  vat_number TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_crm_companies_business ON tenant_crm_companies(business_id);
+
+CREATE TABLE IF NOT EXISTS tenant_crm_contacts (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  company_id TEXT REFERENCES tenant_crm_companies(id),
+  first_name TEXT NOT NULL DEFAULT '',
+  last_name TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT '',
+  tags_json TEXT NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_business ON tenant_crm_contacts(business_id);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_phone ON tenant_crm_contacts(business_id, phone);
+
+CREATE TABLE IF NOT EXISTS tenant_crm_activities (
+  id TEXT PRIMARY KEY,
+  business_id TEXT NOT NULL REFERENCES business(id),
+  contact_id TEXT NOT NULL REFERENCES tenant_crm_contacts(id),
+  type TEXT NOT NULL,
+  notes TEXT NOT NULL DEFAULT '',
+  created_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_crm_activities_contact ON tenant_crm_activities(contact_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS tenant_whatsapp_contacts (
   id TEXT PRIMARY KEY,
@@ -187,3 +370,29 @@ CREATE TABLE IF NOT EXISTS tenant_subscriptions (
   closed_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- PostgREST lockdown (Supabase Advisor): Core API uses pooler, not anon key.
+-- Apply also via docs/supabase/migrations/056_dakinis_core_rls_deny_policies.sql
+DO $$
+DECLARE
+  r RECORD;
+  pol text := 'dakinis_block_anon_authenticated';
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    RETURN;
+  END IF;
+  FOR r IN
+    SELECT c.relname AS table_name
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind = 'r' AND n.nspname = 'dakinis_core' AND NOT c.relispartition
+  LOOP
+    EXECUTE format('ALTER TABLE dakinis_core.%I ENABLE ROW LEVEL SECURITY', r.table_name);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON dakinis_core.%I', pol, r.table_name);
+    EXECUTE format(
+      'CREATE POLICY %I ON dakinis_core.%I FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)',
+      pol,
+      r.table_name
+    );
+  END LOOP;
+END $$;

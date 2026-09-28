@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { dakinisSqlOrderCreatedAtDesc } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
+import { dakinisNotifyOpsOfSupplyAlert } from "../lib/ops-alerts.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import { DAKINIS_ROLES, dakinisRequireRoles } from "../middleware/rbac.js";
 
 const SEVERITIES = new Set(["info", "warning", "critical"]);
 
@@ -24,6 +26,17 @@ export function dakinisRequireTenantJwt(req) {
     );
   }
   return null;
+}
+
+/** Mutaciones sensibles (stock, inventario, supply, perfil): JWT + rol admin. */
+export function dakinisRequireTenantJwtAdmin(req) {
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  return dakinisRequireRoles([
+    DAKINIS_ROLES.ADMIN,
+    DAKINIS_ROLES.TENANT_ADMIN,
+    DAKINIS_ROLES.PLATFORM_ADMIN
+  ])(req);
 }
 
 function dakinisSupplyForbiddenPlatform(business) {
@@ -82,7 +95,7 @@ export async function dakinisHandleSupplyDeliveriesList(req) {
 export async function dakinisHandleSupplyDeliveriesPost(req, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -111,7 +124,7 @@ export async function dakinisHandleSupplyDeliveriesPost(req, rawBody) {
 export async function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const id = typeof deliveryId === "string" ? deliveryId.trim() : "";
@@ -153,7 +166,7 @@ export async function dakinisHandleSupplyDeliveriesPatch(req, deliveryId, rawBod
 export async function dakinisHandleSupplyDeliveriesDelete(req, deliveryId) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const id = typeof deliveryId === "string" ? deliveryId.trim() : "";
@@ -190,7 +203,7 @@ export async function dakinisHandleSupplyAlertsList(req) {
 export async function dakinisHandleSupplyAlertsPost(req, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const body = dakinisParseJson(rawBody);
@@ -214,13 +227,22 @@ export async function dakinisHandleSupplyAlertsPost(req, rawBody) {
   );
 
   const row = await dakinisQueryOne(`SELECT * FROM tenant_supply_alerts WHERE id = ?`, [id]);
-  return dakinisJsonSuccess({ alert: dakinisRowAlert(row) }, req.dakinisBusiness.type, dakinisMeta(req));
+  const alert = dakinisRowAlert(row);
+  try {
+    await dakinisNotifyOpsOfSupplyAlert({
+      business: req.dakinisBusiness,
+      alert
+    });
+  } catch {
+    // La alerta ya está persistida; el email no debe tumbar el POST.
+  }
+  return dakinisJsonSuccess({ alert }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
 export async function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const id = typeof alertId === "string" ? alertId.trim() : "";
@@ -259,7 +281,7 @@ export async function dakinisHandleSupplyAlertsPatch(req, alertId, rawBody) {
 export async function dakinisHandleSupplyAlertsDelete(req, alertId) {
   const p = dakinisSupplyForbiddenPlatform(req.dakinisBusiness);
   if (p) return p;
-  const jwtErr = dakinisRequireTenantJwt(req);
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
   if (jwtErr) return jwtErr;
 
   const id = typeof alertId === "string" ? alertId.trim() : "";

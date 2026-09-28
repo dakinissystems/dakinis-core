@@ -4,7 +4,11 @@ export default function SettingsRestaurantBlock({ t, navigate, allergiesUrl }) {
       <h3>{t("app.settings.restaurantBlock")}</h3>
       <p className="lead">
         {t("app.settings.restaurantLead")}{" "}
-        <button type="button" className="btn btn-outline" onClick={() => navigate("/sistema/restaurante")}>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => navigate("/sistema/restaurante?task=sala")}
+        >
           {t("app.settings.restaurantLink")}
         </button>
         .
@@ -15,6 +19,14 @@ export default function SettingsRestaurantBlock({ t, navigate, allergiesUrl }) {
           <a href={allergiesUrl} target="_blank" rel="noreferrer">
             {allergiesUrl}
           </a>
+          {" · "}
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => navigate("/sistema/restaurante?task=config&sub=allergens")}
+          >
+            {t("app.settings.allergensConfig")}
+          </button>
         </p>
       ) : null}
     </div>

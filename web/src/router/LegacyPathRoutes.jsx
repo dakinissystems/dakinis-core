@@ -1,5 +1,8 @@
 import { useLocation } from "react-router-dom";
-import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
+import {
+  dakinisGetSystemRegistry,
+  dakinisResolveHospitalitySystemKey
+} from "@dakinis/shared/catalog/system-registry.js";
 import {
   DAKINIS_DEMO_ROUTE_PREFIX,
   DAKINIS_SYSTEM_ROUTE_PREFIX,
@@ -16,7 +19,8 @@ const dakinisSystemRegistry = dakinisGetSystemRegistry();
 
 function dakinisGetVerticalFromPath(pathname) {
   if (!pathname.startsWith(DAKINIS_SYSTEM_ROUTE_PREFIX)) return null;
-  const verticalKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
+  const rawKey = decodeURIComponent(pathname.slice(DAKINIS_SYSTEM_ROUTE_PREFIX.length));
+  const verticalKey = dakinisResolveHospitalitySystemKey(rawKey);
   return dakinisSystemRegistry[verticalKey] ? verticalKey : null;
 }
 

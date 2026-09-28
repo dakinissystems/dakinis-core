@@ -1,32 +1,35 @@
-import { useLocale } from "../context/LocaleContext.jsx";
-import { dakinisWriteRestaurantRole } from "../utils/restaurantRoleStorage.js";
+import RestaurantTaskDock from "./RestaurantTaskDock.jsx";
+import { dakinisWriteRestaurantTask } from "../utils/restaurantTaskStorage.js";
 
-const ROLES = [
-  { id: "camarero", labelKey: "restaurant.roleWaiter" },
-  { id: "cocina", labelKey: "restaurant.roleKitchen" },
-  { id: "admin", labelKey: "restaurant.roleAdmin" }
-];
+const ROLE_TO_TASK = {
+  camarero: "sala",
+  cocina: "cocina",
+  admin: "config"
+};
 
-/** Selector de vista: camareros · cocina · administración. */
+const TASK_TO_ROLE = {
+  sala: "camarero",
+  cocina: "cocina",
+  inventario: "admin",
+  delivery: "admin",
+  caja: "admin",
+  config: "admin"
+};
+
+/**
+ * Compatibilidad mockups: mapea roles legacy → dock de tareas.
+ * @deprecated Preferir RestaurantTaskDock en pantallas operativas.
+ */
 export default function RestaurantRoleNav({ role, onRoleChange }) {
-  const { t } = useLocale();
+  const task = ROLE_TO_TASK[role] || "sala";
 
   return (
-    <nav className="restaurant-role-nav" aria-label={t("restaurant.roleNav")}>
-      {ROLES.map(({ id, labelKey }) => (
-        <button
-          key={id}
-          type="button"
-          className={`btn${role === id ? "" : " btn-outline"}`}
-          aria-pressed={role === id}
-          onClick={() => {
-            dakinisWriteRestaurantRole(id);
-            onRoleChange(id);
-          }}
-        >
-          {t(labelKey)}
-        </button>
-      ))}
-    </nav>
+    <RestaurantTaskDock
+      task={task}
+      onTaskChange={(nextTask) => {
+        dakinisWriteRestaurantTask(nextTask);
+        onRoleChange?.(TASK_TO_ROLE[nextTask] || "camarero");
+      }}
+    />
   );
 }

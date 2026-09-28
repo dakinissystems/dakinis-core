@@ -1,3 +1,4 @@
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisGetBusinessDashboardKpis } from "../../data/businessDemoContent.js";
@@ -80,7 +81,7 @@ export default function CommercialBusinessDashboard({ navigate }) {
           className="btn"
           onClick={() => navigate(`/sistema/${encodeURIComponent(vertical)}`)}
         >
-          {vertical === "restaurante"
+          {dakinisIsHospitalityBusiness(vertical)
             ? t("businessDemo.dashboard.ctaRestaurant")
             : t("businessDemo.dashboard.ctaOperations")}
         </button>
