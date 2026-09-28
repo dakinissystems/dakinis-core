@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { Suspense, useEffect } from "react";
+import { AppShell as DesAppShell } from "@dakinis/shared-layouts";
 import AppTopBar from "../components/AppTopBar.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
