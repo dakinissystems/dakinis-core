@@ -12,6 +12,10 @@ import {
   dakinisSplitPublicAllergenDisplay
 } from "@dakinis/shared/catalog/restaurant-allergens.js";
 import {
+  DAKINIS_HOSPITALITY_EVENTS,
+  dakinisHospitalityEmit
+} from "../modules/hospitality/events.js";
+import {
   DAKINIS_DUMPLING_DEFAULT_RECIPES,
   DAKINIS_DUMPLING_HOUSE_SLUG,
   DAKINIS_DUMPLING_STOCK_ITEMS,
@@ -221,6 +225,28 @@ async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId
      VALUES (?, ?, ?, ?, ?, ?)`,
     [dakinisNewId("sm"), businessId, itemId, delta, reason, referenceId ?? null]
   );
+  try {
+    const row = await dakinisQueryOne(
+      `SELECT id, slug, name, quantity, min_quantity FROM tenant_stock_items WHERE id = ? AND business_id = ?`,
+      [itemId, businessId]
+    );
+    if (row) {
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.StockReduced, {
+        businessId,
+        stockId: row.id,
+        slug: row.slug,
+        name: row.name,
+        quantity: Number(row.quantity),
+        minQuantity: Number(row.min_quantity),
+        delta,
+        reason,
+        referenceId: referenceId ?? null,
+        lowStock: Number(row.quantity) <= Number(row.min_quantity)
+      });
+    }
+  } catch (err) {
+    console.warn("[restaurant:stock] hub stock event:", err instanceof Error ? err.message : err);
+  }
 }
 
 async function dakinisEnsureRestaurantKitchenSeedAsync(businessId) {

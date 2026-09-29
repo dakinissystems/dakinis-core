@@ -4,6 +4,7 @@ export {
   dakinisHospitalityOn,
   dakinisEnsureHospitalityEventDefaults
 } from "./events.js";
+export { dakinisRegisterHospitalityHubTimelineBridge } from "./hub-timeline-bridge.js";
 export {
   dakinisMenuListItems,
   dakinisMenuPatch,

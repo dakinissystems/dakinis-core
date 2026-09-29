@@ -126,7 +126,8 @@ export async function dakinisOrdersCreate(businessId, body, ctx = {}) {
     businessId,
     orderId: id,
     status: payload.status,
-    channel: payload.channel
+    channel: payload.channel,
+    total: payload.total
   });
   return { order };
 }
@@ -172,9 +173,17 @@ export async function dakinisOrdersPatch(businessId, orderId, body) {
     }
     if (body.status === "entregada") {
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.Delivered, { businessId, orderId });
-      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, { businessId, orderId });
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, {
+        businessId,
+        orderId,
+        total: next.total
+      });
     } else if (body.paid === true) {
-      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, { businessId, orderId });
+      dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, {
+        businessId,
+        orderId,
+        total: next.total
+      });
     }
     if (body.status === "cancelada") {
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.Cancelled, { businessId, orderId });

@@ -64,4 +64,13 @@ export function dakinisEnsureHospitalityEventDefaults() {
   if (defaultsRegistered) return;
   defaultsRegistered = true;
   dakinisRegisterHospitalityDefaultListeners();
+  // Lazy import avoids circular dependency (bridge → events).
+  import("../hub-timeline-bridge.js")
+    .then((m) => m.dakinisRegisterHospitalityHubTimelineBridge())
+    .catch((err) => {
+      console.warn(
+        "[hospitality] hub timeline bridge failed to register:",
+        err instanceof Error ? err.message : err
+      );
+    });
 }
