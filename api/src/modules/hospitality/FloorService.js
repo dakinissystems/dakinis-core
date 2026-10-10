@@ -94,37 +94,68 @@ export async function dakinisEnsureFloorMigrated(businessId) {
   return { migrated: true, count: tables.length };
 }
 
+function dakinisIsMissingRelation(err) {
+  const msg = String(err?.message || err || "").toLowerCase();
+  return (
+    msg.includes("no such table") ||
+    msg.includes("does not exist") ||
+    msg.includes("undefined_table") ||
+    err?.code === "42P01"
+  );
+}
+
+function dakinisFloorFromConfig(config) {
+  const tables =
+    Array.isArray(config?.floor?.tables) && config.floor.tables.length
+      ? config.floor.tables
+      : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
+  const sessions =
+    config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
+      ? config.floor.sessions
+      : {};
+  return { tables, sessions };
+}
+
 /**
  * Shape legacy `{ tables, sessions }`
  * @param {string} businessId
  */
 export async function dakinisFloorGet(businessId) {
-  await dakinisEnsureFloorMigrated(businessId);
-
-  const tableRows = await dakinisQueryAll(
-    `SELECT id, zone, label, x, y, seats, status FROM tenant_tables WHERE business_id = ? ORDER BY label ASC`,
-    [businessId]
-  );
-
-  if (!tableRows.length) {
-    const config = await dakinisLoadConfig(businessId);
-    const tables =
-      Array.isArray(config?.floor?.tables) && config.floor.tables.length
-        ? config.floor.tables
-        : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
-    const sessions =
-      config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
-        ? config.floor.sessions
-        : {};
-    return { tables, sessions };
+  try {
+    await dakinisEnsureFloorMigrated(businessId);
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:floor] tenant_tables missing — using config/default until migration 059");
+    return dakinisFloorFromConfig(await dakinisLoadConfig(businessId));
   }
 
-  const sessionRows = await dakinisQueryAll(
-    `SELECT table_id, cart_json, notes, opened_at
-     FROM tenant_table_sessions
-     WHERE business_id = ? AND closed_at IS NULL`,
-    [businessId]
-  );
+  let tableRows;
+  try {
+    tableRows = await dakinisQueryAll(
+      `SELECT id, zone, label, x, y, seats, status FROM tenant_tables WHERE business_id = ? ORDER BY label ASC`,
+      [businessId]
+    );
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:floor] tenant_tables missing — using config/default until migration 059");
+    return dakinisFloorFromConfig(await dakinisLoadConfig(businessId));
+  }
+
+  if (!tableRows.length) {
+    return dakinisFloorFromConfig(await dakinisLoadConfig(businessId));
+  }
+
+  let sessionRows = [];
+  try {
+    sessionRows = await dakinisQueryAll(
+      `SELECT table_id, cart_json, notes, opened_at
+       FROM tenant_table_sessions
+       WHERE business_id = ? AND closed_at IS NULL`,
+      [businessId]
+    );
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+  }
 
   const sessions = {};
   for (const s of sessionRows) {
