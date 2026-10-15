@@ -210,10 +210,11 @@ export default function RestaurantMesasPanel({
   }
 
   function handleAddTable(zone) {
-    const next = [...tables, dakinisNewTableAtZone(tables, zone)];
+    const created = dakinisNewTableAtZone(tables, zone);
+    const next = [...tables, created];
     onTablesChange?.(next);
     onFloorSave?.(next);
-    onSelectTable(next[next.length - 1].id);
+    // Do not open the mesa modal / load menu products on create — table stays libre and empty.
   }
 
   function tableTotalFn(tableId) {

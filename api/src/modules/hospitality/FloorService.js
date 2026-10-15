@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../../db/query.js";
-import { DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES } from "@dakinis/shared/catalog/restaurant-floor.js";
 import { DAKINIS_HOSPITALITY_EVENTS, dakinisHospitalityEmit } from "./events.js";
 
 function dakinisNewId(prefix) {
@@ -43,10 +42,8 @@ export async function dakinisEnsureFloorMigrated(businessId) {
     return { migrated: false, source: "flag" };
   }
 
-  const tables =
-    Array.isArray(config?.floor?.tables) && config.floor.tables.length
-      ? config.floor.tables
-      : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
+  // Empty floor by default — operator adds tables into free space (no seeded products/sessions).
+  const tables = Array.isArray(config?.floor?.tables) ? config.floor.tables : [];
   const sessions =
     config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
       ? config.floor.sessions
@@ -105,10 +102,7 @@ function dakinisIsMissingRelation(err) {
 }
 
 function dakinisFloorFromConfig(config) {
-  const tables =
-    Array.isArray(config?.floor?.tables) && config.floor.tables.length
-      ? config.floor.tables
-      : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
+  const tables = Array.isArray(config?.floor?.tables) ? config.floor.tables : [];
   const sessions =
     config?.floor?.sessions && typeof config.floor.sessions === "object" && !Array.isArray(config.floor.sessions)
       ? config.floor.sessions
@@ -142,7 +136,9 @@ export async function dakinisFloorGet(businessId) {
   }
 
   if (!tableRows.length) {
-    return dakinisFloorFromConfig(await dakinisLoadConfig(businessId));
+    // Prefer persisted empty floor over legacy config defaults.
+    const fromConfig = dakinisFloorFromConfig(await dakinisLoadConfig(businessId));
+    return fromConfig.tables.length ? fromConfig : { tables: [], sessions: {} };
   }
 
   let sessionRows = [];
@@ -195,10 +191,7 @@ export async function dakinisFloorPatch(businessId, body) {
       ? body.sessions
       : prev.sessions || {};
 
-  const tables =
-    Array.isArray(nextTables) && nextTables.length
-      ? nextTables
-      : DAKINIS_RESTAURANT_DEFAULT_FLOOR_TABLES.map((t) => ({ ...t }));
+  const tables = Array.isArray(nextTables) ? nextTables : [];
 
   // Replace tables for business (simple sync)
   await dakinisRun(`DELETE FROM tenant_table_sessions WHERE business_id = ?`, [businessId]);
@@ -224,7 +217,15 @@ export async function dakinisFloorPatch(businessId, body) {
 
   for (const [tableId, sess] of Object.entries(nextSessions)) {
     if (!sess || typeof sess !== "object") continue;
-    const cart = Array.isArray(sess.cart) ? sess.cart : [];
+    // Skip orphan sessions for tables that were removed; empty carts stay libre (no product load).
+    if (!tables.some((t) => String(t.id) === String(tableId))) continue;
+    const cart = Array.isArray(sess.cart)
+      ? sess.cart
+      : sess.cart && typeof sess.cart === "object"
+        ? Object.entries(sess.cart)
+            .filter(([, qty]) => Number(qty) > 0)
+            .map(([menuId, qty]) => ({ menuId, qty: Number(qty) }))
+        : [];
     const notes = String(sess.notes || "");
     if (!cart.length && !notes) continue;
     await dakinisRun(

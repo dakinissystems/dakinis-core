@@ -5,11 +5,7 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { dakinisEmptyCart } from "../components/RestaurantComandasSection.shared.js";
-import {
-  dakinisDefaultFloorTables,
-  dakinisTableItemCount,
-  dakinisTableLabel
-} from "../utils/restaurantFloorPlan.js";
+import { dakinisTableItemCount, dakinisTableLabel } from "../utils/restaurantFloorPlan.js";
 import { dakinisRestaurantDayCloseSummary } from "../utils/restaurantOrderMeta.js";
 import { dakinisPlayKitchenBell } from "../utils/kitchenBell.js";
 import { RESTAURANT_COMANDAS_INITIAL, restaurantComandasReducer } from "../components/restaurantComandasReducer.js";
@@ -34,7 +30,7 @@ export function useRestaurantComandasSection({
 
   const [state, dispatch] = useReducer(restaurantComandasReducer, {
     ...RESTAURANT_COMANDAS_INITIAL,
-    tables: dakinisDefaultFloorTables()
+    tables: []
   });
   const {
     menu,

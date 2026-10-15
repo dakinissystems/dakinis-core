@@ -1,17 +1,17 @@
 import { DakinisApiError, dakinisTenantJsonFetch } from "./api.js";
-import { dakinisDefaultFloorTables } from "../utils/restaurantFloorPlan.js";
 
 function dakinisNormalizeFloorPayload(data) {
   const tables = data?.tables;
   const sessions = data?.sessions ?? {};
   return {
-    tables: Array.isArray(tables) && tables.length ? tables : dakinisDefaultFloorTables(),
+    tables: Array.isArray(tables) ? tables : [],
     sessions: sessions && typeof sessions === "object" && !Array.isArray(sessions) ? sessions : {}
   };
 }
 
 /**
- * Plano de mesas: GET /floor (ligero). Si falla, mesas por defecto.
+ * Plano de mesas: GET /floor (ligero).
+ * Vacío por defecto — las mesas se crean en espacio libre sin sesión/productos.
  * No usa /kitchen (evita duplicar carga y 429).
  */
 export async function dakinisFetchRestaurantFloor(apiSession, fetchOpts) {
@@ -23,7 +23,7 @@ export async function dakinisFetchRestaurantFloor(apiSession, fetchOpts) {
       err instanceof DakinisApiError &&
       (err.status === 404 || err.status === 429 || err.code === "NOT_FOUND" || err.code === "RATE_LIMIT_EXCEEDED")
     ) {
-      return { tables: dakinisDefaultFloorTables(), sessions: {} };
+      return { tables: [], sessions: {} };
     }
     throw err;
   }

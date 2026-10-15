@@ -9,7 +9,7 @@ import RestaurantDeliveryPanel from "./RestaurantDeliveryPanel.jsx";
 import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import RestaurantComandasSection from "./RestaurantComandasSection.jsx";
 import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
-import { dakinisDefaultFloorTables, dakinisNewTableAtZone } from "../utils/restaurantFloorPlan.js";
+import { dakinisNewTableAtZone } from "../utils/restaurantFloorPlan.js";
 
 /**
  * Paneles de administración / config. Con `sections` solo se renderizan los pedidos.
@@ -27,7 +27,7 @@ export default function RestaurantAdminPanel({
   const { t } = useLocale();
   const show = (id) => !sections || sections.includes(id);
   const effectiveSlug = dakinisEffectiveTenantSlug(apiSession, tenantSlugForVertical);
-  const [tables, setTables] = useState(dakinisDefaultFloorTables);
+  const [tables, setTables] = useState([]);
   const [sessions, setSessions] = useState({});
   const [menu, setMenu] = useState([]);
   const [menuDraft, setMenuDraft] = useState({});
