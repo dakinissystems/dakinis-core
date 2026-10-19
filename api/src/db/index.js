@@ -204,6 +204,70 @@ function dakinisMigrateHospitalityTables(db) {
       FOREIGN KEY (business_id) REFERENCES business(id)
     );
     CREATE INDEX IF NOT EXISTS idx_delivery_jobs_business ON tenant_delivery_jobs(business_id, status);
+
+    CREATE TABLE IF NOT EXISTS tenant_fiscal_settings (
+      business_id TEXT PRIMARY KEY,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      mode TEXT NOT NULL DEFAULT 'disabled',
+      series TEXT NOT NULL DEFAULT 'A',
+      issuer_name TEXT NOT NULL DEFAULT '',
+      issuer_tax_id TEXT NOT NULL DEFAULT '',
+      issuer_address TEXT NOT NULL DEFAULT '',
+      default_tax_rate REAL NOT NULL DEFAULT 10,
+      software_id TEXT NOT NULL DEFAULT 'dakinis-one-fiscal',
+      software_version TEXT NOT NULL DEFAULT '0.1.0',
+      declaration_ref TEXT NOT NULL DEFAULT '',
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT,
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tenant_fiscal_invoices (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      series TEXT NOT NULL,
+      number INTEGER NOT NULL,
+      invoice_number TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'standard',
+      status TEXT NOT NULL DEFAULT 'issued',
+      customer_name TEXT NOT NULL DEFAULT '',
+      customer_tax_id TEXT NOT NULL DEFAULT '',
+      customer_address TEXT NOT NULL DEFAULT '',
+      lines_json TEXT NOT NULL DEFAULT '[]',
+      base_amount REAL NOT NULL DEFAULT 0,
+      tax_rate REAL NOT NULL DEFAULT 0,
+      tax_amount REAL NOT NULL DEFAULT 0,
+      total_amount REAL NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      issued_at TEXT NOT NULL,
+      record_hash TEXT NOT NULL,
+      previous_record_hash TEXT NOT NULL DEFAULT '',
+      qr_payload TEXT NOT NULL DEFAULT '',
+      qr_url TEXT NOT NULL DEFAULT '',
+      rectifies_id TEXT,
+      hospitality_invoice_id TEXT,
+      aeat_submission_id TEXT,
+      aeat_submitted_at TEXT,
+      aeat_status TEXT NOT NULL DEFAULT '',
+      immutable INTEGER NOT NULL DEFAULT 1,
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (business_id, series, number),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_fiscal_invoices_business ON tenant_fiscal_invoices(business_id, issued_at);
+
+    CREATE TABLE IF NOT EXISTS tenant_fiscal_events (
+      id TEXT PRIMARY KEY,
+      business_id TEXT NOT NULL,
+      invoice_id TEXT,
+      event_type TEXT NOT NULL,
+      payload_json TEXT NOT NULL DEFAULT '{}',
+      record_hash TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_fiscal_events_business ON tenant_fiscal_events(business_id, created_at);
   `);
 }
 

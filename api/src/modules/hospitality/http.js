@@ -200,8 +200,12 @@ export async function dakinisHandleRestaurantInvoicesPost(req, rawBody) {
     return dakinisJsonError(result.error.status, result.error.code, result.error.message);
   }
 
-  return dakinisJsonSuccess({ invoice: result.invoice }, req.dakinisBusiness.type, {
-    ...dakinisMeta(req),
-    status: 201
-  });
+  return dakinisJsonSuccess(
+    { invoice: result.invoice, fiscal: result.fiscal ?? null },
+    req.dakinisBusiness.type,
+    {
+      ...dakinisMeta(req),
+      status: 201
+    }
+  );
 }

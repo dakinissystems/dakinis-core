@@ -62,6 +62,7 @@ import { dakinisHandleCrmRoute } from "./modules/crm/routes.js";
 import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
+import { dakinisHandleFiscalRoute } from "./modules/fiscal/index.js";
 import {
   dakinisHandleWhatsappWebhook,
   dakinisIsWhatsappWebhookPath
@@ -304,6 +305,9 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (hospPath === "/api/tenant/restaurant/invoices" && req.method === "POST")
       return dakinisHandleRestaurantInvoicesPost(req, rawBody);
   }
+
+  const fiscalResult = await dakinisHandleFiscalRoute(req, rawBody, path, url);
+  if (fiscalResult) return fiscalResult;
 
   const moduleResult =
     dakinisHandleUsersRoute(req, rawBody, path) ||

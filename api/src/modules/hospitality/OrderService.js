@@ -270,7 +270,22 @@ export async function dakinisInvoicesCreate(businessId, body, ctx = {}) {
     invoiceId: id,
     orderId: payload.orderId
   });
-  return { invoice };
+
+  // Bridge to independent fiscal module when VERI*FACTU settings are enabled.
+  let fiscal = null;
+  try {
+    const { dakinisFiscalMaybeFromHospitality } = await import("../fiscal/FiscalService.js");
+    const fiscalResult = await dakinisFiscalMaybeFromHospitality(businessId, invoice, {
+      venueName: ctx.venueName
+    });
+    if (fiscalResult?.invoice) fiscal = fiscalResult.invoice;
+    else if (fiscalResult?.error) fiscal = { error: fiscalResult.error };
+    else if (fiscalResult?.skipped) fiscal = { skipped: fiscalResult.reason };
+  } catch (err) {
+    fiscal = { error: { message: String(err?.message || err) } };
+  }
+
+  return { invoice, fiscal };
 }
 
 /** Pedidos activos para KDS (Fase 1 thin). */

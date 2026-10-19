@@ -10,6 +10,7 @@ const CONFIG_SECTIONS = [
   { id: "plano", labelKey: "restaurant.configPlano", sections: ["floor"] },
   { id: "carta", labelKey: "restaurant.configCarta", sections: ["menu"] },
   { id: "compras", labelKey: "restaurant.configCompras", sections: ["supply"] },
+  { id: "fiscal", labelKey: "restaurant.configFiscal", sections: ["fiscal"] },
   { id: "seguridad", labelKey: "restaurant.configSeguridad", sections: ["allergens"] },
   { id: "integraciones", labelKey: "restaurant.configIntegraciones", sections: [] }
 ];
@@ -35,6 +36,7 @@ export default function RestaurantConfigModule({
     if (raw === "floor" || raw === "plano") return "plano";
     if (raw === "supply" || raw === "compras" || raw === "proveedores") return "compras";
     if (raw === "integraciones" || raw === "integrations") return "integraciones";
+    if (raw === "fiscal" || raw === "verifactu" || raw === "facturacion") return "fiscal";
     return CONFIG_SECTIONS.some((s) => s.id === raw) ? raw : "plano";
   });
 
@@ -47,7 +49,7 @@ export default function RestaurantConfigModule({
     const raw = String(initialSub).toLowerCase();
     if (raw === "allergens" || raw === "alergenos") setSub("seguridad");
     else if (raw === "menu") setSub("carta");
-    else if (["plano", "carta", "compras", "seguridad", "integraciones"].includes(raw)) setSub(raw);
+    else if (["plano", "carta", "compras", "fiscal", "seguridad", "integraciones"].includes(raw)) setSub(raw);
   }, [initialSub]);
 
   const active = CONFIG_SECTIONS.find((s) => s.id === sub) || CONFIG_SECTIONS[0];

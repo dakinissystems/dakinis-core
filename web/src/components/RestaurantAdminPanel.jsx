@@ -10,11 +10,12 @@ import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import RestaurantComandasSection from "./RestaurantComandasSection.jsx";
 import InventoryLotsPanel from "./InventoryLotsPanel.jsx";
 import { dakinisNewTableAtZone } from "../utils/restaurantFloorPlan.js";
+import RestaurantFiscalPanel from "./RestaurantFiscalPanel.jsx";
 
 /**
  * Paneles de administración / config. Con `sections` solo se renderizan los pedidos.
  * @param {{
- *   sections?: Array<'floor'|'menu'|'supply'|'delivery'|'stock'|'lots'|'comandas'|'allergens'>
+ *   sections?: Array<'floor'|'menu'|'supply'|'delivery'|'stock'|'lots'|'comandas'|'allergens'|'fiscal'>
  * }} props
  */
 export default function RestaurantAdminPanel({
@@ -392,6 +393,8 @@ export default function RestaurantAdminPanel({
           staffRole="admin"
         />
       ) : null}
+
+      {show("fiscal") ? <RestaurantFiscalPanel apiSession={apiSession} fetchOpts={fetchOpts} /> : null}
     </div>
   );
 }
