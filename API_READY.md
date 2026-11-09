@@ -1,5 +1,7 @@
 # Dakinis API Ready
 
+Endpoints del API de Core. El mapa del ecosistema está en [ARCHITECTURE.md](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/ARCHITECTURE.md).
+
 ## Ejecutar
 
 - `npm run start:api`
