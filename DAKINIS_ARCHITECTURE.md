@@ -1,6 +1,8 @@
-# Dakinis — Arquitectura
+# Dakinis — Arquitectura de Core
 
-Documento único: **estructura del repo**, **cómo encaja el producto**, **posicionamiento y modelo de negocio**, **multi-tenant, seguridad, observabilidad e integraciones**, y **camino hacia SaaS**. Detalle de endpoints en `API_READY.md`; variables en `.env.example`.
+Este archivo describe el repo de Dakinis One. El mapa del ecosistema (gateway, plataforma, productos) es [ARCHITECTURE.md](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/ARCHITECTURE.md) en `dakinis-systems`. La madurez está en [STATUS](https://github.com/dakinissystems/dakinis-systems/blob/main/docs/STATUS.md).
+
+Detalle de endpoints en `API_READY.md`. Variables en `.env.example`.
 
 ## Producto y visión
 

@@ -37,18 +37,11 @@ Requisitos: Node.js 20+, acceso a Postgres (Supabase u otro) según `.env`.
 ```bash
 npm install
 cp .env.example .env   # si existe; completar DATABASE_URL / secrets
-npm run dev            # web (revisar package.json raíz / workspaces)
+npm run dev            # solo la web
+npm run dev:full       # web y API a la vez
 ```
 
-API:
-
-```bash
-cd api
-npm install
-npm run dev            # o npm start / start:fastify según entorno
-```
-
-Puertos y scripts exactos: `package.json` de la raíz y de `api/`. Health local típico bajo el path `/api/health` del servicio Core.
+La API arranca con `npm run start:api` (`node server.js`). Fastify es opcional: `npm run start:fastify` en `api/` pone `USE_FASTIFY=true`. Health local típico: `/api/health`. El puerto está en `.env.example`.
 
 ## Docs canónicas
 
