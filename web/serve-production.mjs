@@ -55,7 +55,7 @@ function dakinisProxyToApi(req, res, bodyBuffer) {
   );
 
   proxyReq.on("error", (err) => {
-    console.error("[proxy]", err.message);
+    console.error("[proxy]", String(err && err.message || "").replace(/[\r\n]/g, " "));
     res.writeHead(502, { "Content-Type": "application/json; charset=utf-8" });
     res.end(
       JSON.stringify({

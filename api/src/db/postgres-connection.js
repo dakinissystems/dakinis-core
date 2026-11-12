@@ -5,8 +5,15 @@
 
 /** @returns {boolean} */
 export function dakinisIsSupabasePoolerUrl(connectionString) {
-  const u = String(connectionString || "").toLowerCase();
-  return u.includes("pooler.supabase.com") || u.includes(":6543/") || u.includes("pgbouncer=true");
+  let parsed;
+  try {
+    parsed = new URL(String(connectionString || ""));
+  } catch {
+    return false;
+  }
+  const host = parsed.hostname.toLowerCase();
+  const poolerHost = host === "pooler.supabase.com" || host.endsWith(".pooler.supabase.com");
+  return poolerHost || parsed.port === "6543" || parsed.searchParams.get("pgbouncer") === "true";
 }
 
 /**

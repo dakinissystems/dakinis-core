@@ -20,6 +20,16 @@ import {
   dakinisInternalServiceKey,
 } from "../lib/internal-client.js";
 
+function oneLine(value) {
+  let out = "";
+  const text = String(value ?? "");
+  for (let i = 0; i < text.length && out.length < 200; i += 1) {
+    const code = text.charCodeAt(i);
+    out += code === 10 || code === 13 ? " " : text[i];
+  }
+  return out;
+}
+
 const PLATFORM_CATALOG_KV_KEY = "hub_catalog";
 const HUB_DEFAULT_PRODUCTS = ["core"];
 const HUB_ECOSYSTEM_PRODUCT_IDS = ["core", "lifeflow", "streamautomator", "akoenet", "tabletop"];
@@ -89,10 +99,10 @@ async function dakinisSyncHubTenantAccess(slug, products) {
       },
     );
     if (!ok) {
-      console.warn("[platform] hub tenant sync failed", slug, status, "base=", dakinisInternalBaseUrl());
+      console.warn("[platform] hub tenant sync failed", oneLine(slug), status);
     }
   } catch (err) {
-    console.warn("[platform] hub tenant sync error", slug, err);
+    console.warn("[platform] hub tenant sync error", oneLine(slug), oneLine(err && err.message));
   }
 }
 

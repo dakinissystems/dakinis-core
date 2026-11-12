@@ -17,10 +17,9 @@ export const DAKINIS_RESTAURANT_MUSHROOM_OPTIONS = [
   { id: "girgola", name: "Gírgola" }
 ];
 
-const MUSHROOM_DISH_CLAUSE_RE =
-  /Hongos que pueden estar presentes:\s*[^.]+\.\s*(?:Aplica a[^.]+\.\s*)?/gi;
+const MUSHROOM_CLAUSE_START = "Hongos que pueden estar presentes:";
 
-const MUSHROOM_LIST_PREFIX_RE = /^Hongos que pueden estar presentes:\s*/i;
+const MUSHROOM_LIST_PREFIX = "hongos que pueden estar presentes:";
 
 /**
  * @param {string} name
@@ -52,8 +51,11 @@ export function dakinisParseMushroomTypesFromNotes(notes = "") {
   const raw = String(notes || "").trim();
   if (!raw) return [];
 
-  let head = raw.split(/\.\s+/)[0].trim();
-  head = head.replace(MUSHROOM_LIST_PREFIX_RE, "").trim();
+  const dot = raw.indexOf(". ");
+  let head = (dot === -1 ? raw : raw.slice(0, dot)).trim();
+  if (head.toLowerCase().startsWith(MUSHROOM_LIST_PREFIX)) {
+    head = head.slice(MUSHROOM_LIST_PREFIX.length).trim();
+  }
   if (!head) return [];
 
   const knownNames = new Set(DAKINIS_RESTAURANT_MUSHROOM_OPTIONS.map((o) => o.name.toLowerCase()));
@@ -106,12 +108,14 @@ export function dakinisBuildDishMushroomClause(selected = []) {
  * @returns {string}
  */
 export function dakinisStripMushroomClauseFromDishNotes(notes = "") {
-  return String(notes || "")
-    .replace(MUSHROOM_DISH_CLAUSE_RE, "")
-    .replace(/\s*\.\s*\./g, ".")
-    .replace(/^\.\s*/, "")
-    .replace(/\s+\./g, ".")
-    .trim();
+  let text = String(notes || "");
+  const lower = text.toLowerCase();
+  const start = lower.indexOf(MUSHROOM_CLAUSE_START.toLowerCase());
+  if (start !== -1) {
+    const after = text.indexOf(".", start);
+    text = after === -1 ? text.slice(0, start) : `${text.slice(0, start)}${text.slice(after + 1)}`;
+  }
+  return text.replace(/\s{2,}/g, " ").trim();
 }
 
 /**

@@ -20,28 +20,46 @@ export function dakinisStockDemoBarcode(slug) {
 }
 
 export function dakinisNormalizeStockScanCode(code) {
-  return String(code || "")
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "");
+  let out = "";
+  for (const ch of String(code || "").trim()) {
+    if (ch === " " || ch === "\n" || ch === "\r" || ch === "\t") continue;
+    out += ch.toUpperCase();
+  }
+  return out;
 }
 
 /** Slug estable para insumo creado desde un código escaneado. */
 export function dakinisSlugFromBarcode(code) {
   const norm = dakinisNormalizeStockScanCode(code);
   if (!norm) return null;
-  const body = norm.replace(/[^A-Z0-9]/g, "").toLowerCase().slice(0, 40);
+  let body = "";
+  for (const ch of norm) {
+    const code = ch.charCodeAt(0);
+    const digit = code >= 48 && code <= 57;
+    const upper = code >= 65 && code <= 90;
+    if (digit || upper) body += ch.toLowerCase();
+    if (body.length === 40) break;
+  }
   return body ? `bc-${body}` : null;
 }
 
 export function dakinisSlugFromName(name) {
-  const s = String(name || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-  return s || null;
+  let out = "";
+  let dash = false;
+  for (const ch of String(name || "").trim().toLowerCase()) {
+    const code = ch.charCodeAt(0);
+    const ok = (code >= 97 && code <= 122) || (code >= 48 && code <= 57);
+    if (ok) {
+      if (out.length === 48) break;
+      out += ch;
+      dash = false;
+    } else if (out && !dash && out.length < 48) {
+      out += "-";
+      dash = true;
+    }
+  }
+  if (out.endsWith("-")) out = out.slice(0, -1);
+  return out || null;
 }
 
 /** Resuelve código escaneado → itemSlug usando barcode, slug o alias DK-*. */

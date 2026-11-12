@@ -49,10 +49,11 @@ export function dakinisValidateDatabaseUrl(rawUrl) {
 
   const host = (meta.host || "").toLowerCase();
 
-  if (host.includes("supabase.com") || host.includes("supabase.co")) {
+  const supabaseHost = host === "supabase.com" || host.endsWith(".supabase.com") || host === "supabase.co" || host.endsWith(".supabase.co");
+  if (supabaseHost) {
     meta.provider = "supabase";
     meta.sslRecommended = true;
-    meta.pooler = host.includes("pooler") || meta.port === 6543;
+    meta.pooler = host === "pooler.supabase.com" || host.endsWith(".pooler.supabase.com") || meta.port === 6543;
 
     if (!meta.pooler && meta.port === 5432) {
       warnings.push(
@@ -65,7 +66,7 @@ export function dakinisValidateDatabaseUrl(rawUrl) {
     if (!parsed.searchParams.has("pgbouncer") && meta.port === 6543) {
       warnings.push("Opcional: añadir ?pgbouncer=true al final de la URI (Transaction pooler).");
     }
-  } else if (host.includes("railway") || host.includes("rlwy.net")) {
+  } else if (host === "railway.app" || host.endsWith(".railway.app") || host === "rlwy.net" || host.endsWith(".rlwy.net")) {
     meta.provider = "railway-postgres";
     warnings.push(
       "Detectado host Railway Postgres. Si tu base principal es Supabase, usa la URI del pooler Supabase, no ${{Postgres.DATABASE_URL}}."

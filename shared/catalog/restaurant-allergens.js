@@ -143,11 +143,32 @@ export const DAKINIS_RESTAURANT_DISH_CATEGORIES = new Set([
  * @param {string} name
  * @returns {string}
  */
+function stripLeadingCount(value) {
+  let i = 0;
+  while (i < value.length && value.charCodeAt(i) >= 48 && value.charCodeAt(i) <= 57) i += 1;
+  if (i > 0 && value[i] === " ") return value.slice(i + 1);
+  return value;
+}
+
+function stripTrailingUnits(value) {
+  const lower = value.toLowerCase();
+  let end = lower.length;
+  while (end > 0 && lower[end - 1] === " ") end -= 1;
+  const uds = lower.endsWith("uds", end) ? 3 : lower.endsWith("ud", end) ? 2 : 0;
+  if (!uds) return value;
+  let i = end - uds;
+  while (i > 0 && lower[i - 1] === " ") i -= 1;
+  const digitsEnd = i;
+  while (i > 0 && lower.charCodeAt(i - 1) >= 48 && lower.charCodeAt(i - 1) <= 57) i -= 1;
+  if (i === digitsEnd || i === 0 || lower[i - 1] !== " ") return value;
+  return value.slice(0, i).trimEnd();
+}
+
 export function dakinisFormatPublicDishName(name = "") {
   let s = String(name).trim();
   if (!s) return "";
-  s = s.replace(/^\d+\s+/, "");
-  s = s.replace(/\s+\d+\s*UDS?\b/gi, "");
+  s = stripLeadingCount(s);
+  s = stripTrailingUnits(s);
   return s.replace(/\s{2,}/g, " ").trim() || String(name).trim();
 }
 
