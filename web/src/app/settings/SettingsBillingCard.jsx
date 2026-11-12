@@ -1,14 +1,18 @@
 export default function SettingsBillingCard({ t, billing, aiUsage }) {
   if (!billing) return null;
+  const base = billing.usage?.commercial?.baseEur ?? billing.usage?.planBaseEur;
+  const estimate = billing.nextInvoiceEstimate?.amount;
 
   return (
     <div className="card" style={{ marginTop: "1rem" }}>
       <h3>{t("app.settings.billingTitle")}</h3>
       <p className="lead">
-        {t("app.settings.billingPlan", {
-          plan: billing.subscription?.plan,
-          base: billing.usage?.commercial?.baseEur ?? billing.usage?.planBaseEur
-        })}
+        {base != null
+          ? t("app.settings.billingPlan", {
+              plan: billing.subscription?.plan,
+              base
+            })
+          : billing.subscription?.plan || "—"}
       </p>
       {billing.usage?.commercial?.includes?.length ? (
         <p>{billing.usage.commercial.includes.join(" · ")}</p>
@@ -48,12 +52,13 @@ export default function SettingsBillingCard({ t, billing, aiUsage }) {
             : ""}
         </p>
       ) : null}
-      <p>
-        {t("app.settings.billingEstimate")}{" "}
-        <strong>{billing.nextInvoiceEstimate?.amount} €</strong>
-        {billing.nextInvoiceEstimate?.note ? ` — ${billing.nextInvoiceEstimate.note}` : ""}
-        {billing.stripeConnected ? "" : ` ${t("app.settings.billingStripePending")}`}
-      </p>
+      {estimate != null ? (
+        <p>
+          {t("app.settings.billingEstimate")} <strong>{estimate} €</strong>
+          {billing.nextInvoiceEstimate?.note ? ` — ${billing.nextInvoiceEstimate.note}` : ""}
+        </p>
+      ) : null}
+      {billing.stripeConnected ? null : <p>{t("app.settings.billingStripePending")}</p>}
     </div>
   );
 }

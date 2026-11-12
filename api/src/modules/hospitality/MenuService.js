@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { dakinisSqlInsertIgnore } from "../../db/dialect.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../../db/query.js";
 import { dakinisSlugFromName } from "@dakinis/shared/catalog/stock-barcodes.js";
 import { DAKINIS_HOSPITALITY_EVENTS, dakinisHospitalityEmit } from "./events.js";
@@ -60,14 +61,21 @@ export async function dakinisEnsureMenuMigrated(businessId) {
   let sort = 0;
   for (const raw of items) {
     const category = String(raw?.category || "Otros").trim() || "Otros";
-    if (!categoryIds.has(category)) {
-      const catId = dakinisNewId("mcat");
-      categoryIds.set(category, catId);
-      await dakinisRun(
-        `INSERT INTO tenant_menu_categories (id, business_id, name, sort_order, active) VALUES (?, ?, ?, ?, 1)`,
-        [catId, businessId, category, sort++]
-      );
+    if (categoryIds.has(category)) continue;
+    const existingCat = await dakinisQueryOne(
+      `SELECT id FROM tenant_menu_categories WHERE business_id = ? AND name = ?`,
+      [businessId, category]
+    );
+    if (existingCat?.id) {
+      categoryIds.set(category, existingCat.id);
+      continue;
     }
+    const catId = dakinisNewId("mcat");
+    categoryIds.set(category, catId);
+    await dakinisRun(
+      `INSERT INTO tenant_menu_categories (id, business_id, name, sort_order, active) VALUES (?, ?, ?, ?, 1)`,
+      [catId, businessId, category, sort++]
+    );
   }
 
   for (const raw of items) {
@@ -80,24 +88,40 @@ export async function dakinisEnsureMenuMigrated(businessId) {
         : dakinisSlugFromName(nameEs) || dakinisNewId("dish");
     const cents = dakinisEurToCents(raw?.priceEur ?? raw?.price ?? 0) ?? 0;
     await dakinisRun(
-      `INSERT OR IGNORE INTO tenant_menu_items
-        (id, business_id, category_id, name, name_es, description, active, station, meta_json)
-       VALUES (?, ?, ?, ?, ?, ?, 1, NULL, '{}')`,
+      dakinisSqlInsertIgnore("tenant_menu_items", [
+        "id",
+        "business_id",
+        "category_id",
+        "name",
+        "name_es",
+        "description",
+        "active",
+        "station",
+        "meta_json"
+      ]),
       [
         id,
         businessId,
         categoryIds.get(category),
         String(raw?.name || nameEs).trim(),
         nameEs,
-        String(raw?.description || "").trim()
+        String(raw?.description || "").trim(),
+        1,
+        null,
+        "{}"
       ]
     );
     const priceId = dakinisNewId("mprice");
     await dakinisRun(
-      `INSERT OR IGNORE INTO tenant_menu_prices
-        (id, business_id, item_id, channel, price_cents, currency)
-       VALUES (?, ?, ?, 'salon', ?, 'EUR')`,
-      [priceId, businessId, id, cents]
+      dakinisSqlInsertIgnore("tenant_menu_prices", [
+        "id",
+        "business_id",
+        "item_id",
+        "channel",
+        "price_cents",
+        "currency"
+      ]),
+      [priceId, businessId, id, "salon", cents, "EUR"]
     );
   }
 

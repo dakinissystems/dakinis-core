@@ -12,6 +12,7 @@ import {
 } from "../lib/ai-usage.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 import { dakinisHandleTenantDashboardRoute } from "./tenant-dashboard-routes.js";
+import { dakinisHandleTenantSettingsRoute } from "./tenant-settings-routes.js";
 
 function dakinisParseJson(rawBody) {
   try {
@@ -175,6 +176,9 @@ async function dakinisHandleIntelligenceAsk(req, rawBody) {
 }
 
 export async function dakinisHandleTenantIntelligenceRoute(req, rawBody, path) {
+  const settingsResult = await dakinisHandleTenantSettingsRoute(req, rawBody, path);
+  if (settingsResult) return settingsResult;
+
   const dashboardResult = await dakinisHandleTenantDashboardRoute(req, rawBody, path);
   if (dashboardResult) return dashboardResult;
 
