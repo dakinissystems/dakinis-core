@@ -3,6 +3,7 @@ import { dakinisSqlInsertIgnore } from "../../db/dialect.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../../db/query.js";
 import { dakinisSlugFromName } from "@dakinis/shared/catalog/stock-barcodes.js";
 import { DAKINIS_HOSPITALITY_EVENTS, dakinisHospitalityEmit } from "./events.js";
+import { dakinisIsMissingRelation } from "./sql-errors.js";
 
 function dakinisNewId(prefix) {
   return `${prefix}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -137,10 +138,22 @@ export async function dakinisEnsureMenuMigrated(businessId) {
  * Lista menú en shape legacy `{ id, name, nameEs, category, priceEur, description? }[]`
  * @param {string} businessId
  */
-export async function dakinisMenuListItems(businessId) {
-  await dakinisEnsureMenuMigrated(businessId);
+function dakinisMenuFromConfig(config) {
+  return Array.isArray(config?.menu?.items) ? config.menu.items : [];
+}
 
-  const rows = await dakinisQueryAll(
+export async function dakinisMenuListItems(businessId) {
+  try {
+    await dakinisEnsureMenuMigrated(businessId);
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:menu] tenant_menu_items missing — using config until migration 059");
+    return dakinisMenuFromConfig(await dakinisLoadConfig(businessId));
+  }
+
+  let rows;
+  try {
+    rows = await dakinisQueryAll(
     `SELECT i.id, i.name, i.name_es, i.description, i.active, c.name AS category,
             p.price_cents
      FROM tenant_menu_items i
@@ -150,7 +163,12 @@ export async function dakinisMenuListItems(businessId) {
      WHERE i.business_id = ? AND i.active = 1
      ORDER BY c.sort_order ASC, i.name_es ASC`,
     [businessId]
-  );
+    );
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:menu] tenant_menu_items missing — using config until migration 059");
+    return dakinisMenuFromConfig(await dakinisLoadConfig(businessId));
+  }
 
   if (rows.length) {
     return rows.map((r) => {
@@ -166,9 +184,8 @@ export async function dakinisMenuListItems(businessId) {
     });
   }
 
-  // Dual-read fallback JSON si tablas vacías
   const config = await dakinisLoadConfig(businessId);
-  return Array.isArray(config?.menu?.items) ? config.menu.items : [];
+  return dakinisMenuFromConfig(config);
 }
 
 function dakinisNormalizeMenuPrice(value) {
@@ -190,8 +207,61 @@ function dakinisUniqueMenuItemId(baseId, existingIds) {
  * @param {string} businessId
  * @param {object} body
  */
+async function dakinisMenuPatchConfig(businessId, body) {
+  const config = await dakinisLoadConfig(businessId);
+  const current = dakinisMenuFromConfig(config).map((it) => ({ ...it }));
+  const byId = new Map(current.filter((it) => it?.id).map((it) => [it.id, { ...it }]));
+  const existingIds = new Set(byId.keys());
+
+  const priceUpdates = Array.isArray(body.items) ? body.items : [];
+  for (const patch of priceUpdates) {
+    const id = typeof patch?.id === "string" ? patch.id.trim() : "";
+    if (!id || !byId.has(id)) continue;
+    if (patch.priceEur === undefined && patch.price === undefined) continue;
+    const price = dakinisNormalizeMenuPrice(patch.priceEur ?? patch.price);
+    if (price === null) {
+      return { error: { status: 400, code: "VALIDATION_ERROR", message: `Precio invalido para ${id}` } };
+    }
+    byId.get(id).priceEur = price;
+  }
+
+  const createList = Array.isArray(body.create) ? body.create : body.create ? [body.create] : [];
+  for (const raw of createList) {
+    const nameEs = String(raw?.nameEs || raw?.name || "").trim();
+    if (!nameEs) {
+      return { error: { status: 400, code: "VALIDATION_ERROR", message: "Cada producto necesita un nombre" } };
+    }
+    const price = dakinisNormalizeMenuPrice(raw?.priceEur ?? raw?.price ?? 0);
+    if (price === null) {
+      return { error: { status: 400, code: "VALIDATION_ERROR", message: `Precio invalido para ${nameEs}` } };
+    }
+    const category = String(raw?.category || "Otros").trim() || "Otros";
+    const description = String(raw?.description || "").trim();
+    const requestedId =
+      typeof raw?.id === "string" && raw.id.trim()
+        ? raw.id.trim()
+        : dakinisSlugFromName(nameEs) || dakinisNewId("dish");
+    const id = dakinisUniqueMenuItemId(requestedId, existingIds);
+    existingIds.add(id);
+    const item = { id, name: String(raw?.name || nameEs).trim(), nameEs, category, priceEur: price };
+    if (description) item.description = description;
+    byId.set(id, item);
+  }
+
+  const menuRoot = config.menu && typeof config.menu === "object" ? { ...config.menu } : {};
+  menuRoot.items = [...byId.values()];
+  await dakinisSaveConfig(businessId, { ...config, menu: menuRoot });
+  return { menu: menuRoot.items, brand: menuRoot.brand ?? config.brand ?? null };
+}
+
 export async function dakinisMenuPatch(businessId, body) {
-  await dakinisEnsureMenuMigrated(businessId);
+  try {
+    await dakinisEnsureMenuMigrated(businessId);
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:menu] tenant_menu_items missing — patching config until migration 059");
+    return dakinisMenuPatchConfig(businessId, body);
+  }
 
   const current = await dakinisMenuListItems(businessId);
   const byId = new Map(current.map((it) => [it.id, { ...it }]));

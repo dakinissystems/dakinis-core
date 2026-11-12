@@ -5,6 +5,7 @@ import {
   DAKINIS_PRICE_LIST_LABELS,
   dakinisChannelToPriceListKey
 } from "@dakinis/shared/catalog/deliveryProviders.js";
+import { dakinisIsMissingRelation } from "./sql-errors.js";
 
 function dakinisNewId(prefix) {
   return `${prefix}_${randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -19,8 +20,23 @@ function dakinisRoundCents(cents, roundTo) {
  * Asegura tarifas base del tenant (salon default + canales delivery).
  * @param {string} businessId
  */
+const MIGRATION_059 = {
+  error: {
+    status: 503,
+    code: "MIGRATION_REQUIRED",
+    message: "Falta aplicar la migracion 059 de hosteleria"
+  }
+};
+
 export async function dakinisEnsureDefaultPriceLists(businessId) {
-  const existing = await dakinisQueryAll(`SELECT key FROM tenant_price_lists WHERE business_id = ?`, [businessId]);
+  let existing;
+  try {
+    existing = await dakinisQueryAll(`SELECT key FROM tenant_price_lists WHERE business_id = ?`, [businessId]);
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    console.warn("[hospitality:prices] tenant_price_lists missing — migration 059 not applied");
+    return false;
+  }
   const have = new Set(existing.map((r) => r.key));
 
   for (const key of DAKINIS_PRICE_LIST_KEYS) {
@@ -64,6 +80,7 @@ export async function dakinisEnsureDefaultPriceLists(businessId) {
       ]
     );
   }
+  return true;
 }
 
 /**
@@ -103,8 +120,9 @@ async function dakinisBaseSalonCents(businessId, itemId) {
  * @returns {Promise<{ priceCents: number, priceListKey: string, source: string }>}
  */
 export async function dakinisResolveItemPriceCents(businessId, itemId, channel) {
-  await dakinisEnsureDefaultPriceLists(businessId);
   const key = dakinisChannelToPriceListKey(channel);
+  const ready = await dakinisEnsureDefaultPriceLists(businessId);
+  if (!ready) return { priceCents: 0, priceListKey: key, source: "unavailable" };
 
   const list = await dakinisQueryOne(
     `SELECT id, markup_pct, markup_fixed_cents, round_to_cents FROM tenant_price_lists
@@ -160,7 +178,11 @@ export async function dakinisApplyPriceListToLines(businessId, lines, channel, o
     if (opts.force || !Number.isFinite(unitPrice) || unitPrice <= 0) {
       if (line.menuId) {
         priceMeta = await dakinisResolveItemPriceCents(businessId, line.menuId, channel);
-        unitPrice = priceMeta.priceCents / 100;
+        if (priceMeta.source === "unavailable") {
+          unitPrice = Number.isFinite(Number(line.unitPrice)) ? Number(line.unitPrice) : 0;
+        } else {
+          unitPrice = priceMeta.priceCents / 100;
+        }
       } else {
         unitPrice = Number(line.unitPrice) || 0;
       }
@@ -177,7 +199,8 @@ export async function dakinisApplyPriceListToLines(businessId, lines, channel, o
 }
 
 export async function dakinisListPriceLists(businessId) {
-  await dakinisEnsureDefaultPriceLists(businessId);
+  const ready = await dakinisEnsureDefaultPriceLists(businessId);
+  if (!ready) return [];
   const lists = await dakinisQueryAll(
     `SELECT id, key, name, channel, is_default, markup_pct, markup_fixed_cents, round_to_cents, active
      FROM tenant_price_lists WHERE business_id = ? ORDER BY is_default DESC, key ASC`,
@@ -200,7 +223,8 @@ export async function dakinisListPriceLists(businessId) {
  * Upsert precio explícito en una tarifa.
  */
 export async function dakinisUpsertPriceListItem(businessId, priceListKey, itemId, priceEur) {
-  await dakinisEnsureDefaultPriceLists(businessId);
+  const ready = await dakinisEnsureDefaultPriceLists(businessId);
+  if (!ready) return MIGRATION_059;
   const list = await dakinisQueryOne(
     `SELECT id FROM tenant_price_lists WHERE business_id = ? AND key = ?`,
     [businessId, priceListKey]
@@ -232,7 +256,8 @@ export async function dakinisUpsertPriceListItem(businessId, priceListKey, itemI
  * Actualiza reglas de markup de una tarifa.
  */
 export async function dakinisPatchPriceListRules(businessId, priceListKey, patch) {
-  await dakinisEnsureDefaultPriceLists(businessId);
+  const ready = await dakinisEnsureDefaultPriceLists(businessId);
+  if (!ready) return MIGRATION_059;
   const list = await dakinisQueryOne(
     `SELECT id, markup_pct, markup_fixed_cents, round_to_cents, name, active FROM tenant_price_lists WHERE business_id = ? AND key = ?`,
     [businessId, priceListKey]
