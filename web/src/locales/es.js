@@ -902,7 +902,8 @@ export default {
         "Login: respuesta sin datos. Comprueba la URL de la API (VITE_API_BASE_URL) y que el seed exista en la base de datos.",
       incomplete: "Login incompleto: falta token o tipo de negocio en la respuesta.",
       generic: "Error de login",
-      idpTenant: "No se pudo resolver el negocio para SSO. Usa login local o configura tenant en el JWT IdP."
+      idpTenant: "Esta cuenta no es owner, admin ni member de un negocio en Core.",
+      idpTenants: "Hay varios negocios. Escribe el slug: {slugs}"
     },
     submitIdp: "Entrar con cuenta Dakinis (SSO)",
     idpHint: "En producción el login usa Auth central (auth.dakinissystems.com). Admin plataforma: tenant dakinis-platform.",

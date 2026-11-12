@@ -10,7 +10,8 @@ const DAKINIS_AUTH_RATE_WINDOW_MS = Number(process.env.DAKINIS_AUTH_RATE_WINDOW_
 
 const DAKINIS_AUTH_PATHS = new Set([
   "/api/auth/login",
-  "/api/auth/exchange"
+  "/api/auth/exchange",
+  "/api/auth/tenants"
 ]);
 
 function dakinisGetClientKey(req) {

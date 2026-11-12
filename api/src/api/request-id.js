@@ -10,10 +10,24 @@ export function dakinisRequestIdFrom(req) {
   return crypto.randomUUID();
 }
 
+function dakinisActorTokenFrom(req) {
+  const raw = req?.headers?.["x-dakinis-actor"];
+  const value = typeof raw === "string" ? raw.trim() : "";
+  if (!value || value.length > 8192 || value.split(".").length !== 3) return "";
+  return value;
+}
+
 export function dakinisRunWithRequest(req, fn) {
-  return store.run({ requestId: dakinisRequestIdFrom(req) }, fn);
+  return store.run(
+    { requestId: dakinisRequestIdFrom(req), actorToken: dakinisActorTokenFrom(req) },
+    fn
+  );
 }
 
 export function dakinisCurrentRequestId() {
   return store.getStore()?.requestId || `dk_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+}
+
+export function dakinisCurrentActorToken() {
+  return store.getStore()?.actorToken || "";
 }

@@ -3,6 +3,12 @@ import { Navigate } from "react-router-dom";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 
+function dakinisLoginWithNext() {
+  const path = window.location.pathname;
+  if (!/^\/app\/[a-z0-9/-]+$/.test(path)) return "/login";
+  return `/login?next=${encodeURIComponent(path)}`;
+}
+
 /** Redirige a login si no hay sesión JWT en rutas /app/*. Valida token antes de montar hijos. */
 export default function AppGuard({ children }) {
   const { session, logout } = useDakinisSession();
@@ -56,7 +62,7 @@ export default function AppGuard({ children }) {
   }, [token, logout]);
 
   if (!session?.token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={dakinisLoginWithNext()} replace />;
   }
 
   if (!checked) {
@@ -64,7 +70,7 @@ export default function AppGuard({ children }) {
   }
 
   if (!valid) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={dakinisLoginWithNext()} replace />;
   }
 
   return children;

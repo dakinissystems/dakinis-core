@@ -16,7 +16,7 @@ import {
   dakinisNormalizeCommercialPlan
 } from "@dakinis/shared/catalog/plan-modules.js";
 import { resolveTenantCapabilities } from "@dakinis/shared/catalog/product-capabilities.js";
-import { dakinisHandleAuthLogin, dakinisHandleAuthExchange, dakinisHandleMe } from "./auth-routes.js";
+import { dakinisHandleAuthLogin, dakinisHandleAuthExchange, dakinisHandleAuthTenants, dakinisHandleMe } from "./auth-routes.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 import { dakinisPostgresSchema } from "../db/schema-config.js";
 import { dakinisIsSupabasePoolerUrl } from "../db/postgres-connection.js";
@@ -77,6 +77,10 @@ export async function dakinisHandleAuthLoginRequest(rawBody) {
 
 export async function dakinisHandleAuthExchangeRequest(req, rawBody) {
   return dakinisHandleAuthExchange(req, rawBody);
+}
+
+export async function dakinisHandleAuthTenantsRequest(req) {
+  return dakinisHandleAuthTenants(req);
 }
 
 export async function dakinisHandleMeRequest(req) {

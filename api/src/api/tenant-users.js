@@ -6,6 +6,12 @@ import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 const TENANT_USER_ROLES = new Set(["admin", "member"]);
 
+export function dakinisNormalizeUserEmail(raw) {
+  const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  return email;
+}
+
 function dakinisParseJson(rawBody) {
   try {
     return JSON.parse(rawBody || "{}");
@@ -79,10 +85,13 @@ export async function dakinisHandleTenantUsersPost(req, rawBody) {
     return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   }
 
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const email = dakinisNormalizeUserEmail(body.email);
   const password = typeof body.password === "string" ? body.password : "";
   const role = typeof body.role === "string" ? body.role.trim().toLowerCase() : "member";
 
+  if (typeof body.email === "string" && body.email.trim() && !email) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "email invalido");
+  }
   if (!email || !password) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "email y password son obligatorios");
   }
@@ -145,7 +154,11 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
       ? body.role.trim().toLowerCase()
       : undefined;
   const newPassword = typeof body.password === "string" ? body.password : undefined;
+  const emailIn = body.email !== undefined ? dakinisNormalizeUserEmail(body.email) : undefined;
 
+  if (body.email !== undefined && !emailIn) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "email invalido");
+  }
   if (roleIn !== undefined && !TENANT_USER_ROLES.has(roleIn)) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "role debe ser admin o member");
   }
@@ -165,13 +178,22 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
   if (newPassword !== undefined && newPassword.length > 0) {
     nextHash = bcrypt.hashSync(newPassword, 10);
   }
+  let nextEmail = target.email;
+  if (emailIn && emailIn !== String(target.email || "").toLowerCase()) {
+    const taken = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?) AND id <> ?", [
+      emailIn,
+      id
+    ]);
+    if (taken) {
+      return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ese email");
+    }
+    nextEmail = emailIn;
+  }
 
-  await dakinisRun(`UPDATE users SET role = ?, password_hash = ? WHERE id = ? AND business_id = ?`, [
-    nextRole,
-    nextHash,
-    id,
-    req.dakinisBusiness.id
-  ]);
+  await dakinisRun(
+    `UPDATE users SET role = ?, password_hash = ?, email = ? WHERE id = ? AND business_id = ?`,
+    [nextRole, nextHash, nextEmail, id, req.dakinisBusiness.id]
+  );
 
   const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {

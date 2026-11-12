@@ -28,6 +28,7 @@ export default function TenantTeamSection({
   const [saving, setSaving] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
   const [teamMsg, setTeamMsg] = useState("");
 
   const apiSessionRef = useRef(apiSession);
@@ -123,8 +124,8 @@ export default function TenantTeamSection({
     <section style={{ marginTop: "2rem" }}>
       <h3>Equipo y usuarios del negocio</h3>
       <p className="lead">
-        Como administrador puedes ver a tu equipo y dar de alta cuentas adicionales (miembros u otros
-        administradores). Solo sesión con contraseña (JWT), no API key.
+        Para entrar en producción se usa la cuenta Dakinis, con la invitación del Hub. Aquí se crea el usuario en
+        Core. La contraseña de este formulario vale para el login local y no cambia la de Dakinis.
       </p>
 
       {teamLoading ? <p className="lead">Cargando usuarios…</p> : null}
@@ -140,9 +141,7 @@ export default function TenantTeamSection({
       ) : null}
 
       <form className="mockup-form card tenant-team-form" onSubmit={handleCreateUser}>
-        <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>
-          Invitar o crear usuario
-        </h4>
+        <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>Crear usuario</h4>
         <label className="mockup-field">
           <span>Email</span>
           <input
@@ -224,6 +223,13 @@ export default function TenantTeamSection({
                 <td data-label="Acciones">
                   {editingUserId === u.id ? (
                     <>
+                      <PasswordInput
+                        id={`team-pass-${u.id}`}
+                        value={editPassword}
+                        onChange={(ev) => setEditPassword(ev.target.value)}
+                        autoComplete="new-password"
+                      />
+                      <span className="kpi-label">Nueva contraseña de Core, opcional.</span>
                       <button
                         type="button"
                         className="btn"
@@ -231,6 +237,12 @@ export default function TenantTeamSection({
                         onClick={async () => {
                           setSaving(true);
                           setTeamError("");
+                          const nextPassword = editPassword.trim();
+                          if (nextPassword && nextPassword.length < 8) {
+                            setTeamError("La contraseña nueva necesita 8 caracteres.");
+                            setSaving(false);
+                            return;
+                          }
                           try {
                             await dakinisTenantJsonFetch(
                               `/api/tenant/users/${encodeURIComponent(u.id)}`,
@@ -239,11 +251,19 @@ export default function TenantTeamSection({
                                 method: "PATCH",
                                 businessId: tenantSlugForVertical,
                                 businessTypeHeader: activeSystemKey,
-                                body: { email: editEmail.trim().toLowerCase() }
+                                body: {
+                                  email: editEmail.trim().toLowerCase(),
+                                  ...(nextPassword ? { password: nextPassword } : {})
+                                }
                               }
                             );
                             setEditingUserId(null);
-                            setTeamMsg("Email actualizado.");
+                            setEditPassword("");
+                            setTeamMsg(
+                              nextPassword
+                                ? "Email y contraseña de Core actualizados. La cuenta Dakinis no cambia."
+                                : "Email actualizado. La cuenta Dakinis no cambia."
+                            );
                             await loadTeam();
                           } catch (err) {
                             setTeamError(err instanceof Error ? err.message : "No se pudo actualizar el email");
@@ -254,7 +274,7 @@ export default function TenantTeamSection({
                       >
                         Guardar email
                       </button>
-                      <button type="button" className="btn btn-outline" onClick={() => setEditingUserId(null)}>
+                      <button type="button" className="btn btn-outline" onClick={() => { setEditingUserId(null); setEditPassword(""); }}>
                         Cancelar
                       </button>
                     </>
@@ -266,43 +286,10 @@ export default function TenantTeamSection({
                         onClick={() => {
                           setEditingUserId(u.id);
                           setEditEmail(u.email);
+                          setEditPassword("");
                         }}
                       >
                         Editar email
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        disabled={saving}
-                        onClick={async () => {
-                          setSaving(true);
-                          setTeamError("");
-                          setTeamMsg("");
-                          try {
-                            const res = await dakinisTenantJsonFetch(
-                              `/api/tenant/users/${encodeURIComponent(u.id)}/resend-password-reset`,
-                              apiSession,
-                              {
-                                method: "POST",
-                                businessId: tenantSlugForVertical,
-                                businessTypeHeader: activeSystemKey
-                              }
-                            );
-                            if (res?.data?.emailSent) {
-                              setTeamMsg(`Enlace de restablecimiento enviado a ${res.data.email}.`);
-                            } else {
-                              setTeamMsg(
-                                `Email no enviado (configura RESEND). Enlace: ${res?.data?.resetUrl || "—"}`
-                              );
-                            }
-                          } catch (err) {
-                            setTeamError(err instanceof Error ? err.message : "No se pudo reenviar el correo");
-                          } finally {
-                            setSaving(false);
-                          }
-                        }}
-                      >
-                        Reenviar reset
                       </button>
                     </>
                   )}

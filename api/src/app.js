@@ -5,6 +5,7 @@ import {
   dakinisHandlePlatformBusinessUpdate,
   dakinisHandlePlatformBusinesses,
   dakinisHandlePlatformUsers,
+  dakinisHandlePlatformUserPatch,
   dakinisHandlePlatformCatalogGet,
   dakinisHandlePlatformCatalogPut,
   dakinisHandlePlatformTelemetrySummary,
@@ -15,6 +16,7 @@ import {
 import {
   dakinisHandleAuthLoginRequest,
   dakinisHandleAuthExchangeRequest,
+  dakinisHandleAuthTenantsRequest,
   dakinisHandleMeRequest,
   dakinisHandleApiRequest
 } from "./api/router.js";
@@ -108,6 +110,12 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (authErr) return authErr;
     return dakinisHandlePlatformUsers();
   }
+  const platformUserPatch = /^\/api\/platform\/users\/([^/]+)$/.exec(path);
+  if (platformUserPatch && req.method === "PATCH") {
+    const authErr = await dakinisRequirePlatformAdmin(req);
+    if (authErr) return authErr;
+    return dakinisHandlePlatformUserPatch(platformUserPatch[1], rawBody);
+  }
   if (path === "/api/platform/catalog" && req.method === "GET") {
     const authErr = await dakinisRequirePlatformAdmin(req);
     if (authErr) return authErr;
@@ -162,6 +170,9 @@ export async function dakinisDispatch(req, rawBody, url) {
   }
   if (path === "/api/auth/exchange" && req.method === "POST") {
     return dakinisHandleAuthExchangeRequest(req, rawBody);
+  }
+  if (path === "/api/auth/tenants" && req.method === "POST") {
+    return dakinisHandleAuthTenantsRequest(req);
   }
 
   if (path === "/api/public/stripe/plans" && req.method === "GET") {

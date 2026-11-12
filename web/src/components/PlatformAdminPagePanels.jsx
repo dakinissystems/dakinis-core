@@ -1,4 +1,5 @@
 import { dakinisFormatBusinessTypeLabel } from "@dakinis/shared/catalog/business-type-display.js";
+import { useState } from "react";
 import { dakinisBearerJsonFetch } from "../services/api.js";
 import PlatformCatalogPanel from "./PlatformCatalogPanel.jsx";
 import PlatformHubAccessPanel from "./PlatformHubAccessPanel.jsx";
@@ -477,6 +478,7 @@ export function PlatformAdminUsersPanel({
   load,
   userActionMsg
 }) {
+  const [editPassword, setEditPassword] = useState("");
   return (
     <>
       {userActionMsg ? (
@@ -522,6 +524,12 @@ export function PlatformAdminUsersPanel({
                   <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
                     {editingUserId === u.id ? (
                       <>
+                        <PasswordInput
+                          id={`platform-pass-${u.id}`}
+                          value={editPassword}
+                          onChange={(ev) => setEditPassword(ev.target.value)}
+                          autoComplete="new-password"
+                        />
                         <button
                           type="button"
                           className="btn"
@@ -529,14 +537,34 @@ export function PlatformAdminUsersPanel({
                           onClick={async () => {
                             setSaving(true);
                             setUserActionMsg("");
+                            const nextPassword = editPassword.trim();
+                            if (nextPassword && nextPassword.length < 8) {
+                              setError(t("admin.passwordShort", "La contraseña nueva necesita 8 caracteres."));
+                              setSaving(false);
+                              return;
+                            }
                             try {
                               await dakinisBearerJsonFetch(
                                 `/api/platform/users/${encodeURIComponent(u.id)}`,
                                 session.token,
-                                { method: "PATCH", body: { email: editUserEmail.trim().toLowerCase() } }
+                                {
+                                  method: "PATCH",
+                                  body: {
+                                    email: editUserEmail.trim().toLowerCase(),
+                                    ...(nextPassword ? { password: nextPassword } : {})
+                                  }
+                                }
                               );
                               setEditingUserId(null);
-                              setUserActionMsg(t("admin.userEmailSaved"));
+                              setEditPassword("");
+                              setUserActionMsg(
+                                nextPassword
+                                  ? t(
+                                      "admin.corePasswordSaved",
+                                      "Email y contraseña de Core actualizados. La cuenta Dakinis no cambia."
+                                    )
+                                  : t("admin.userEmailSaved")
+                              );
                               await load();
                             } catch (err) {
                               setError(err instanceof Error ? err.message : t("admin.saveError"));
@@ -547,7 +575,7 @@ export function PlatformAdminUsersPanel({
                         >
                           {t("admin.saveEmail")}
                         </button>
-                        <button type="button" className="btn btn-outline" onClick={() => setEditingUserId(null)}>
+                        <button type="button" className="btn btn-outline" onClick={() => { setEditingUserId(null); setEditPassword(""); }}>
                           {t("admin.cancel")}
                         </button>
                       </>
@@ -559,42 +587,10 @@ export function PlatformAdminUsersPanel({
                           onClick={() => {
                             setEditingUserId(u.id);
                             setEditUserEmail(u.email);
+                            setEditPassword("");
                           }}
                         >
                           {t("admin.editEmail")}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          disabled={saving}
-                          onClick={async () => {
-                            setSaving(true);
-                            setUserActionMsg("");
-                            try {
-                              const res = await dakinisBearerJsonFetch(
-                                `/api/platform/users/${encodeURIComponent(u.id)}/resend-password-reset`,
-                                session.token,
-                                { method: "POST" }
-                              );
-                              const d = res?.data;
-                              if (d?.emailSent) {
-                                setUserActionMsg(t("admin.resetEmailed", { email: d.email }));
-                              } else {
-                                setUserActionMsg(
-                                  t("admin.resetManual", {
-                                    email: d?.email || u.email,
-                                    url: d?.resetUrl || ""
-                                  })
-                                );
-                              }
-                            } catch (err) {
-                              setError(err instanceof Error ? err.message : t("admin.resetError"));
-                            } finally {
-                              setSaving(false);
-                            }
-                          }}
-                        >
-                          {t("admin.resendReset")}
                         </button>
                       </>
                     )}

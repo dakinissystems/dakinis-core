@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisResetAuthExpiredFlag } from "../services/auth-events.js";
@@ -15,6 +15,12 @@ import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.
 import { Button } from "@dakinis/shared-ux";
 import PasswordInput from "../components/PasswordInput.jsx";
 
+function dakinisSafeAppPath(raw) {
+  const value = String(raw || "").trim();
+  if (!/^\/app\/[a-z0-9/-]+$/.test(value)) return "";
+  return value;
+}
+
 function dakinisReadExpiredSessionMessage() {
   try {
     if (sessionStorage.getItem("dakinis_session_expired") === "1") {
@@ -29,6 +35,8 @@ function dakinisReadExpiredSessionMessage() {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextPath = dakinisSafeAppPath(searchParams.get("next"));
   const { t } = useLocale();
   const { setSession } = useDakinisSession();
   const [email, setEmail] = useState("");
@@ -70,7 +78,7 @@ export default function LoginPage() {
       return;
     }
     const isTenantUser = user?.role !== "platform_admin" && business?.type !== "platform";
-    navigate(isTenantUser ? "/app/dashboard" : "/hub", { replace: true });
+    navigate(nextPath && isTenantUser ? nextPath : isTenantUser ? "/app/dashboard" : "/hub", { replace: true });
     setNeedsTotp(false);
     setTotpCode("");
   }
@@ -85,6 +93,22 @@ export default function LoginPage() {
       const idp = await loginViaIdp(email.trim(), password);
       if (idp.refreshToken) setIdpRefreshToken(idp.refreshToken);
       tenantRef = dakinisResolveExchangeTenantRef(email, idp, businessSlug);
+      if (!tenantRef) {
+        const listed = await dakinisPublicJsonFetch("/api/auth/tenants", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${idp.token}` }
+        });
+        const tenants = Array.isArray(listed?.data?.tenants) ? listed.data.tenants : [];
+        if (tenants.length === 1 && tenants[0]?.slug) {
+          tenantRef = String(tenants[0].slug);
+        } else if (tenants.length > 1) {
+          throw new Error(
+            t("login.errors.idpTenants", {
+              slugs: tenants.map((item) => item.slug).filter(Boolean).join(", ")
+            })
+          );
+        }
+      }
       if (!tenantRef) {
         throw new Error(t("login.errors.idpTenant"));
       }

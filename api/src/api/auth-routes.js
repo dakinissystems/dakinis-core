@@ -11,7 +11,8 @@ import { dakinisJsonSuccess, dakinisJsonError } from "./responses.js";
 import { dakinisResolveBusinessFromHeader, dakinisBusinessAuthPayload } from "./business-context.js";
 import {
   dakinisVerifyPlatformAccessTokenOnly,
-  dakinisResolveCoreUserFromPlatformToken
+  dakinisResolveCoreUserFromPlatformToken,
+  dakinisListOperatorTenantsForPlatformUser
 } from "./platform-user-bridge.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 
@@ -148,6 +149,40 @@ export async function dakinisHandleMe(req) {
 }
 
 /**
+ * Negocios que esta identidad del IdP puede operar.
+ * No crea usuarios. El exchange sigue siendo el alta.
+ */
+export async function dakinisHandleAuthTenants(req) {
+  const authHeader = req.headers.authorization;
+  const token =
+    typeof authHeader === "string" && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+  if (!token) {
+    return dakinisJsonError(401, "UNAUTHORIZED", "Authorization: Bearer con JWT del IdP requerido");
+  }
+
+  let payload;
+  try {
+    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+  } catch {
+    return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
+  }
+
+  const sub = String(payload?.sub || "").trim();
+  if (!sub) {
+    return dakinisJsonError(400, "INVALID_PLATFORM_IDENTITY", "Identidad invalida");
+  }
+
+  try {
+    const tenants = await dakinisListOperatorTenantsForPlatformUser(sub);
+    return dakinisJsonSuccess({ tenants }, "custom");
+  } catch (e) {
+    return dakinisJsonError(400, "INVALID_PLATFORM_IDENTITY", e instanceof Error ? e.message : "Identidad invalida");
+  }
+}
+
+/**
  * Intercambia JWT del IdP (`platform/auth`) por sesión core (JWT emitido por core).
  * Body JSON: `businessId` o `businessSlug` (uno obligatorio).
  */
@@ -209,7 +244,7 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
       return dakinisJsonError(
         403,
         "USER_NOT_PROVISIONED",
-        "Usuario no provisionado en este tenant. Solicita invitacion o activa DAKINIS_AUTH_EXCHANGE_AUTO_PROVISION."
+        "Usuario no provisionado en este tenant. Hace falta ser owner, admin o member del workspace."
       );
     }
     return dakinisJsonError(

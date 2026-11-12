@@ -4,6 +4,7 @@
  */
 import Fastify from "fastify";
 import { dakinisDispatch } from "../app.js";
+import { dakinisRunWithRequest } from "../api/request-id.js";
 import { dakinisEnforceRateLimit } from "../api/security.js";
 import { dakinisStructuredLog } from "../api/structured-logger.js";
 import { dakinisGetDbDriver } from "../db/index.js";
@@ -45,7 +46,7 @@ export async function dakinisCreateFastifyServer() {
     reply.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
     reply.header(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, x-api-key, x-business-id, x-business-type"
+      "Content-Type, Authorization, x-api-key, x-business-id, x-business-type, x-dakinis-actor"
     );
     if (req.method === "OPTIONS") {
       reply.code(204).send();
@@ -61,7 +62,9 @@ export async function dakinisCreateFastifyServer() {
 
     const started = Date.now();
     try {
-      const result = await dakinisDispatch(req.raw, req.body ? JSON.stringify(req.body) : "", url);
+      const result = await dakinisRunWithRequest(req.raw, () =>
+        dakinisDispatch(req.raw, req.body ? JSON.stringify(req.body) : "", url)
+      );
       const ms = Date.now() - started;
       dakinisStructuredLog({
         level: result.status >= 500 ? "error" : "info",

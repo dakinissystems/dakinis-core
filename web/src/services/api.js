@@ -91,6 +91,9 @@ export async function dakinisTenantJsonFetch(path, session, options = {}) {
 
   mergedHeaders["x-business-id"] = businessId;
 
+  const actorToken = String(session?.idp?.accessToken || "").trim();
+  if (actorToken) mergedHeaders["x-dakinis-actor"] = actorToken;
+
   if (options.businessTypeHeader) {
     mergedHeaders["x-business-type"] = options.businessTypeHeader;
   }

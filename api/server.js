@@ -45,7 +45,7 @@ function dakinisSetCorsHeaders(res, req) {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-api-key, x-business-id, x-business-type"
+    "Content-Type, Authorization, x-api-key, x-business-id, x-business-type, x-dakinis-actor"
   );
 }
 

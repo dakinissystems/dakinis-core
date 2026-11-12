@@ -901,7 +901,8 @@ export default {
         "Login: empty response. Check VITE_API_BASE_URL and that the seed exists in the database.",
       incomplete: "Incomplete login: missing token or business type in the response.",
       generic: "Login error",
-      idpTenant: "Could not resolve business for SSO. Use local login or set tenant in the IdP JWT."
+      idpTenant: "This account is not an owner, admin, or member of a Core business.",
+      idpTenants: "There is more than one business. Type the slug: {slugs}"
     },
     submitIdp: "Sign in with Dakinis account (SSO)",
     idpHint: "Ecosystem SSO needs the IdP and links AkoeNet without re-entering your password there.",

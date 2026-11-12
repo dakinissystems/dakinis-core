@@ -3,7 +3,8 @@
  * ADR-014 in-process bus → platform timeline (sale.*, order.*, stock.low).
  */
 
-import { dakinisQueryAll, dakinisQueryOne } from "../../db/query.js";
+import { dakinisCurrentActorToken } from "../../api/request-id.js";
+import { dakinisQueryOne } from "../../db/query.js";
 import {
   dakinisInternalConfigured,
   dakinisInternalRequest,
@@ -13,33 +14,33 @@ import {
   dakinisHospitalityOn,
 } from "./events.js";
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 const PENDING_STATUSES = new Set(["nueva", "cocina", "lista", "pending", "open"]);
 
-async function resolvePlatformUserIds(businessId) {
-  if (!businessId) return [];
-  try {
-    const rows = await dakinisQueryAll(
-      `SELECT platform_user_id AS id FROM users
-       WHERE business_id = ? AND platform_user_id IS NOT NULL AND trim(platform_user_id) <> ''`,
-      [businessId]
-    );
-    return [
-      ...new Set(
-        (rows || [])
-          .map((r) => String(r.id || "").trim())
-          .filter((id) => UUID_RE.test(id))
-      ),
-    ];
-  } catch (err) {
-    console.warn(
-      "[hospitality:hub-bridge] platform_user lookup failed:",
-      err instanceof Error ? err.message : err
-    );
-    return [];
-  }
+const IDENTITY_KEYS = ["userId", "user_id", "platformUserId", "tenantId", "businessId"];
+
+/**
+ * El evento no nombra personas. Internal atribuye el userId al JWT y copia
+ * la fila a los miembros de ese workspace.
+ * @param {string} event
+ * @param {object} payload
+ * @param {string} actorToken
+ */
+export function dakinisHospitalityHubEventRequest(event, payload, actorToken) {
+  const token = String(actorToken || "").trim();
+  if (!token) return null;
+  const clean = { ...(payload && typeof payload === "object" ? payload : {}), product: "core" };
+  for (const key of IDENTITY_KEYS) delete clean[key];
+  return {
+    headers: {
+      "Content-Type": "application/json",
+      "X-Dakinis-Actor": token,
+    },
+    body: {
+      event,
+      source: "core-hospitality",
+      payload: clean,
+    },
+  };
 }
 
 async function loadOrderSnapshot(businessId, orderId) {
@@ -61,24 +62,32 @@ async function loadOrderSnapshot(businessId, orderId) {
  * @param {object} payload
  * @param {string} userId
  */
-async function postHubEvent(event, payload, userId) {
+async function resolveBusinessSlug(businessId) {
+  if (!businessId) return "";
+  try {
+    const row = await dakinisQueryOne(`SELECT slug FROM business WHERE id = ?`, [businessId]);
+    return String(row?.slug || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+async function postHubEvent(event, payload, businessId) {
+  const slug = await resolveBusinessSlug(businessId);
+  const request = dakinisHospitalityHubEventRequest(
+    event,
+    { ...payload, ...(slug ? { workspaceSlug: slug } : {}) },
+    dakinisCurrentActorToken()
+  );
+  if (!request) return { skipped: true, reason: "no_actor" };
   if (!dakinisInternalConfigured()) {
     return { skipped: true, reason: "internal_not_configured" };
   }
   try {
     const res = await dakinisInternalRequest("/events", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event,
-        userId,
-        source: "core-hospitality",
-        payload: {
-          ...payload,
-          platformUserId: userId,
-          product: "core",
-        },
-      }),
+      headers: request.headers,
+      body: JSON.stringify(request.body),
     });
     if (!res.ok) {
       console.warn("[hospitality:hub-bridge] POST /events", event, res.status, res.data);
@@ -94,20 +103,10 @@ async function postHubEvent(event, payload, userId) {
   }
 }
 
-async function fanOut(event, payload, businessId) {
-  const users = await resolvePlatformUserIds(businessId);
-  if (!users.length) return { skipped: true, reason: "no_platform_user" };
-  const results = [];
-  for (const userId of users) {
-    results.push(await postHubEvent(event, payload, userId));
-  }
-  return { ok: true, count: results.length };
-}
-
 async function onOrderCreated(p) {
   const order = await loadOrderSnapshot(p.businessId, p.orderId);
   const status = String(p.status || order?.status || "nueva");
-  await fanOut(
+  await postHubEvent(
     "order.pending",
     {
       status: PENDING_STATUSES.has(status) ? "pending" : status,
@@ -124,7 +123,7 @@ async function onOrderStatusChanged(p) {
   const to = String(p.to || "").toLowerCase();
   if (!PENDING_STATUSES.has(to)) return;
   const order = await loadOrderSnapshot(p.businessId, p.orderId);
-  await fanOut(
+  await postHubEvent(
     "order.pending",
     {
       status: "pending",
@@ -141,7 +140,7 @@ async function onOrderStatusChanged(p) {
 async function onOrderPaid(p) {
   const order = await loadOrderSnapshot(p.businessId, p.orderId);
   const amount = Number(order?.total ?? p.total ?? 0);
-  await fanOut(
+  await postHubEvent(
     "sale.completed",
     {
       amount,
@@ -160,7 +159,7 @@ async function onStockReduced(p) {
     p.lowStock === true ||
     (Number.isFinite(qty) && Number.isFinite(min) && qty <= min);
   if (!isLow && p.force !== true) return;
-  await fanOut(
+  await postHubEvent(
     "stock.low",
     {
       sku: p.sku || p.slug || p.stockId,

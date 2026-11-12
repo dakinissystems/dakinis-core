@@ -12,6 +12,7 @@ import { dakinisQueryAll, dakinisQueryOne, dakinisRun, dakinisWithTransaction } 
 import { dakinisSqlOrderCreatedAtDesc, dakinisSqlOrderEmail } from "../db/dialect.js";
 import { dakinisOpsAlertEmailTo } from "../lib/ops-alerts.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import { dakinisNormalizeUserEmail } from "./tenant-users.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
 import {
   dakinisInternalBaseUrl,
@@ -332,6 +333,47 @@ export async function dakinisHandlePlatformUsers() {
        ORDER BY ${orderBiz}, ${orderEmail}`
   );
   return dakinisJsonSuccess({ users: rows }, "platform", {});
+}
+
+export async function dakinisHandlePlatformUserPatch(userId, rawBody) {
+  const id = typeof userId === "string" ? userId.trim() : "";
+  if (!id) return dakinisJsonError(400, "VALIDATION_ERROR", "id de usuario invalido");
+
+  let body = {};
+  try {
+    body = rawBody && String(rawBody).trim() ? JSON.parse(rawBody) : {};
+  } catch {
+    return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  }
+
+  const password = typeof body.password === "string" ? body.password : "";
+  if (password && password.length < 8) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "password: minimo 8 caracteres");
+  }
+
+  const email = dakinisNormalizeUserEmail(body.email);
+  if (!email) return dakinisJsonError(400, "VALIDATION_ERROR", "email invalido");
+
+  const target = await dakinisQueryOne("SELECT id, email FROM users WHERE id = ?", [id]);
+  if (!target) return dakinisJsonError(404, "NOT_FOUND", "Usuario no encontrado");
+
+  if (email !== String(target.email || "").toLowerCase()) {
+    const taken = await dakinisQueryOne("SELECT id FROM users WHERE lower(email) = lower(?) AND id <> ?", [
+      email,
+      id
+    ]);
+    if (taken) return dakinisJsonError(409, "EMAIL_TAKEN", "Ya existe un usuario con ese email");
+  }
+
+  const passwordHash = password.length >= 8 ? bcrypt.hashSync(password, 10) : null;
+  if (passwordHash) {
+    await dakinisRun("UPDATE users SET email = ?, password_hash = ? WHERE id = ?", [email, passwordHash, id]);
+  } else if (email !== String(target.email || "").toLowerCase()) {
+    await dakinisRun("UPDATE users SET email = ? WHERE id = ?", [email, id]);
+  }
+
+  const row = await dakinisQueryOne("SELECT id, email, role, created_at FROM users WHERE id = ?", [id]);
+  return dakinisJsonSuccess({ user: row }, "platform", {});
 }
 
 export async function dakinisHandlePlatformCatalogGet() {
