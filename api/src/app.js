@@ -140,7 +140,7 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandlePlatformBusinessHubProductsPatch(platformHubProductsMatch[1], rawBody);
   }
 
-  if (path === "/api/health" && req.method === "GET") {
+  if ((path === "/api/health" || path === "/api/health/live" || path === "/api/health/ready") && req.method === "GET") {
     return dakinisHandleApiRequest(req, rawBody, url);
   }
 

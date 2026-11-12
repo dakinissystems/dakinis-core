@@ -5,6 +5,7 @@ import { dakinisInitDb } from "./src/db/index.js";
 import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisStructuredLog } from "./src/api/structured-logger.js";
 import { dakinisDispatch } from "./src/app.js";
+import { dakinisRequestIdFrom, dakinisRunWithRequest } from "./src/api/request-id.js";
 import { dakinisInitSentry, dakinisCaptureException } from "./src/lib/sentry.js";
 
 dakinisAssertProductionJwtSecret();
@@ -73,7 +74,9 @@ function createNativeServer() {
         }
 
         const started = Date.now();
-        const result = await dakinisDispatch(req, rawBody, url);
+        const inboundRequestId = dakinisRequestIdFrom(req);
+        const result = await dakinisRunWithRequest(req, () => dakinisDispatch(req, rawBody, url));
+        res.setHeader("X-Request-Id", result.body?.meta?.requestId || inboundRequestId);
         const ms = Date.now() - started;
         const rid = result.body?.meta?.requestId;
         const bizHeader = typeof req.headers["x-business-id"] === "string" ? req.headers["x-business-id"].trim() : "";

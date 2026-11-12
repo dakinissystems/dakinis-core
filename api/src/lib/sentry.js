@@ -3,6 +3,8 @@
  * Sin DSN: no-op (cero overhead).
  */
 
+import { scrubSentryEvent } from "./sentry-scrub.js";
+
 let sentryReady = false;
 
 export async function dakinisInitSentry(serviceName) {
@@ -20,7 +22,10 @@ export async function dakinisInitSentry(serviceName) {
         undefined,
       tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE || 0.1),
       sendDefaultPii: false,
-      initialScope: { tags: { service: serviceName } }
+      initialScope: { tags: { service: serviceName } },
+      beforeSend(event) {
+        return scrubSentryEvent(event);
+      }
     });
     sentryReady = true;
     return true;

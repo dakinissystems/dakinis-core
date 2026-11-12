@@ -1,3 +1,5 @@
+import { dakinisCurrentRequestId } from "../api/request-id.js";
+
 /** @typedef {{ type: string, payload: Record<string, unknown>, ts: string }} DakinisDomainEvent */
 
 const listeners = new Map();
@@ -30,7 +32,8 @@ export async function dakinisPublishEvent(type, payload = {}) {
   const event = {
     type: String(type),
     payload,
-    ts: new Date().toISOString()
+    ts: new Date().toISOString(),
+    requestId: dakinisCurrentRequestId(),
   };
 
   if (String(process.env.DAKINIS_EVENT_BUS || "").toLowerCase() === "redis") {

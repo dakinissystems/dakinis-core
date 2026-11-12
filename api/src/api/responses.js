@@ -1,5 +1,7 @@
+import { dakinisCurrentRequestId } from "./request-id.js";
+
 function dakinisGenerateRequestId() {
-  return `dk_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  return dakinisCurrentRequestId();
 }
 
 export function dakinisJsonSuccess(data, adapter, metaExtra = {}) {

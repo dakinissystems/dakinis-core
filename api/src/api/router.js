@@ -84,6 +84,28 @@ export async function dakinisHandleMeRequest(req) {
 }
 
 export async function dakinisHandleApiRequest(req, rawBody, url) {
+  if (req.method === "GET" && url.pathname === "/api/health/live") {
+    return dakinisJsonSuccess(
+      { status: "live", service: "dakinis-core-api", uptimeSec: Math.floor(process.uptime()) },
+      "custom"
+    );
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/health/ready") {
+    let timer;
+    try {
+      const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("timeout")), 800);
+      });
+      await Promise.race([dakinisQueryOne("SELECT 1 AS ok"), timeout]);
+      return dakinisJsonSuccess({ status: "ready", service: "dakinis-core-api" }, "custom");
+    } catch {
+      return dakinisJsonError(503, "NOT_READY", "Dependencia no disponible");
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   if (req.method === "GET" && url.pathname === "/api/health") {
     const dbUrlCheck = dakinisValidateDatabaseUrl(process.env.DATABASE_URL || "");
     return dakinisJsonSuccess(

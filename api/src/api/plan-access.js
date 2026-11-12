@@ -67,7 +67,7 @@ function dakinisSuggestUpgradeForModule(moduleKey) {
 export function dakinisTenantApiPathRequiredModule(pathname) {
   if (pathname.startsWith("/api/tenant/") && !pathname.startsWith("/api/tenant/supply")) return null;
   if (pathname === "/api/config") return null;
-  if (pathname === "/api/health") return null;
+  if (pathname === "/api/health" || pathname.startsWith("/api/health/")) return null;
   for (const [prefix, mod] of PATH_MODULE_RULES) {
     if (pathname === prefix || pathname.startsWith(prefix) || pathname.startsWith(`${prefix}/`)) {
       return mod;
