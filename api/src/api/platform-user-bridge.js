@@ -98,10 +98,23 @@ export async function dakinisListOperatorTenantsForPlatformUser(platformSub) {
   }
 }
 
-async function dakinisSyncUserRoleFromIdp(user, payload) {
-  const mapped = dakinisMapPlatformRoleToCoreRole(payload.role);
-  if (mapped === user.role) return user;
-  await dakinisRun("UPDATE users SET role = ? WHERE id = ?", [mapped, user.id]);
+async function dakinisSyncUserRoleFromIdp(user, payload, business) {
+  const membership = business?.slug
+    ? dakinisCoreRoleFromWorkspaceMembership(
+        await dakinisWorkspaceRoleForBusiness(payload.sub, business.slug)
+      )
+    : null;
+  const fromToken = dakinisMapPlatformRoleToCoreRole(payload.role);
+  let next = membership || fromToken;
+  const current = String(user.role || "").toLowerCase();
+  const alreadyOperates =
+    current === "admin" || current === "tenant_admin" || current === "platform_admin" || current === "owner";
+  if (next === "member" && alreadyOperates) {
+    next = current === "owner" || current === "tenant_admin" ? "admin" : current;
+  }
+  if (next === "owner") next = "admin";
+  if (next === user.role) return user;
+  await dakinisRun("UPDATE users SET role = ? WHERE id = ?", [next, user.id]);
   return dakinisQueryOne("SELECT * FROM users WHERE id = ?", [user.id]);
 }
 
@@ -133,7 +146,7 @@ export async function dakinisResolveCoreUserFromPlatformToken(payload, targetBus
       await dakinisRun("UPDATE users SET platform_user_id = ? WHERE id = ?", [platformSub, user.id]);
       user = await dakinisQueryOne("SELECT * FROM users WHERE id = ?", [user.id]);
     }
-    user = await dakinisSyncUserRoleFromIdp(user, payload);
+    user = await dakinisSyncUserRoleFromIdp(user, payload, targetBusiness);
     return user;
   }
 

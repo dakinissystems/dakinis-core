@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { dakinisSqlOrderCreatedAtDesc, dakinisSqlTimestampNow } from "../db/dialect.js";
 import { dakinisQueryOne, dakinisQueryAll, dakinisRun } from "../db/query.js";
+import { dakinisAuditLog } from "../lib/audit-log.js";
+import { dakinisIsMissingRelation } from "../modules/hospitality/sql-errors.js";
 import { dakinisEnsureAllRestaurantProfilesAsync } from "../db/restaurant-kitchen-seed.js";
 import { dakinisEnsureRestaurantProfileAsync } from "../db/restaurant-kitchen-async.js";
 import {
@@ -45,7 +47,7 @@ import {
 } from "@dakinis/shared/catalog/inventory-lots.js";
 import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
-import { dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
+import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
 import { dakinisFloorGet } from "../modules/hospitality/FloorService.js";
 import {
   dakinisHandleRestaurantFloorGet,
@@ -380,6 +382,21 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
   });
 
   const floor = await dakinisFloorGet(businessId);
+  let movements = [];
+  try {
+    movements = await dakinisQueryAll(
+      `SELECT m.id, m.delta, m.reason, m.created_at, i.name, i.unit
+         FROM tenant_stock_movements m
+         JOIN tenant_stock_items i ON i.id = m.stock_item_id
+        WHERE m.business_id = ?
+        ORDER BY ${dakinisSqlOrderCreatedAtDesc("m.created_at")}
+        LIMIT 30`,
+      [businessId]
+    );
+  } catch (err) {
+    if (!dakinisIsMissingRelation(err)) throw err;
+    movements = [];
+  }
 
   return dakinisJsonSuccess(
     {
@@ -387,6 +404,14 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
       recipes,
       maxPerRecipe,
       productionHistory: batches,
+      movements: movements.map((row) => ({
+        id: row.id,
+        delta: row.delta,
+        reason: row.reason,
+        name: row.name,
+        unit: row.unit,
+        createdAt: row.created_at
+      })),
       floor,
       profile: profile
         ? {
@@ -888,5 +913,60 @@ export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
     },
     "restaurante",
     { public: true }
+  );
+}
+
+export async function dakinisHandleRestaurantCashClosePost(req, rawBody) {
+  const blocked = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (blocked) return blocked;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const expected = Number(body.expectedCash);
+  const counted = Number(body.countedCash);
+  if (!Number.isFinite(expected) || !Number.isFinite(counted) || counted < 0) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "El efectivo esperado y el contado tienen que ser importes.");
+  }
+  const difference = Math.round((counted - expected) * 100) / 100;
+  const note = String(body.note || "").trim();
+  if (Math.abs(difference) >= 0.01 && note.length < 3) {
+    return dakinisJsonError(400, "JUSTIFICATION_REQUIRED", "Escribe el motivo de la diferencia antes de cerrar.");
+  }
+
+  const closedAt = new Date().toISOString();
+  const dateKey = String(body.dateKey || closedAt.slice(0, 10));
+  const actorEmail = req.dakinisAuth?.email || null;
+  const actorUserId = req.dakinisAuth?.userId || null;
+  await dakinisAuditLog({
+    action: "restaurant.cash_close",
+    tenantId: req.dakinisBusiness.id,
+    userId: actorUserId,
+    resourceType: "cash_close",
+    resourceId: dateKey,
+    expectedCash: expected,
+    countedCash: counted,
+    difference,
+    note,
+    actorEmail,
+    closedAt
+  });
+
+  return dakinisJsonSuccess(
+    {
+      close: {
+        dateKey,
+        expectedCash: expected,
+        countedCash: counted,
+        difference,
+        note,
+        closedAt,
+        actorEmail,
+        actorUserId
+      }
+    },
+    req.dakinisBusiness.type,
+    { businessId: req.dakinisBusiness.id }
   );
 }

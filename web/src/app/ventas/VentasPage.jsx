@@ -4,7 +4,6 @@ import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
 import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import CrmPipelineBoard from "../../components/business/CrmPipelineBoard.jsx";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 
 export default function VentasPage({ navigate }) {
   const { t } = useLocale();
@@ -28,7 +27,6 @@ export default function VentasPage({ navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {isDemo ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{t("businessDemo.sales.kicker")}</p>
         <h2>{t("businessDemo.sales.title")}</h2>
         <p className="lead">{t("businessDemo.sales.lead")}</p>

@@ -182,6 +182,10 @@ export default function RestaurantFloorPlan({
   }
 
   const zones = Object.values(DAKINIS_RESTAURANT_FLOOR_ZONES);
+  const selectedTable = liveTables.find((tbl) => tbl.id === selectedTableId) || null;
+  const selectedSession = selectedTable ? sessions[selectedTable.id] : null;
+  const selectedBusy = selectedTable ? dakinisSessionBusy(selectedSession) : false;
+  const selectedTotal = selectedTable && tableTotal ? Number(tableTotal(selectedTable.id)) : null;
 
   return (
     <div className="restaurant-floor">
@@ -285,6 +289,29 @@ export default function RestaurantFloorPlan({
         </div>
       </div>
 
+      {selectedTable ? (
+        <article className="card" style={{ marginTop: "0.75rem" }}>
+          <h4 style={{ marginTop: 0 }}>{selectedTable.label}</h4>
+          <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
+            <li>Capacidad: {Number.isFinite(Number(selectedTable.seats)) ? `${Number(selectedTable.seats)} plazas` : "Sin registro"}</li>
+            <li>Comensales: Sin registro</li>
+            <li>
+              Tiempo de ocupación:{" "}
+              {selectedSession?.openedAt && selectedBusy
+                ? dakinisOccupationLabel(selectedSession.openedAt)
+                : selectedBusy
+                  ? "Sin registro"
+                  : "Libre"}
+            </li>
+            <li>Estado de la comanda: {selectedBusy ? "Cuenta abierta" : "Sin comanda"}</li>
+            <li>
+              Importe pendiente:{" "}
+              {selectedBusy && Number.isFinite(selectedTotal) ? `${selectedTotal.toFixed(2)} €` : "Sin importe"}
+            </li>
+          </ul>
+        </article>
+      ) : null}
+
       <div className="restaurant-floor__legend">
         <span className="restaurant-floor__legend-item">
           <span className="restaurant-floor__swatch" /> {label("restaurant.floorFree", "Libre")}
@@ -317,4 +344,13 @@ function localeZoneLabel(zone, label) {
 function dakinisSessionBusy(session) {
   if (!session?.cart) return false;
   return Object.values(session.cart).some((q) => Number(q) > 0);
+}
+
+function dakinisOccupationLabel(openedAt) {
+  const start = new Date(openedAt);
+  if (Number.isNaN(start.getTime())) return "Sin registro";
+  const minutes = Math.max(0, Math.round((Date.now() - start.getTime()) / 60000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours} h ${minutes % 60} min`;
 }

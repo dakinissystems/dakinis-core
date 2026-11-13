@@ -34,6 +34,7 @@ export function dakinisRequireTenantJwtAdmin(req) {
   if (jwtErr) return jwtErr;
   return dakinisRequireRoles([
     DAKINIS_ROLES.ADMIN,
+    DAKINIS_ROLES.OWNER,
     DAKINIS_ROLES.TENANT_ADMIN,
     DAKINIS_ROLES.PLATFORM_ADMIN
   ])(req);

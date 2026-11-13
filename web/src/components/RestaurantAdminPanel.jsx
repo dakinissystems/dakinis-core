@@ -46,6 +46,7 @@ export default function RestaurantAdminPanel({
   const [error, setError] = useState("");
   const [menuNotice, setMenuNotice] = useState("");
   const [selectedTableId, setSelectedTableId] = useState(null);
+  const [floorLocked, setFloorLocked] = useState(false);
 
   const fetchOpts = useMemo(
     () => ({
@@ -98,7 +99,12 @@ export default function RestaurantAdminPanel({
       });
       setTables(nextTables);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("restaurant.floorSaveError"));
+      if (e?.status === 403) {
+        setFloorLocked(true);
+        setError("Tu rol puede ver el plano, no guardarlo. Operación sigue disponible.");
+      } else {
+        setError(e instanceof Error ? e.message : t("restaurant.floorSaveError"));
+      }
     } finally {
       setFloorBusy(false);
     }
@@ -217,8 +223,8 @@ export default function RestaurantAdminPanel({
             onSelectTable={setSelectedTableId}
             onTablesChange={setTables}
             onDragEnd={saveFloor}
-            layoutEditable
-            positionEditable
+            layoutEditable={!floorLocked}
+            positionEditable={!floorLocked}
             onAddTable={(zone) => saveFloor([...tables, dakinisNewTableAtZone(tables, zone)])}
             tableTotal={() => 0}
             t={t}

@@ -43,3 +43,27 @@ export function dakinisWriteCashFloat(businessId, amountEur, dateKey = dakinisTo
 export function dakinisCashFloatDateKey() {
   return dakinisTodayKey();
 }
+
+function dakinisCashCloseStorageKey(businessId, dateKey = dakinisTodayKey()) {
+  return `dakinis-cash-close:${businessId || "local"}:${dateKey}`;
+}
+
+export function dakinisReadCashClose(businessId, dateKey = dakinisTodayKey()) {
+  try {
+    const raw = localStorage.getItem(dakinisCashCloseStorageKey(businessId, dateKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function dakinisWriteCashClose(businessId, close, dateKey = dakinisTodayKey()) {
+  try {
+    localStorage.setItem(dakinisCashCloseStorageKey(businessId, dateKey), JSON.stringify(close));
+  } catch {
+    /* ignore quota */
+  }
+  return close;
+}

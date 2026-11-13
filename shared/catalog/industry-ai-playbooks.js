@@ -15,9 +15,13 @@ const DAKINIS_INDUSTRY_AI_PLAYBOOKS = {
     {
       id: "promo_dishes",
       question: "¿Qué platos debería promocionar?",
-      available: () => false,
-      heuristic: () => "No se propone. Hacen falta excedentes medidos, recetas vinculadas y estacionalidad.",
-      basis: () => "Una alerta de stock mínimo indica falta de inventario, no un excedente para promocionar.",
+      available: (s) => Array.isArray(s.promoDishes) && s.promoDishes.length > 0,
+      heuristic: (s) =>
+        Array.isArray(s.promoDishes) && s.promoDishes.length
+          ? `Se pueden revisar estos platos: ${s.promoDishes.join(", ")}.`
+          : "No se propone. Hacen falta excedentes medidos, recetas vinculadas y estacionalidad.",
+      basis: () =>
+        "Una alerta de stock mínimo indica falta de inventario, no un excedente para promocionar. No hay una lista de platos calculada.",
       impact: "No calculado.",
       action: null
     }

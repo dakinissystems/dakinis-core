@@ -1,3 +1,4 @@
+import { useState } from "react";
 import FerminaKitchenOrderTime from "./FerminaKitchenOrderTime.jsx";
 import RestaurantMesasPanel from "./RestaurantMesasPanel.jsx";
 import {
@@ -6,7 +7,8 @@ import {
   DAKINIS_RESTAURANT_APP_CHANNEL_IDS,
   DAKINIS_RESTAURANT_LOCAL_CHANNEL_IDS
 } from "../utils/restaurantOrderMeta.js";
-import { dakinisReadCashFloat } from "../utils/restaurantCashFloat.js";
+import { dakinisReadCashFloat, dakinisReadCashClose, dakinisWriteCashClose } from "../utils/restaurantCashFloat.js";
+import { dakinisTenantJsonFetch } from "../services/api.js";
 import { DAKINIS_RESTAURANT_PAYMENT_IDS } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 
 const STATUS_FLOW = ["nueva", "cocina", "lista", "entregada", "cancelada"];
@@ -374,13 +376,23 @@ export function RestaurantComandasActivasView({
   );
 }
 
-export function RestaurantComandasCierrePanel({ t, dayClose, businessId }) {
+export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSession, fetchOpts }) {
   const opening = typeof window !== "undefined" ? dakinisReadCashFloat(businessId) : null;
   const cashRow = Array.isArray(dayClose?.byPayment)
     ? dayClose.byPayment.find((r) => r.id === "efectivo")
     : null;
   const cashSales = cashRow ? Number(cashRow.total) || 0 : 0;
   const expectedCash = opening != null ? Math.round((opening + cashSales) * 100) / 100 : null;
+  const [counted, setCounted] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [closeError, setCloseError] = useState("");
+  const [snapshot, setSnapshot] = useState(() => dakinisReadCashClose(businessId));
+  const countedNumber = Number(String(counted).replace(",", "."));
+  const difference =
+    expectedCash != null && Number.isFinite(countedNumber) ? Math.round((countedNumber - expectedCash) * 100) / 100 : null;
+  const needsNote = difference != null && Math.abs(difference) >= 0.01;
+  const canClose = expectedCash != null && Number.isFinite(countedNumber) && countedNumber >= 0 && (!needsNote || note.trim().length >= 3);
 
   return (
     <article className="card" style={{ marginTop: "1rem" }}>
@@ -410,6 +422,77 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId }) {
           <strong>{expectedCash != null ? `${expectedCash.toFixed(2)} €` : "—"}</strong>
         </li>
       </ul>
+      <form
+        className="mockup-form"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (!canClose || !apiSession?.token) return;
+          setBusy(true);
+          setCloseError("");
+          try {
+            const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/cash-close", apiSession, {
+              ...fetchOpts,
+              method: "POST",
+              body: {
+                expectedCash,
+                countedCash: countedNumber,
+                note: note.trim(),
+                dateKey: new Date().toISOString().slice(0, 10)
+              }
+            });
+            const close = json?.data?.close;
+            if (!close) throw new Error("El cierre no ha devuelto la instantánea.");
+            dakinisWriteCashClose(businessId, close);
+            setSnapshot(close);
+            setCounted("");
+            setNote("");
+          } catch (err) {
+            setCloseError(err instanceof Error ? err.message : "No se pudo cerrar la caja.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <h5 style={{ margin: "0 0 0.35rem" }}>Arqueo de caja</h5>
+        <p className="kpi-label">Pendiente de conciliación hasta que el efectivo contado coincida o quede justificado.</p>
+        <label className="mockup-field">
+          <span>Efectivo contado</span>
+          <input
+            inputMode="decimal"
+            value={counted}
+            placeholder="Introducir importe"
+            onChange={(e) => setCounted(e.target.value)}
+            disabled={expectedCash == null || busy}
+          />
+        </label>
+        <p className="kpi-label">
+          Diferencia: {difference == null ? "—" : `${difference.toFixed(2)} €`}
+        </p>
+        {needsNote ? (
+          <label className="mockup-field">
+            <span>Justificación</span>
+            <input
+              value={note}
+              placeholder="Escribe el motivo de la diferencia..."
+              onChange={(e) => setNote(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+        ) : null}
+        {expectedCash == null ? <p className="kpi-label">Guarda el fondo de inicio para calcular el efectivo esperado.</p> : null}
+        {!apiSession?.token ? <p className="kpi-label">Inicia sesión para registrar el cierre.</p> : null}
+        {closeError ? <p className="lead" style={{ color: "var(--dakinis-warning)" }}>{closeError}</p> : null}
+        <button type="submit" className="btn" disabled={!canClose || busy || !apiSession?.token}>
+          {busy ? "Guardando…" : "Confirmar cierre"}
+        </button>
+        {snapshot?.closedAt ? (
+          <p className="kpi-label">
+            Último cierre: {new Date(snapshot.closedAt).toLocaleString("es-ES")}
+            {snapshot.actorEmail ? ` · ${snapshot.actorEmail}` : ""}
+            {snapshot.difference != null ? ` · diferencia ${Number(snapshot.difference).toFixed(2)} €` : ""}
+          </p>
+        ) : null}
+      </form>
       <div
         style={{
           display: "grid",

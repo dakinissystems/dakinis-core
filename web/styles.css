@@ -5629,6 +5629,21 @@ dialog.restaurant-mesa-modal::backdrop {
   align-self: center;
 }
 
+html[data-density="compact"] .card {
+  padding: 0.7rem;
+}
+
+html[data-density="comfortable"] .card {
+  padding: 1.2rem;
+}
+
+@media (max-width: 1024px) {
+  .btn,
+  .tenant-touch-btn {
+    min-height: 44px;
+  }
+}
+
 @media (min-width: 960px) {
   .dashboard-groups {
     grid-template-columns: 1fr 1fr;

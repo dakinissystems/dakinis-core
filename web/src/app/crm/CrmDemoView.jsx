@@ -1,11 +1,9 @@
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import CrmPipelineBoard from "../../components/business/CrmPipelineBoard.jsx";
 
 export default function CrmDemoView({ t, navigate, isBusinessFacing }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{t("businessDemo.clients.kicker")}</p>
         <h2>{t("businessDemo.clients.title")}</h2>
         <p className="lead">{t("businessDemo.clients.lead")}</p>

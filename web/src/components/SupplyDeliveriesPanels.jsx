@@ -32,6 +32,7 @@ export function SupplyDeliveriesSection({
   deliveryForm,
   setDeliveryForm,
   supplierNames,
+  productRefs = [],
   handleAddDelivery,
   handleDeleteDelivery
 }) {
@@ -182,9 +183,27 @@ export function SupplyDeliveriesSection({
             value={deliveryForm.contents}
             onChange={(e) => setDeliveryForm((p) => ({ ...p, contents: e.target.value }))}
             placeholder="Productos o referencia del pedido"
+            list="supply-product-refs"
             disabled={!canMutate || saving}
           />
+          <datalist id="supply-product-refs">
+            {productRefs.map((ref) => (
+              <option key={ref} value={ref} />
+            ))}
+          </datalist>
         </label>
+        {deliveryForm.status === "Recibido" || deliveryForm.status === "Recepción parcial" ? (
+          <label className="mockup-field">
+            <span>Cantidad recibida</span>
+            <input
+              inputMode="decimal"
+              value={deliveryForm.receiveQty || ""}
+              placeholder="Unidades de esta recepción"
+              onChange={(e) => setDeliveryForm((p) => ({ ...p, receiveQty: e.target.value }))}
+              disabled={!canMutate || saving}
+            />
+          </label>
+        ) : null}
         <label className="mockup-field">
           <span>Estado</span>
           <select
@@ -196,9 +215,12 @@ export function SupplyDeliveriesSection({
             <option value="Confirmado">Confirmado</option>
             <option value="En ruta">En camino</option>
             <option value="Recibido">Recibido</option>
+            <option value="Recepción parcial">Recepción parcial</option>
             <option value="Cancelado">Cancelado</option>
           </select>
-          <span className="kpi-label">Recibido no suma stock. La entrada se registra en inventario.</span>
+          <span className="kpi-label">
+            Una entrega prevista no entra mercancía. Recibido y recepción parcial crean un lote si indicas cantidad. No modifican el stock de cocina.
+          </span>
         </label>
         <button
           type="submit"
@@ -208,11 +230,29 @@ export function SupplyDeliveriesSection({
         >
           {saving
             ? "Guardando…"
-            : deliveryForm.status === "Recibido"
-              ? "Registrar recepción"
-              : "Registrar entrega prevista"}
+            : deliveryForm.status === "Recepción parcial"
+              ? "Registrar recepción parcial"
+              : deliveryForm.status === "Recibido"
+                ? "Registrar recepción"
+                : "Registrar entrega prevista"}
         </button>
       </form>
+
+      {deliveries.length > 0 ? (
+        <article className="card" style={{ marginTop: "1rem" }}>
+          <h5 style={{ marginTop: 0 }}>Agenda de proveedores</h5>
+          <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
+            {[...deliveries]
+              .sort((a, b) => String(a.arrivalWindow).localeCompare(String(b.arrivalWindow)))
+              .map((row) => (
+                <li key={`tl-${row.id}`}>
+                  {row.arrivalWindow || "Sin fecha"} · {row.supplier} · {row.status}
+                  {row.contents ? ` · ${row.contents}` : ""}
+                </li>
+              ))}
+          </ul>
+        </article>
+      ) : null}
     </>
   );
 }

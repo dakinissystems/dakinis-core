@@ -379,6 +379,20 @@ export function RestaurantStockInventoryGrid({
         <button type="button" className="btn btn-outline tenant-touch-btn" disabled={busy} onClick={dakinisApplyDemoPurchase}>
           {t("kitchen.demoPurchase")}
         </button>
+        <h5>Historial de movimientos</h5>
+        {Array.isArray(kitchen.movements) && kitchen.movements.length ? (
+          <ul className="kpi-label">
+            {kitchen.movements.map((row) => (
+              <li key={row.id}>
+                {row.createdAt ? new Date(row.createdAt).toLocaleString("es-ES") : "Sin fecha"} · {row.name} ·{" "}
+                {Number(row.delta) > 0 ? "+" : ""}
+                {row.delta} {row.unit || ""} · {row.reason || "Sin motivo"}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="kpi-label">No hay movimientos registrados.</p>
+        )}
       </article>
 
       <article className="card">
@@ -511,6 +525,7 @@ function ProductionAvailability({ kitchen, plan, itemNames }) {
           ? "Hay stock para estas tandas."
           : "No se puede registrar la producción: falta stock. No hay una autorización de producción excepcional."}
       </p>
+      <p className="kpi-label">Coste estimado: no calculado. Los ingredientes no tienen un coste guardado.</p>
       <table className="mockup-table">
         <thead>
           <tr>

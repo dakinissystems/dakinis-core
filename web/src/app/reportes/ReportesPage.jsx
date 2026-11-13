@@ -3,7 +3,6 @@ import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitalit
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import AnalyticsBusinessDemo from "../../components/business/AnalyticsBusinessDemo.jsx";
 import { dakinisTenantBenchmark } from "../../services/tenant-intelligence.js";
 import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
@@ -50,7 +49,6 @@ export default function ReportesPage({ navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {isDemo ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{t("businessDemo.analytics.kicker")}</p>
         <h2>{t("businessDemo.analytics.title")}</h2>
         {isDemo ? <span className="mockup-badge">{t("commercial.executive.demoBadge")}</span> : null}

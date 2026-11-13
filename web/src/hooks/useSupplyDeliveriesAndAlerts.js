@@ -147,6 +147,14 @@ export function useSupplyDeliveriesAndAlerts({
     setSaving(true);
     setActionError("");
     try {
+      const status = deliveryForm.status;
+      const receiveQty = Number(String(deliveryForm.receiveQty || "").replace(",", "."));
+      const receives = status === "Recibido" || status === "Recepción parcial";
+      if (receives && (!Number.isFinite(receiveQty) || receiveQty <= 0)) {
+        setActionError("Indica la cantidad recibida. Una recepción sin cantidad no entra mercancía.");
+        setSaving(false);
+        return;
+      }
       await dakinisTenantJsonFetch("/api/tenant/supply/deliveries", apiSession, {
         method: "POST",
         businessId: tenantSlugForVertical,
@@ -155,10 +163,22 @@ export function useSupplyDeliveriesAndAlerts({
           supplier: deliveryForm.supplier.trim(),
           arrivalWindow: deliveryForm.arrivalWindow.trim(),
           contents: deliveryForm.contents.trim(),
-          status: deliveryForm.status
+          status
         }
       });
-      setDeliveryForm({ supplier: "", arrivalWindow: "", contents: "", status: "Programado" });
+      if (receives) {
+        await dakinisTenantJsonFetch("/api/tenant/inventory/receive", apiSession, {
+          method: "POST",
+          businessId: tenantSlugForVertical,
+          businessTypeHeader: activeSystemKey,
+          body: {
+            productName: deliveryForm.contents.trim() || deliveryForm.supplier.trim(),
+            supplier: deliveryForm.supplier.trim(),
+            quantity: receiveQty
+          }
+        });
+      }
+      setDeliveryForm({ supplier: "", arrivalWindow: "", contents: "", status: "Programado", receiveQty: "" });
       await loadSupply();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "No se pudo guardar la entrega");

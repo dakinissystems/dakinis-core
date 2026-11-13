@@ -26,6 +26,8 @@ export default function RestaurantComandasPanels({ ctx }) {
     staffRole,
     opsMode,
     apiSessionBusinessId,
+    apiSession,
+    fetchOpts,
     comandasViews,
     comandasView,
     setComandasView,
@@ -221,7 +223,13 @@ export default function RestaurantComandasPanels({ ctx }) {
       </article>
 
       {comandasView === "cierre" ? (
-        <RestaurantComandasCierrePanel t={t} dayClose={dayClose} businessId={apiSessionBusinessId} />
+        <RestaurantComandasCierrePanel
+          t={t}
+          dayClose={dayClose}
+          businessId={apiSessionBusinessId}
+          apiSession={apiSession}
+          fetchOpts={fetchOpts}
+        />
       ) : null}
 
       {comandasView === "facturas" ? (

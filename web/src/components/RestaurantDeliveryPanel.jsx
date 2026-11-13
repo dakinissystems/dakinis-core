@@ -14,7 +14,8 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
       return fallback;
     }
   };
-  const [view, setView] = useState("ops"); // ops | config
+  const [view, setView] = useState("ops"); // ops | config | requirements | diagnose
+  const [focusProvider, setFocusProvider] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [providers, setProviders] = useState([]);
   const [lists, setLists] = useState([]);
@@ -166,7 +167,15 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
         </p>
       ) : null}
 
-      {view === "ops" ? (
+      {view === "requirements" || view === "diagnose" ? (
+        <DeliveryFocusPanel
+          view={view}
+          row={(dashboard?.integrations || healthRows).find((item) => item.provider === focusProvider)}
+          busy={busy}
+          onBack={() => setView("ops")}
+          onRetry={reload}
+        />
+      ) : view === "ops" ? (
         <>
           <article className="card">
             <h4 style={{ marginTop: 0 }}>{label("restaurant.deliveryOrdersTitle", "Pedidos activos")}</h4>
@@ -210,8 +219,17 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                     <button
                       type="button"
                       className="btn btn-outline"
-                      disabled={state.locked && (row.availability === "coming_soon" || row.status === "stub")}
-                      onClick={() => setView("config")}
+                      disabled={
+                        row.availability === "coming_soon" ||
+                        row.status === "stub" ||
+                        (row.availability === "connection_error" && !(row.last_error || row.lastError || row.detail))
+                      }
+                      onClick={() => {
+                        setFocusProvider(row.provider);
+                        if (row.availability === "pending_access") setView("requirements");
+                        else if (row.availability === "connection_error") setView("diagnose");
+                        else setView("config");
+                      }}
                     >
                       {row.availability === "coming_soon" || row.status === "stub"
                         ? "No disponible aún"
@@ -220,7 +238,9 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                           : row.availability === "connected"
                             ? "Gestionar"
                             : row.availability === "connection_error"
-                              ? "Diagnosticar"
+                              ? row.last_error || row.lastError || row.detail
+                                ? "Diagnosticar"
+                                : "Sin detalle de error"
                               : "Configurar"}
                     </button>
                   </article>
@@ -238,7 +258,7 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
             <h4 style={{ marginTop: 0 }}>Simulación</h4>
             <p className="kpi-label">Esto no entra un pedido real de un canal. Sirve para probar la pantalla.</p>
             <button type="button" className="btn btn-outline" disabled={busy} onClick={simulateOrder}>
-              {label("restaurant.deliverySimulate", "Simular pedido manual")}
+              Crear pedido de prueba
             </button>
           </article>
 
@@ -336,6 +356,28 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
         </>
       )}
     </div>
+  );
+}
+
+function DeliveryFocusPanel({ view, row, busy, onBack, onRetry }) {
+  const detail = row?.detail || row?.notes || "";
+  const errorText = row?.last_error || row?.lastError || "";
+  return (
+    <article className="card">
+      <h4 style={{ marginTop: 0 }}>{view === "diagnose" ? "Diagnóstico" : "Requisitos"}</h4>
+      <p className="kpi-label">{row?.label || row?.provider || "Canal"}</p>
+      {view === "requirements" ? (
+        <p>{detail || "Este canal está pendiente de acceso. No hay una lista de requisitos guardada."}</p>
+      ) : (
+        <p>{errorText || detail || "No hay un detalle técnico de este error."}</p>
+      )}
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <button type="button" className="btn btn-outline" onClick={onBack}>Volver</button>
+        {view === "diagnose" ? (
+          <button type="button" className="btn" disabled={busy} onClick={onRetry}>Reintentar</button>
+        ) : null}
+      </div>
+    </article>
   );
 }
 

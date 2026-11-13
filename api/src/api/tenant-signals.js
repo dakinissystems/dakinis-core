@@ -9,6 +9,15 @@ function dakinisParseRecordPayload(row) {
   }
 }
 
+async function dakinisCountOrZero(sql, params) {
+  try {
+    const row = await dakinisQueryOne(sql, params);
+    return Number(row?.c) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 function dakinisDaysAgoIso(days) {
   return new Date(Date.now() - days * 86400000).toISOString();
 }
@@ -57,6 +66,14 @@ export async function dakinisGatherTenantSignals(businessId, businessType) {
     `SELECT COUNT(*) AS c FROM tenant_supply_deliveries WHERE business_id = ?`,
     [businessId]
   );
+  const surplusItems = await dakinisCountOrZero(
+    `SELECT COUNT(*) AS c FROM tenant_stock_items WHERE business_id = ? AND min_quantity > 0 AND quantity >= min_quantity * 2`,
+    [businessId]
+  );
+  const linkedRecipes = await dakinisCountOrZero(
+    `SELECT COUNT(*) AS c FROM tenant_recipes WHERE business_id = ?`,
+    [businessId]
+  );
 
   return {
     crmContacts: records.length,
@@ -67,6 +84,9 @@ export async function dakinisGatherTenantSignals(businessId, businessType) {
     lowStock,
     supplyAlerts: stockAlerts,
     deliveries: Number(deliveriesRow?.c) || 0,
+    surplusItems,
+    linkedRecipes,
+    seasonalityKnown: false,
     users,
     onboardingCompleted: records.length > 0
   };

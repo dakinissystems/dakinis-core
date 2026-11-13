@@ -380,6 +380,8 @@ export function useRestaurantComandasSection({
       staffRole,
       opsMode,
       apiSessionBusinessId: apiSession?.businessId || apiSession?.business?.id || effectiveSlug || null,
+      apiSession,
+      fetchOpts,
       comandasViews,
       comandasView,
       setComandasView,

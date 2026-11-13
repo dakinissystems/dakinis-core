@@ -4,6 +4,7 @@ export const DAKINIS_ROLES = Object.freeze({
   PLATFORM_ADMIN: "platform_admin",
   TENANT_ADMIN: "tenant_admin",
   ADMIN: "admin",
+  OWNER: "owner",
   EMPLOYEE: "employee",
   MEMBER: "member",
   READONLY: "readonly",
@@ -32,5 +33,5 @@ export function dakinisRequireRoles(allowedRoles) {
 /** platform_admin OR tenant admin (admin / tenant_admin). */
 export function dakinisIsTenantAdminRole(role) {
   const r = String(role || "").toLowerCase();
-  return r === "admin" || r === "tenant_admin" || r === "platform_admin";
+  return r === "admin" || r === "owner" || r === "tenant_admin" || r === "platform_admin";
 }

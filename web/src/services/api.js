@@ -56,6 +56,7 @@ async function dakinisFetchJson(url, init) {
   try {
     res = await fetch(url, init);
   } catch (err) {
+    if (err?.name === "AbortError") throw err;
     console.error("[dakinis] fetch failed", url);
     throw new DakinisApiError(
       "No hemos podido obtener los datos. Tus datos anteriores no se han modificado.",

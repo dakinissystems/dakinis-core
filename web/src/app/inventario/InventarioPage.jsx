@@ -4,7 +4,6 @@ import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
 import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import InventoryBusinessDemo from "../../components/business/InventoryBusinessDemo.jsx";
 
 export default function InventarioPage({ navigate }) {
@@ -39,7 +38,6 @@ export default function InventarioPage({ navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {isDemo ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{t("businessDemo.inventory.kicker")}</p>
         <h2>{t("businessDemo.inventory.title")}</h2>
         <p className="lead">{t("businessDemo.inventory.lead")}</p>
