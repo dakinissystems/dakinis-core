@@ -102,6 +102,7 @@ export async function dakinisHandleDeliveryIntegrationsPatch(req, providerId, ra
   const body = dakinisParseJson(rawBody);
   if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
   const row = await dakinisUpsertDeliveryIntegration(req.dakinisBusiness.id, providerId, body);
+  if (row?.error) return dakinisJsonError(row.error.status, row.error.code, row.error.message);
   return dakinisJsonSuccess({ integration: row }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 

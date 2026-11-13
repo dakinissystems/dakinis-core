@@ -3,6 +3,8 @@ import { dakinisSqlTimestampNow } from "../../../db/dialect.js";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../../../db/query.js";
 import {
   dakinisChannelToProviderId,
+  dakinisDeliveryAvailability,
+  dakinisDeliveryProviderMeta,
   DAKINIS_DELIVERY_PROVIDERS
 } from "@dakinis/shared/catalog/deliveryProviders.js";
 import { dakinisGetDeliveryProvider } from "./providers/index.js";
@@ -40,11 +42,23 @@ async function dakinisLoadIntegration(businessId, providerId) {
  * @param {object} patch
  */
 export async function dakinisUpsertDeliveryIntegration(businessId, providerId, patch = {}) {
+  const meta = dakinisDeliveryProviderMeta(providerId);
+  const wantsLive = patch.enabled === true || patch.status === "online" || patch.status === "ok";
+  if (wantsLive && meta?.phase !== "live") {
+    return {
+      error: {
+        status: 409,
+        code: "INTEGRATION_NOT_AVAILABLE",
+        message: "Esta integración todavía no se puede activar."
+      }
+    };
+  }
   const existing = await dakinisLoadIntegration(businessId, providerId);
   const enabled = patch.enabled !== undefined ? (patch.enabled ? 1 : 0) : existing?.enabled ?? 0;
   const status =
-    patch.status ||
-    (enabled ? existing?.status || "online" : "disconnected");
+    meta?.phase === "live"
+      ? patch.status || (enabled ? existing?.status || "online" : "disconnected")
+      : existing?.status || "stub";
 
   if (existing) {
     await dakinisRun(
@@ -116,11 +130,20 @@ export async function dakinisListDeliveryIntegrations(businessId) {
     } else if (meta.id === "manual") {
       health = { ok: true, status: row?.enabled ? "online" : "disabled", detail: "Simulación local" };
     }
+    const enabled = row ? !!row.enabled : meta.id === "manual";
     out.push({
       provider: meta.id,
       label: meta.label,
-      enabled: row ? !!row.enabled : meta.id === "manual",
-      status: health.status || row?.status || "disconnected",
+      phase: meta.phase || "soon",
+      enabled,
+      status: health.status || row?.status || "disabled",
+      availability: dakinisDeliveryAvailability({
+        phase: meta.phase,
+        healthStatus: health.status || row?.status,
+        healthOk: !!health.ok,
+        enabled,
+        lastSyncAt: row?.last_sync_at || null
+      }),
       healthOk: !!health.ok,
       detail: health.detail || row?.last_error || meta.notes,
       storeId: row?.store_id || null,
@@ -188,18 +211,12 @@ export async function dakinisListDeliveryProviderHealth(businessId) {
           lastSync = mins <= 1 ? "1 min" : `${mins} min`;
         }
       }
-      const status =
-        row.status === "online" || row.status === "ok"
-          ? "connected"
-          : row.status === "stub"
-            ? "stub"
-            : row.enabled
-              ? row.status || "unknown"
-              : "disconnected";
       return {
         provider: row.provider,
         label: row.label,
-        status,
+        phase: row.phase || "soon",
+        status: row.status,
+        availability: row.availability,
         lastSync,
         lastSyncAt,
         pending: pendingByChannel[row.provider] || 0,

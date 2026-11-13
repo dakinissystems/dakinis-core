@@ -429,8 +429,7 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
   const initialQuantity = Number(body.initialQuantity);
   const expiryDate = typeof body.expiryDate === "string" ? body.expiryDate.trim() : "";
 
-  if (!name) return dakinisJsonError(400, "VALIDATION_ERROR", "name es obligatorio");
-  if (!barcode) return dakinisJsonError(400, "VALIDATION_ERROR", "barcode es obligatorio");
+  if (!name) return dakinisJsonError(400, "VALIDATION_ERROR", "El nombre es obligatorio");
 
   const businessId = req.dakinisBusiness.id;
   await dakinisEnsureRestaurantKitchenSeedAsync(businessId);
@@ -446,7 +445,20 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
     [businessId, slug]
   );
   if (existing) {
-    return dakinisJsonError(409, "CONFLICT", "Ya existe un insumo con este codigo");
+    if (!barcode && Number.isFinite(initialQuantity) && initialQuantity > 0) {
+      await dakinisAdjustStock(businessId, existing.id, initialQuantity, "entrada-manual", null);
+      const updated = await dakinisQueryOne(
+        `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+           FROM tenant_stock_items WHERE id = ?`,
+        [existing.id]
+      );
+      return dakinisJsonSuccess(
+        { item: dakinisRowStockItem(updated, null) },
+        req.dakinisBusiness.type,
+        dakinisMeta(req)
+      );
+    }
+    return dakinisJsonError(409, "CONFLICT", barcode ? "Ya existe un insumo con este codigo" : "Ya existe un insumo con este nombre");
   }
 
   const id = dakinisNewId("stk");
@@ -463,13 +475,17 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
     await dakinisRun(
       `INSERT INTO tenant_stock_movements (id, business_id, stock_item_id, delta, reason, reference_id)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [dakinisNewId("sm"), businessId, id, qty, "alta-escaneo", null]
+      [dakinisNewId("sm"), businessId, id, qty, barcode ? "alta-escaneo" : "alta-manual", null]
     );
   }
 
-  const config = await dakinisLoadBusinessConfig(businessId);
-  const barcodes = dakinisPutStockBarcode(dakinisStockBarcodesFromConfig(config), slug, barcode);
-  await dakinisSaveBusinessConfig(businessId, { ...config, stockBarcodes: barcodes });
+  let savedBarcode = null;
+  if (barcode) {
+    const config = await dakinisLoadBusinessConfig(businessId);
+    const barcodes = dakinisPutStockBarcode(dakinisStockBarcodesFromConfig(config), slug, barcode);
+    await dakinisSaveBusinessConfig(businessId, { ...config, stockBarcodes: barcodes });
+    savedBarcode = barcodes[slug] || barcode;
+  }
 
   if (expiryDate) {
     await dakinisMaybeCreateLotOnReceive(businessId, {
@@ -486,7 +502,62 @@ export async function dakinisHandleRestaurantStockItemsPost(req, rawBody) {
     [id]
   );
   return dakinisJsonSuccess(
-    { item: dakinisRowStockItem(row, barcode) },
+    { item: dakinisRowStockItem(row, savedBarcode) },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
+export async function dakinisHandleRestaurantStockMovePost(req, rawBody) {
+  const gate = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+
+  const itemId = typeof body.itemId === "string" ? body.itemId.trim() : "";
+  const slug = typeof body.slug === "string" ? body.slug.trim() : "";
+  const qty = Number(body.quantity);
+  const direction = String(body.direction || "in").toLowerCase() === "out" ? "out" : "in";
+  if (!itemId && !slug) return dakinisJsonError(400, "VALIDATION_ERROR", "Elige un producto");
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "La cantidad tiene que ser mayor que cero");
+  }
+
+  const businessId = req.dakinisBusiness.id;
+  const row = itemId
+    ? await dakinisQueryOne(
+        `SELECT id, slug, name, unit, quantity FROM tenant_stock_items WHERE id = ? AND business_id = ?`,
+        [itemId, businessId]
+      )
+    : await dakinisQueryOne(
+        `SELECT id, slug, name, unit, quantity FROM tenant_stock_items WHERE slug = ? AND business_id = ?`,
+        [slug, businessId]
+      );
+  if (!row) return dakinisJsonError(404, "NOT_FOUND", "No está ese producto en el inventario");
+
+  const delta = direction === "out" ? -qty : qty;
+  if (direction === "out" && Number(row.quantity) + delta < -1e-9) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "Stock insuficiente");
+  }
+
+  await dakinisAdjustStock(
+    businessId,
+    row.id,
+    delta,
+    direction === "out" ? "salida-manual" : "entrada-manual",
+    null
+  );
+
+  const updated = await dakinisQueryOne(
+    `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
+       FROM tenant_stock_items WHERE id = ?`,
+    [row.id]
+  );
+  return dakinisJsonSuccess(
+    { item: dakinisRowStockItem(updated, null) },
     req.dakinisBusiness.type,
     dakinisMeta(req)
   );

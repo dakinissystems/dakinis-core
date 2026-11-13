@@ -34,7 +34,12 @@ export default function CrmContactList({
           placeholder={t("app.crm.searchPlaceholder")}
         />
       </label>
-      <button type="button" className="btn btn-outline" onClick={onLoadContacts} disabled={loading}>
+      {search ? (
+        <button type="button" className="btn btn-outline" onClick={() => onSearchChange("")}>
+          Limpiar búsqueda
+        </button>
+      ) : null}
+      <button type="button" className="btn btn-outline" onClick={onLoadContacts} disabled={loading} aria-busy={loading}>
         {loading ? t("app.crm.loading") : t("app.crm.refresh")}
       </button>
       <ul className="wa-thread-list" role="list">
@@ -59,7 +64,7 @@ export default function CrmContactList({
 
       {!loading && contacts.length === 0 ? (
         <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-          Todavía no hay clientes. El alta es el botón de arriba.
+          Todavía no tienes clientes. Añade el primero con Nuevo cliente. La importación de un archivo no está en esta pantalla.
         </p>
       ) : null}
 

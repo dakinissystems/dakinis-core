@@ -9,6 +9,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Interno / Manual",
     channels: ["salon", "barra", "takeaway", "delivery"],
     officialApi: true,
+    phase: "live",
     notes: "Pedidos creados en Dakinis (sala, barra, takeaway propio)."
   },
   {
@@ -16,6 +17,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Manual (simulación)",
     channels: ["manual"],
     officialApi: true,
+    phase: "live",
     notes: "Provider de pruebas: importa pedidos simulados sin API externa."
   },
   {
@@ -23,6 +25,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Glovo",
     channels: ["glovo"],
     officialApi: "partner",
+    phase: "partner_access",
     notes: "Requiere acuerdo partner / API oficial."
   },
   {
@@ -30,6 +33,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Uber Eats",
     channels: ["ubereats", "uber"],
     officialApi: "partner",
+    phase: "partner_access",
     notes: "Requiere acceso Uber Eats Marketplace API."
   },
   {
@@ -37,6 +41,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Just Eat",
     channels: ["justeat"],
     officialApi: "partner",
+    phase: "partner_access",
     notes: "Just Eat Takeaway.com partner API."
   },
   {
@@ -44,6 +49,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Rappi",
     channels: ["rappi"],
     officialApi: "partner",
+    phase: "soon",
     notes: "Stub — LATAM."
   },
   {
@@ -51,6 +57,7 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "PedidosYa",
     channels: ["pedidosya"],
     officialApi: "partner",
+    phase: "soon",
     notes: "Stub — LATAM."
   },
   {
@@ -58,11 +65,33 @@ export const DAKINIS_DELIVERY_PROVIDERS = Object.freeze([
     label: "Deliveroo",
     channels: ["deliveroo"],
     officialApi: "partner",
+    phase: "soon",
     notes: "Stub — requiere partner."
   }
 ]);
 
 const BY_ID = new Map(DAKINIS_DELIVERY_PROVIDERS.map((p) => [p.id, p]));
+
+export function dakinisDeliveryProviderMeta(id) {
+  return BY_ID.get(id) || null;
+}
+
+/**
+ * Estado que puede mostrarse. Un stub no es una integración desconectada.
+ * @returns {"available"|"pending_access"|"not_configured"|"connected"|"connection_error"|"coming_soon"}
+ */
+export function dakinisDeliveryAvailability({ phase, healthStatus, healthOk, enabled, lastSyncAt } = {}) {
+  const live = phase === "live";
+  const status = String(healthStatus || "");
+  if (!live) return phase === "partner_access" ? "pending_access" : "coming_soon";
+  if (healthOk && enabled && (status === "online" || status === "ok" || status === "connected")) {
+    return "connected";
+  }
+  if (status === "error_token") return "pending_access";
+  if (lastSyncAt && enabled && !healthOk) return "connection_error";
+  if (!enabled && !lastSyncAt) return "available";
+  return "not_configured";
+}
 
 /** Price list keys canónicos (canal → tarifa). */
 export const DAKINIS_PRICE_LIST_KEYS = Object.freeze([

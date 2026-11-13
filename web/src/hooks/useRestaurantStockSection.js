@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { dakinisRestaurantValidatePlan } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisResolveStockItemSlug } from "@dakinis/shared/catalog/stock-barcodes.js";
 import {
   DAKINIS_DUMPLING_DEMO_PRODUCTION,
@@ -153,6 +154,62 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     return true;
   }
 
+  async function dakinisApplyManualMove({ itemId, name, unit, quantity, direction }) {
+    const qty = Number(quantity);
+    const dir = direction === "out" ? "out" : "in";
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setError("La cantidad tiene que ser mayor que cero.");
+      return false;
+    }
+    if (!apiSession?.token) {
+      setError("Inicia sesión para registrar el movimiento.");
+      return false;
+    }
+    if (!itemId && !String(name || "").trim()) {
+      setError("Escribe el nombre del producto.");
+      return false;
+    }
+    if (itemId && dir === "out") {
+      const known = (kitchen?.items ?? []).find((item) => item.id === itemId);
+      if (Number(known?.quantity) - qty < 0) {
+        setError("Stock insuficiente");
+        return false;
+      }
+    }
+    setBusy(true);
+    setError("");
+    setScanMessage("");
+    try {
+      if (itemId) {
+        await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/move", apiSession, {
+          ...fetchOpts,
+          method: "POST",
+          body: { itemId, quantity: qty, direction: dir }
+        });
+      } else {
+        const productName = String(name || "").trim();
+        await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/items", apiSession, {
+          ...fetchOpts,
+          method: "POST",
+          body: {
+            name: productName,
+            unit: unit || "u",
+            initialQuantity: qty,
+            minQuantity: 0
+          }
+        });
+      }
+      setScanMessage(dir === "out" ? "Salida registrada." : "Entrada registrada.");
+      await reload(undefined);
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo registrar el movimiento.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function dakinisApplyStockScan(barcode) {
     const code = String(barcode || "").trim();
     if (!code) return;
@@ -273,6 +330,14 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
   }
 
   async function dakinisApplyProduction() {
+    const active = plan.filter((row) => Number(row.batches) > 0);
+    const stock = {};
+    for (const item of kitchen?.items || []) stock[item.slug] = item.quantity;
+    const validation = dakinisRestaurantValidatePlan(active, kitchen?.recipes || [], stock);
+    if (!active.length || !validation.ok) {
+      setError("No se puede registrar la producción: falta stock.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -335,6 +400,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     fetchOpts,
     apiSession,
     pendingScan,
+    dakinisApplyManualMove,
     dakinisApplyStockScan,
     dakinisConfirmStockScan,
     dakinisCreateProductFromScan,

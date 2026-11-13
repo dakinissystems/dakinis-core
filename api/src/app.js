@@ -35,6 +35,7 @@ import {
   dakinisHandleRestaurantProductionSimulatePost,
   dakinisHandleRestaurantProfilePatch,
   dakinisHandleRestaurantStockItemsPost,
+  dakinisHandleRestaurantStockMovePost,
   dakinisHandleRestaurantStockPurchasePost,
   dakinisHandleRestaurantStockScanPost
 } from "./api/tenant-restaurant.js";
@@ -254,6 +255,8 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandleRestaurantTableSessionPatch(req, restaurantTableSession[1], rawBody);
   if (path === "/api/tenant/restaurant/stock/items" && req.method === "POST")
     return dakinisHandleRestaurantStockItemsPost(req, rawBody);
+  if (path === "/api/tenant/restaurant/stock/move" && req.method === "POST")
+    return dakinisHandleRestaurantStockMovePost(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/scan" && req.method === "POST")
     return dakinisHandleRestaurantStockScanPost(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
@@ -291,6 +294,8 @@ export async function dakinisDispatch(req, rawBody, url) {
       return dakinisHandleRestaurantTableSessionPatch(req, hospTableSession[1], rawBody);
     if (hospPath === "/api/tenant/restaurant/stock/items" && req.method === "POST")
       return dakinisHandleRestaurantStockItemsPost(req, rawBody);
+    if (hospPath === "/api/tenant/restaurant/stock/move" && req.method === "POST")
+      return dakinisHandleRestaurantStockMovePost(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/stock/scan" && req.method === "POST")
       return dakinisHandleRestaurantStockScanPost(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")

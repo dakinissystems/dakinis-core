@@ -56,7 +56,10 @@ function HealthFactors({ factors }) {
         const rows = list.filter((factor) => group.keys.includes(factor.key));
         if (!rows.length) return null;
         return (
-          <article className="card dashboard-kpi" key={group.id}>
+          <article
+            className={`card dashboard-kpi${rows.some((factor) => Number(factor.stockAlerts) > 0) ? " dashboard-kpi--alert" : ""}`}
+            key={group.id}
+          >
             <p className="kpi-label">{group.title}</p>
             {group.id === "setup" ? (
               <p className="kpi-label">Un negocio sin configurar no es una incidencia operativa.</p>
@@ -84,7 +87,7 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
   if (health) grouped.get("attention").unshift({ key: "health", label: t("app.dashboard.healthScore"), health: true });
 
   return (
-    <div className="dashboard-groups" style={{ marginTop: "0.75rem", display: "grid", gap: "0.65rem" }}>
+    <div className="dashboard-groups">
       {KPI_GROUPS.map((group) => {
         const items = grouped.get(group.id) || [];
         if (!items.length) return null;
@@ -131,8 +134,9 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
                   );
                 }
                 const missing = item.value == null || item.value === "" || item.value === "Datos no disponibles";
+                const alertCount = item.key === "stock_alertas" && !missing ? Number(item.value) : 0;
                 return (
-                  <article className="card" key={item.key}>
+                  <article className={`card dashboard-kpi${alertCount > 0 ? " dashboard-kpi--alert" : ""}`} key={item.key}>
                     <p className="kpi-label">{item.label}</p>
                     <p className="kpi-value" style={missing ? { fontSize: "1rem" } : undefined}>
                       {missing ? "Datos no disponibles" : item.value}
@@ -273,7 +277,10 @@ export default function LiveTenantDashboard({ session, navigate }) {
                 const stock = /stock|inventario|reponer/i.test(text);
                 return (
                   <li key={item.id}>
-                    <strong>{item.question}</strong> — {item.answer}
+                    <strong>{item.question}</strong>
+                    <p className="kpi-label">Motivo: {item.answer}</p>
+                    <p className="kpi-label">{item.basis || "No hay una medición detrás de este texto."}</p>
+                    <p className="kpi-label">Impacto estimado: {item.impact == null ? "Datos no disponibles" : item.impact}</p>
                     {hospitality ? (
                       <div>
                         <button

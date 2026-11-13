@@ -45,7 +45,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.7rem 0;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  padding: 0.55rem 0;
+}
+
+.topbar-tools {
+  flex: 1 1 100%;
+  justify-content: flex-end;
 }
 
 .topbar-actions {
@@ -5597,7 +5604,24 @@ dialog.restaurant-mesa-modal::backdrop {
 }
 
 .dashboard-groups {
+  margin-top: 0.75rem;
+  display: grid;
   gap: 0.65rem;
+}
+
+@media (min-width: 960px) {
+  .dashboard-groups {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .dashboard-groups section[aria-label="Atención"] {
+    grid-column: 1 / -1;
+  }
+}
+
+.dashboard-kpi--alert {
+  border-color: var(--dakinis-warning, #f59e0b);
 }
 
 .dashboard-groups__grid {

@@ -1,4 +1,5 @@
 import { DAKINIS_PUBLIC_DEFAULT_API_KEY } from "../config/public-defaults.js";
+import { dakinisUserFacingMessage } from "./user-facing-error.js";
 
 /** Gateway público: `VITE_API_BASE_URL` (preferido) o `VITE_API_URL` (p. ej. https://api.dakinissystems.com). */
 const API_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "")
@@ -55,11 +56,11 @@ async function dakinisFetchJson(url, init) {
   try {
     res = await fetch(url, init);
   } catch (err) {
-    const hint =
-      dakinisApiBaseUrl() === ""
-        ? "No se pudo contactar /api en este sitio. En Railway (Core Front): API_UPSTREAM=https://tu-api.railway.app y redeploy."
-        : `No se pudo contactar ${url}. Revisa CORS en la API (CORS_ORIGIN=https://core.dakinissystems.com) o usa proxy same-origin.`;
-    throw new Error(err instanceof Error ? `${err.message}. ${hint}` : hint);
+    console.error("[dakinis] fetch failed", url);
+    throw new DakinisApiError(
+      "No hemos podido obtener los datos. Tus datos anteriores no se han modificado.",
+      { status: 0, code: "NETWORK", details: err instanceof Error ? err.message : "" }
+    );
   }
   return res;
 }
@@ -108,7 +109,7 @@ async function dakinisTenantJsonFetchOnce(path, session, options = {}) {
   const businessId = businessIdRaw;
 
   if (!businessId) {
-    throw new Error("Falta x-business-id: configura sesion tras login o VITE_BUSINESS_ID");
+    throw new DakinisApiError("No hay un negocio activo en esta sesión.", { code: "BUSINESS_REQUIRED" });
   }
 
   const method = String(options.method || "GET").toUpperCase();
@@ -206,7 +207,10 @@ async function dakinisParseJsonResponse(res, url) {
         { status: 429, code: code || "RATE_LIMIT_EXCEEDED", details: json?.error?.details }
       );
     }
-    const msg = json?.error?.message || res.statusText || "Error HTTP";
+    const msg = dakinisUserFacingMessage(
+      json?.error?.message || res.statusText,
+      "No hemos podido completar la operación. Tus datos anteriores no se han modificado."
+    );
     if (code) {
       throw new DakinisApiError(msg, {
         status: res.status,
@@ -214,11 +218,13 @@ async function dakinisParseJsonResponse(res, url) {
         details: json?.error?.details
       });
     }
-    throw new Error(`${msg} (${res.status})`);
+    throw new DakinisApiError(msg, { status: res.status });
   }
   if (json == null) {
-    throw new Error(
-      `Respuesta vacía o no JSON desde ${url}. Si es el front en Railway, define API_UPSTREAM (servicio API), no solo VITE_API_BASE_URL en build.`
+    console.error("[dakinis] empty response", url);
+    throw new DakinisApiError(
+      "No hemos podido leer la respuesta. Tus datos anteriores no se han modificado.",
+      { status: res.status, code: "EMPTY_RESPONSE" }
     );
   }
   return json;

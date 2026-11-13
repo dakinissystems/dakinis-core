@@ -1,7 +1,113 @@
+import { useState } from "react";
+import { dakinisRestaurantValidatePlan } from "@dakinis/shared/catalog/restaurant-kitchen.js";
 import { dakinisStockDemoBarcode } from "@dakinis/shared/catalog/stock-barcodes.js";
 import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
 import StockBarcodeScanner from "./StockBarcodeScanner.jsx";
 import { dakinisFormatQty } from "../hooks/useRestaurantStockSection.js";
+
+export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManualMove }) {
+  const [itemId, setItemId] = useState("");
+  const [name, setName] = useState("");
+  const [unit, setUnit] = useState("kg");
+  const [qty, setQty] = useState("1");
+  const [direction, setDirection] = useState("in");
+  const isNew = itemId === "__new__";
+  const item = (kitchen?.items || []).find((row) => row.id === itemId) || null;
+  const amount = Number(qty);
+  const current = item && item.quantity != null ? Number(item.quantity) : null;
+  const next =
+    item && Number.isFinite(current) && Number.isFinite(amount)
+      ? direction === "out"
+        ? current - amount
+        : current + amount
+      : null;
+  const blocked = !Number.isFinite(amount) || amount <= 0 || (direction === "out" && next != null && next < 0);
+  const canSubmit = !busy && !blocked && (isNew ? name.trim() : Boolean(item));
+
+  async function onConfirm() {
+    const ok = await dakinisApplyManualMove?.({
+      itemId: isNew ? "" : itemId,
+      name,
+      unit: isNew ? unit : item?.unit,
+      quantity: amount,
+      direction: isNew ? "in" : direction
+    });
+    if (ok) {
+      setQty("1");
+      if (isNew) setName("");
+    }
+  }
+
+  return (
+    <article className="card" style={{ marginBottom: "1rem" }}>
+      <h4 style={{ marginTop: 0 }}>{t("kitchen.manualTitle")}</h4>
+      <p className="kpi-label">{t("kitchen.manualLead")}</p>
+      <div className="stock-scan-actions">
+        <label className="mockup-field">
+          <span>{t("kitchen.manualProduct")}</span>
+          <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
+            <option value="">{t("kitchen.manualChoose")}</option>
+            {(kitchen?.items || []).map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
+              </option>
+            ))}
+            <option value="__new__">{t("kitchen.manualNew")}</option>
+          </select>
+        </label>
+        {isNew ? (
+          <>
+            <label className="mockup-field">
+              <span>{t("kitchen.manualName")}</span>
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <label className="mockup-field">
+              <span>{t("kitchen.manualUnit")}</span>
+              <select value={unit} onChange={(e) => setUnit(e.target.value)}>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="l">L</option>
+                <option value="ml">ml</option>
+                <option value="u">u</option>
+              </select>
+            </label>
+          </>
+        ) : null}
+        <label className="mockup-field">
+          <span>{t("kitchen.manualQty")}</span>
+          <input
+            type="number"
+            min="0.01"
+            step="any"
+            inputMode="decimal"
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+          />
+        </label>
+        {!isNew && item ? (
+          <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
+            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => setDirection("in")}>
+              {t("kitchen.scanIn")}
+            </button>
+            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => setDirection("out")}>
+              {t("kitchen.scanOut")}
+            </button>
+          </div>
+        ) : null}
+        {item ? (
+          <p className="kpi-label">
+            {t("kitchen.manualCurrent")}: {dakinisFormatQty(item.quantity, item.unit)}
+            {" · "}
+            {t("kitchen.manualResult")}: {next != null && next < 0 ? t("kitchen.manualShort") : next != null ? `${next} ${item.unit || ""}` : t("kitchen.manualUnknown")}
+          </p>
+        ) : null}
+        <button type="button" className="btn" disabled={!canSubmit} onClick={onConfirm}>
+          {isNew || direction !== "out" ? t("kitchen.manualConfirmIn") : t("kitchen.manualConfirmOut")}
+        </button>
+      </div>
+    </article>
+  );
+}
 
 export function RestaurantStockScanPanel({
   t,
@@ -44,10 +150,20 @@ export function RestaurantStockScanPanel({
           />
         </label>
         {pendingScan?.code ? (
-          <p className="kpi-label">
-            {pendingScan.name || "Producto identificado"}
-            {pendingScan.quantity != null ? ` · stock ${pendingScan.quantity} ${pendingScan.unit || ""}` : ""}
-          </p>
+          <div className="kpi-label">
+            <p style={{ margin: "0.35rem 0" }}>
+              <strong>{pendingScan.name || "Producto identificado"}</strong>
+            </p>
+            <p style={{ margin: "0.2rem 0" }}>
+              Stock actual:{" "}
+              {pendingScan.quantity == null
+                ? "Sin registro"
+                : `${pendingScan.quantity} ${pendingScan.unit || ""}`.trim()}
+            </p>
+            <p style={{ margin: "0.2rem 0" }}>
+              Stock resultante: {dakinisResultingStock(pendingScan, scanQty, scanDirection)}
+            </p>
+          </div>
         ) : null}
         <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
           <button
@@ -67,7 +183,7 @@ export function RestaurantStockScanPanel({
           <button
             type="button"
             className="btn"
-            disabled={busy || !pendingScan?.code}
+            disabled={busy || !pendingScan?.code || dakinisScanBlocked(pendingScan, scanQty, scanDirection)}
             onClick={() => dakinisConfirmStockScan?.()}
           >
             Confirmar {scanDirection === "out" ? "salida" : "entrada"}
@@ -193,11 +309,8 @@ export function RestaurantStockInventoryGrid({
                   <td data-label={t("kitchen.scanCodeCol")} className="kpi-label">
                     {item.barcode || dakinisStockDemoBarcode(item.slug)}
                   </td>
-                  <td
-                    data-label={t("kitchen.stock")}
-                    style={item.quantity < item.minQuantity ? { color: "var(--dakinis-warning)" } : undefined}
-                  >
-                    {dakinisFormatQty(item.quantity, item.unit)}
+                  <td data-label={t("kitchen.stock")} style={dakinisStockTone(item)}>
+                    {dakinisStockLabel(item)}
                   </td>
                   <td data-label={t("kitchen.minimum")}>{dakinisFormatQty(item.minQuantity, item.unit)}</td>
                 </tr>
@@ -241,6 +354,7 @@ export function RestaurantStockInventoryGrid({
             </label>
           </div>
         ))}
+        <ProductionAvailability kitchen={kitchen} plan={plan} itemNames={itemNames} />
         <div className="tenant-action-row">
           <button type="button" className="btn btn-outline tenant-touch-btn" disabled={busy} onClick={dakinisRunSimulate}>
             {t("kitchen.simulate")}
@@ -248,7 +362,7 @@ export function RestaurantStockInventoryGrid({
           <button
             type="button"
             className="btn tenant-touch-btn"
-            disabled={busy || !apiSession?.token}
+            disabled={busy || !apiSession?.token || !dakinisProductionAllowed(kitchen, plan)}
             onClick={dakinisApplyProduction}
           >
             {t("kitchen.registerProduction")}
@@ -277,6 +391,88 @@ export function RestaurantStockInventoryGrid({
           </div>
         ) : null}
       </article>
+    </div>
+  );
+}
+
+function dakinisStockBySlug(kitchen) {
+  const stock = {};
+  for (const item of kitchen?.items || []) stock[item.slug] = item.quantity;
+  return stock;
+}
+
+function dakinisProductionAllowed(kitchen, plan) {
+  const active = (plan || []).filter((row) => Number(row.batches) > 0);
+  if (!active.length || !kitchen?.recipes) return false;
+  return dakinisRestaurantValidatePlan(active, kitchen.recipes, dakinisStockBySlug(kitchen)).ok;
+}
+
+function dakinisResultingStock(pending, qty, direction) {
+  const current = Number(pending?.quantity);
+  const amount = Number(qty);
+  if (!Number.isFinite(current) || !Number.isFinite(amount)) return "Datos no disponibles";
+  const next = direction === "out" ? current - amount : current + amount;
+  if (next < 0) return "Insuficiente";
+  return `${next} ${pending.unit || ""}`.trim();
+}
+
+function dakinisScanBlocked(pending, qty, direction) {
+  return direction === "out" && dakinisResultingStock(pending, qty, direction) === "Insuficiente";
+}
+
+function dakinisStockLabel(item) {
+  if (item?.quantity == null || item.quantity === "") return "Sin registro";
+  const qty = Number(item.quantity);
+  if (!Number.isFinite(qty)) return "Sin registro";
+  const text = dakinisFormatQty(qty, item.unit);
+  const min = Number(item.minQuantity);
+  if (Number.isFinite(min) && qty < min) return `${text} · por debajo del mínimo`;
+  if (qty === 0) return `${text} · stock real`;
+  return text;
+}
+
+function dakinisStockTone(item) {
+  const qty = Number(item?.quantity);
+  const min = Number(item?.minQuantity);
+  if (Number.isFinite(qty) && Number.isFinite(min) && qty < min) return { color: "var(--dakinis-warning)" };
+  return undefined;
+}
+
+function ProductionAvailability({ kitchen, plan, itemNames }) {
+  const active = (plan || []).filter((row) => Number(row.batches) > 0);
+  if (!active.length || !kitchen?.recipes) return null;
+  const validation = dakinisRestaurantValidatePlan(active, kitchen.recipes, dakinisStockBySlug(kitchen));
+  const rows = Object.entries(validation.needed || {}).map(([slug, needed]) => {
+    const available = Number(dakinisStockBySlug(kitchen)[slug] ?? 0);
+    return { slug, needed, available, ok: available + 1e-6 >= needed };
+  });
+  return (
+    <div style={{ margin: "0.5rem 0 0.75rem" }}>
+      <p className="kpi-label" style={{ marginTop: 0 }}>
+        {validation.ok
+          ? "Hay stock para estas tandas."
+          : "No se puede registrar la producción: falta stock. No hay una autorización de producción excepcional."}
+      </p>
+      <table className="mockup-table">
+        <thead>
+          <tr>
+            <th>Ingrediente</th>
+            <th>Disponible</th>
+            <th>Necesario</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.slug}>
+              <td>{itemNames[row.slug] || row.slug}</td>
+              <td>{row.available}</td>
+              <td>{row.needed}</td>
+              <td>{row.ok ? "Suficiente" : "Insuficiente"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

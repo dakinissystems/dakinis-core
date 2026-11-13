@@ -55,7 +55,7 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
       await dakinisTenantJsonFetch(
         `/api/tenant/restaurant/delivery/integrations/${encodeURIComponent(provider)}`,
         apiSession,
-        { ...fetchOpts, method: "PATCH", body: { enabled, status: enabled ? "online" : "disconnected" } }
+        { ...fetchOpts, method: "PATCH", body: { enabled } }
       );
       await reload();
     } catch (e) {
@@ -107,18 +107,25 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
   const todayCounts = dashboard?.todayCounts || {};
   const healthRows = providers.length ? providers : dashboard?.integrations || [];
 
-  function channelState(status) {
-    const value = String(status || "");
-    if (value === "online" || value === "ok" || value === "connected") {
-      return { label: "Conectado", color: "#34d399" };
-    }
-    if (value === "disconnected" || value === "offline") {
-      return { label: "Desconectado", color: "#f87171" };
-    }
-    if (value === "error_token" || value === "failed" || value === "stub" || value === "degraded") {
-      return { label: "Configuración pendiente", color: "#fbbf24" };
-    }
-    return { label: "No configurado", color: "#94a3b8" };
+  function channelState(row) {
+    const value = String(row?.availability || row?.status || row || "");
+    const table = {
+      available: ["Disponible", "#94a3b8"],
+      pending_access: ["Pendiente de acceso", "#fbbf24"],
+      not_configured: ["No configurado", "#94a3b8"],
+      connected: ["Conectado", "#34d399"],
+      connection_error: ["Error de conexión", "#f87171"],
+      coming_soon: ["Próximamente", "#94a3b8"],
+      online: ["Conectado", "#34d399"],
+      ok: ["Conectado", "#34d399"],
+      error_token: ["Pendiente de acceso", "#fbbf24"],
+      stub: ["Próximamente", "#94a3b8"],
+      disabled: ["No configurado", "#94a3b8"],
+      disconnected: ["No configurado", "#94a3b8"],
+      offline: ["No configurado", "#94a3b8"]
+    };
+    const pair = table[value] || ["No configurado", "#94a3b8"];
+    return { label: pair[0], color: pair[1], locked: value === "coming_soon" || value === "pending_access" || value === "stub" };
   }
 
   function jobLine(job) {
@@ -184,7 +191,7 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
 
             <div style={{ marginTop: "0.75rem", display: "grid", gap: "0.6rem", gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))" }}>
               {healthRows.slice(0, 8).map((row) => {
-                const state = channelState(row.status);
+                const state = channelState(row);
                 return (
                   <article key={row.provider} className="card" style={{ margin: 0 }}>
                     <strong>{row.label || row.provider}</strong>
@@ -259,8 +266,8 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                 >
                   <div>
                     <strong>{row.label}</strong>{" "}
-                    <span style={{ color: channelState(row.status).color, marginLeft: "0.35rem" }}>
-                      {channelState(row.status).label}
+                    <span style={{ color: channelState(row).color, marginLeft: "0.35rem" }}>
+                      {channelState(row).label}
                     </span>
                     <div className="kpi-label" style={{ marginTop: "0.15rem" }}>
                       {row.detail}
@@ -269,11 +276,11 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                   <label className="kpi-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
                     <input
                       type="checkbox"
-                      checked={!!row.enabled}
-                      disabled={busy}
+                      checked={!!row.enabled && !channelState(row).locked}
+                      disabled={busy || channelState(row).locked}
                       onChange={(e) => toggleProvider(row.provider, e.target.checked)}
                     />
-                    {label("restaurant.deliveryEnabled", "Activo")}
+                    {channelState(row).locked ? "No activable" : label("restaurant.deliveryEnabled", "Activo")}
                   </label>
                 </div>
               ))}

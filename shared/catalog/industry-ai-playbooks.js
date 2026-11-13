@@ -78,11 +78,21 @@ export function dakinisGetIndustryAiPlaybook(industryKey) {
 export function dakinisRunIndustryAiHeuristics(business, signals) {
   const template = dakinisGetIndustryTemplate(business?.type);
   const playbook = dakinisGetIndustryAiPlaybook(template?.key || business?.type);
+  const alerts = Number(signals.stockAlerts ?? 0);
+  const contacts = Number(signals.crmContacts ?? 0);
+  const basis =
+    alerts > 0
+      ? `Sale de ${alerts} alertas de stock registradas. No lista ingredientes ni calcula un importe.`
+      : contacts > 0
+        ? `Sale de ${contacts} contactos en CRM. No calcula un impacto en euros.`
+        : "No hay una medición de ingredientes, coste ni margen detrás de este texto.";
   return playbook.map((item) => ({
     id: item.id,
     question: item.question,
     answer: item.heuristic(signals),
     source: "heuristic",
+    basis,
+    impact: null,
     industry: template?.label || business?.type
   }));
 }

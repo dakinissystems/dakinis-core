@@ -102,20 +102,17 @@ export function useSupplyDeliveriesAndAlerts({
           setLoading(false);
           return;
         }
-        const message = e instanceof Error ? e.message : "No se pudo cargar proveedores";
-        setLoadError(message);
-        void dakinisReportTenantLoadAlert({
-          apiSession: sess,
-          businessId: tenantSlugForVertical,
-          businessTypeHeader: activeSystemKey,
-          moduleKey: "supply",
-          moduleLabel: "proveedores / alertas",
-          errorMessage: message
-        });
-        setDeliveries(
-          fbDeliveries.map((r, i) => dakinisNormalizeDeliveryRow({ ...r, id: r.id || `fb-d-${i}` }))
-        );
-        setAlerts(fbAlerts.map((r, i) => dakinisNormalizeAlertRow({ ...r, id: r.id || `fb-a-${i}` })));
+        setLoadError("No hemos podido obtener los datos de inventario. Tus datos anteriores no se han modificado.");
+        if (e?.code !== "NETWORK" && e?.status !== 0 && e?.status !== 429) {
+          void dakinisReportTenantLoadAlert({
+            apiSession: sess,
+            businessId: tenantSlugForVertical,
+            businessTypeHeader: activeSystemKey,
+            moduleKey: "supply",
+            moduleLabel: "proveedores / alertas",
+            errorMessage: "No se pudo cargar proveedores"
+          });
+        }
       } finally {
         setLoading(false);
       }

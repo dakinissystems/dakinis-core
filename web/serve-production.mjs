@@ -62,7 +62,7 @@ function dakinisProxyToApi(req, res, bodyBuffer) {
         ok: false,
         error: {
           code: "API_UPSTREAM_UNAVAILABLE",
-          message: `No se pudo conectar con la API (${UPSTREAM}). Comprueba API_UPSTREAM en Railway.`
+          message: "No hemos podido obtener los datos. Tus datos anteriores no se han modificado."
         }
       })
     );

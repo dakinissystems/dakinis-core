@@ -98,7 +98,50 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
             {t("nav.byCompany")}
           </span>
         </div>
-        <div className="topbar-actions">
+        {isBusinessFacing && !currentPath.startsWith("/vista/") && !currentPath.startsWith("/demo/") && session?.user?.email ? (
+          <nav className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
+            <button
+              type="button"
+              className={`btn btn-outline${isActive("/app/dashboard") ? " is-active" : ""}`}
+              onClick={() => navigate("/app/dashboard")}
+            >
+              {t("appNav.panel")}
+            </button>
+            {businessNav
+              .filter((item) => item.capability === "crm" || item.capability === "whatsapp")
+              .map((item) => {
+                const path = dakinisBusinessNavPath(item, session);
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    className={`btn btn-outline${isActive(path) || isActive(item.path) ? " is-active" : ""}`}
+                    onClick={() => navigate(path)}
+                  >
+                    {t(item.labelKey)}
+                  </button>
+                );
+              })}
+            {session.business?.type && systemRegistry[session.business.type] && !isSystemDemoView ? (
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() =>
+                  navigate(
+                    dakinisIsHospitalityBusiness(session.business.type)
+                      ? dakinisRestaurantTaskPath(session.business.type, "sala")
+                      : `/sistema/${encodeURIComponent(session.business.type)}`
+                  )
+                }
+              >
+                {isBusinessDemo && dakinisIsHospitalityBusiness(session.business.type)
+                  ? t("businessDemo.dashboard.ctaRestaurant")
+                  : t("nav.myBusiness")}
+              </button>
+            ) : null}
+          </nav>
+        ) : null}
+        <div className="topbar-actions topbar-tools">
           {isBusinessFacing && !isPlatformAdmin ? <DakinisCopilotBar /> : null}
           <button
             type="button"
@@ -118,33 +161,6 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
               {!isSystemDemoView && !isBusinessDemo ? (
                 <TopbarPackagesButton navigate={navigate} currentPath={currentPath} t={t} />
               ) : null}
-              {isBusinessFacing && !currentPath.startsWith("/vista/") && !currentPath.startsWith("/demo/") ? (
-                <div className="topbar-app-nav topbar-app-nav--business" aria-label={t("appNav.aria")}>
-                  <button
-                    type="button"
-                    className={`btn btn-outline${isActive("/app/dashboard") ? " is-active" : ""}`}
-                    onClick={() => navigate("/app/dashboard")}
-                  >
-                    {t("appNav.panel")}
-                  </button>
-                  {businessNav
-                    .filter((item) => item.capability === "crm" || item.capability === "whatsapp")
-                    .map((item) => {
-                      const path = dakinisBusinessNavPath(item, session);
-                      return (
-                        <button
-                          key={item.path}
-                          type="button"
-                          className={`btn btn-outline${isActive(path) || isActive(item.path) ? " is-active" : ""}`}
-                          onClick={() => navigate(path)}
-                        >
-                          {t(item.labelKey)}
-                        </button>
-                      );
-                    })}
-                </div>
-              ) : null}
-
               {!isBusinessFacing && !isBusinessDemo && !isSystemDemoView ? (
                 <button
                   type="button"
@@ -163,23 +179,6 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                 (session.business?.slug || isBusinessDemo) &&
                 systemRegistry[session.business.type] ? (
                 <>
-                  {!isSystemDemoView ? (
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() =>
-                        navigate(
-                          dakinisIsHospitalityBusiness(session.business.type)
-                            ? dakinisRestaurantTaskPath(session.business.type, "sala")
-                            : `/sistema/${encodeURIComponent(session.business.type)}`
-                        )
-                      }
-                    >
-                      {isBusinessDemo && dakinisIsHospitalityBusiness(session.business.type)
-                        ? t("businessDemo.dashboard.ctaRestaurant")
-                        : t("nav.myBusiness")}
-                    </button>
-                  ) : null}
                   {tenantCanOpenMockup ? (
                     <button
                       type="button"

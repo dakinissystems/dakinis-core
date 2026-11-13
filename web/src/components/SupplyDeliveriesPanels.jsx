@@ -1,3 +1,13 @@
+import { dakinisUserFacingMessage } from "../services/user-facing-error.js";
+
+const ALERT_RULES = [
+  { id: "below", label: "Stock inferior a una cantidad", text: "Avisar si el stock baja del mínimo configurado." },
+  { id: "expiring", label: "Producto próximo a caducar", text: "Avisar si caduca en los próximos días." },
+  { id: "expired", label: "Producto caducado", text: "Avisar si la fecha de caducidad ya pasó." },
+  { id: "delivery", label: "Entrega pendiente", text: "Avisar si hay una entrega sin confirmar." },
+  { id: "idle", label: "Producto sin movimiento", text: "Avisar si no hay movimientos en el periodo indicado." }
+];
+
 export function SupplyDeliveriesSection({
   canMutate,
   loading,
@@ -15,7 +25,7 @@ export function SupplyDeliveriesSection({
     <>
       <h4 style={{ marginTop: "1.75rem" }}>Cuándo traen la mercadería</h4>
       <p className="lead" style={{ fontSize: "0.95rem", marginBottom: "0.75rem" }}>
-        Registra ventanas de reparto o visitas del proveedor. Los datos se guardan en tu espacio (SQLite por tenant).
+        Registra ventanas de reparto o visitas del proveedor.
         {!canMutate ? (
           <>
             {" "}
@@ -26,9 +36,11 @@ export function SupplyDeliveriesSection({
 
       {loading ? <p className="lead">Cargando entregas…</p> : null}
       {loadError ? (
-        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
-          {loadError} (mostrando vista offline si hay datos locales de ejemplo).
-        </p>
+        <article className="card dashboard-load-error">
+          <h3 style={{ marginTop: 0 }}>No se pudo cargar el inventario</h3>
+          <p>{dakinisUserFacingMessage(loadError)}</p>
+          <p className="kpi-label">Último intento: no disponible</p>
+        </article>
       ) : null}
       {actionError ? (
         <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
@@ -189,7 +201,7 @@ export function SupplyAlertsSection({
                   <td data-label="Ref.">
                     <code>{row.productRef || "—"}</code>
                   </td>
-                  <td data-label="Condición">{row.condition}</td>
+                  <td data-label="Condición">{dakinisUserFacingMessage(row.condition, "Aviso sin detalle")}</td>
                   <td data-label="Nivel" style={dakinisSeverityStyle(row.severity)}>
                     {dakinisSeverityLabel(row.severity)}
                   </td>
@@ -201,8 +213,9 @@ export function SupplyAlertsSection({
                           className="btn btn-outline"
                           disabled={saving}
                           onClick={() => handleDeleteAlert(row.id)}
+                          title="Quita el aviso de esta lista. No guarda un historial de esa decisión."
                         >
-                          Eliminar
+                          Descartar
                         </button>
                       ) : null}
                     </td>
@@ -242,14 +255,24 @@ export function SupplyAlertsSection({
           </p>
         ) : null}
         <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
-          <span>Condición (cuándo avisar)</span>
-          <input
-            value={alertForm.condition}
-            onChange={(e) => setAlertForm((p) => ({ ...p, condition: e.target.value }))}
-            placeholder="Ej. Si quedan menos de 5 kg"
+          <span>Regla</span>
+          <select
+            value={ALERT_RULES.find((rule) => rule.text === alertForm.condition)?.id || ""}
+            onChange={(e) => {
+              const rule = ALERT_RULES.find((item) => item.id === e.target.value);
+              setAlertForm((p) => ({ ...p, condition: rule?.text || "" }));
+            }}
             required
             disabled={!canMutate || saving}
-          />
+          >
+            <option value="">Elegir una regla</option>
+            {ALERT_RULES.map((rule) => (
+              <option key={rule.id} value={rule.id}>
+                {rule.label}
+              </option>
+            ))}
+          </select>
+          <span className="kpi-label">La regla se guarda como aviso. Todavía no se evalúa sola.</span>
         </label>
         <label className="mockup-field">
           <span>Prioridad</span>

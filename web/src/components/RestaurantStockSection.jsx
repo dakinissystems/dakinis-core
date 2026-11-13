@@ -2,6 +2,7 @@ import { useRestaurantStockSection } from "../hooks/useRestaurantStockSection.js
 import {
   RestaurantStockAllergenSection,
   RestaurantStockInventoryGrid,
+  RestaurantStockManualForm,
   RestaurantStockProductionHistory,
   RestaurantStockScanPanel
 } from "./RestaurantStockBody.jsx";
@@ -63,6 +64,7 @@ export default function RestaurantStockSection(props) {
 
       {showScanToast ? <RestaurantScanToast message={scanMessage} tone={toastTone} /> : null}
 
+      {show("scan") || show("grid") ? <RestaurantStockManualForm {...stock} /> : null}
       {show("scan") ? <RestaurantStockScanPanel {...stock} autoFocus={autoFocusScan} /> : null}
       {show("grid") ? <RestaurantStockInventoryGrid {...stock} kitchen={kitchen} /> : null}
       {show("production") ? (
