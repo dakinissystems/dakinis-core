@@ -200,8 +200,8 @@ export default function RestaurantFloorPlan({
             </button>
             <p className="kpi-label" style={{ flexBasis: "100%", margin: 0 }}>
               {designMode
-                ? "Diseño: añadir, mover y configurar mobiliario."
-                : "Operación: abrir mesas y gestionar comandas."}
+                ? "Diseño: añadir mesas, moverlas, modificar zonas y guardar la distribución."
+                : "Operación: abrir una mesa libre, consultar la comanda, enviar a cocina y cobrar."}
             </p>
           </div>
         ) : null}

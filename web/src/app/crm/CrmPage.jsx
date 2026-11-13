@@ -188,7 +188,7 @@ export default function CrmPage({ navigate }) {
 
         <div className="crm-quick-links">
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
-            {t("app.crm.linkCommunications")}
+            Abrir WhatsApp
           </button>
         </div>
 
@@ -230,17 +230,26 @@ export default function CrmPage({ navigate }) {
             onCloseComposer={() => setComposerOpen(false)}
             onCreateContact={handleCreateContact}
           />
-          <CrmContactDetail
-            t={t}
-            selected={selected}
-            timeline={timeline}
-            noteType={noteType}
-            noteText={noteText}
-            saving={saving}
-            onNoteTypeChange={setNoteType}
-            onNoteTextChange={setNoteText}
-            onAddActivity={handleAddActivity}
-          />
+          {contacts.length > 0 ? (
+            <CrmContactDetail
+              t={t}
+              selected={selected}
+              timeline={timeline}
+              noteType={noteType}
+              noteText={noteText}
+              saving={saving}
+              onNoteTypeChange={setNoteType}
+              onNoteTextChange={setNoteText}
+              onAddActivity={handleAddActivity}
+            />
+          ) : (
+            <div className="wa-conv-thread card">
+              <h3 style={{ marginTop: 0 }}>Todavía no tienes clientes</h3>
+              <p className="lead">
+                Registra el primero para guardar compras y seguimiento. La ficha aparecerá aquí cuando exista un cliente.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

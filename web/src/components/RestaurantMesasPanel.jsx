@@ -85,15 +85,17 @@ function RestaurantMesaModal({
           />
         </label>
 
-        <label className="mockup-field">
+        <label className="mockup-field" style={{ flex: "0 0 auto" }}>
           <span>Buscar productos</span>
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del producto" />
         </label>
-        <p className="kpi-label">
+        <p className="kpi-label" style={{ flex: "0 0 auto" }}>
           {mesaLines.length ? "Pedido preparado para enviar a cocina." : "Selecciona productos para preparar la comanda."}
         </p>
         <ul className="fermina-menu-list restaurant-mesa-modal__menu">
-          {visibleMenu.map((item) => (
+          {visibleMenu.map((item) => {
+            const qty = mesaCart[item.id] || 0;
+            return (
             <li key={item.id} className="fermina-menu-item">
               <div>
                 <strong style={{ display: "block" }}>{item.nameEs || item.name}</strong>
@@ -102,72 +104,75 @@ function RestaurantMesaModal({
                 </span>
               </div>
               <div className="fermina-menu-item__qty">
-                <button type="button" className="btn btn-outline" onClick={() => onCartQtyChange(item.id, -1)}>
+                <button type="button" className="btn btn-outline" disabled={qty <= 0} onClick={() => onCartQtyChange(item.id, -1)}>
                   −
                 </button>
-                <span>{mesaCart[item.id] || 0}</span>
+                <span>{qty}</span>
                 <button type="button" className="btn btn-outline" onClick={() => onCartQtyChange(item.id, 1)}>
                   +
                 </button>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
-        <p className="allergen-panel__summary restaurant-mesa-modal__total">
-          <strong>{mesaTotal.toFixed(2)} €</strong>
-          {mesaItemCount > 0 ? (
-            <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })}</span>
-          ) : null}
-        </p>
+        <div className="restaurant-mesa-modal__footer">
+          <p className="allergen-panel__summary restaurant-mesa-modal__total">
+            <strong>{mesaTotal.toFixed(2)} €</strong>
+            {mesaItemCount > 0 ? (
+              <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })}</span>
+            ) : null}
+          </p>
 
-        <div className="restaurant-mesa-modal__actions">
-          <button
-            type="button"
-            className="btn"
-            disabled={busy || !mesaLines.length}
-            onClick={onSendKitchen}
-          >
-            {t("fermina.sendKitchen")}
-          </button>
-          {confirmClear ? (
+          <div className="restaurant-mesa-modal__actions">
             <button
               type="button"
-              className="btn btn-outline"
-              disabled={busy}
-              onClick={() => {
-                onClear();
-                setConfirmClear(false);
-              }}
+              className="btn"
+              disabled={busy || !mesaLines.length}
+              onClick={onSendKitchen}
             >
-              Confirmar vaciado
+              {t("fermina.sendKitchen")}
             </button>
-          ) : (
-            <button type="button" className="btn btn-outline" disabled={!mesaItemCount || busy} onClick={() => setConfirmClear(true)}>
-              {t("restaurant.mesaClear")}
-            </button>
-          )}
-        </div>
-        {confirmClear ? (
-          <p className="kpi-label">Vaciar quita los productos de esta mesa. No envía la comanda ni cobra.</p>
-        ) : null}
-
-        <div className="restaurant-mesa-modal__pay">
-          <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-            {mesaLines.length ? t("restaurant.mesaPayLabel") : "El cobro se habilita cuando hay productos en la comanda."}
-          </p>
-          <div className="restaurant-mesa-modal__pay-buttons">
-            {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
+            {confirmClear ? (
               <button
-                key={id}
                 type="button"
-                className={mesaClosePayment === id ? "btn" : "btn btn-outline"}
-                disabled={busy || !mesaLines.length}
-                onClick={() => onPay(id)}
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => {
+                  onClear();
+                  setConfirmClear(false);
+                }}
               >
-                {dakinisRestaurantPaymentLabel(id, t)}
+                Confirmar vaciado
               </button>
-            ))}
+            ) : (
+              <button type="button" className="btn btn-outline" disabled={!mesaItemCount || busy} onClick={() => setConfirmClear(true)}>
+                {t("restaurant.mesaClear")}
+              </button>
+            )}
+          </div>
+          {confirmClear ? (
+            <p className="kpi-label">Vaciar quita los productos de esta mesa. No envía la comanda ni cobra.</p>
+          ) : null}
+
+          <div className="restaurant-mesa-modal__pay">
+            <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
+              {mesaLines.length ? t("restaurant.mesaPayLabel") : "El cobro se habilita cuando hay productos en la comanda."}
+            </p>
+            <div className="restaurant-mesa-modal__pay-buttons">
+              {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={mesaClosePayment === id ? "btn" : "btn btn-outline"}
+                  disabled={busy || !mesaLines.length}
+                  onClick={() => onPay(id)}
+                >
+                  {dakinisRestaurantPaymentLabel(id, t)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

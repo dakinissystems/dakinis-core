@@ -119,8 +119,9 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
         </aside>
         <section className="wa-conversations__panel">
           <form onSubmit={handleSend}>
+            <h3 style={{ marginTop: 0 }}>Enviar mensaje</h3>
             <label className="mockup-field">
-              <span>{t("app.whatsapp.phone")}</span>
+              <span>{t("app.whatsapp.sendPhone")}</span>
               <input
                 value={phoneDraft || selectedPhone}
                 onChange={(e) => setPhoneDraft(e.target.value)}
@@ -128,7 +129,7 @@ export default function WhatsappConversationsTab({ t, demoMode = false }) {
               />
             </label>
             <label className="mockup-field">
-              <span>{t("app.whatsapp.message")}</span>
+              <span>{t("app.whatsapp.sendMessage")}</span>
               <textarea value={sendText} onChange={(e) => setSendText(e.target.value)} rows={3} />
             </label>
             <button type="submit" className="btn" disabled={sending}>

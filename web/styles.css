@@ -2874,9 +2874,13 @@ dialog.allergen-modal::backdrop {
 .restaurant-ops-header__statuses li {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.72rem;
-  opacity: 0.85;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  opacity: 0.95;
+}
+
+.restaurant-ops-header__status-label {
+  color: inherit;
 }
 
 .restaurant-ops-header__status-dot {
@@ -3194,8 +3198,8 @@ dialog.allergen-modal::backdrop {
 .restaurant-floor__table {
   position: absolute;
   transform: translate(-50%, -50%);
-  min-width: 5.4rem;
-  min-height: 44px;
+  min-width: max(5.4rem, 48px);
+  min-height: 48px;
   padding: 0.45rem 0.5rem;
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.35);
@@ -3391,10 +3395,12 @@ dialog.restaurant-mesa-modal::backdrop {
 .restaurant-mesa-modal__panel {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 36rem);
   max-height: min(90vh, 40rem);
-  overflow-y: auto;
-  padding: 1.25rem 1.25rem 1rem;
+  overflow: hidden;
+  padding: 1.25rem 1.25rem 0;
   border-radius: 14px 14px 10px 10px;
   border: 1px solid var(--line);
   background: var(--card, #1a1f2e);
@@ -3405,33 +3411,45 @@ dialog.restaurant-mesa-modal::backdrop {
 .restaurant-mesa-modal__title {
   margin: 0 2rem 0.75rem 0;
   font-size: 1.25rem;
+  flex: 0 0 auto;
 }
 
 .restaurant-mesa-modal__notes {
   display: block;
   margin-bottom: 0.75rem;
+  flex: 0 0 auto;
 }
 
 .restaurant-mesa-modal__menu {
-  margin-bottom: 0.75rem;
-  max-height: min(52vh, 24rem);
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: 8rem;
+  max-height: none;
   overflow-y: auto;
 }
 
+.restaurant-mesa-modal__footer {
+  flex: 0 0 auto;
+  margin-top: 0.75rem;
+  padding: 0.85rem 0 1rem;
+  border-top: 1px solid var(--line);
+  background: var(--card, #1a1f2e);
+}
+
 .restaurant-mesa-modal__total {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .restaurant-mesa-modal__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .restaurant-mesa-modal__pay {
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--line);
+  padding-top: 0;
+  border-top: none;
 }
 
 .restaurant-mesa-modal__pay-buttons {

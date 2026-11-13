@@ -117,7 +117,14 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
   }
 
   const todayCounts = dashboard?.todayCounts || {};
-  const healthRows = providers.length ? providers : dashboard?.integrations || [];
+  const healthRows = (providers.length ? providers : dashboard?.integrations || []).filter((row) => {
+    const id = String(row?.provider || row?.id || "").toLowerCase();
+    const labelText = String(row?.label || "").toLowerCase();
+    if (id === "manual" || id.includes("simulat") || labelText.includes("simulación") || labelText.includes("manual")) {
+      return false;
+    }
+    return true;
+  });
 
   function channelState(row) {
     const value = String(row?.availability || row?.status || row || "");
@@ -257,16 +264,14 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
               })}
             </div>
 
-            <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-              {label("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
-              <strong>
-                {healthRows.some((row) => row.availability === "connected")
-                  ? dashboard?.pendingMarketplace == null
-                    ? "Datos no disponibles"
-                    : dashboard.pendingMarketplace
-                  : "Sin canales conectados"}
-              </strong>
-            </p>
+            {healthRows.some((row) => row.availability === "connected") ? (
+              <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
+                {label("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
+                <strong>
+                  {dashboard?.pendingMarketplace == null ? "Datos no disponibles" : dashboard.pendingMarketplace}
+                </strong>
+              </p>
+            ) : null}
           </article>
 
           <article className="card" style={{ marginTop: "0.75rem" }}>

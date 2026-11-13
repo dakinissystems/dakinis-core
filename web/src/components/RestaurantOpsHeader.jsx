@@ -43,7 +43,6 @@ export default function RestaurantOpsHeader({
               {statuses.map((s) => (
                 <li key={s.id} title={s.label} className={`is-${s.tone}`}>
                   <span className="restaurant-ops-header__status-dot" aria-hidden="true" />
-                  <span className="sr-only">{s.label}</span>
                   <span className="restaurant-ops-header__status-label">{s.label}</span>
                 </li>
               ))}

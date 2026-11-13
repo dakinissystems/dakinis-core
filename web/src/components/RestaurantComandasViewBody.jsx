@@ -173,7 +173,12 @@ export function RestaurantComandasPedidoView({
               </span>
             </div>
             <div className="fermina-menu-item__qty">
-              <button type="button" className="btn btn-outline" onClick={() => dakinisCartQty(item.id, -1)}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={(cart[item.id] || 0) <= 0}
+                onClick={() => dakinisCartQty(item.id, -1)}
+              >
                 −
               </button>
               <span>{cart[item.id] || 0}</span>
@@ -497,12 +502,19 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
             />
           </label>
         ) : null}
-        {expectedCash == null ? <p className="kpi-label">Guarda el fondo de inicio para calcular el efectivo esperado.</p> : null}
+        {expectedCash == null ? (
+          <p className="kpi-label">
+            Falta registrar el fondo inicial. Introduce el efectivo de inicio arriba para calcular el esperado y poder cerrar.
+          </p>
+        ) : null}
         {!apiSession?.token ? <p className="kpi-label">Inicia sesión para registrar el cierre.</p> : null}
         {closeError ? <p className="lead" style={{ color: "var(--dakinis-warning)" }}>{closeError}</p> : null}
         <button type="submit" className="btn" disabled={!canClose || busy || !apiSession?.token}>
-          {expectedCash == null ? "Falta el fondo de inicio" : busy ? "Guardando…" : "Confirmar cierre"}
+          {busy ? "Guardando…" : "Confirmar cierre"}
         </button>
+        {!canClose && expectedCash == null ? (
+          <p className="kpi-label">Confirmar cierre · Bloqueado hasta guardar el fondo de inicio.</p>
+        ) : null}
         {snapshot?.closedAt ? (
           <p className="kpi-label">
             Último cierre: {new Date(snapshot.closedAt).toLocaleString("es-ES")}
@@ -530,13 +542,21 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
               </tr>
             </thead>
             <tbody>
-              {dayClose.byPayment.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.label}</td>
-                  <td>{row.count}</td>
-                  <td>{row.total.toFixed(2)} €</td>
+              {dayClose.byPayment.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="lead">
+                    No hay cobros registrados.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                dayClose.byPayment.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>{row.count}</td>
+                    <td>{row.total.toFixed(2)} €</td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot>
               <tr>
@@ -557,13 +577,21 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
               </tr>
             </thead>
             <tbody>
-              {dayClose.byChannel.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.label}</td>
-                  <td>{row.count}</td>
-                  <td>{row.total.toFixed(2)} €</td>
+              {dayClose.byChannel.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="lead">
+                    No hay cobros por canal registrados.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                dayClose.byChannel.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>{row.count}</td>
+                    <td>{row.total.toFixed(2)} €</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

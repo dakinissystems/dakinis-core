@@ -49,7 +49,7 @@ const HEALTH_FACTOR_GROUPS = [
 function HealthFactors({ factors }) {
   const list = Array.isArray(factors) ? factors : [];
   return (
-    <>
+    <div className="module-grid dashboard-groups__grid">
       {HEALTH_FACTOR_GROUPS.map((group) => {
         const rows = list.filter((factor) => group.keys.includes(factor.key));
         if (!rows.length) return null;
@@ -61,13 +61,17 @@ function HealthFactors({ factors }) {
             ) : null}
             <ul className="kpi-label dashboard-kpi__factors">
               {rows.map((factor) => (
-                <li key={factor.key}>{factor.label}</li>
+                <li key={factor.key}>
+                  {factor.label}
+                  {factor.key === "team" ? " registrados en el negocio" : ""}
+                  {factor.key === "crm" ? " en la cartera" : ""}
+                </li>
               ))}
             </ul>
           </article>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -277,37 +281,63 @@ export default function LiveTenantDashboard({ session, navigate }) {
           <section aria-label="Estado del negocio" style={{ marginTop: "1rem" }}>
             <h3 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>Estado del negocio</h3>
             <p className="kpi-label">Configuración, actividad y adopción. Las alertas de inventario están en Atención.</p>
-            <div className="module-grid dashboard-groups__grid">
-              <HealthFactors factors={health.factors} />
-            </div>
+            <HealthFactors factors={health.factors} />
           </section>
         ) : null}
 
-        {aiTips?.suggestions?.filter((item) => item.available !== false).length ? (
-          <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>Recomendaciones de Dakinis AI</h3>
-            <ul>
-              {aiTips.suggestions.filter((item) => item.available !== false).map((item) => {
-                const openInventory = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
-                return (
-                  <li key={item.id}>
-                    <strong>{item.question}</strong>
-                    <p className="kpi-label">Motivo: {item.answer}</p>
-                    <p className="kpi-label">{item.basis || "No hay una medición detrás de este texto."}</p>
-                    <p className="kpi-label">Impacto: {item.impact == null ? "No calculado" : item.impact}</p>
-                    {hospitality && item.available !== false && openInventory ? (
-                      <div>
-                        <button type="button" className="btn btn-outline" onClick={() => openKpi("stock_alertas")}>
-                          Revisar inventario
-                        </button>
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
+        {(() => {
+          const stockAlertKpi = (industryDash?.kpis || []).find((kpi) => kpi.key === "stock_alertas");
+          const stockAlertCount = stockAlertKpi && stockAlertKpi.value != null && stockAlertKpi.value !== "Datos no disponibles"
+            ? Number(stockAlertKpi.value)
+            : 0;
+          const tips = (aiTips?.suggestions || []).filter((item) => {
+            if (item.available === false) return false;
+            const isStock = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
+            if (isStock && stockAlertCount > 0) return false;
+            return true;
+          });
+          if (stockAlertCount > 0) {
+            return (
+              <div className="card" style={{ marginTop: "1rem" }}>
+                <h3>Siguiente paso recomendado</h3>
+                <p className="kpi-label">
+                  {stockAlertCount} referencias por debajo del mínimo. Revisa cantidades y establece reposición.
+                </p>
+                {hospitality ? (
+                  <button type="button" className="btn btn-outline" onClick={() => openKpi("stock_alertas")}>
+                    Revisar inventario
+                  </button>
+                ) : null}
+              </div>
+            );
+          }
+          if (!tips.length) return null;
+          return (
+            <div className="card" style={{ marginTop: "1rem" }}>
+              <h3>Recomendaciones de Dakinis AI</h3>
+              <ul>
+                {tips.map((item) => {
+                  const openInventory = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
+                  return (
+                    <li key={item.id}>
+                      <strong>{item.question}</strong>
+                      <p className="kpi-label">Motivo: {item.answer}</p>
+                      <p className="kpi-label">{item.basis || "No hay una medición detrás de este texto."}</p>
+                      <p className="kpi-label">Impacto: {item.impact == null ? "No calculado" : item.impact}</p>
+                      {hospitality && openInventory ? (
+                        <div>
+                          <button type="button" className="btn btn-outline" onClick={() => openKpi("stock_alertas")}>
+                            Revisar inventario
+                          </button>
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })()}
 
         {recommendations.length ? (
           <div className="module-grid" style={{ marginTop: "1rem" }}>

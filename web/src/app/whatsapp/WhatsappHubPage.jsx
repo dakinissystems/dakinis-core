@@ -48,8 +48,20 @@ export default function WhatsappHubPage({ navigate }) {
     <section className="modules comm-page wa-hub business-app-page">
       <div className="container">
         <p className="kicker">{isBusinessFacing ? t("businessDemo.whatsapp.kicker") : t("app.whatsapp.kicker")}</p>
-        <h2>{isBusinessFacing ? t("businessDemo.whatsapp.title") : t("app.whatsapp.heading")}</h2>
-        <p className="lead">{isBusinessFacing ? t("businessDemo.whatsapp.pageLead") : t("app.whatsapp.lead")}</p>
+        <h2>
+          {activeTab === "conversations"
+            ? "Enviar mensaje"
+            : isBusinessFacing
+              ? t("businessDemo.whatsapp.title")
+              : t("app.whatsapp.heading")}
+        </h2>
+        <p className="lead">
+          {activeTab === "conversations"
+            ? "Escribe un número y un mensaje. La bandeja de conversaciones solo lista hilos que el servicio ya ha guardado."
+            : isBusinessFacing
+              ? t("businessDemo.whatsapp.pageLead")
+              : t("app.whatsapp.lead")}
+        </p>
 
         <nav className="wa-subnav" aria-label={t("app.whatsapp.navAria")}>
           {visibleTabs.map((tab) => (
@@ -81,16 +93,6 @@ export default function WhatsappHubPage({ navigate }) {
           </button>
         </p>
 
-        {!isDemo ? (
-          <div className="system-page-actions" style={{ marginTop: "1.25rem" }}>
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/app/crm")}>
-              {t("app.crm.title")}
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
-              {t("appNav.hub")}
-            </button>
-          </div>
-        ) : null}
       </div>
     </section>
   );

@@ -103,10 +103,24 @@ export function RestaurantStockManualForm({
             </label>
           </>
         ) : null}
+        {method === "manual" && !itemId ? (
+          <p className="kpi-label">Elige un producto para definir entrada o salida.</p>
+        ) : null}
+        {(method === "manual" && item && !isNew) || (method !== "manual" && pendingScan?.code) ? (
+          <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
+            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("in"); setScanDirection?.("in"); }}>
+              {t("kitchen.scanIn")}
+            </button>
+            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("out"); setScanDirection?.("out"); }}>
+              {t("kitchen.scanOut")}
+            </button>
+          </div>
+        ) : null}
+        {isNew ? <p className="kpi-label">Un producto nuevo solo admite entrada.</p> : null}
         <label className="mockup-field">
           <span>
             {t("kitchen.manualQty")}
-            {item?.unit ? ` (${item.unit})` : ""}
+            {item?.unit ? ` (${item.unit})` : pendingScan?.unit ? ` (${pendingScan.unit})` : ""}
           </span>
           <input
             type="number"
@@ -124,18 +138,10 @@ export function RestaurantStockManualForm({
           <p className="kpi-label">
             <strong>{pendingScan.name || "Producto identificado"}</strong>
             {" · "}
+            {t("kitchen.manualCurrent")}: {dakinisFormatQty(pendingScan.quantity, pendingScan.unit)}
+            {" · "}
             {t("kitchen.manualResult")}: {dakinisResultingStock(pendingScan, qty, direction)}
           </p>
-        ) : null}
-        {method !== "manual" || (item && !isNew) ? (
-          <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
-            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("in"); setScanDirection?.("in"); }}>
-              {t("kitchen.scanIn")}
-            </button>
-            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("out"); setScanDirection?.("out"); }}>
-              {t("kitchen.scanOut")}
-            </button>
-          </div>
         ) : null}
         {item ? (
           <p className="kpi-label">

@@ -77,10 +77,11 @@ export function dakinisRestaurantDayCloseSummary(orders, t) {
     byChannel[ch].total += total;
     byChannel[ch].count += 1;
   }
+  const channelRows = Object.values(byChannel).filter((row) => row.count > 0);
   return {
     closed,
     grandTotal,
-    byPayment: Object.values(byPayment),
-    byChannel: Object.values(byChannel)
+    byPayment: Object.values(byPayment).filter((row) => row.count > 0),
+    byChannel: channelRows
   };
 }
