@@ -137,24 +137,9 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
         {statusLabel ? <p className="stock-scanner__status">{statusLabel}</p> : null}
       </div>
 
-      <label className="mockup-field stock-scanner__code-field">
-        <span>{label("kitchen.scanCode", "Último código")}</span>
-        <input
-          type="text"
-          readOnly
-          value={confirmedCode}
-          placeholder={
-            isScanning
-              ? label("kitchen.scanSearching", "Buscando código…")
-              : label("kitchen.scanCodePlaceholder", "—")
-          }
-          className="stock-scanner__code-input"
-        />
-      </label>
-
       {confirmedCode ? (
         <p className="kpi-label stock-scanner__confirmed" style={{ marginTop: "0.35rem" }}>
-          {label("kitchen.scanConfirmed", "Código confirmado")}
+          {label("kitchen.scanConfirmed", "Código leído")}: {confirmedCode}
         </p>
       ) : null}
 

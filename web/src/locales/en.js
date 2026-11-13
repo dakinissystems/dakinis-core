@@ -1937,7 +1937,7 @@ export default {
       noContacts: "No contacts yet. Create one or receive a WhatsApp message.",
       aiHintInactive: "Check inactive customers — AI can suggest reactivation campaigns.",
       aiHintAction: "Open Copilot",
-      newContact: "New contact",
+      newContact: "New client",
       firstName: "First name",
       lastName: "Last name",
       phone: "Phone",

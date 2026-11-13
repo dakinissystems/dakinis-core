@@ -1,4 +1,3 @@
-import EmptyState from "@dakinis/shared-ux/react/EmptyState.jsx";
 import { dakinisContactLabel } from "./contactUtils.js";
 
 export default function CrmContactList({
@@ -59,11 +58,9 @@ export default function CrmContactList({
       </button>
 
       {!loading && contacts.length === 0 ? (
-        <EmptyState
-          product="core"
-          stateKey="noCustomers"
-          onPrimary={onOpenComposer}
-        />
+        <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
+          Todavía no hay clientes. El alta es el botón de arriba.
+        </p>
       ) : null}
 
       {composerOpen ? (

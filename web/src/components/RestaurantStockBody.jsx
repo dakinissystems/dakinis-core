@@ -6,6 +6,8 @@ import { dakinisFormatQty } from "../hooks/useRestaurantStockSection.js";
 export function RestaurantStockScanPanel({
   t,
   dakinisApplyStockScan,
+  dakinisConfirmStockScan,
+  pendingScan,
   scanQty,
   setScanQty,
   scanDirection,
@@ -41,6 +43,12 @@ export function RestaurantStockScanPanel({
             onChange={(e) => setScanQty(e.target.value)}
           />
         </label>
+        {pendingScan?.code ? (
+          <p className="kpi-label">
+            {pendingScan.name || "Producto identificado"}
+            {pendingScan.quantity != null ? ` · stock ${pendingScan.quantity} ${pendingScan.unit || ""}` : ""}
+          </p>
+        ) : null}
         <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
           <button
             type="button"
@@ -55,6 +63,14 @@ export function RestaurantStockScanPanel({
             onClick={() => setScanDirection("out")}
           >
             {t("kitchen.scanOut")}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            disabled={busy || !pendingScan?.code}
+            onClick={() => dakinisConfirmStockScan?.()}
+          >
+            Confirmar {scanDirection === "out" ? "salida" : "entrada"}
           </button>
         </div>
       </div>

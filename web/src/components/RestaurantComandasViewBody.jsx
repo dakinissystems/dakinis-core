@@ -41,8 +41,8 @@ export function RestaurantComandasMesasView(props) {
       onTablesChange={setTables}
       onSessionsChange={setTableSessions}
       onSessionPatch={dakinisPatchTableSession}
-      layoutEditable={staffRole === "camarero"}
-      positionEditable={staffRole === "camarero"}
+      layoutEditable={false}
+      positionEditable={false}
       onFloorSave={dakinisSaveFloor}
       busy={busy}
       mesaClosePayment={mesaClosePayment}

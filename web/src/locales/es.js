@@ -1940,7 +1940,7 @@ export default {
       noContacts: "Sin contactos. Crea uno o recibe un WhatsApp.",
       aiHintInactive: "Revisa clientes inactivos — la IA puede sugerir campañas de reactivación.",
       aiHintAction: "Abrir Copilot",
-      newContact: "Nuevo contacto",
+      newContact: "Nuevo cliente",
       firstName: "Nombre",
       lastName: "Apellidos",
       phone: "Teléfono",

@@ -194,6 +194,9 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                     </p>
                     {row.lastSync ? <p className="kpi-label">Última sincronización: {row.lastSync}</p> : null}
                     {row.last_error || row.lastError ? <p className="kpi-label">{row.last_error || row.lastError}</p> : null}
+                    <button type="button" className="btn btn-outline" onClick={() => setView("config")}>
+                      Configurar integración
+                    </button>
                   </article>
                 );
               })}

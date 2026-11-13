@@ -12,7 +12,7 @@ const DAKINIS_BUSINESS_TILES = [
   { key: "whatsapp", icon: "💬", path: "/app/whatsapp" }
 ];
 
-export default function BusinessNavHero({ navigate, compact = false, showCopilot = !compact }) {
+export default function BusinessNavHero({ navigate, compact = false, quiet = false, showCopilot = !compact }) {
   const { t } = useLocale();
   const { session } = useDakinisSession();
   const hospitality = dakinisIsHospitalityBusiness(session?.business?.type);
@@ -31,7 +31,7 @@ export default function BusinessNavHero({ navigate, compact = false, showCopilot
   });
 
   return (
-    <section className={`business-nav-hero${compact ? " business-nav-hero--compact" : ""}`}>
+    <section className={`business-nav-hero${compact ? " business-nav-hero--compact" : ""}${quiet ? " business-nav-hero--quiet" : ""}`}>
       {!compact ? (
         <div className="business-nav-hero__copy">
           <h2 className="business-nav-hero__title">{t("businessDemo.hero.title")}</h2>
@@ -47,9 +47,11 @@ export default function BusinessNavHero({ navigate, compact = false, showCopilot
               className="business-nav-hero__tile"
               onClick={() => navigate(tile.path)}
             >
-              <span className="business-nav-hero__icon" aria-hidden>
-                {tile.icon}
-              </span>
+              {quiet ? null : (
+                <span className="business-nav-hero__icon" aria-hidden>
+                  {tile.icon}
+                </span>
+              )}
               <span className="business-nav-hero__label">{t(`businessDemo.hero.tiles.${tile.key}`)}</span>
             </button>
           </li>

@@ -3192,8 +3192,8 @@ dialog.allergen-modal::backdrop {
   padding: 0.45rem 0.5rem;
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--dakinis-surface-0);
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.88);
   font-size: 0.78rem;
   line-height: 1.2;
   cursor: pointer;
@@ -3234,9 +3234,14 @@ dialog.allergen-modal::backdrop {
   border-color: var(--brand);
 }
 
+.restaurant-floor__table.is-free {
+  border-color: rgba(148, 163, 184, 0.85);
+}
+
 .restaurant-floor__table.is-busy {
-  border-color: var(--dakinis-warning);
-  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  background: rgba(146, 64, 14, 0.72);
+  color: #fff;
 }
 
 .restaurant-floor__table.is-selected {
@@ -5570,6 +5575,48 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .business-nav-hero--compact .business-nav-hero__tiles {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.business-nav-hero--quiet {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.business-nav-hero--quiet .business-nav-hero__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.business-nav-hero--quiet .business-nav-hero__tile {
+  flex-direction: row;
+  min-height: 44px;
+  padding: 0.35rem 0.75rem;
+}
+
+.dashboard-groups {
+  gap: 0.65rem;
+}
+
+.dashboard-groups__grid {
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.dashboard-groups .card,
+.dashboard-kpi {
+  padding: 0.7rem 0.8rem;
+}
+
+.dashboard-kpi__factors {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.dashboard-load-error {
+  margin: 0.75rem 0;
 }
 
 .business-nav-hero__tile {

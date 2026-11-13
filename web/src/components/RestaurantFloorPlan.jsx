@@ -34,6 +34,7 @@ export default function RestaurantFloorPlan({
   const dragRef = useRef(null);
   const hasMovedRef = useRef(false);
 
+  const [designMode, setDesignMode] = useState(false);
   const [liveTables, setLiveTables] = useState(tables);
   const [draggingId, setDraggingId] = useState(null);
   const liveTablesRef = useRef(tables);
@@ -53,9 +54,10 @@ export default function RestaurantFloorPlan({
     setLiveTables(tables);
   }
 
-  const canMove = Boolean(positionEditable && onTablesChange);
-  const canAdd = Boolean((layoutEditable || positionEditable) && onAddTable);
-  const canRemove = Boolean(layoutEditable && onTablesChange);
+  const designAllowed = Boolean(positionEditable || layoutEditable);
+  const canMove = Boolean(designMode && positionEditable && onTablesChange);
+  const canAdd = Boolean(designMode && (layoutEditable || positionEditable) && onAddTable);
+  const canRemove = Boolean(designMode && layoutEditable && onTablesChange);
 
   const commitTables = useCallback(
     (next, fromDrag) => {
@@ -184,6 +186,11 @@ export default function RestaurantFloorPlan({
   return (
     <div className="restaurant-floor">
       <div className="restaurant-floor__toolbar no-print">
+        {designAllowed ? (
+          <button type="button" className={designMode ? "btn" : "btn btn-outline"} onClick={() => setDesignMode((value) => !value)}>
+            {designMode ? "Diseño activo" : "Operación"}
+          </button>
+        ) : null}
         {canAdd ? (
           <div className="restaurant-floor__add-group">
             <span className="kpi-label">{label("restaurant.floorAdd", "Añadir mesa")}:</span>
@@ -246,7 +253,7 @@ export default function RestaurantFloorPlan({
               <button
                 key={tbl.id}
                 type="button"
-                className={`restaurant-floor__table${selected ? " is-selected" : ""}${busy ? " is-busy" : ""}${dragging ? " is-dragging" : ""}${canMove ? " is-draggable" : ""}`}
+                className={`restaurant-floor__table${selected ? " is-selected" : ""}${busy ? " is-busy" : " is-free"}${dragging ? " is-dragging" : ""}${canMove ? " is-draggable" : ""}`}
                 style={{ left: `${tbl.x}%`, top: `${tbl.y}%` }}
                 title={canMove ? `${tbl.label} — ${label("restaurant.floorDragTitle", "Arrastrar para mover")}` : tbl.label}
                 aria-label={tbl.label}

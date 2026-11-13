@@ -47,6 +47,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
   const [scanQty, setScanQty] = useState("1");
   const [scanDirection, setScanDirection] = useState("in");
   const [scanMessage, setScanMessage] = useState("");
+  const [pendingScan, setPendingScan] = useState(null);
   const [unknownBarcode, setUnknownBarcode] = useState("");
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("u");
@@ -157,13 +158,33 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     if (!code) return;
 
     const slug = dakinisResolveStockItemSlug(code, kitchen?.items ?? []);
-    if (!slug && !apiSession?.token) {
+    const known = (kitchen?.items ?? []).find((item) => item.slug === slug || item.barcode === code);
+    if (!slug) {
+      setPendingScan(null);
       setUnknownBarcode(code);
+      setScanMessage(apiSession?.token ? t("kitchen.scanUnknownPrompt") : t("kitchen.scanNotFound"));
+      return;
+    }
+    setPendingScan({
+      code,
+      name: known?.name || known?.slug || "",
+      quantity: known?.quantity,
+      unit: known?.unit || ""
+    });
+    setUnknownBarcode("");
+    setScanMessage(known?.name ? `${known.name}` : t("kitchen.scanMatched"));
+  }
+
+  async function dakinisConfirmStockScan() {
+    if (!pendingScan?.code) return;
+    const slug = dakinisResolveStockItemSlug(pendingScan.code, kitchen?.items ?? []);
+    if (!slug && !apiSession?.token) {
+      setUnknownBarcode(pendingScan.code);
       setScanMessage(t("kitchen.scanNotFound"));
       return;
     }
     if (!slug && apiSession?.token) {
-      setUnknownBarcode(code);
+      setUnknownBarcode(pendingScan.code);
       setNewProductName("");
       setScanMessage(t("kitchen.scanUnknownPrompt"));
       return;
@@ -177,10 +198,11 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     setScanMessage("");
     setError("");
     try {
-      await dakinisPostStockScan(code);
+      await dakinisPostStockScan(pendingScan.code);
+      setPendingScan(null);
     } catch (e) {
       if (e instanceof DakinisApiError && (e.code === "BARCODE_UNKNOWN" || e.status === 404)) {
-        setUnknownBarcode(code);
+        setUnknownBarcode(pendingScan.code);
         setScanMessage(t("kitchen.scanUnknownPrompt"));
         return;
       }
@@ -312,7 +334,9 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     reload,
     fetchOpts,
     apiSession,
+    pendingScan,
     dakinisApplyStockScan,
+    dakinisConfirmStockScan,
     dakinisCreateProductFromScan,
     dakinisApplyDemoPurchase,
     dakinisRunSimulate,

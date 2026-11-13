@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
@@ -7,7 +7,6 @@ import {
   dakinisTenantIndustryDashboard,
   dakinisTenantHealthScore,
   dakinisTenantAiSuggestions,
-  dakinisTenantBenchmark,
   dakinisTenantGrowthScore,
   dakinisTenantRecommendations,
   dakinisTenantFinanceSummary
@@ -15,6 +14,7 @@ import {
 import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import {
   LIVE_TENANT_DASHBOARD_INITIAL,
+  dakinisMergeDashboardLoad,
   liveTenantDashboardReducer
 } from "./liveTenantDashboardReducer.js";
 
@@ -41,6 +41,38 @@ function dakinisTaskLabel(t, key) {
   );
 }
 
+const HEALTH_FACTOR_GROUPS = [
+  { id: "setup", title: "Configuración", keys: ["onboarding"] },
+  { id: "ops", title: "Salud operativa", keys: ["operations"] },
+  { id: "commercial", title: "Actividad comercial", keys: ["crm", "activity", "engagement"] },
+  { id: "adoption", title: "Adopción", keys: ["team"] }
+];
+
+function HealthFactors({ factors }) {
+  const list = Array.isArray(factors) ? factors : [];
+  return (
+    <>
+      {HEALTH_FACTOR_GROUPS.map((group) => {
+        const rows = list.filter((factor) => group.keys.includes(factor.key));
+        if (!rows.length) return null;
+        return (
+          <article className="card dashboard-kpi" key={group.id}>
+            <p className="kpi-label">{group.title}</p>
+            {group.id === "setup" ? (
+              <p className="kpi-label">Un negocio sin configurar no es una incidencia operativa.</p>
+            ) : null}
+            <ul className="kpi-label dashboard-kpi__factors">
+              {rows.map((factor) => (
+                <li key={factor.key}>{factor.label}</li>
+              ))}
+            </ul>
+          </article>
+        );
+      })}
+    </>
+  );
+}
+
 function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKpi }) {
   const grouped = new Map(KPI_GROUPS.map((group) => [group.id, []]));
   for (const kpi of kpis) {
@@ -52,30 +84,17 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
   if (health) grouped.get("attention").unshift({ key: "health", label: t("app.dashboard.healthScore"), health: true });
 
   return (
-    <div className="dashboard-groups" style={{ marginTop: "1rem", display: "grid", gap: "1rem" }}>
+    <div className="dashboard-groups" style={{ marginTop: "0.75rem", display: "grid", gap: "0.65rem" }}>
       {KPI_GROUPS.map((group) => {
         const items = grouped.get(group.id) || [];
         if (!items.length) return null;
         return (
           <section key={group.id} aria-label={group.title}>
-            <h3 style={{ margin: "0 0 0.6rem", fontSize: "1.05rem" }}>{group.title}</h3>
-            <div className="module-grid">
+            <h3 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>{group.title}</h3>
+            <div className="module-grid dashboard-groups__grid">
               {items.map((item) => {
                 if (item.health) {
-                  return (
-                    <article className="card" key={item.key}>
-                      <p className="kpi-label">{item.label}</p>
-                      <p className="kpi-value">{health.score}/100</p>
-                      <p className="kpi-label">{health.statusLabel}</p>
-                      {Array.isArray(health.factors) && health.factors.length ? (
-                        <ul className="kpi-label">
-                          {health.factors.map((factor) => (
-                            <li key={factor.key}>{factor.label}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </article>
-                  );
+                  return <HealthFactors key={item.key} factors={health.factors} />;
                 }
                 if (item.growth) {
                   return (
@@ -144,44 +163,47 @@ const HOSPITALITY_KPI_TASK = {
 export default function LiveTenantDashboard({ session, navigate }) {
   const { t } = useLocale();
   const [data, dispatch] = useReducer(liveTenantDashboardReducer, LIVE_TENANT_DASHBOARD_INITIAL);
-  const { industryDash, health, aiTips, benchmark, growth, recommendations, finance } = data;
+  const { industryDash, health, aiTips, growth, recommendations, finance, errors, loadedAt } = data;
+  const [reloadNonce, setReloadNonce] = useState(0);
 
   const sessionToken = session?.token;
 
   useEffect(() => {
     if (!sessionToken) return undefined;
     let cancelled = false;
-    Promise.all([
-      dakinisTenantIndustryDashboard(session),
-      dakinisTenantHealthScore(session),
-      dakinisTenantAiSuggestions(session).catch(() => null),
-      dakinisTenantBenchmark(session).catch(() => null),
-      dakinisTenantGrowthScore(session).catch(() => null),
-      dakinisTenantRecommendations(session).catch(() => null),
-      dakinisTenantFinanceSummary(session).catch(() => null)
-    ])
-      .then(([dashJson, healthJson, aiJson, benchJson, growthJson, recJson, finJson]) => {
-        if (cancelled) return;
-        dispatch({
-          type: "loaded",
-          payload: {
-            industryDash: dashJson?.data?.dashboard || null,
-            health: healthJson?.data?.health || null,
-            aiTips: aiJson?.data || null,
-            benchmark: benchJson?.data?.benchmark || null,
-            growth: growthJson?.data?.growth || null,
-            recommendations: recJson?.data?.recommendations || [],
-            finance: finJson?.data?.summary || null
-          }
-        });
+    const jobs = [
+      ["panel", () => dakinisTenantIndustryDashboard(session)],
+      ["salud", () => dakinisTenantHealthScore(session)],
+      ["sugerencias", () => dakinisTenantAiSuggestions(session)],
+      ["crecimiento", () => dakinisTenantGrowthScore(session)],
+      ["recomendaciones", () => dakinisTenantRecommendations(session)],
+      ["finanzas", () => dakinisTenantFinanceSummary(session)]
+    ];
+    Promise.all(
+      jobs.map(async ([key, run]) => {
+        try {
+          return { key, ok: true, value: await run() };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "No se ha podido cargar";
+          return { key, ok: false, message };
+        }
       })
-      .catch(() => {});
+    ).then((results) => {
+      if (cancelled) return;
+      const merged = dakinisMergeDashboardLoad(data, results);
+      dispatch({
+        type: "loaded",
+        loadedAt: new Date().toISOString(),
+        errors: merged.errors,
+        payload: merged
+      });
+    });
     return () => {
       cancelled = true;
     };
-    // Intentionally token-only: billing refresh must not re-fire this fan-out.
+    // Token and an explicit retry. A failed module does not borrar los que sí llegaron.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- session object identity churns
-  }, [sessionToken]);
+  }, [sessionToken, reloadNonce]);
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
   const businessFacing = dakinisIsBusinessFacingSession(session);
@@ -198,11 +220,39 @@ export default function LiveTenantDashboard({ session, navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {businessFacing ? <BusinessNavHero navigate={navigate} /> : null}
-
         <p className="kicker">{t("app.dashboard.kicker", { name: businessName })}</p>
         <h2>{industryDash?.industry || t("app.dashboard.heading")}</h2>
         <p className="lead">{t("app.dashboard.lead")}</p>
+        {loadedAt ? (
+          <p className="kpi-label">
+            Actualizado a las {new Date(loadedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+          </p>
+        ) : null}
+        {Object.keys(errors).length ? (
+          <article className="card dashboard-load-error">
+            <h3 style={{ marginTop: 0 }}>Hay módulos que no se han cargado</h3>
+            <ul>
+              {Object.entries(errors).map(([key, message]) => (
+                <li key={key}>
+                  <strong>
+                    {{
+                      panel: "Panel",
+                      salud: "Salud",
+                      sugerencias: "Sugerencias",
+                      crecimiento: "Crecimiento",
+                      recomendaciones: "Recomendaciones",
+                      finanzas: "Finanzas"
+                    }[key] || key}
+                  </strong>
+                  : {message}
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="btn" onClick={() => setReloadNonce((value) => value + 1)}>
+              Reintentar
+            </button>
+          </article>
+        ) : null}
 
         <DashboardGroups
           t={t}
@@ -242,20 +292,7 @@ export default function LiveTenantDashboard({ session, navigate }) {
           </div>
         ) : null}
 
-        {benchmark?.comparisons?.length ? (
-          <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>{t("app.dashboard.benchmark")}</h3>
-            <p className="kpi-label">{benchmark.sectorSampleLabel}</p>
-            <ul>
-              {benchmark.comparisons.map((row) => (
-                <li key={row.key}>
-                  {row.label}: {row.tenantValue}
-                  {row.unit ? ` ${row.unit}` : ""} · media {row.sectorAverage}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        {businessFacing ? <BusinessNavHero navigate={navigate} compact quiet /> : null}
 
         {recommendations.length ? (
           <div className="module-grid" style={{ marginTop: "1rem" }}>
