@@ -18,7 +18,8 @@ export const RESTAURANT_COMANDAS_INITIAL = {
   selectedTableId: null,
   mesaClosePayment: "tarjeta",
   error: "",
-  busy: false
+  busy: false,
+  loaded: false
 };
 
 export function restaurantComandasReducer(state, action) {
@@ -32,7 +33,8 @@ export function restaurantComandasReducer(state, action) {
         invoices: action.invoices,
         tables: action.tables,
         tableSessions: action.tableSessions,
-        error: ""
+        error: "",
+        loaded: true
       };
     case "setField":
       return { ...state, [action.field]: action.value };

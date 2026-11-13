@@ -64,6 +64,7 @@ export function dakinisCompareToSector(industryKey, tenantMetrics = {}) {
 
   const add = (key, tenantValue, sectorValue, label, unit = "") => {
     if (sectorValue === undefined || sectorValue === null) return;
+    if (tenantValue === undefined || tenantValue === null) return;
     const tv = Number(tenantValue) || 0;
     const sv = Number(sectorValue) || 0;
     const delta = sv === 0 ? (tv > 0 ? 100 : 0) : ((tv - sv) / sv) * 100;

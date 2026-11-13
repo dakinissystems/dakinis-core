@@ -64,8 +64,37 @@ async function dakinisFetchJson(url, init) {
   return res;
 }
 
+/** Misma lectura de hostelería en vuelo (carta + pulso + panel) cuenta como una petición. */
+const restaurantGetInflight = new Map();
+
+function dakinisRestaurantGetKey(path, session, options) {
+  const businessId =
+    dakinisTrimOr(options.businessId, "") ||
+    dakinisTrimOr(session?.business?.slug, "") ||
+    dakinisTrimOr(session?.business?.id, "") ||
+    "";
+  const token = String(session?.token || "").slice(-16);
+  return `${path}|${businessId}|${token}`;
+}
+
 /** GET / POST JSON con multi-tenant. `businessId` puede ser slug o UUID. */
 export async function dakinisTenantJsonFetch(path, session, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (method === "GET" && normalizedPath.startsWith("/api/tenant/restaurant/")) {
+    const key = dakinisRestaurantGetKey(normalizedPath, session, options);
+    const pending = restaurantGetInflight.get(key);
+    if (pending) return pending;
+    const promise = dakinisTenantJsonFetchOnce(normalizedPath, session, options).finally(() => {
+      if (restaurantGetInflight.get(key) === promise) restaurantGetInflight.delete(key);
+    });
+    restaurantGetInflight.set(key, promise);
+    return promise;
+  }
+  return dakinisTenantJsonFetchOnce(normalizedPath, session, options);
+}
+
+async function dakinisTenantJsonFetchOnce(path, session, options = {}) {
   const base = dakinisApiBaseUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
@@ -170,6 +199,12 @@ async function dakinisParseJsonResponse(res, url) {
     if (res.status === 401 && (code === "UNAUTHORIZED" || code === "INVALID_TOKEN")) {
       const { dakinisEmitAuthExpired } = await import("./auth-events.js");
       dakinisEmitAuthExpired({ url, code });
+    }
+    if (res.status === 429 || code === "RATE_LIMIT_EXCEEDED") {
+      throw new DakinisApiError(
+        "No hemos podido cargar estos datos. El servicio está recibiendo demasiadas solicitudes.",
+        { status: 429, code: code || "RATE_LIMIT_EXCEEDED", details: json?.error?.details }
+      );
     }
     const msg = json?.error?.message || res.statusText || "Error HTTP";
     if (code) {

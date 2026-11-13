@@ -51,7 +51,8 @@ export function useRestaurantComandasSection({
     selectedTableId,
     mesaClosePayment,
     error,
-    busy
+    busy,
+    loaded
   } = state;
 
   const setMenu = (value) =>
@@ -135,10 +136,13 @@ export function useRestaurantComandasSection({
     if (!sessionToken || !sess?.token) return;
     dispatch({ type: "setError", error: "" });
     try {
+      const needsInvoices = staffRole === "admin";
       const [menuRes, ordersRes, invRes, floorState] = await Promise.all([
         dakinisTenantJsonFetch("/api/tenant/restaurant/menu", sess, fetchOpts),
         dakinisTenantJsonFetch("/api/tenant/restaurant/orders", sess, fetchOpts),
-        dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", sess, fetchOpts),
+        needsInvoices
+          ? dakinisTenantJsonFetch("/api/tenant/restaurant/invoices", sess, fetchOpts)
+          : Promise.resolve(null),
         dakinisFetchRestaurantFloor(sess, fetchOpts)
       ]);
       dispatch({
@@ -153,7 +157,7 @@ export function useRestaurantComandasSection({
     } catch (e) {
       dispatch({ type: "setError", error: e instanceof Error ? e.message : t("fermina.loadError") });
     }
-  }, [sessionToken, fetchOpts, t]);
+  }, [sessionToken, fetchOpts, staffRole, t]);
 
   useEffect(() => {
     reload();
@@ -371,6 +375,8 @@ export function useRestaurantComandasSection({
       venueName,
       t,
       error,
+      reload,
+      dataReady: Boolean(loaded) && !error,
       staffRole,
       opsMode,
       apiSessionBusinessId: apiSession?.businessId || apiSession?.business?.id || effectiveSlug || null,

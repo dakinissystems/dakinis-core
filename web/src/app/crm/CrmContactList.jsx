@@ -19,7 +19,10 @@ export default function CrmContactList({
   onNewLastChange,
   onNewPhoneChange,
   onNewEmailChange,
-  onCreateContact
+  onCreateContact,
+  composerOpen = false,
+  onOpenComposer,
+  onCloseComposer
 }) {
   return (
     <aside className="wa-conv-list card">
@@ -51,15 +54,20 @@ export default function CrmContactList({
         ))}
       </ul>
 
+      <button type="button" className="btn" style={{ marginTop: "0.75rem" }} onClick={onOpenComposer}>
+        + {t("app.crm.newContact")}
+      </button>
+
       {!loading && contacts.length === 0 ? (
         <EmptyState
           product="core"
           stateKey="noCustomers"
-          onPrimary={() => document.querySelector(".crm-new-contact-form")?.scrollIntoView({ behavior: "smooth" })}
+          onPrimary={onOpenComposer}
         />
       ) : null}
 
-      <form className="mockup-form crm-new-contact-form" onSubmit={onCreateContact} style={{ marginTop: "1rem" }}>
+      {composerOpen ? (
+      <form className="mockup-form crm-new-contact-form card" onSubmit={onCreateContact} style={{ marginTop: "1rem" }}>
         <p className="kpi-label">{t("app.crm.newContact")}</p>
         <label className="mockup-field">
           <span>{t("app.crm.firstName")}</span>
@@ -80,7 +88,11 @@ export default function CrmContactList({
         <button type="submit" className="btn" disabled={saving}>
           {t("app.crm.saveContact")}
         </button>
+        <button type="button" className="btn btn-outline" onClick={onCloseComposer}>
+          {t("app.crm.cancel", "Cancelar")}
+        </button>
       </form>
+      ) : null}
     </aside>
   );
 }

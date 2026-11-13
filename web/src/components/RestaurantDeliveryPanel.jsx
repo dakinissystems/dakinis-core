@@ -107,16 +107,18 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
   const todayCounts = dashboard?.todayCounts || {};
   const healthRows = providers.length ? providers : dashboard?.integrations || [];
 
-  function statusDot(status) {
-    if (status === "online" || status === "ok" || status === "connected") return "●";
-    if (status === "error_token" || status === "failed" || status === "stub" || status === "degraded") return "●";
-    return "○";
-  }
-
-  function statusColor(status) {
-    if (status === "online" || status === "ok" || status === "connected") return "#34d399";
-    if (status === "error_token" || status === "failed" || status === "stub" || status === "degraded") return "#fb923c";
-    return "#94a3b8";
+  function channelState(status) {
+    const value = String(status || "");
+    if (value === "online" || value === "ok" || value === "connected") {
+      return { label: "Conectado", color: "#34d399" };
+    }
+    if (value === "disconnected" || value === "offline") {
+      return { label: "Desconectado", color: "#f87171" };
+    }
+    if (value === "error_token" || value === "failed" || value === "stub" || value === "degraded") {
+      return { label: "Configuración pendiente", color: "#fbbf24" };
+    }
+    return { label: "No configurado", color: "#94a3b8" };
   }
 
   function jobLine(job) {
@@ -180,31 +182,35 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
               )}
             </ul>
 
-            <div style={{ marginTop: "0.75rem" }}>
-              <p className="kpi-label" style={{ marginBottom: "0.35rem" }}>
-                {label("restaurant.deliveryHealth", "Canales")}
-              </p>
-              <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
-                {healthRows.slice(0, 8).map((row) => (
-                  <li key={row.provider}>
-                    <span style={{ color: statusColor(row.status) }}>{statusDot(row.status)}</span>{" "}
-                    {row.label || row.provider}: {row.status}
-                    {row.pending != null ? ` · ${row.pending} pend.` : ""}
-                    {row.lastSync ? ` · sync ${row.lastSync}` : ""}
-                  </li>
-                ))}
-              </ul>
+            <div style={{ marginTop: "0.75rem", display: "grid", gap: "0.6rem", gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))" }}>
+              {healthRows.slice(0, 8).map((row) => {
+                const state = channelState(row.status);
+                return (
+                  <article key={row.provider} className="card" style={{ margin: 0 }}>
+                    <strong>{row.label || row.provider}</strong>
+                    <p className="kpi-label" style={{ color: state.color, margin: "0.25rem 0" }}>{state.label}</p>
+                    <p className="kpi-label">
+                      {row.pending != null ? `${row.pending} pendientes` : "Pedidos pendientes: datos no disponibles"}
+                    </p>
+                    {row.lastSync ? <p className="kpi-label">Última sincronización: {row.lastSync}</p> : null}
+                    {row.last_error || row.lastError ? <p className="kpi-label">{row.last_error || row.lastError}</p> : null}
+                  </article>
+                );
+              })}
             </div>
 
-            <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-              <button type="button" className="btn" disabled={busy} onClick={simulateOrder}>
-                {label("restaurant.deliverySimulate", "Simular pedido Manual")}
-              </button>
-              <span className="kpi-label">
-                {label("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
-                <strong>{dashboard?.pendingMarketplace ?? 0}</strong>
-              </span>
-            </div>
+            <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
+              {label("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
+              <strong>{dashboard?.pendingMarketplace == null ? "Datos no disponibles" : dashboard.pendingMarketplace}</strong>
+            </p>
+          </article>
+
+          <article className="card" style={{ marginTop: "0.75rem" }}>
+            <h4 style={{ marginTop: 0 }}>Simulación</h4>
+            <p className="kpi-label">Esto no entra un pedido real de un canal. Sirve para probar la pantalla.</p>
+            <button type="button" className="btn btn-outline" disabled={busy} onClick={simulateOrder}>
+              {label("restaurant.deliverySimulate", "Simular pedido manual")}
+            </button>
           </article>
 
           {(jobs.length || jobCounts) && (
@@ -250,8 +256,8 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                 >
                   <div>
                     <strong>{row.label}</strong>{" "}
-                    <span style={{ color: statusColor(row.status), marginLeft: "0.35rem" }}>
-                      {statusDot(row.status)} {row.status}
+                    <span style={{ color: channelState(row.status).color, marginLeft: "0.35rem" }}>
+                      {channelState(row.status).label}
                     </span>
                     <div className="kpi-label" style={{ marginTop: "0.15rem" }}>
                       {row.detail}

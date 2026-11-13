@@ -38,6 +38,7 @@ export default function CrmPage({ navigate }) {
   const [noteType, setNoteType] = useState("note");
   const [noteText, setNoteText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
 
   const loadContacts = useCallback(async () => {
     if (!hasToken) return;
@@ -118,6 +119,7 @@ export default function CrmPage({ navigate }) {
       setNewPhone("");
       setNewEmail("");
       await loadContacts();
+      setComposerOpen(false);
       if (created?.id) setSelectedId(created.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("app.crm.error"));
@@ -172,6 +174,7 @@ export default function CrmPage({ navigate }) {
           </p>
         ) : null}
 
+        <p className="kpi-label">El recorrido muestra el orden de trabajo. Un paso solo abre el módulo que ya existe.</p>
         <div className="crm-journey card" aria-label={t("app.crm.journeyAria")}>
           {journeySteps.map((label, index) => (
             <span key={DAKINIS_CRM_JOURNEY_KEYS[index]} className="crm-journey__step">
@@ -225,6 +228,9 @@ export default function CrmPage({ navigate }) {
             onNewLastChange={setNewLast}
             onNewPhoneChange={setNewPhone}
             onNewEmailChange={setNewEmail}
+            composerOpen={composerOpen}
+            onOpenComposer={() => setComposerOpen(true)}
+            onCloseComposer={() => setComposerOpen(false)}
             onCreateContact={handleCreateContact}
           />
           <CrmContactDetail

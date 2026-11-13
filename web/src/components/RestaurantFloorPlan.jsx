@@ -211,6 +211,13 @@ export default function RestaurantFloorPlan({
         ) : null}
       </div>
 
+      {liveTables.length ? (
+        <p className="restaurant-floor__occupancy">
+          {liveTables.filter((tbl) => dakinisSessionBusy(sessions[tbl.id])).length} con cuenta ·{" "}
+          {liveTables.filter((tbl) => !dakinisSessionBusy(sessions[tbl.id])).length} libres
+        </p>
+      ) : null}
+
       <div className="restaurant-floor__canvas-wrap">
         <div
           ref={canvasRef}
@@ -251,6 +258,7 @@ export default function RestaurantFloorPlan({
               >
                 {canMove ? <span className="restaurant-floor__table-grip" aria-hidden /> : null}
                 <span className="restaurant-floor__table-label">{tbl.label}</span>
+                <span className="restaurant-floor__table-state">{busy ? "Cuenta" : "Libre"}</span>
                 {busy && total > 0 ? (
                   <span className="restaurant-floor__table-total">{total.toFixed(0)} €</span>
                 ) : null}

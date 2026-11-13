@@ -14,9 +14,6 @@ function dakinisMeta(req) {
 function dakinisTenantMetricsFromSignals(signals) {
   return {
     crmContacts: signals.crmContacts ?? 0,
-    salesMonthDeltaPct: (signals.activities7d ?? 0) > 4 ? 8 : 2,
-    reservations7d: signals.reservations7d ?? 0,
-    occupancyPct: Math.min(92, 35 + (signals.openOrders ?? 0) * 6),
     stockAlerts: signals.stockAlerts ?? 0
   };
 }
@@ -25,32 +22,31 @@ function dakinisDashboardKpiValues(businessType, signals) {
   const open = signals.openOrders ?? 0;
   const alerts = signals.stockAlerts ?? 0;
   const crm = signals.crmContacts ?? 0;
-  const act = signals.activities7d ?? 0;
 
   const byType = {
     restaurante: {
-      mesas_ocupadas: String(open),
-      ventas_hoy: `${Math.max(0, open * 85)} €`,
+      mesas_ocupadas: "Datos no disponibles",
+      ventas_hoy: "Datos no disponibles",
       comandas_abiertas: String(open),
       stock_alertas: String(alerts)
     },
     clinica: {
-      pacientes_hoy: String(Math.min(crm, act + 2)),
-      citas_pendientes: String(Math.max(0, crm - act)),
-      no_show_semana: "2",
-      ingresos_estimados: `${Math.max(0, act * 120)} €`
+      pacientes_hoy: "Datos no disponibles",
+      citas_pendientes: "Datos no disponibles",
+      no_show_semana: "Datos no disponibles",
+      ingresos_estimados: "Datos no disponibles"
     },
     peluqueria: {
-      citas_hoy: String(act),
-      sillas_ocupadas: `${Math.min(100, 20 + act * 8)}%`,
-      reservas_online: String(act),
-      clientes_recurrentes: String(Math.round(crm * 0.4))
+      citas_hoy: "Datos no disponibles",
+      sillas_ocupadas: "Datos no disponibles",
+      reservas_online: "Datos no disponibles",
+      clientes_recurrentes: "Datos no disponibles"
     },
     inmobiliaria: {
       leads_activos: String(crm),
-      visitas_hoy: String(Math.min(3, act)),
-      propuestas_abiertas: String(Math.max(0, Math.floor(crm / 3))),
-      cierres_mes: "1"
+      visitas_hoy: "Datos no disponibles",
+      propuestas_abiertas: "Datos no disponibles",
+      cierres_mes: "Datos no disponibles"
     }
   };
 
@@ -61,25 +57,9 @@ function dakinisDashboardKpiValues(businessType, signals) {
   };
 }
 
-function dakinisGrowthSignalsFromTenant(signals) {
+function dakinisFinanceSummaryFromSignals() {
   return {
-    newContacts30d: Math.max(0, Math.floor((signals.crmContacts ?? 0) / 4)),
-    lostContacts30d: Math.max(0, Math.floor((signals.crmContacts ?? 0) / 10)),
-    reservations7d: signals.reservations7d ?? 0,
-    salesMonthDeltaPct: (signals.activities7d ?? 0) > 4 ? 8 : 2,
-    dealsPipeline: signals.crmContacts ?? 0,
-    dealsWon30d: Math.max(0, Math.floor((signals.crmContacts ?? 0) / 8))
-  };
-}
-
-function dakinisFinanceSummaryFromSignals(signals) {
-  const base = (signals.crmContacts ?? 0) * 72 + (signals.openOrders ?? 0) * 140 + (signals.activities7d ?? 0) * 35;
-  const income = Math.max(420, Math.round(base));
-  const marginPct = Math.min(38, 18 + Math.floor((signals.activities7d ?? 0) / 2));
-  return {
-    income,
-    marginPct,
-    expenses: Math.round(income * (1 - marginPct / 100)),
+    available: false,
     currency: "EUR",
     periodDays: 30
   };
@@ -123,9 +103,12 @@ export async function dakinisHandleTenantDashboardRoute(req, rawBody, path) {
   }
 
   if (path === "/api/v1/tenant/growth-score" && req.method === "GET") {
-    const signals = await dakinisGatherTenantSignals(business.id, business.type);
-    const growth = dakinisComputeGrowthScore(business, dakinisGrowthSignalsFromTenant(signals));
-    return dakinisJsonSuccess({ growth }, business.type, dakinisMeta(req));
+    const growth = dakinisComputeGrowthScore(business, {});
+    return dakinisJsonSuccess(
+      { growth: growth.factors?.length ? growth : null },
+      business.type,
+      dakinisMeta(req)
+    );
   }
 
   if (path === "/api/v1/tenant/recommendations" && req.method === "GET") {
@@ -134,8 +117,7 @@ export async function dakinisHandleTenantDashboardRoute(req, rawBody, path) {
   }
 
   if (path === "/api/v1/tenant/finance/summary" && req.method === "GET") {
-    const signals = await dakinisGatherTenantSignals(business.id, business.type);
-    const summary = dakinisFinanceSummaryFromSignals(signals);
+    const summary = dakinisFinanceSummaryFromSignals();
     return dakinisJsonSuccess({ summary }, business.type, dakinisMeta(req));
   }
 

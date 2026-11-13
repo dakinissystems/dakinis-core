@@ -122,7 +122,7 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
         </label>
       </div>
 
-      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}${isSeeking ? " is-seeking" : ""}`}>
+      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}${isSeeking ? " is-seeking" : ""}${!isScanning && !imageSrc ? " is-idle" : ""}`}>
         <video
           ref={videoRef}
           className="stock-scanner__video"
@@ -133,9 +133,6 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
         {isScanning ? <div className="stock-scanner__roi" aria-hidden="true" /> : null}
         {!isScanning && imageSrc ? (
           <img src={imageSrc} alt="" className="stock-scanner__preview" />
-        ) : null}
-        {!isScanning && !imageSrc ? (
-          <p className="stock-scanner__placeholder">{label("kitchen.scanPlaceholder", "Vista previa cámara")}</p>
         ) : null}
         {statusLabel ? <p className="stock-scanner__status">{statusLabel}</p> : null}
       </div>

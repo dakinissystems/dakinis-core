@@ -57,7 +57,14 @@ export function dakinisComputeTenantHealthScore(business, signals = {}) {
   }
   opsPart = Math.max(0, opsPart);
   score += opsPart;
-  factors.push({ key: "operations", label: "Operativa del sector", impact: opsPart });
+  factors.push({
+    key: "operations",
+    label:
+      template?.key === "restaurante"
+        ? `${signals.openOrders ?? 0} comandas registradas, ${signals.stockAlerts ?? 0} alertas de stock`
+        : "Operativa del sector",
+    impact: opsPart
+  });
 
   const wa = signals.whatsappMessages7d ?? 0;
   const engPart = Math.min(weights.engagement, wa * 2);

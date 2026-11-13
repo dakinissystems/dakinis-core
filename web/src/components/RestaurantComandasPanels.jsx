@@ -21,6 +21,8 @@ export default function RestaurantComandasPanels({ ctx }) {
     venueName,
     t,
     error,
+    reload,
+    dataReady,
     staffRole,
     opsMode,
     apiSessionBusinessId,
@@ -86,9 +88,14 @@ export default function RestaurantComandasPanels({ ctx }) {
       ) : null}
 
       {error ? (
-        <p className="lead" style={{ color: "var(--dakinis-warning)" }}>
-          {error}
-        </p>
+        <article className="card" style={{ marginTop: "0.75rem" }}>
+          <h3 style={{ marginTop: 0 }}>No hemos podido cargar estos datos</h3>
+          <p className="lead" style={{ color: "var(--dakinis-warning)" }}>{error}</p>
+          <p className="kpi-label">Las operaciones de esta pantalla no se han confirmado.</p>
+          {typeof reload === "function" ? (
+            <button type="button" className="btn" onClick={() => reload()}>Reintentar</button>
+          ) : null}
+        </article>
       ) : null}
 
       {!opsMode && staffRole === "camarero" ? (
@@ -107,7 +114,7 @@ export default function RestaurantComandasPanels({ ctx }) {
         </p>
       ) : null}
 
-      {opsMode && staffRole === "admin" ? (
+      {opsMode && staffRole === "admin" && dataReady ? (
         <RestaurantCajaTpvSummary
           dayClose={dayClose}
           businessId={apiSessionBusinessId}

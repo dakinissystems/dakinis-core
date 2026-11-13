@@ -18,6 +18,122 @@ import {
   liveTenantDashboardReducer
 } from "./liveTenantDashboardReducer.js";
 
+const KPI_GROUPS = [
+  { id: "performance", title: "Rendimiento", keys: ["ventas_hoy", "ingresos_mes", "margen"] },
+  { id: "ops", title: "Operación", keys: ["comandas_abiertas", "mesas_ocupadas"] },
+  { id: "attention", title: "Atención", keys: ["stock_alertas", "alertas"] }
+];
+
+function dakinisKpiGroup(key) {
+  return KPI_GROUPS.find((group) => group.keys.includes(key))?.id || "performance";
+}
+
+function dakinisTaskLabel(t, key) {
+  const task = HOSPITALITY_KPI_TASK[key];
+  if (!task) return "";
+  return t(
+    {
+      sala: "restaurant.taskSala",
+      cocina: "restaurant.taskCocina",
+      inventario: "restaurant.taskInventario",
+      caja: "restaurant.taskCaja"
+    }[task]
+  );
+}
+
+function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKpi }) {
+  const grouped = new Map(KPI_GROUPS.map((group) => [group.id, []]));
+  for (const kpi of kpis) {
+    const id = dakinisKpiGroup(kpi.key);
+    grouped.get(id).push(kpi);
+  }
+  if (finance) grouped.get("performance").unshift({ key: "finance-30d", label: t("app.dashboard.finance30d"), finance: true });
+  if (growth?.factors?.length) grouped.get("performance").unshift({ key: "growth", label: t("app.dashboard.growthScore"), growth: true });
+  if (health) grouped.get("attention").unshift({ key: "health", label: t("app.dashboard.healthScore"), health: true });
+
+  return (
+    <div className="dashboard-groups" style={{ marginTop: "1rem", display: "grid", gap: "1rem" }}>
+      {KPI_GROUPS.map((group) => {
+        const items = grouped.get(group.id) || [];
+        if (!items.length) return null;
+        return (
+          <section key={group.id} aria-label={group.title}>
+            <h3 style={{ margin: "0 0 0.6rem", fontSize: "1.05rem" }}>{group.title}</h3>
+            <div className="module-grid">
+              {items.map((item) => {
+                if (item.health) {
+                  return (
+                    <article className="card" key={item.key}>
+                      <p className="kpi-label">{item.label}</p>
+                      <p className="kpi-value">{health.score}/100</p>
+                      <p className="kpi-label">{health.statusLabel}</p>
+                      {Array.isArray(health.factors) && health.factors.length ? (
+                        <ul className="kpi-label">
+                          {health.factors.map((factor) => (
+                            <li key={factor.key}>{factor.label}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </article>
+                  );
+                }
+                if (item.growth) {
+                  return (
+                    <article className="card" key={item.key}>
+                      <p className="kpi-label">{item.label}</p>
+                      <p className="kpi-value">{growth.score}/100</p>
+                      <p className="kpi-label">{growth.statusLabel}</p>
+                      <ul className="kpi-label">
+                        {growth.factors.map((factor) => (
+                          <li key={factor.key}>{factor.label}</li>
+                        ))}
+                      </ul>
+                    </article>
+                  );
+                }
+                if (item.finance) {
+                  return (
+                    <article className="card" key={item.key}>
+                      <p className="kpi-label">{item.label}</p>
+                      {finance.available && finance.income != null ? (
+                        <>
+                          <p className="kpi-value">{finance.income} €</p>
+                          <p className="kpi-label">{t("app.dashboard.margin", { pct: finance.marginPct })}</p>
+                        </>
+                      ) : (
+                        <p className="kpi-value" style={{ fontSize: "1rem" }}>Datos no disponibles</p>
+                      )}
+                      {hospitality ? (
+                        <button type="button" className="btn btn-outline" onClick={() => openKpi("ventas_hoy")}>
+                          {t("restaurant.taskCaja")}
+                        </button>
+                      ) : null}
+                    </article>
+                  );
+                }
+                const missing = item.value == null || item.value === "" || item.value === "Datos no disponibles";
+                return (
+                  <article className="card" key={item.key}>
+                    <p className="kpi-label">{item.label}</p>
+                    <p className="kpi-value" style={missing ? { fontSize: "1rem" } : undefined}>
+                      {missing ? "Datos no disponibles" : item.value}
+                    </p>
+                    {HOSPITALITY_KPI_TASK[item.key] && hospitality ? (
+                      <button type="button" className="btn btn-outline" onClick={() => openKpi(item.key)}>
+                        {dakinisTaskLabel(t, item.key)}
+                      </button>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 const HOSPITALITY_KPI_TASK = {
   mesas_ocupadas: "sala",
   comandas_abiertas: "cocina",
@@ -88,97 +204,56 @@ export default function LiveTenantDashboard({ session, navigate }) {
         <h2>{industryDash?.industry || t("app.dashboard.heading")}</h2>
         <p className="lead">{t("app.dashboard.lead")}</p>
 
-        <div className="commercial-business-dashboard__kpis" style={{ marginTop: "1rem" }}>
-          {health ? (
-            <article className="card commercial-kpi-card">
-              <p className="kpi-label">{t("app.dashboard.healthScore")}</p>
-              <p className="kpi-value">{health.score}/100</p>
-              <p className="kpi-label">{health.statusLabel}</p>
-            </article>
-          ) : null}
-          {growth ? (
-            <article className="card commercial-kpi-card">
-              <p className="kpi-label">{t("app.dashboard.growthScore")}</p>
-              <p className="kpi-value">{growth.score}/100</p>
-              <p className="kpi-label">{growth.statusLabel}</p>
-            </article>
-          ) : null}
-          {finance ? (
-            <article className="card commercial-kpi-card">
-              <p className="kpi-label">{t("app.dashboard.finance30d")}</p>
-              <p className="kpi-value">{finance.income} €</p>
-              <p className="kpi-label">
-                {t("app.dashboard.margin", { pct: finance.marginPct })}
-              </p>
-              {hospitality ? (
-                <button type="button" className="btn btn-outline" onClick={() => openKpi("ventas_hoy")}>
-                  {t("restaurant.taskCaja")}
-                </button>
-              ) : null}
-            </article>
-          ) : null}
-          {industryDash?.kpis?.slice(0, 1).map((kpi) => (
-            <article className="card commercial-kpi-card" key={kpi.key}>
-              <p className="kpi-label">{kpi.label}</p>
-              <p className="kpi-value">{kpi.value}</p>
-              {HOSPITALITY_KPI_TASK[kpi.key] && hospitality ? (
-                <button type="button" className="btn btn-outline" onClick={() => openKpi(kpi.key)}>
-                  {t(
-                    {
-                      sala: "restaurant.taskSala",
-                      cocina: "restaurant.taskCocina",
-                      inventario: "restaurant.taskInventario",
-                      caja: "restaurant.taskCaja"
-                    }[HOSPITALITY_KPI_TASK[kpi.key]]
-                  )}
-                </button>
-              ) : null}
-            </article>
-          ))}
-        </div>
-
-        {industryDash?.kpis?.length > 1 ? (
-          <div className="module-grid" style={{ margin: "1rem 0" }}>
-            {industryDash.kpis.slice(1).map((kpi) => (
-              <article className="card" key={kpi.key}>
-                <p className="kpi-label">{kpi.label}</p>
-                <p className="kpi-value">{kpi.value}</p>
-                {HOSPITALITY_KPI_TASK[kpi.key] && hospitality ? (
-                  <button type="button" className="btn btn-outline" onClick={() => openKpi(kpi.key)}>
-                    {t(
-                      {
-                        sala: "restaurant.taskSala",
-                        cocina: "restaurant.taskCocina",
-                        inventario: "restaurant.taskInventario",
-                        caja: "restaurant.taskCaja"
-                      }[HOSPITALITY_KPI_TASK[kpi.key]]
-                    )}
-                  </button>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        ) : null}
+        <DashboardGroups
+          t={t}
+          health={health}
+          growth={growth}
+          finance={finance}
+          kpis={industryDash?.kpis || []}
+          hospitality={hospitality}
+          openKpi={openKpi}
+        />
 
         {aiTips?.suggestions?.length ? (
           <div className="card" style={{ marginTop: "1rem" }}>
             <h3>{t("app.dashboard.aiSuggestions")}</h3>
             <ul>
-              {aiTips.suggestions.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.question}</strong> — {item.answer}
-                </li>
-              ))}
+              {aiTips.suggestions.map((item) => {
+                const text = `${item.question || ""} ${item.answer || ""}`;
+                const stock = /stock|inventario|reponer/i.test(text);
+                return (
+                  <li key={item.id}>
+                    <strong>{item.question}</strong> — {item.answer}
+                    {hospitality ? (
+                      <div>
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          onClick={() => openKpi(stock ? "stock_alertas" : "ventas_hoy")}
+                        >
+                          {stock ? t("restaurant.taskInventario") : t("restaurant.taskCaja")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ) : null}
 
-        {benchmark ? (
+        {benchmark?.comparisons?.length ? (
           <div className="card" style={{ marginTop: "1rem" }}>
             <h3>{t("app.dashboard.benchmark")}</h3>
-            <p>
-              {benchmark.sectorLabel}: {benchmark.yourScore} vs {benchmark.sectorAverage}
-            </p>
+            <p className="kpi-label">{benchmark.sectorSampleLabel}</p>
+            <ul>
+              {benchmark.comparisons.map((row) => (
+                <li key={row.key}>
+                  {row.label}: {row.tenantValue}
+                  {row.unit ? ` ${row.unit}` : ""} · media {row.sectorAverage}
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
 

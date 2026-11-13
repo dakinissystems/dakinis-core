@@ -3187,8 +3187,9 @@ dialog.allergen-modal::backdrop {
 .restaurant-floor__table {
   position: absolute;
   transform: translate(-50%, -50%);
-  min-width: 4.5rem;
-  padding: 0.5rem 0.55rem 0.45rem;
+  min-width: 5.4rem;
+  min-height: 44px;
+  padding: 0.45rem 0.5rem;
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
@@ -3285,8 +3286,21 @@ dialog.allergen-modal::backdrop {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   color: var(--muted);
+}
+
+.restaurant-floor__occupancy {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+}
+
+.restaurant-floor__table-state {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .restaurant-floor__legend-item {
@@ -4122,6 +4136,10 @@ dialog.restaurant-mesa-modal::backdrop {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--line);
+}
+
+.stock-scanner__viewport.is-idle {
+  display: none;
 }
 
 .stock-scanner__viewport.is-live {
