@@ -131,8 +131,9 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     }
   }
 
-  async function dakinisPostStockScan(barcode) {
-    const qty = Number(scanQty);
+  async function dakinisPostStockScan(barcode, overrides = {}) {
+    const qty = Number(overrides.quantity ?? scanQty);
+    const direction = overrides.direction || scanDirection;
     if (!Number.isFinite(qty) || qty <= 0) {
       setScanMessage(t("kitchen.scanQtyInvalid"));
       return false;
@@ -140,7 +141,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/stock/scan", apiSession, {
       ...fetchOpts,
       method: "POST",
-      body: { barcode, quantity: qty, direction: scanDirection }
+      body: { barcode, quantity: qty, direction }
     });
     const item = json?.data?.item;
     setScanMessage(
@@ -232,8 +233,18 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     setScanMessage(known?.name ? `${known.name}` : t("kitchen.scanMatched"));
   }
 
-  async function dakinisConfirmStockScan() {
+  async function dakinisConfirmStockScan(overrides = {}) {
     if (!pendingScan?.code) return;
+    const direction = overrides.direction || scanDirection;
+    const quantity = overrides.quantity ?? scanQty;
+    if (direction === "out") {
+      const current = Number(pendingScan.quantity);
+      const amount = Number(quantity);
+      if (Number.isFinite(current) && Number.isFinite(amount) && current - amount < 0) {
+        setError("Stock insuficiente");
+        return;
+      }
+    }
     const slug = dakinisResolveStockItemSlug(pendingScan.code, kitchen?.items ?? []);
     if (!slug && !apiSession?.token) {
       setUnknownBarcode(pendingScan.code);
@@ -255,7 +266,7 @@ export function useRestaurantStockSection({ apiSession, tenantSlugForVertical, a
     setScanMessage("");
     setError("");
     try {
-      await dakinisPostStockScan(pendingScan.code);
+      await dakinisPostStockScan(pendingScan.code, { quantity, direction });
       setPendingScan(null);
     } catch (e) {
       if (e instanceof DakinisApiError && (e.code === "BARCODE_UNKNOWN" || e.status === 404)) {

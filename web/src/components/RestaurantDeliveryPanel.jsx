@@ -176,7 +176,13 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
 
             <ul className="restaurant-delivery__channels">
               {Object.keys(todayCounts).length === 0 ? (
-                <li className="kpi-label">—</li>
+                <li className="kpi-label">
+                  {!dashboard
+                    ? "Datos no disponibles"
+                    : healthRows.some((row) => row.availability === "connected")
+                      ? "No hay pedidos recibidos"
+                      : "Sin canales conectados"}
+                </li>
               ) : (
                 Object.entries(todayCounts)
                   .sort((a, b) => Number(b[1]) - Number(a[1]))
@@ -201,8 +207,21 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                     </p>
                     {row.lastSync ? <p className="kpi-label">Última sincronización: {row.lastSync}</p> : null}
                     {row.last_error || row.lastError ? <p className="kpi-label">{row.last_error || row.lastError}</p> : null}
-                    <button type="button" className="btn btn-outline" onClick={() => setView("config")}>
-                      Configurar integración
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={state.locked && (row.availability === "coming_soon" || row.status === "stub")}
+                      onClick={() => setView("config")}
+                    >
+                      {row.availability === "coming_soon" || row.status === "stub"
+                        ? "No disponible aún"
+                        : row.availability === "pending_access"
+                          ? "Ver requisitos"
+                          : row.availability === "connected"
+                            ? "Gestionar"
+                            : row.availability === "connection_error"
+                              ? "Diagnosticar"
+                              : "Configurar"}
                     </button>
                   </article>
                 );

@@ -64,8 +64,8 @@ export default function RestaurantStockSection(props) {
 
       {showScanToast ? <RestaurantScanToast message={scanMessage} tone={toastTone} /> : null}
 
-      {show("scan") || show("grid") ? <RestaurantStockManualForm {...stock} /> : null}
-      {show("scan") ? <RestaurantStockScanPanel {...stock} autoFocus={autoFocusScan} /> : null}
+      {show("scan") || show("grid") ? <RestaurantStockManualForm {...stock} autoFocus={autoFocusScan} /> : null}
+      {show("scan") && stock.unknownBarcode ? <RestaurantStockScanPanel {...stock} createOnly /> : null}
       {show("grid") ? <RestaurantStockInventoryGrid {...stock} kitchen={kitchen} /> : null}
       {show("production") ? (
         <RestaurantStockProductionHistory t={t} kitchen={kitchen} dateLocale={dateLocale} />

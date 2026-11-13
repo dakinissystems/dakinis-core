@@ -5,7 +5,21 @@ import RestaurantAllergenPanel from "./RestaurantAllergenPanel.jsx";
 import StockBarcodeScanner from "./StockBarcodeScanner.jsx";
 import { dakinisFormatQty } from "../hooks/useRestaurantStockSection.js";
 
-export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManualMove }) {
+export function RestaurantStockManualForm({
+  t,
+  kitchen,
+  busy,
+  dakinisApplyManualMove,
+  dakinisApplyStockScan,
+  dakinisConfirmStockScan,
+  pendingScan,
+  scanQty,
+  setScanQty,
+  scanDirection,
+  setScanDirection,
+  autoFocus = false
+}) {
+  const [method, setMethod] = useState("manual");
   const [itemId, setItemId] = useState("");
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("kg");
@@ -40,9 +54,24 @@ export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManual
 
   return (
     <article className="card" style={{ marginBottom: "1rem" }}>
-      <h4 style={{ marginTop: 0 }}>{t("kitchen.manualTitle")}</h4>
-      <p className="kpi-label">{t("kitchen.manualLead")}</p>
+      <h4 style={{ marginTop: 0 }}>{t("kitchen.movementTitle")}</h4>
+      <p className="kpi-label">{t("kitchen.movementLead")}</p>
+      <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.movementMethod")}>
+        <button type="button" className={method === "manual" ? "btn" : "btn btn-outline"} onClick={() => setMethod("manual")}>
+          {t("kitchen.movementManual")}
+        </button>
+        <button type="button" className={method === "wedge" ? "btn" : "btn btn-outline"} onClick={() => setMethod("wedge")}>
+          {t("kitchen.movementWedge")}
+        </button>
+        <button type="button" className={method === "camera" ? "btn" : "btn btn-outline"} onClick={() => setMethod("camera")}>
+          {t("kitchen.movementCamera")}
+        </button>
+      </div>
+      {method === "manual" ? null : (
+        <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} autoFocus={autoFocus && method === "wedge"} method={method} />
+      )}
       <div className="stock-scan-actions">
+        {method === "manual" ? (
         <label className="mockup-field">
           <span>{t("kitchen.manualProduct")}</span>
           <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
@@ -55,7 +84,8 @@ export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManual
             <option value="__new__">{t("kitchen.manualNew")}</option>
           </select>
         </label>
-        {isNew ? (
+        ) : null}
+        {method === "manual" && isNew ? (
           <>
             <label className="mockup-field">
               <span>{t("kitchen.manualName")}</span>
@@ -81,15 +111,25 @@ export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManual
             step="any"
             inputMode="decimal"
             value={qty}
-            onChange={(e) => setQty(e.target.value)}
+            onChange={(e) => {
+              setQty(e.target.value);
+              setScanQty?.(e.target.value);
+            }}
           />
         </label>
-        {!isNew && item ? (
+        {method !== "manual" && pendingScan?.code ? (
+          <p className="kpi-label">
+            <strong>{pendingScan.name || "Producto identificado"}</strong>
+            {" · "}
+            {t("kitchen.manualResult")}: {dakinisResultingStock(pendingScan, qty, direction)}
+          </p>
+        ) : null}
+        {method !== "manual" || (item && !isNew) ? (
           <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
-            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => setDirection("in")}>
+            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("in"); setScanDirection?.("in"); }}>
               {t("kitchen.scanIn")}
             </button>
-            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => setDirection("out")}>
+            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("out"); setScanDirection?.("out"); }}>
               {t("kitchen.scanOut")}
             </button>
           </div>
@@ -101,8 +141,21 @@ export function RestaurantStockManualForm({ t, kitchen, busy, dakinisApplyManual
             {t("kitchen.manualResult")}: {next != null && next < 0 ? t("kitchen.manualShort") : next != null ? `${next} ${item.unit || ""}` : t("kitchen.manualUnknown")}
           </p>
         ) : null}
-        <button type="button" className="btn" disabled={!canSubmit} onClick={onConfirm}>
-          {isNew || direction !== "out" ? t("kitchen.manualConfirmIn") : t("kitchen.manualConfirmOut")}
+        <button
+          type="button"
+          className="btn"
+          disabled={method === "manual" ? !canSubmit : busy || !pendingScan?.code || dakinisScanBlocked(pendingScan, qty, direction)}
+          onClick={() => {
+            if (method === "manual") {
+              onConfirm();
+              return;
+            }
+            dakinisConfirmStockScan?.({ quantity: qty, direction });
+          }}
+        >
+          {(method === "manual" ? direction : scanDirection) === "out" && !(method === "manual" && isNew)
+            ? t("kitchen.manualConfirmOut")
+            : t("kitchen.manualConfirmIn")}
         </button>
       </div>
     </article>
@@ -131,10 +184,13 @@ export function RestaurantStockScanPanel({
   busy,
   dakinisCreateProductFromScan,
   setScanMessage,
-  autoFocus = false
+  autoFocus = false,
+  createOnly = false
 }) {
   return (
     <article className="card stock-panel__scan" style={{ marginBottom: "1rem" }}>
+      {createOnly ? null : (
+        <>
       <h4 style={{ marginTop: 0 }}>{t("kitchen.scanTitle")}</h4>
       <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} autoFocus={autoFocus} />
       <div className="stock-scan-actions">
@@ -202,6 +258,8 @@ export function RestaurantStockScanPanel({
           {scanMessage}
         </p>
       ) : null}
+        </>
+      )}
 
       {unknownBarcode ? (
         <form className="mockup-form card" style={{ marginTop: "1rem" }} onSubmit={dakinisCreateProductFromScan}>

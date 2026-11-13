@@ -8,7 +8,6 @@ import {
   dakinisCrmListContacts,
   dakinisCrmMeta
 } from "../../services/crm.js";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import AiContextualHint from "@dakinis/shared-ux/react/AiContextualHint.jsx";
 import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 import CrmLoginGate from "./CrmLoginGate.jsx";
@@ -159,7 +158,6 @@ export default function CrmPage({ navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">
           {isBusinessFacing ? t("businessDemo.clients.kicker") : t("app.crm.title")}
         </p>

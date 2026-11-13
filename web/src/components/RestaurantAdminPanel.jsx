@@ -32,6 +32,9 @@ export default function RestaurantAdminPanel({
   const [sessions, setSessions] = useState({});
   const [menu, setMenu] = useState([]);
   const [menuDraft, setMenuDraft] = useState({});
+  const [menuQuery, setMenuQuery] = useState("");
+  const [menuCategory, setMenuCategory] = useState("");
+  const [menuSort, setMenuSort] = useState("name");
   const [newProduct, setNewProduct] = useState({
     nameEs: "",
     category: "",
@@ -106,10 +109,23 @@ export default function RestaurantAdminPanel({
     setError("");
     setMenuNotice("");
     try {
-      const items = menu.map((it) => ({
-        id: it.id,
-        priceEur: Number(menuDraft[it.id] ?? it.priceEur)
-      }));
+      const items = [];
+      for (const it of menu) {
+        const raw = menuDraft[it.id];
+        if (raw == null || String(raw).trim() === "") continue;
+        const priceEur = Number(String(raw).replace(",", "."));
+        if (!Number.isFinite(priceEur) || priceEur < 0) {
+          setError("Hay un precio que no es un importe válido.");
+          setMenuBusy(false);
+          return;
+        }
+        items.push({ id: it.id, priceEur });
+      }
+      if (!items.length) {
+        setError("No hay precios para guardar. Un campo vacío no se convierte en 0 €.");
+        setMenuBusy(false);
+        return;
+      }
       const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/menu", apiSession, {
         ...fetchOpts,
         method: "PATCH",
@@ -133,7 +149,7 @@ export default function RestaurantAdminPanel({
       setError(t("restaurant.adminProductNameRequired"));
       return;
     }
-    const priceEur = Number(newProduct.priceEur);
+    const priceEur = Number(String(newProduct.priceEur).replace(",", "."));
     if (!Number.isFinite(priceEur) || priceEur < 0) {
       setError(t("restaurant.adminProductPriceRequired"));
       return;
@@ -214,63 +230,88 @@ export default function RestaurantAdminPanel({
       {show("menu") ? (
         <>
           <article className="card" style={{ marginTop: "1rem" }}>
-            <h4 style={{ marginTop: 0 }}>{t("restaurant.adminPricesTitle")}</h4>
+            <h4 style={{ marginTop: 0 }}>
+              {t("restaurant.adminPricesTitle")}
+              <span className="kpi-label"> · {menu.length} productos</span>
+            </h4>
             <p className="kpi-label">{t("restaurant.adminPricesLead")}</p>
+            <div className="stock-scan-actions" style={{ marginBottom: "0.75rem" }}>
+              <label className="mockup-field">
+                <span>Buscar plato</span>
+                <input value={menuQuery} onChange={(e) => setMenuQuery(e.target.value)} placeholder="Buscar plato…" />
+              </label>
+              <label className="mockup-field">
+                <span>Categoría</span>
+                <select value={menuCategory} onChange={(e) => setMenuCategory(e.target.value)}>
+                  <option value="">Todas</option>
+                  {[...new Set(menu.map((it) => it.category).filter(Boolean))].map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="mockup-field">
+                <span>Orden</span>
+                <select value={menuSort} onChange={(e) => setMenuSort(e.target.value)}>
+                  <option value="name">Nombre</option>
+                  <option value="price">Precio</option>
+                </select>
+              </label>
+            </div>
             {menu.length === 0 ? (
               <p className="lead">{t("restaurant.adminPricesEmpty")}</p>
             ) : (
-              <table className="mockup-table">
-                <thead>
-                  <tr>
-                    <th>{t("fermina.colItem")}</th>
-                    <th>{t("restaurant.adminProductCategory")}</th>
-                    <th>{t("restaurant.priceEur")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {menu.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.nameEs || item.name}</td>
-                      <td>{item.category || "—"}</td>
-                      <td>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          style={{ width: "6rem" }}
-                          aria-label={`${t("restaurant.priceEur")} — ${item.nameEs || item.name}`}
-                          value={menuDraft[item.id] ?? ""}
-                          onChange={(e) =>
-                            setMenuDraft((prev) => ({ ...prev, [item.id]: e.target.value }))
-                          }
-                        />{" "}
-                        €
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              dakinisGroupedMenu(menu, menuDraft, menuQuery, menuCategory, menuSort).map((group) => (
+                <section key={group.category} style={{ marginTop: "0.85rem" }}>
+                  <h5 style={{ margin: "0 0 0.35rem" }}>{group.category}</h5>
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                    {group.items.map((item) => {
+                      const raw = menuDraft[item.id] ?? "";
+                      const hint = String(raw).trim() === "" ? "Sin precio" : Number(String(raw).replace(",", ".")) === 0 ? "Precio cero" : "";
+                      return (
+                        <li key={item.id} style={{ display: "flex", gap: "0.75rem", alignItems: "center", justifyContent: "space-between", padding: "0.45rem 0", borderTop: "1px solid var(--dakinis-border, rgba(255,255,255,0.08))" }}>
+                          <span>{item.nameEs || item.name}</span>
+                          <label className="mockup-field" style={{ margin: 0, minWidth: "9rem" }}>
+                            <span className="sr-only">{t("restaurant.priceEur")}</span>
+                            <input
+                              inputMode="decimal"
+                              aria-label={`${t("restaurant.priceEur")} — ${item.nameEs || item.name}`}
+                              value={raw}
+                              placeholder="Sin precio"
+                              onChange={(e) => setMenuDraft((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                            />
+                            {hint ? <span className="kpi-label">{hint}</span> : null}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))
             )}
-            <button
-              type="button"
-              className="btn"
-              style={{ marginTop: "0.75rem" }}
-              disabled={menuBusy || !menu.length}
-              onClick={saveMenuPrices}
-            >
-              {menuBusy ? t("restaurant.saving") : t("restaurant.adminPricesSave")}
-            </button>
-            {menuNotice ? (
-              <p className="kpi-label" style={{ marginTop: "0.5rem", color: "#86efac" }}>
-                {menuNotice}
+            <div style={{ position: "sticky", bottom: 0, marginTop: "0.75rem", padding: "0.65rem 0", background: "var(--dakinis-surface, #111827)" }}>
+              <p className="kpi-label" style={{ margin: "0 0 0.35rem" }}>
+                Cambios pendientes: {dakinisPendingPriceCount(menu, menuDraft)}
               </p>
-            ) : null}
+              <button
+                type="button"
+                className="btn"
+                disabled={menuBusy || !menu.length}
+                onClick={saveMenuPrices}
+              >
+                {menuBusy ? t("restaurant.saving") : t("restaurant.adminPricesSave")}
+              </button>
+              {menuNotice ? (
+                <p className="kpi-label" style={{ marginTop: "0.5rem", color: "#86efac" }}>
+                  {menuNotice}
+                </p>
+              ) : null}
+            </div>
           </article>
 
           <article className="card" style={{ marginTop: "1rem" }}>
             <h4 style={{ marginTop: 0 }}>{t("restaurant.adminProductAddTitle")}</h4>
             <p className="kpi-label">{t("restaurant.adminProductAddLead")}</p>
-            <form className="restaurant-admin__add-product" onSubmit={addMenuProduct}>
+            <form className="mockup-form" onSubmit={addMenuProduct}>
               <div
                 style={{
                   display: "grid",
@@ -279,26 +320,24 @@ export default function RestaurantAdminPanel({
                   marginTop: "0.75rem"
                 }}
               >
-                <label className="kpi-label">
-                  {t("restaurant.adminProductName")}
+                <label className="mockup-field">
+                  <span>{t("restaurant.adminProductName")}</span>
                   <input
                     type="text"
                     required
                     value={newProduct.nameEs}
                     onChange={(e) => setNewProduct((prev) => ({ ...prev, nameEs: e.target.value }))}
                     placeholder={t("restaurant.adminProductNamePlaceholder")}
-                    style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
                   />
                 </label>
-                <label className="kpi-label">
-                  {t("restaurant.adminProductCategory")}
+                <label className="mockup-field">
+                  <span>{t("restaurant.adminProductCategory")}</span>
                   <input
                     type="text"
                     value={newProduct.category}
                     onChange={(e) => setNewProduct((prev) => ({ ...prev, category: e.target.value }))}
                     placeholder={t("restaurant.adminProductCategoryPlaceholder")}
                     list="restaurant-menu-categories"
-                    style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
                   />
                   <datalist id="restaurant-menu-categories">
                     {[...new Set(menu.map((it) => it.category).filter(Boolean))].map((cat) => (
@@ -306,28 +345,24 @@ export default function RestaurantAdminPanel({
                     ))}
                   </datalist>
                 </label>
-                <label className="kpi-label">
-                  {t("restaurant.priceEur")}
+                <label className="mockup-field">
+                  <span>{t("restaurant.priceEur")}</span>
                   <input
-                    type="number"
+                    inputMode="decimal"
                     required
-                    step="0.01"
-                    min="0"
                     value={newProduct.priceEur}
                     onChange={(e) => setNewProduct((prev) => ({ ...prev, priceEur: e.target.value }))}
-                    placeholder="0.00"
-                    style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
+                    placeholder="Sin precio"
                   />
                 </label>
               </div>
-              <label className="kpi-label" style={{ display: "block", marginTop: "0.75rem" }}>
-                {t("restaurant.adminProductDescription")}
+              <label className="mockup-field" style={{ display: "block", marginTop: "0.75rem" }}>
+                <span>{t("restaurant.adminProductDescription")}</span>
                 <input
                   type="text"
                   value={newProduct.description}
                   onChange={(e) => setNewProduct((prev) => ({ ...prev, description: e.target.value }))}
                   placeholder={t("restaurant.adminProductDescriptionPlaceholder")}
-                  style={{ display: "block", width: "100%", marginTop: "0.25rem" }}
                 />
               </label>
               <button type="submit" className="btn" style={{ marginTop: "0.75rem" }} disabled={menuBusy}>
@@ -397,4 +432,38 @@ export default function RestaurantAdminPanel({
       {show("fiscal") ? <RestaurantFiscalPanel apiSession={apiSession} fetchOpts={fetchOpts} /> : null}
     </div>
   );
+}
+
+function dakinisPendingPriceCount(menu, draft) {
+  return menu.filter((item) => {
+    const raw = draft[item.id];
+    const stored = item.priceEur == null || item.priceEur === "" ? "" : String(item.priceEur);
+    return String(raw ?? "") !== stored;
+  }).length;
+}
+
+function dakinisGroupedMenu(menu, draft, query, category, sort) {
+  const needle = String(query || "").trim().toLowerCase();
+  const rows = menu.filter((item) => {
+    if (category && item.category !== category) return false;
+    if (!needle) return true;
+    return `${item.nameEs || ""} ${item.name || ""}`.toLowerCase().includes(needle);
+  });
+  const groups = new Map();
+  for (const item of rows) {
+    const key = item.category || "Sin categoría";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  return [...groups.entries()].map(([name, items]) => ({
+    category: name,
+    items: [...items].sort((a, b) => {
+      if (sort === "price") {
+        const left = Number(String(draft[a.id] ?? a.priceEur ?? "").replace(",", "."));
+        const right = Number(String(draft[b.id] ?? b.priceEur ?? "").replace(",", "."));
+        return (Number.isFinite(left) ? left : Number.POSITIVE_INFINITY) - (Number.isFinite(right) ? right : Number.POSITIVE_INFINITY);
+      }
+      return String(a.nameEs || a.name || "").localeCompare(String(b.nameEs || b.name || ""), "es");
+    })
+  }));
 }

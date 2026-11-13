@@ -1,8 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
-import { dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 import {
   dakinisTenantIndustryDashboard,
   dakinisTenantHealthScore,
@@ -139,8 +137,11 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
                   <article className={`card dashboard-kpi${alertCount > 0 ? " dashboard-kpi--alert" : ""}`} key={item.key}>
                     <p className="kpi-label">{item.label}</p>
                     <p className="kpi-value" style={missing ? { fontSize: "1rem" } : undefined}>
-                      {missing ? "Datos no disponibles" : item.value}
+                      {missing ? "Datos no disponibles" : alertCount > 0 ? `${item.value} productos afectados` : item.value}
                     </p>
+                    {alertCount > 0 ? (
+                      <p className="kpi-label">El dato no separa alertas críticas e informativas.</p>
+                    ) : null}
                     {HOSPITALITY_KPI_TASK[item.key] && hospitality ? (
                       <button type="button" className="btn btn-outline" onClick={() => openKpi(item.key)}>
                         {dakinisTaskLabel(t, item.key)}
@@ -210,7 +211,6 @@ export default function LiveTenantDashboard({ session, navigate }) {
   }, [sessionToken, reloadNonce]);
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
-  const businessFacing = dakinisIsBusinessFacingSession(session);
   const hospitality = dakinisIsHospitalityBusiness(session.business?.type);
 
   function openKpi(key) {
@@ -229,7 +229,11 @@ export default function LiveTenantDashboard({ session, navigate }) {
         <p className="lead">{t("app.dashboard.lead")}</p>
         {loadedAt ? (
           <p className="kpi-label">
-            Actualizado a las {new Date(loadedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+            Última consulta del panel a las {new Date(loadedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}.
+            Un módulo que falló no comparte esa hora.
+            <button type="button" className="btn btn-outline" style={{ marginLeft: "0.5rem" }} onClick={() => setReloadNonce((value) => value + 1)}>
+              Actualizar
+            </button>
           </p>
         ) : null}
         {Object.keys(errors).length ? (
@@ -273,22 +277,18 @@ export default function LiveTenantDashboard({ session, navigate }) {
             <h3>{t("app.dashboard.aiSuggestions")}</h3>
             <ul>
               {aiTips.suggestions.map((item) => {
-                const text = `${item.question || ""} ${item.answer || ""}`;
-                const stock = /stock|inventario|reponer/i.test(text);
+                const openInventory = item.action === "inventario" || (item.available !== false && /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`));
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} style={item.available === false ? { opacity: 0.72 } : undefined}>
                     <strong>{item.question}</strong>
+                    {item.available === false ? <span className="kpi-label"> · No disponible</span> : null}
                     <p className="kpi-label">Motivo: {item.answer}</p>
                     <p className="kpi-label">{item.basis || "No hay una medición detrás de este texto."}</p>
-                    <p className="kpi-label">Impacto estimado: {item.impact == null ? "Datos no disponibles" : item.impact}</p>
-                    {hospitality ? (
+                    <p className="kpi-label">Impacto: {item.impact == null ? "No calculado" : item.impact}</p>
+                    {hospitality && item.available !== false && openInventory ? (
                       <div>
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          onClick={() => openKpi(stock ? "stock_alertas" : "ventas_hoy")}
-                        >
-                          {stock ? t("restaurant.taskInventario") : t("restaurant.taskCaja")}
+                        <button type="button" className="btn btn-outline" onClick={() => openKpi("stock_alertas")}>
+                          Revisar inventario
                         </button>
                       </div>
                     ) : null}
@@ -298,8 +298,6 @@ export default function LiveTenantDashboard({ session, navigate }) {
             </ul>
           </div>
         ) : null}
-
-        {businessFacing ? <BusinessNavHero navigate={navigate} compact quiet /> : null}
 
         {recommendations.length ? (
           <div className="module-grid" style={{ marginTop: "1rem" }}>

@@ -15,7 +15,7 @@ const DEGRADED_HINTS = {
 const DAKINIS_QUICK_PROMPTS = {
   restaurante: [
     "¿Qué clientes llevan más de 30 días sin venir?",
-    "¿Qué platos debería promocionar?",
+    "¿Qué productos están bajo el mínimo?",
     "¿Qué me queda poco de stock?",
     "¿Qué productos caducan?"
   ],

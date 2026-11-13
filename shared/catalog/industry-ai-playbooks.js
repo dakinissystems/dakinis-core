@@ -4,20 +4,22 @@ import { dakinisGetIndustryTemplate } from "./business-templates.js";
 const DAKINIS_INDUSTRY_AI_PLAYBOOKS = {
   restaurante: [
     {
-      id: "promo_dishes",
-      question: "¿Qué platos debería promocionar?",
-      heuristic: (s) =>
-        s.stockAlerts > 0
-          ? "Prioriza platos con ingredientes en exceso de stock y menú de temporada."
-          : "Promociona el menú del día y platos con mejor margen (consulta ventas en dashboard)."
+      id: "stock_review",
+      question: "Revisar productos bajo mínimo",
+      available: (s) => Number(s.stockAlerts) > 0,
+      heuristic: (s) => `Hay ${Number(s.stockAlerts)} referencias que necesitan revisión.`,
+      basis: (s) => `Se han detectado ${Number(s.stockAlerts)} alertas de inventario.`,
+      impact: "No calculado. Faltan cantidades de reposición y costes.",
+      action: "inventario"
     },
     {
-      id: "stock_buy",
-      question: "¿Cuánto stock debo comprar?",
-      heuristic: (s) =>
-        s.stockAlerts > 0
-          ? `Reponer ${s.stockAlerts} SKU bajo mínimo según alertas de inventario.`
-          : "Stock estable; compra habitual según consumo de la última semana."
+      id: "promo_dishes",
+      question: "¿Qué platos debería promocionar?",
+      available: () => false,
+      heuristic: () => "No se propone. Hacen falta excedentes medidos, recetas vinculadas y estacionalidad.",
+      basis: () => "Una alerta de stock mínimo indica falta de inventario, no un excedente para promocionar.",
+      impact: "No calculado.",
+      action: null
     }
   ],
   inmobiliaria: [
@@ -80,7 +82,7 @@ export function dakinisRunIndustryAiHeuristics(business, signals) {
   const playbook = dakinisGetIndustryAiPlaybook(template?.key || business?.type);
   const alerts = Number(signals.stockAlerts ?? 0);
   const contacts = Number(signals.crmContacts ?? 0);
-  const basis =
+  const fallbackBasis =
     alerts > 0
       ? `Sale de ${alerts} alertas de stock registradas. No lista ingredientes ni calcula un importe.`
       : contacts > 0
@@ -91,8 +93,10 @@ export function dakinisRunIndustryAiHeuristics(business, signals) {
     question: item.question,
     answer: item.heuristic(signals),
     source: "heuristic",
-    basis,
-    impact: null,
+    available: typeof item.available === "function" ? item.available(signals) : true,
+    basis: typeof item.basis === "function" ? item.basis(signals) : fallbackBasis,
+    impact: item.impact ?? null,
+    action: item.action || null,
     industry: template?.label || business?.type
   }));
 }

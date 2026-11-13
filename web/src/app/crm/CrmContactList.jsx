@@ -64,7 +64,7 @@ export default function CrmContactList({
 
       {!loading && contacts.length === 0 ? (
         <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-          Todavía no tienes clientes. Añade el primero con Nuevo cliente. La importación de un archivo no está en esta pantalla.
+          Empieza a crear tu cartera. Registra el primer cliente para guardar sus datos, compras y seguimiento.
         </p>
       ) : null}
 

@@ -96,30 +96,7 @@ export default function RestaurantFiscalPanel({ apiSession, fetchOpts }) {
       {error ? <p className="error-text">{error}</p> : null}
       {notice ? <p className="kpi-label">{notice}</p> : null}
 
-      <div className="mockup-grid" style={{ display: "grid", gap: "0.75rem", maxWidth: 520 }}>
-        <label className="mockup-field">
-          <span>{t("restaurant.fiscalEnabled", "Activar emisión fiscal")}</span>
-          <input
-            type="checkbox"
-            checked={draft.enabled}
-            onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))}
-          />
-        </label>
-        <label className="mockup-field">
-          <span>{t("restaurant.fiscalMode", "Modalidad")}</span>
-          <select
-            value={draft.mode}
-            onChange={(e) => setDraft((d) => ({ ...d, mode: e.target.value }))}
-            disabled={!draft.enabled}
-          >
-            <option value="no_verifactu">NO VERI*FACTU (conservación local)</option>
-            <option value="verifactu">VERI*FACTU (remisión — stub local)</option>
-          </select>
-        </label>
-        <label className="mockup-field">
-          <span>{t("restaurant.fiscalSeries", "Serie")}</span>
-          <input value={draft.series} onChange={(e) => setDraft((d) => ({ ...d, series: e.target.value }))} />
-        </label>
+      <div className="fiscal-settings-grid">
         <label className="mockup-field">
           <span>{t("restaurant.fiscalIssuerName", "Razón social / nombre")}</span>
           <input
@@ -134,7 +111,7 @@ export default function RestaurantFiscalPanel({ apiSession, fetchOpts }) {
             onChange={(e) => setDraft((d) => ({ ...d, issuerTaxId: e.target.value }))}
           />
         </label>
-        <label className="mockup-field">
+        <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
           <span>{t("restaurant.fiscalIssuerAddress", "Domicilio fiscal")}</span>
           <input
             value={draft.issuerAddress}
@@ -142,22 +119,46 @@ export default function RestaurantFiscalPanel({ apiSession, fetchOpts }) {
           />
         </label>
         <label className="mockup-field">
-          <span>{t("restaurant.fiscalTaxRate", "IVA por defecto %")}</span>
+          <span>{t("restaurant.fiscalSeries", "Serie")}</span>
+          <input value={draft.series} onChange={(e) => setDraft((d) => ({ ...d, series: e.target.value }))} />
+        </label>
+        <label className="mockup-field">
+          <span>{t("restaurant.fiscalTaxRate", "IVA por defecto del emisor %")}</span>
           <input
             type="number"
             step="0.01"
             value={draft.defaultTaxRate}
             onChange={(e) => setDraft((d) => ({ ...d, defaultTaxRate: e.target.value }))}
           />
+          <span className="kpi-label">Es el tipo por defecto del emisor. No es el IVA de cada producto.</span>
+        </label>
+        <label className="mockup-field">
+          <span>{t("restaurant.fiscalMode", "Modalidad")}</span>
+          <select value={draft.mode} onChange={(e) => setDraft((d) => ({ ...d, mode: e.target.value }))}>
+            <option value="no_verifactu">NO VERI*FACTU (conservación local)</option>
+            <option value="verifactu">VERI*FACTU (remisión — base técnica, no certificación)</option>
+          </select>
+        </label>
+        <label className="mockup-field" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <input
+            type="checkbox"
+            checked={draft.enabled}
+            disabled={!String(draft.issuerName).trim() || !String(draft.issuerTaxId).trim()}
+            onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))}
+          />
+          <span>{t("restaurant.fiscalEnabled", "Activar emisión fiscal")}</span>
         </label>
       </div>
+      {!String(draft.issuerName).trim() || !String(draft.issuerTaxId).trim() ? (
+        <p className="kpi-label">La emisión se activa cuando el nombre y el NIF/CIF del emisor están rellenos.</p>
+      ) : null}
 
       <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        <button type="button" className="btn" disabled={busy} onClick={saveSettings}>
+        <button type="button" className="btn" disabled={busy || (draft.enabled && (!String(draft.issuerName).trim() || !String(draft.issuerTaxId).trim()))} onClick={saveSettings}>
           {t("common.save", "Guardar")}
         </button>
         <button type="button" className="btn btn-outline" disabled={busy} onClick={reload}>
-          {t("common.refresh", "Actualizar")}
+          Recargar datos
         </button>
       </div>
 

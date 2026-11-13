@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useStockBarcodeScanner } from "../hooks/useStockBarcodeScanner.js";
 
-export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false }) {
+export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false, method = "all" }) {
   const {
     label,
     videoRef,
@@ -43,7 +43,7 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
           )}
       </p>
 
-      <div className="stock-scanner__wedge card">
+      {method === "camera" ? null : <div className="stock-scanner__wedge card">
         <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
           {label("kitchen.scanWedgeTitle", "Lector de código de barras (USB / pistola)")}
         </p>
@@ -79,11 +79,11 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
         >
           {label("kitchen.scanWedgeFocus", "Activar campo para lector")}
         </button>
-      </div>
+      </div>}
 
-      <p className="kpi-label stock-scanner__or">{label("kitchen.scanOrCamera", "O usa la cámara del dispositivo")}</p>
+      {method === "wedge" ? null : <p className="kpi-label stock-scanner__or">{label("kitchen.scanOrCamera", "O usa la cámara del dispositivo")}</p>}
 
-      <div className="stock-scanner__controls">
+      {method === "wedge" ? null : <div className="stock-scanner__controls">
         <button
           type="button"
           className={`btn stock-scanner__btn${isScanning ? " stock-scanner__btn--stop" : ""}`}
@@ -120,9 +120,9 @@ export default function StockBarcodeScanner({ onScan, t, hint, autoFocus = false
             hidden
           />
         </label>
-      </div>
+      </div>}
 
-      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}${isSeeking ? " is-seeking" : ""}${!isScanning && !imageSrc ? " is-idle" : ""}`}>
+      <div className={`stock-scanner__viewport${isScanning ? " is-live" : ""}${isSeeking ? " is-seeking" : ""}${method === "wedge" || (!isScanning && !imageSrc) ? " is-idle" : ""}`}>
         <video
           ref={videoRef}
           className="stock-scanner__video"

@@ -6,7 +6,6 @@ import WhatsappContactsTab from "./WhatsappContactsTab.jsx";
 import WhatsappTemplatesTab from "./WhatsappTemplatesTab.jsx";
 import WhatsappAutomationsTab from "./WhatsappAutomationsTab.jsx";
 import WhatsappAiTab from "./WhatsappAiTab.jsx";
-import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import { dakinisIsBusinessDemoSession, dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
 
 const DAKINIS_WA_TABS = [
@@ -48,7 +47,6 @@ export default function WhatsappHubPage({ navigate }) {
   return (
     <section className="modules comm-page wa-hub business-app-page">
       <div className="container">
-        {isBusinessFacing ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{isBusinessFacing ? t("businessDemo.whatsapp.kicker") : t("app.whatsapp.kicker")}</p>
         <h2>{isBusinessFacing ? t("businessDemo.whatsapp.title") : t("app.whatsapp.heading")}</h2>
         <p className="lead">{isBusinessFacing ? t("businessDemo.whatsapp.pageLead") : t("app.whatsapp.lead")}</p>

@@ -1,5 +1,19 @@
 import { dakinisUserFacingMessage } from "../services/user-facing-error.js";
 
+function dakinisComposeArrivalWindow(date, from, to) {
+  const day = String(date || "").trim();
+  if (!day) return "";
+  const start = String(from || "").trim();
+  const end = String(to || "").trim();
+  if (start && end) return `${day} ${start}–${end}`;
+  if (start || end) return `${day} ${start || end}`;
+  return day;
+}
+
+function dakinisIsSystemIncident(row) {
+  return String(row?.productRef || "").startsWith("system:");
+}
+
 const ALERT_RULES = [
   { id: "below", label: "Stock inferior a una cantidad", text: "Avisar si el stock baja del mínimo configurado." },
   { id: "expiring", label: "Producto próximo a caducar", text: "Avisar si caduca en los próximos días." },
@@ -99,26 +113,66 @@ export function SupplyDeliveriesSection({
         <label className="mockup-field">
           <span>Proveedor</span>
           <input
+            list="supply-supplier-names"
             value={deliveryForm.supplier}
             onChange={(e) => setDeliveryForm((p) => ({ ...p, supplier: e.target.value }))}
-            placeholder="Nombre o elige de la lista"
+            placeholder="Nombre del proveedor"
             autoComplete="off"
             aria-label="Proveedor"
             disabled={!canMutate || saving}
           />
+          <datalist id="supply-supplier-names">
+            {supplierNames.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
         </label>
-        {supplierNames.length > 0 ? (
-          <p className="kpi-label" style={{ gridColumn: "1 / -1", margin: 0 }}>
-            Sugeridos: {supplierNames.join(", ")}
-          </p>
-        ) : null}
         <label className="mockup-field">
-          <span>Fecha / franja</span>
+          <span>Fecha de entrega</span>
           <input
-            value={deliveryForm.arrivalWindow}
-            onChange={(e) => setDeliveryForm((p) => ({ ...p, arrivalWindow: e.target.value }))}
-            placeholder="Ej. Lun 12 may — 08:00–10:00"
+            type="date"
+            value={deliveryForm.deliveryDate || ""}
+            onChange={(e) => {
+              const deliveryDate = e.target.value;
+              setDeliveryForm((p) => ({
+                ...p,
+                deliveryDate,
+                arrivalWindow: dakinisComposeArrivalWindow(deliveryDate, p.timeFrom, p.timeTo)
+              }));
+            }}
             required
+            disabled={!canMutate || saving}
+          />
+        </label>
+        <label className="mockup-field">
+          <span>Hora desde</span>
+          <input
+            type="time"
+            value={deliveryForm.timeFrom || ""}
+            onChange={(e) => {
+              const timeFrom = e.target.value;
+              setDeliveryForm((p) => ({
+                ...p,
+                timeFrom,
+                arrivalWindow: dakinisComposeArrivalWindow(p.deliveryDate, timeFrom, p.timeTo)
+              }));
+            }}
+            disabled={!canMutate || saving}
+          />
+        </label>
+        <label className="mockup-field">
+          <span>Hora hasta</span>
+          <input
+            type="time"
+            value={deliveryForm.timeTo || ""}
+            onChange={(e) => {
+              const timeTo = e.target.value;
+              setDeliveryForm((p) => ({
+                ...p,
+                timeTo,
+                arrivalWindow: dakinisComposeArrivalWindow(p.deliveryDate, p.timeFrom, timeTo)
+              }));
+            }}
             disabled={!canMutate || saving}
           />
         </label>
@@ -140,17 +194,23 @@ export function SupplyDeliveriesSection({
           >
             <option value="Programado">Programado</option>
             <option value="Confirmado">Confirmado</option>
-            <option value="En ruta">En ruta</option>
+            <option value="En ruta">En camino</option>
             <option value="Recibido">Recibido</option>
+            <option value="Cancelado">Cancelado</option>
           </select>
+          <span className="kpi-label">Recibido no suma stock. La entrada se registra en inventario.</span>
         </label>
         <button
           type="submit"
           className="btn btn-outline"
           style={{ gridColumn: "1 / -1" }}
-          disabled={!canMutate || saving}
+          disabled={!canMutate || saving || !deliveryForm.arrivalWindow}
         >
-          {saving ? "Guardando…" : "Guardar entrega"}
+          {saving
+            ? "Guardando…"
+            : deliveryForm.status === "Recibido"
+              ? "Registrar recepción"
+              : "Registrar entrega prevista"}
         </button>
       </form>
     </>
@@ -166,14 +226,17 @@ export function SupplyAlertsSection({
   productRefs,
   handleAddAlert,
   handleDeleteAlert,
+  reloadSupply,
   dakinisSeverityStyle,
   dakinisSeverityLabel
 }) {
+  const businessAlerts = alerts.filter((row) => !dakinisIsSystemIncident(row));
+  const incidents = alerts.filter((row) => dakinisIsSystemIncident(row));
   return (
     <>
-      <h4 style={{ marginTop: "1.75rem" }}>Alertas de mercadería</h4>
+      <h4 style={{ marginTop: "1.75rem" }}>Alertas de inventario</h4>
       <p className="lead" style={{ fontSize: "0.95rem", marginBottom: "0.75rem" }}>
-        Avisos persistentes por stock, caducidad o pedidos pendientes.
+        Stock bajo, caducidades, mercancía pendiente y productos sin movimiento.
       </p>
 
       <article className="card mockup-table-card" style={{ marginBottom: "1rem" }}>
@@ -188,14 +251,14 @@ export function SupplyAlertsSection({
             </tr>
           </thead>
           <tbody>
-            {alerts.length === 0 ? (
+            {businessAlerts.length === 0 ? (
               <tr>
                 <td colSpan={canMutate ? 5 : 4}>
-                  <span className="lead">Sin alertas.</span>
+                  <span className="lead">Sin alertas de inventario.</span>
                 </td>
               </tr>
             ) : (
-              alerts.map((row) => (
+              businessAlerts.map((row) => (
                 <tr key={row.id}>
                   <td data-label="Alerta">{row.title}</td>
                   <td data-label="Ref.">
@@ -227,8 +290,28 @@ export function SupplyAlertsSection({
         </table>
       </article>
 
+      {incidents.length > 0 ? (
+        <article className="card" style={{ marginBottom: "1rem" }}>
+          <h4 style={{ marginTop: 0 }}>Incidencias del sistema</h4>
+          <p className="kpi-label">
+            Un fallo de carga no es una alerta de mercadería. Comprueba si el módulo ya responde antes de quitar el aviso.
+          </p>
+          <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem" }}>
+            {incidents.map((row) => (
+              <li key={row.id}>
+                <strong>No se pudieron cargar los datos de inventario.</strong>
+                <p className="kpi-label">El detalle técnico no se muestra aquí.</p>
+                <button type="button" className="btn btn-outline" disabled={saving} onClick={() => reloadSupply?.()}>
+                  Reintentar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ) : null}
+
       <form className="mockup-form card" onSubmit={handleAddAlert}>
-        <h5 style={{ gridColumn: "1 / -1", margin: 0 }}>Nueva alerta</h5>
+        <h5 style={{ gridColumn: "1 / -1", margin: 0 }}>Crear aviso manual</h5>
         <label className="mockup-field">
           <span>Nombre de la alerta</span>
           <input
@@ -255,7 +338,7 @@ export function SupplyAlertsSection({
           </p>
         ) : null}
         <label className="mockup-field" style={{ gridColumn: "1 / -1" }}>
-          <span>Regla</span>
+          <span>Condición del aviso</span>
           <select
             value={ALERT_RULES.find((rule) => rule.text === alertForm.condition)?.id || ""}
             onChange={(e) => {
@@ -272,7 +355,7 @@ export function SupplyAlertsSection({
               </option>
             ))}
           </select>
-          <span className="kpi-label">La regla se guarda como aviso. Todavía no se evalúa sola.</span>
+          <span className="kpi-label">Se guarda como aviso. No hay un motor que lo evalúe solo.</span>
         </label>
         <label className="mockup-field">
           <span>Prioridad</span>
@@ -292,7 +375,7 @@ export function SupplyAlertsSection({
           style={{ gridColumn: "1 / -1" }}
           disabled={!canMutate || saving}
         >
-          {saving ? "Guardando…" : "Crear alerta"}
+          {saving ? "Guardando…" : "Guardar aviso"}
         </button>
       </form>
     </>

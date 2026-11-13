@@ -16,6 +16,9 @@ export async function dakinisReportTenantLoadAlert({
   errorMessage
 }) {
   if (!apiSession?.token || !businessId) return;
+  // Un fallo de carga es una incidencia del sistema, no una alerta de mercadería.
+  console.error("[dakinis] load error", moduleKey, String(errorMessage || "").slice(0, 180));
+  return;
   const msg = String(errorMessage || "").trim();
   if (!msg) return;
   if (

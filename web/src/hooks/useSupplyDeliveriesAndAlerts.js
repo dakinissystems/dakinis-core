@@ -248,6 +248,7 @@ export function useSupplyDeliveriesAndAlerts({
     handleDeleteDelivery,
     handleAddAlert,
     handleDeleteAlert,
+    reloadSupply: loadSupply,
     dakinisSeverityStyle,
     dakinisSeverityLabel
   };

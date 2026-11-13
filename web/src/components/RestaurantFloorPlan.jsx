@@ -187,9 +187,19 @@ export default function RestaurantFloorPlan({
     <div className="restaurant-floor">
       <div className="restaurant-floor__toolbar no-print">
         {designAllowed ? (
-          <button type="button" className={designMode ? "btn" : "btn btn-outline"} onClick={() => setDesignMode((value) => !value)}>
-            {designMode ? "Diseño activo" : "Operación"}
-          </button>
+          <div className="restaurant-floor__add-group" role="group" aria-label="Modo del plano">
+            <button type="button" className={designMode ? "btn btn-outline" : "btn"} aria-pressed={!designMode} onClick={() => setDesignMode(false)}>
+              Operación
+            </button>
+            <button type="button" className={designMode ? "btn" : "btn btn-outline"} aria-pressed={designMode} onClick={() => setDesignMode(true)}>
+              Diseño
+            </button>
+            <p className="kpi-label" style={{ flexBasis: "100%", margin: 0 }}>
+              {designMode
+                ? "Diseño: añadir, mover y configurar mobiliario."
+                : "Operación: abrir mesas y gestionar comandas."}
+            </p>
+          </div>
         ) : null}
         {canAdd ? (
           <div className="restaurant-floor__add-group">
