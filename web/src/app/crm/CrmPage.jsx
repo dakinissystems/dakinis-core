@@ -190,9 +190,6 @@ export default function CrmPage({ navigate }) {
           <button type="button" className="btn btn-outline" onClick={() => navigate("/app/whatsapp")}>
             {t("app.crm.linkCommunications")}
           </button>
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/hub")}>
-            {t("appNav.hub")}
-          </button>
         </div>
 
         {error ? (
@@ -201,11 +198,13 @@ export default function CrmPage({ navigate }) {
           </p>
         ) : null}
 
-        <AiContextualHint
-          message={t("app.crm.aiHintInactive")}
-          actionLabel={t("app.crm.aiHintAction")}
-          onAction={() => navigate("/app/dashboard")}
-        />
+        {contacts.length > 0 ? (
+          <AiContextualHint
+            message={t("app.crm.aiHintInactive")}
+            actionLabel={t("app.crm.aiHintAction")}
+            onAction={() => navigate("/app/dashboard")}
+          />
+        ) : null}
 
         <div className="wa-conv-layout" style={{ marginTop: "1.25rem" }}>
           <CrmContactList

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import {
   dakinisTableCartLines,
@@ -30,6 +30,12 @@ function RestaurantMesaModal({
   onClear
 }) {
   const dialogRef = useRef(null);
+  const [query, setQuery] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
+  const visibleMenu = menu.filter((item) => {
+    const name = String(item.nameEs || item.name || "").toLowerCase();
+    return !query.trim() || name.includes(query.trim().toLowerCase());
+  });
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -79,12 +85,21 @@ function RestaurantMesaModal({
           />
         </label>
 
+        <label className="mockup-field">
+          <span>Buscar productos</span>
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del producto" />
+        </label>
+        <p className="kpi-label">
+          {mesaLines.length ? "Pedido preparado para enviar a cocina." : "Selecciona productos para preparar la comanda."}
+        </p>
         <ul className="fermina-menu-list restaurant-mesa-modal__menu">
-          {menu.map((item) => (
+          {visibleMenu.map((item) => (
             <li key={item.id} className="fermina-menu-item">
               <div>
-                <strong>{item.nameEs || item.name}</strong>
-                <span className="kpi-label">{item.priceEur?.toFixed(2)} €</span>
+                <strong style={{ display: "block" }}>{item.nameEs || item.name}</strong>
+                <span className="kpi-label" style={{ display: "block", marginTop: "0.15rem" }}>
+                  {item.priceEur?.toFixed(2)} €
+                </span>
               </div>
               <div className="fermina-menu-item__qty">
                 <button type="button" className="btn btn-outline" onClick={() => onCartQtyChange(item.id, -1)}>
@@ -115,14 +130,31 @@ function RestaurantMesaModal({
           >
             {t("fermina.sendKitchen")}
           </button>
-          <button type="button" className="btn btn-outline" disabled={!mesaItemCount || busy} onClick={onClear}>
-            {t("restaurant.mesaClear")}
-          </button>
+          {confirmClear ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={busy}
+              onClick={() => {
+                onClear();
+                setConfirmClear(false);
+              }}
+            >
+              Confirmar vaciado
+            </button>
+          ) : (
+            <button type="button" className="btn btn-outline" disabled={!mesaItemCount || busy} onClick={() => setConfirmClear(true)}>
+              {t("restaurant.mesaClear")}
+            </button>
+          )}
         </div>
+        {confirmClear ? (
+          <p className="kpi-label">Vaciar quita los productos de esta mesa. No envía la comanda ni cobra.</p>
+        ) : null}
 
         <div className="restaurant-mesa-modal__pay">
           <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-            {t("restaurant.mesaPayLabel")}
+            {mesaLines.length ? t("restaurant.mesaPayLabel") : "El cobro se habilita cuando hay productos en la comanda."}
           </p>
           <div className="restaurant-mesa-modal__pay-buttons">
             {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (

@@ -3414,7 +3414,7 @@ dialog.restaurant-mesa-modal::backdrop {
 
 .restaurant-mesa-modal__menu {
   margin-bottom: 0.75rem;
-  max-height: min(40vh, 16rem);
+  max-height: min(52vh, 24rem);
   overflow-y: auto;
 }
 

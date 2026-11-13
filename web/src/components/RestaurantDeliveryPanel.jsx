@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { dakinisTenantJsonFetch } from "../services/api.js";
 
+function dakinisChannelVolume(row) {
+  const availability = String(row?.availability || "");
+  if (availability === "connected") {
+    return row.pending != null ? `${row.pending} pendientes` : "Pedidos pendientes: datos no disponibles";
+  }
+  if (availability === "coming_soon") return "Sin pedidos: el canal no está disponible.";
+  if (availability === "pending_access") return "Sin pedidos: falta el acceso al canal.";
+  if (availability === "connection_error") return "Sin pedidos: la conexión tiene un error.";
+  return "Sin pedidos: el canal no está configurado.";
+}
+
 /**
  * Delivery — vistas Operación (encargado) vs Configuración (admin).
  * Alias canónico futuro: HospitalityDeliveryModule.
@@ -211,9 +222,7 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                   <article key={row.provider} className="card" style={{ margin: 0 }}>
                     <strong>{row.label || row.provider}</strong>
                     <p className="kpi-label" style={{ color: state.color, margin: "0.25rem 0" }}>{state.label}</p>
-                    <p className="kpi-label">
-                      {row.pending != null ? `${row.pending} pendientes` : "Pedidos pendientes: datos no disponibles"}
-                    </p>
+                    <p className="kpi-label">{dakinisChannelVolume(row)}</p>
                     {row.lastSync ? <p className="kpi-label">Última sincronización: {row.lastSync}</p> : null}
                     {row.last_error || row.lastError ? <p className="kpi-label">{row.last_error || row.lastError}</p> : null}
                     <button
@@ -250,7 +259,13 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
 
             <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
               {label("restaurant.deliveryPending", "Pendientes marketplace")}:{" "}
-              <strong>{dashboard?.pendingMarketplace == null ? "Datos no disponibles" : dashboard.pendingMarketplace}</strong>
+              <strong>
+                {healthRows.some((row) => row.availability === "connected")
+                  ? dashboard?.pendingMarketplace == null
+                    ? "Datos no disponibles"
+                    : dashboard.pendingMarketplace
+                  : "Sin canales conectados"}
+              </strong>
             </p>
           </article>
 
@@ -266,10 +281,13 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
             <article className="card" style={{ marginTop: "1rem" }}>
               <h4 style={{ marginTop: 0 }}>{label("restaurant.deliveryJobs", "Cola / incidencias")}</h4>
               {jobCounts ? (
-                <p className="kpi-label" style={{ marginTop: 0 }}>
-                  Pending {jobCounts.pending || 0} · Running {jobCounts.running || 0} · Retry {jobCounts.retry || 0} ·
-                  Failed {jobCounts.failed || 0} · Done {jobCounts.completed || 0}
-                </p>
+                <details>
+                  <summary className="kpi-label">Detalle técnico de la cola</summary>
+                  <p className="kpi-label">
+                    Pendientes {jobCounts.pending || 0} · Procesando {jobCounts.running || 0} · Reintentos {jobCounts.retry || 0} ·
+                    Fallidos {jobCounts.failed || 0} · Completados {jobCounts.completed || 0}
+                  </p>
+                </details>
               ) : null}
               <ul className="kpi-label" style={{ margin: 0, paddingLeft: "1.1rem" }}>
                 {jobs.slice(0, 10).map((job) => (
@@ -312,15 +330,19 @@ export default function RestaurantDeliveryPanel({ apiSession, fetchOpts, t }) {
                       {row.detail}
                     </div>
                   </div>
-                  <label className="kpi-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                    <input
-                      type="checkbox"
-                      checked={!!row.enabled && !channelState(row).locked}
-                      disabled={busy || channelState(row).locked}
-                      onChange={(e) => toggleProvider(row.provider, e.target.checked)}
-                    />
-                    {channelState(row).locked ? "No activable" : label("restaurant.deliveryEnabled", "Activo")}
-                  </label>
+                  {channelState(row).locked ? (
+                    <span className="kpi-label">{channelState(row).label}</span>
+                  ) : (
+                    <label className="kpi-label" style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                      <input
+                        type="checkbox"
+                        checked={!!row.enabled}
+                        disabled={busy}
+                        onChange={(e) => toggleProvider(row.provider, e.target.checked)}
+                      />
+                      {label("restaurant.deliveryEnabled", "Activo")}
+                    </label>
+                  )}
                 </div>
               ))}
             </div>

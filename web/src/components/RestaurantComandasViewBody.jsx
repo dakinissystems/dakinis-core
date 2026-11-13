@@ -122,6 +122,12 @@ export function RestaurantComandasPedidoView({
   dakinisEmptyCart,
   setCart
 }) {
+  const [query, setQuery] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
+  const visibleMenu = menu.filter((item) => {
+    const name = String(item.nameEs || item.name || "").toLowerCase();
+    return !query.trim() || name.includes(query.trim().toLowerCase());
+  });
   return (
     <div>
       <h4 style={{ marginTop: 0 }}>{t("fermina.pedidoTitle")}</h4>
@@ -150,12 +156,16 @@ export function RestaurantComandasPedidoView({
         <span>{t("fermina.orderNotes")}</span>
         <input value={notes} onChange={(e) => setNotes(e.target.value)} />
       </label>
+      <label className="mockup-field">
+        <span>Buscar productos</span>
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del producto" />
+      </label>
       <ul className="fermina-menu-list" style={{ marginBottom: "0.75rem" }}>
-        {menu.map((item) => (
+        {visibleMenu.map((item) => (
           <li key={item.id} className="fermina-menu-item">
             <div>
-              <strong>{item.nameEs || item.name}</strong>
-              <span className="kpi-label">
+              <strong style={{ display: "block" }}>{item.nameEs || item.name}</strong>
+              <span className="kpi-label" style={{ display: "block", marginTop: "0.15rem" }}>
                 {item.priceEur?.toFixed(2)} €
                 {item.portionQty
                   ? ` · ${t("fermina.portionHint", { qty: item.portionQty, pack: item.packSize })}`
@@ -192,14 +202,22 @@ export function RestaurantComandasPedidoView({
         >
           {t("fermina.pedidoGoCobro")}
         </button>
-        <button
-          type="button"
-          className="btn btn-outline"
-          disabled={!cartItemCount}
-          onClick={() => setCart(dakinisEmptyCart())}
-        >
-          {t("fermina.pedidoClear")}
-        </button>
+        {confirmClear ? (
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => {
+              setCart(dakinisEmptyCart());
+              setConfirmClear(false);
+            }}
+          >
+            Confirmar vaciado
+          </button>
+        ) : (
+          <button type="button" className="btn btn-outline" disabled={!cartItemCount} onClick={() => setConfirmClear(true)}>
+            {t("fermina.pedidoClear")}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -483,7 +501,7 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
         {!apiSession?.token ? <p className="kpi-label">Inicia sesión para registrar el cierre.</p> : null}
         {closeError ? <p className="lead" style={{ color: "var(--dakinis-warning)" }}>{closeError}</p> : null}
         <button type="submit" className="btn" disabled={!canClose || busy || !apiSession?.token}>
-          {busy ? "Guardando…" : "Confirmar cierre"}
+          {expectedCash == null ? "Falta el fondo de inicio" : busy ? "Guardando…" : "Confirmar cierre"}
         </button>
         {snapshot?.closedAt ? (
           <p className="kpi-label">

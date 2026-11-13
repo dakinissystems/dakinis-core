@@ -104,7 +104,10 @@ export function RestaurantStockManualForm({
           </>
         ) : null}
         <label className="mockup-field">
-          <span>{t("kitchen.manualQty")}</span>
+          <span>
+            {t("kitchen.manualQty")}
+            {item?.unit ? ` (${item.unit})` : ""}
+          </span>
           <input
             type="number"
             min="0.01"
@@ -387,6 +390,7 @@ export function RestaurantStockInventoryGrid({
                 {row.createdAt ? new Date(row.createdAt).toLocaleString("es-ES") : "Sin fecha"} · {row.name} ·{" "}
                 {Number(row.delta) > 0 ? "+" : ""}
                 {row.delta} {row.unit || ""} · {row.reason || "Sin motivo"}
+                {row.actorEmail ? ` · ${row.actorEmail}` : ""}
               </li>
             ))}
           </ul>

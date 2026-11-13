@@ -61,9 +61,8 @@ export function dakinisComputeTenantHealthScore(business, signals = {}) {
     key: "operations",
     label:
       template?.key === "restaurante"
-        ? `${signals.openOrders ?? 0} comandas registradas, ${signals.stockAlerts ?? 0} alertas de stock`
+        ? `${signals.openOrders ?? 0} comandas registradas`
         : "Operativa del sector",
-    stockAlerts: template?.key === "restaurante" ? Number(signals.stockAlerts ?? 0) : null,
     impact: opsPart
   });
 

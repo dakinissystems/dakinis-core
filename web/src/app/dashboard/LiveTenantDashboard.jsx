@@ -54,10 +54,7 @@ function HealthFactors({ factors }) {
         const rows = list.filter((factor) => group.keys.includes(factor.key));
         if (!rows.length) return null;
         return (
-          <article
-            className={`card dashboard-kpi${rows.some((factor) => Number(factor.stockAlerts) > 0) ? " dashboard-kpi--alert" : ""}`}
-            key={group.id}
-          >
+          <article className="card dashboard-kpi" key={group.id}>
             <p className="kpi-label">{group.title}</p>
             {group.id === "setup" ? (
               <p className="kpi-label">Un negocio sin configurar no es una incidencia operativa.</p>
@@ -74,7 +71,12 @@ function HealthFactors({ factors }) {
   );
 }
 
-function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKpi }) {
+function dakinisMissingKpi(value, failed) {
+  if (value != null && value !== "" && value !== "—" && value !== "Datos no disponibles") return "";
+  return failed ? "No se pudo consultar el servicio." : "El módulo no proporciona ese dato.";
+}
+
+function DashboardGroups({ t, growth, finance, kpis, hospitality, openKpi, panelFailed, financeFailed }) {
   const grouped = new Map(KPI_GROUPS.map((group) => [group.id, []]));
   for (const kpi of kpis) {
     const id = dakinisKpiGroup(kpi.key);
@@ -82,7 +84,6 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
   }
   if (finance) grouped.get("performance").unshift({ key: "finance-30d", label: t("app.dashboard.finance30d"), finance: true });
   if (growth?.factors?.length) grouped.get("performance").unshift({ key: "growth", label: t("app.dashboard.growthScore"), growth: true });
-  if (health) grouped.get("attention").unshift({ key: "health", label: t("app.dashboard.healthScore"), health: true });
 
   return (
     <div className="dashboard-groups">
@@ -94,9 +95,6 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
             <h3 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>{group.title}</h3>
             <div className="module-grid dashboard-groups__grid">
               {items.map((item) => {
-                if (item.health) {
-                  return <HealthFactors key={item.key} factors={health.factors} />;
-                }
                 if (item.growth) {
                   return (
                     <article className="card" key={item.key}>
@@ -121,7 +119,9 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
                           <p className="kpi-label">{t("app.dashboard.margin", { pct: finance.marginPct })}</p>
                         </>
                       ) : (
-                        <p className="kpi-value" style={{ fontSize: "1rem" }}>Datos no disponibles</p>
+                        <p className="kpi-value" style={{ fontSize: "1rem" }}>
+                          {financeFailed ? "No se pudo consultar el servicio." : "El módulo no proporciona ese dato."}
+                        </p>
                       )}
                       {hospitality ? (
                         <button type="button" className="btn btn-outline" onClick={() => openKpi("ventas_hoy")}>
@@ -131,13 +131,13 @@ function DashboardGroups({ t, health, growth, finance, kpis, hospitality, openKp
                     </article>
                   );
                 }
-                const missing = item.value == null || item.value === "" || item.value === "Datos no disponibles";
-                const alertCount = item.key === "stock_alertas" && !missing ? Number(item.value) : 0;
+                const missingText = dakinisMissingKpi(item.value, panelFailed);
+                const alertCount = item.key === "stock_alertas" && !missingText ? Number(item.value) : 0;
                 return (
                   <article className={`card dashboard-kpi${alertCount > 0 ? " dashboard-kpi--alert" : ""}`} key={item.key}>
                     <p className="kpi-label">{item.label}</p>
-                    <p className="kpi-value" style={missing ? { fontSize: "1rem" } : undefined}>
-                      {missing ? "Datos no disponibles" : alertCount > 0 ? `${item.value} productos afectados` : item.value}
+                    <p className="kpi-value" style={missingText ? { fontSize: "1rem" } : undefined}>
+                      {missingText || (alertCount > 0 ? `${item.value} productos afectados` : item.value)}
                     </p>
                     {alertCount > 0 ? (
                       <p className="kpi-label">El dato no separa alertas críticas e informativas.</p>
@@ -224,8 +224,8 @@ export default function LiveTenantDashboard({ session, navigate }) {
   return (
     <section className="modules business-app-page">
       <div className="container">
-        <p className="kicker">{t("app.dashboard.kicker", { name: businessName })}</p>
-        <h2>{industryDash?.industry || t("app.dashboard.heading")}</h2>
+        <p className="kicker">Panel del negocio</p>
+        <h2>{businessName}</h2>
         <p className="lead">{t("app.dashboard.lead")}</p>
         {loadedAt ? (
           <p className="kpi-label">
@@ -264,24 +264,34 @@ export default function LiveTenantDashboard({ session, navigate }) {
 
         <DashboardGroups
           t={t}
-          health={health}
           growth={growth}
           finance={finance}
           kpis={industryDash?.kpis || []}
           hospitality={hospitality}
           openKpi={openKpi}
+          panelFailed={Boolean(errors.panel)}
+          financeFailed={Boolean(errors.finanzas)}
         />
 
-        {aiTips?.suggestions?.length ? (
+        {health?.factors?.length ? (
+          <section aria-label="Estado del negocio" style={{ marginTop: "1rem" }}>
+            <h3 style={{ margin: "0 0 0.35rem", fontSize: "1.05rem" }}>Estado del negocio</h3>
+            <p className="kpi-label">Configuración, actividad y adopción. Las alertas de inventario están en Atención.</p>
+            <div className="module-grid dashboard-groups__grid">
+              <HealthFactors factors={health.factors} />
+            </div>
+          </section>
+        ) : null}
+
+        {aiTips?.suggestions?.filter((item) => item.available !== false).length ? (
           <div className="card" style={{ marginTop: "1rem" }}>
-            <h3>{t("app.dashboard.aiSuggestions")}</h3>
+            <h3>Recomendaciones de Dakinis AI</h3>
             <ul>
-              {aiTips.suggestions.map((item) => {
-                const openInventory = item.action === "inventario" || (item.available !== false && /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`));
+              {aiTips.suggestions.filter((item) => item.available !== false).map((item) => {
+                const openInventory = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
                 return (
-                  <li key={item.id} style={item.available === false ? { opacity: 0.72 } : undefined}>
+                  <li key={item.id}>
                     <strong>{item.question}</strong>
-                    {item.available === false ? <span className="kpi-label"> · No disponible</span> : null}
                     <p className="kpi-label">Motivo: {item.answer}</p>
                     <p className="kpi-label">{item.basis || "No hay una medición detrás de este texto."}</p>
                     <p className="kpi-label">Impacto: {item.impact == null ? "No calculado" : item.impact}</p>

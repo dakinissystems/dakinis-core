@@ -37,7 +37,11 @@ export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, busin
   function saveOpening() {
     setNotice("");
     try {
-      const n = dakinisWriteCashFloat(businessId, openingInput === "" ? 0 : openingInput, dateKey);
+      if (String(openingInput).trim() === "") {
+        setNotice("Escribe el importe del fondo. Un campo vacío no es 0 €.");
+        return;
+      }
+      const n = dakinisWriteCashFloat(businessId, openingInput, dateKey);
       setOpeningSaved(n);
       setOpeningInput(String(n));
       setNotice(t("restaurant.cajaOpeningSaved", "Fondo de caja guardado"));
@@ -99,10 +103,10 @@ export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, busin
             inputMode="decimal"
             value={openingInput}
             onChange={(e) => setOpeningInput(e.target.value)}
-            placeholder="0.00"
+            placeholder="Importe del fondo"
           />
         </label>
-        <button type="button" className="btn" onClick={saveOpening}>
+        <button type="button" className="btn" onClick={saveOpening} disabled={String(openingInput).trim() === ""}>
           {t("restaurant.cajaOpeningSave", "Guardar fondo")}
         </button>
       </div>

@@ -39,6 +39,9 @@ export default function CrmContactList({
           Limpiar búsqueda
         </button>
       ) : null}
+      <button type="button" className="btn" style={{ marginTop: "0.75rem" }} onClick={onOpenComposer}>
+        + {contacts.length === 0 ? "Crear primer cliente" : t("app.crm.newContact")}
+      </button>
       <button type="button" className="btn btn-outline" onClick={onLoadContacts} disabled={loading} aria-busy={loading}>
         {loading ? t("app.crm.loading") : t("app.crm.refresh")}
       </button>
@@ -58,13 +61,9 @@ export default function CrmContactList({
         ))}
       </ul>
 
-      <button type="button" className="btn" style={{ marginTop: "0.75rem" }} onClick={onOpenComposer}>
-        + {t("app.crm.newContact")}
-      </button>
-
       {!loading && contacts.length === 0 ? (
         <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-          Empieza a crear tu cartera. Registra el primer cliente para guardar sus datos, compras y seguimiento.
+          Todavía no tienes clientes. Registra el primero para guardar compras y seguimiento.
         </p>
       ) : null}
 
