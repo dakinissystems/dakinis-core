@@ -23,28 +23,36 @@ export default function CrmContactList({
   onOpenComposer,
   onCloseComposer
 }) {
+  const empty = !loading && contacts.length === 0;
+
   return (
     <aside className="wa-conv-list card">
-      <label className="mockup-field">
-        <span>{t("app.crm.search")}</span>
-        <input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onLoadContacts()}
-          placeholder={t("app.crm.searchPlaceholder")}
-        />
-      </label>
-      {search ? (
-        <button type="button" className="btn btn-outline" onClick={() => onSearchChange("")}>
-          Limpiar búsqueda
+      {!empty ? (
+        <>
+          <label className="mockup-field">
+            <span>{t("app.crm.search")}</span>
+            <input
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onLoadContacts()}
+              placeholder={t("app.crm.searchPlaceholder")}
+            />
+          </label>
+          {search ? (
+            <button type="button" className="btn btn-outline" onClick={() => onSearchChange("")}>
+              Limpiar búsqueda
+            </button>
+          ) : null}
+        </>
+      ) : null}
+      <button type="button" className="btn" style={{ marginTop: empty ? 0 : "0.75rem" }} onClick={onOpenComposer}>
+        + {empty ? "Crear primer cliente" : t("app.crm.newContact")}
+      </button>
+      {!empty ? (
+        <button type="button" className="btn btn-outline" onClick={onLoadContacts} disabled={loading} aria-busy={loading}>
+          {loading ? t("app.crm.loading") : t("app.crm.refresh")}
         </button>
       ) : null}
-      <button type="button" className="btn" style={{ marginTop: "0.75rem" }} onClick={onOpenComposer}>
-        + {contacts.length === 0 ? "Crear primer cliente" : t("app.crm.newContact")}
-      </button>
-      <button type="button" className="btn btn-outline" onClick={onLoadContacts} disabled={loading} aria-busy={loading}>
-        {loading ? t("app.crm.loading") : t("app.crm.refresh")}
-      </button>
       <ul className="wa-thread-list" role="list">
         {contacts.map((c) => (
           <li key={c.id}>
@@ -60,12 +68,6 @@ export default function CrmContactList({
           </li>
         ))}
       </ul>
-
-      {!loading && contacts.length === 0 ? (
-        <p className="kpi-label" style={{ marginTop: "0.75rem" }}>
-          Todavía no tienes clientes. Registra el primero para guardar compras y seguimiento.
-        </p>
-      ) : null}
 
       {composerOpen ? (
       <form className="mockup-form crm-new-contact-form card" onSubmit={onCreateContact} style={{ marginTop: "1rem" }}>

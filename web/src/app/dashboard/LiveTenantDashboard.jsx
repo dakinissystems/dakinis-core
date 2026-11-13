@@ -123,12 +123,17 @@ function DashboardGroups({ t, growth, finance, kpis, hospitality, openKpi, panel
                           <p className="kpi-label">{t("app.dashboard.margin", { pct: finance.marginPct })}</p>
                         </>
                       ) : (
-                        <p className="kpi-value" style={{ fontSize: "1rem" }}>
-                          {financeFailed ? "No se pudo consultar el servicio." : "El módulo no proporciona ese dato."}
-                        </p>
+                        <>
+                          <p className="kpi-value" style={{ fontSize: "1rem" }}>
+                            {financeFailed ? "Sin consultar" : "El módulo no proporciona ese dato."}
+                          </p>
+                          {financeFailed ? (
+                            <p className="kpi-label">No se pudieron cargar los datos de Caja.</p>
+                          ) : null}
+                        </>
                       )}
                       {hospitality ? (
-                        <button type="button" className="btn btn-outline" onClick={() => openKpi("ventas_hoy")}>
+                        <button type="button" className="btn" onClick={() => openKpi("ventas_hoy")}>
                           {t("restaurant.taskCaja")}
                         </button>
                       ) : null}
@@ -141,14 +146,29 @@ function DashboardGroups({ t, growth, finance, kpis, hospitality, openKpi, panel
                   <article className={`card dashboard-kpi${alertCount > 0 ? " dashboard-kpi--alert" : ""}`} key={item.key}>
                     <p className="kpi-label">{item.label}</p>
                     <p className="kpi-value" style={missingText ? { fontSize: "1rem" } : undefined}>
-                      {missingText || (alertCount > 0 ? `${item.value} productos afectados` : item.value)}
+                      {missingText
+                        ? panelFailed
+                          ? "Sin consultar"
+                          : missingText
+                        : alertCount > 0
+                          ? `${item.value} referencias`
+                          : item.value}
                     </p>
+                    {missingText && panelFailed ? (
+                      <p className="kpi-label">No se pudieron cargar estos datos.</p>
+                    ) : null}
                     {alertCount > 0 ? (
-                      <p className="kpi-label">El dato no separa alertas críticas e informativas.</p>
+                      <>
+                        <p className="kpi-label">
+                          Hay productos por debajo de su stock mínimo. Las alertas críticas e informativas todavía no están
+                          diferenciadas.
+                        </p>
+                        <p className="kpi-label">Siguiente paso: revisar cantidades y establecer reposición.</p>
+                      </>
                     ) : null}
                     {HOSPITALITY_KPI_TASK[item.key] && hospitality ? (
-                      <button type="button" className="btn btn-outline" onClick={() => openKpi(item.key)}>
-                        {dakinisTaskLabel(t, item.key)}
+                      <button type="button" className="btn" onClick={() => openKpi(item.key)}>
+                        {alertCount > 0 ? "Abrir inventario" : dakinisTaskLabel(t, item.key)}
                       </button>
                     ) : null}
                   </article>
@@ -233,37 +253,11 @@ export default function LiveTenantDashboard({ session, navigate }) {
         <p className="lead">{t("app.dashboard.lead")}</p>
         {loadedAt ? (
           <p className="kpi-label">
-            Última consulta del panel a las {new Date(loadedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}.
-            Un módulo que falló no comparte esa hora.
+            Panel consultado a las {new Date(loadedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}.
             <button type="button" className="btn btn-outline" style={{ marginLeft: "0.5rem" }} onClick={() => setReloadNonce((value) => value + 1)}>
               Actualizar
             </button>
           </p>
-        ) : null}
-        {Object.keys(errors).length ? (
-          <article className="card dashboard-load-error">
-            <h3 style={{ marginTop: 0 }}>Hay módulos que no se han cargado</h3>
-            <ul>
-              {Object.entries(errors).map(([key, message]) => (
-                <li key={key}>
-                  <strong>
-                    {{
-                      panel: "Panel",
-                      salud: "Salud",
-                      sugerencias: "Sugerencias",
-                      crecimiento: "Crecimiento",
-                      recomendaciones: "Recomendaciones",
-                      finanzas: "Finanzas"
-                    }[key] || key}
-                  </strong>
-                  : {message}
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="btn" onClick={() => setReloadNonce((value) => value + 1)}>
-              Reintentar
-            </button>
-          </article>
         ) : null}
 
         <DashboardGroups
@@ -287,37 +281,24 @@ export default function LiveTenantDashboard({ session, navigate }) {
 
         {(() => {
           const stockAlertKpi = (industryDash?.kpis || []).find((kpi) => kpi.key === "stock_alertas");
-          const stockAlertCount = stockAlertKpi && stockAlertKpi.value != null && stockAlertKpi.value !== "Datos no disponibles"
-            ? Number(stockAlertKpi.value)
-            : 0;
+          const stockAlertCount =
+            stockAlertKpi && stockAlertKpi.value != null && stockAlertKpi.value !== "Datos no disponibles"
+              ? Number(stockAlertKpi.value)
+              : 0;
           const tips = (aiTips?.suggestions || []).filter((item) => {
             if (item.available === false) return false;
             const isStock = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
             if (isStock && stockAlertCount > 0) return false;
             return true;
           });
-          if (stockAlertCount > 0) {
-            return (
-              <div className="card" style={{ marginTop: "1rem" }}>
-                <h3>Siguiente paso recomendado</h3>
-                <p className="kpi-label">
-                  {stockAlertCount} referencias por debajo del mínimo. Revisa cantidades y establece reposición.
-                </p>
-                {hospitality ? (
-                  <button type="button" className="btn btn-outline" onClick={() => openKpi("stock_alertas")}>
-                    Revisar inventario
-                  </button>
-                ) : null}
-              </div>
-            );
-          }
           if (!tips.length) return null;
           return (
             <div className="card" style={{ marginTop: "1rem" }}>
               <h3>Recomendaciones de Dakinis AI</h3>
               <ul>
                 {tips.map((item) => {
-                  const openInventory = item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
+                  const openInventory =
+                    item.action === "inventario" || /inventario|mínimo|stock/i.test(`${item.question} ${item.answer}`);
                   return (
                     <li key={item.id}>
                       <strong>{item.question}</strong>

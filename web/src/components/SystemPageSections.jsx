@@ -287,15 +287,25 @@ export function SystemPageRestauranteSection({
   }
 
   const statuses = [
-    { id: "api", label: "API", tone: apiSession?.token ? "ok" : "down" },
+    {
+      id: "api",
+      label: apiSession?.token ? "API conectada" : "API sin sesión",
+      tone: apiSession?.token ? "ok" : "down"
+    },
     {
       id: "delivery",
-      label: "Delivery",
+      label:
+        pulse.deliveryPending > 0
+          ? `Delivery · ${pulse.deliveryPending} pendientes`
+          : "Delivery sin pedidos pendientes",
       tone: pulse.deliveryPending > 0 ? "warn" : "idle"
     },
     {
       id: "caja",
-      label: t("restaurant.taskCaja"),
+      label:
+        pulse.cashToday != null && pulse.cashToday > 0
+          ? `${t("restaurant.taskCaja")} · ${pulse.cashToday.toFixed(0)} €`
+          : `${t("restaurant.taskCaja")} · sin cobros hoy`,
       tone: pulse.cashToday > 0 ? "ok" : "idle"
     }
   ];

@@ -32,8 +32,11 @@ export default function RestaurantOpsHeader({
           <span
             className={`restaurant-ops-header__live${open ? " is-open" : " is-closed"}`}
             title={open ? t("restaurant.opsOpen") : t("restaurant.opsClosed")}
-            aria-label={open ? t("restaurant.opsOpen") : t("restaurant.opsClosed")}
+            aria-hidden="true"
           />
+          <span className="restaurant-ops-header__open-label">
+            {open ? t("restaurant.opsOpen") : t("restaurant.opsClosed")}
+          </span>
           <h2 className="restaurant-ops-header__title">{businessName}</h2>
           {crumb ? <span className="restaurant-ops-header__crumb-inline">{crumb}</span> : null}
         </div>

@@ -16,7 +16,7 @@ export default {
     modules: "Modules",
     platformPanel: "Platform admin",
     myBusiness: "My business",
-    panelMockup: "Panel mockup",
+    panelMockup: "Preview",
     platformAdmin: "Platform administrator",
     logout: "Log out",
     language: "Language",

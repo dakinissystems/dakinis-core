@@ -244,9 +244,11 @@ export default function CrmPage({ navigate }) {
             />
           ) : (
             <div className="wa-conv-thread card">
-              <h3 style={{ marginTop: 0 }}>Todavía no tienes clientes</h3>
-              <p className="lead">
-                Registra el primero para guardar compras y seguimiento. La ficha aparecerá aquí cuando exista un cliente.
+              <h3 style={{ marginTop: 0 }}>Tu cartera de clientes</h3>
+              <p className="lead">Todavía no tienes clientes.</p>
+              <p className="kpi-label">
+                Registra tu primer cliente para guardar sus datos, compras e historial. La ficha aparecerá aquí cuando exista
+                un registro.
               </p>
             </div>
           )}

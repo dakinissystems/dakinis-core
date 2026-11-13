@@ -477,7 +477,11 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
         }}
       >
         <h5 style={{ margin: "0 0 0.35rem" }}>Arqueo de caja</h5>
-        <p className="kpi-label">Pendiente de conciliación hasta que el efectivo contado coincida o quede justificado.</p>
+        <p className="kpi-label">
+          {expectedCash == null
+            ? "Pendiente de fondo inicial"
+            : "Pendiente de conciliación hasta que el efectivo contado coincida o quede justificado."}
+        </p>
         <label className="mockup-field">
           <span>Efectivo contado</span>
           <input
@@ -488,9 +492,9 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
             disabled={expectedCash == null || busy}
           />
         </label>
-        <p className="kpi-label">
-          Diferencia: {difference == null ? "—" : `${difference.toFixed(2)} €`}
-        </p>
+        {expectedCash != null ? (
+          <p className="kpi-label">Diferencia: {difference == null ? "—" : `${difference.toFixed(2)} €`}</p>
+        ) : null}
         {needsNote ? (
           <label className="mockup-field">
             <span>Justificación</span>
@@ -504,17 +508,19 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
         ) : null}
         {expectedCash == null ? (
           <p className="kpi-label">
-            Falta registrar el fondo inicial. Introduce el efectivo de inicio arriba para calcular el esperado y poder cerrar.
+            Completa primero el fondo inicial. Sin ese dato no podemos calcular el efectivo esperado ni conciliar la caja.
           </p>
         ) : null}
         {!apiSession?.token ? <p className="kpi-label">Inicia sesión para registrar el cierre.</p> : null}
         {closeError ? <p className="lead" style={{ color: "var(--dakinis-warning)" }}>{closeError}</p> : null}
-        <button type="submit" className="btn" disabled={!canClose || busy || !apiSession?.token}>
+        <button
+          type="submit"
+          className="btn"
+          disabled={!canClose || busy || !apiSession?.token}
+          aria-disabled={!canClose || busy || !apiSession?.token}
+        >
           {busy ? "Guardando…" : "Confirmar cierre"}
         </button>
-        {!canClose && expectedCash == null ? (
-          <p className="kpi-label">Confirmar cierre · Bloqueado hasta guardar el fondo de inicio.</p>
-        ) : null}
         {snapshot?.closedAt ? (
           <p className="kpi-label">
             Último cierre: {new Date(snapshot.closedAt).toLocaleString("es-ES")}
@@ -533,67 +539,59 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
       >
         <div>
           <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByPayment", "Por forma de cobro")}</h5>
-          <table className="mockup-table">
-            <thead>
-              <tr>
-                <th>{t("fermina.colPayment", "Cobro")}</th>
-                <th>{t("fermina.dayCloseOrdersCol", "Pedidos")}</th>
-                <th>{t("fermina.colTotal", "Total")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dayClose.byPayment.length === 0 ? (
+          {dayClose.byPayment.length === 0 ? (
+            <p className="kpi-label">No hay cobros registrados.</p>
+          ) : (
+            <table className="mockup-table">
+              <thead>
                 <tr>
-                  <td colSpan={3} className="lead">
-                    No hay cobros registrados.
-                  </td>
+                  <th>{t("fermina.colPayment", "Cobro")}</th>
+                  <th>{t("fermina.dayCloseOrdersCol", "Pedidos")}</th>
+                  <th>{t("fermina.colTotal", "Total")}</th>
                 </tr>
-              ) : (
-                dayClose.byPayment.map((row) => (
+              </thead>
+              <tbody>
+                {dayClose.byPayment.map((row) => (
                   <tr key={row.id}>
                     <td>{row.label}</td>
                     <td>{row.count}</td>
                     <td>{row.total.toFixed(2)} €</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colSpan={2}>{t("fermina.dayCloseCashTotal", "Caja (entregadas)")}</th>
-                <th>{dayClose.grandTotal.toFixed(2)} €</th>
-              </tr>
-            </tfoot>
-          </table>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colSpan={2}>{t("fermina.dayCloseCashTotal", "Caja (entregadas)")}</th>
+                  <th>{dayClose.grandTotal.toFixed(2)} €</th>
+                </tr>
+              </tfoot>
+            </table>
+          )}
         </div>
         <div>
           <h5 style={{ marginTop: 0 }}>{t("fermina.dayCloseByChannel")}</h5>
-          <table className="mockup-table">
-            <thead>
-              <tr>
-                <th>{t("fermina.colChannel")}</th>
-                <th>{t("fermina.dayCloseOrdersCol")}</th>
-                <th>{t("fermina.colTotal")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dayClose.byChannel.length === 0 ? (
+          {dayClose.byChannel.length === 0 ? (
+            <p className="kpi-label">No hay cobros por canal registrados.</p>
+          ) : (
+            <table className="mockup-table">
+              <thead>
                 <tr>
-                  <td colSpan={3} className="lead">
-                    No hay cobros por canal registrados.
-                  </td>
+                  <th>{t("fermina.colChannel")}</th>
+                  <th>{t("fermina.dayCloseOrdersCol")}</th>
+                  <th>{t("fermina.colTotal")}</th>
                 </tr>
-              ) : (
-                dayClose.byChannel.map((row) => (
+              </thead>
+              <tbody>
+                {dayClose.byChannel.map((row) => (
                   <tr key={row.id}>
                     <td>{row.label}</td>
                     <td>{row.count}</td>
                     <td>{row.total.toFixed(2)} €</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
       <table className="mockup-table">

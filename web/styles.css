@@ -1153,6 +1153,22 @@ a.link-btn {
   background: var(--brand-dark);
 }
 
+.btn:disabled,
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover,
+.btn[aria-disabled="true"]:hover {
+  background: var(--brand);
+}
+
 .btn-outline {
   background: transparent;
   color: var(--text);
@@ -2830,6 +2846,19 @@ dialog.allergen-modal::backdrop {
   gap: 0.75rem;
 }
 
+.restaurant-ops-header__identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.65rem;
+}
+
+.restaurant-ops-header__open-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
 .restaurant-ops-header--minimal .restaurant-ops-header__title {
   margin: 0;
   font-size: 1.15rem;
@@ -4252,6 +4281,18 @@ dialog.restaurant-mesa-modal::backdrop {
   gap: 0.75rem;
   align-items: flex-end;
   margin-top: 0.75rem;
+}
+
+.stock-scan-actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.stock-scan-actions--stack .mockup-field,
+.stock-scan-actions--stack .stock-scan-actions__dir,
+.stock-scan-actions--stack .btn {
+  width: 100%;
+  max-width: 28rem;
 }
 
 .stock-scan-actions__dir {
@@ -5678,13 +5719,30 @@ html[data-density="comfortable"] .card {
 }
 
 .dashboard-groups__grid {
+  display: grid;
   gap: 0.55rem;
-  align-items: start;
+  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 960px) {
+  .dashboard-groups__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .dashboard-groups .card,
 .dashboard-kpi {
   padding: 0.7rem 0.8rem;
+  min-height: 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dashboard-kpi .btn {
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 .dashboard-kpi__factors {
@@ -5861,8 +5919,10 @@ html[data-density="comfortable"] .card {
 }
 
 .topbar-user-label {
-  font-size: 0.85rem;
-  max-width: 22ch;
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.78;
+  max-width: 18ch;
   overflow: hidden;
   text-overflow: ellipsis;
 }

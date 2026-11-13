@@ -70,20 +70,20 @@ export function RestaurantStockManualForm({
       {method === "manual" ? null : (
         <StockBarcodeScanner onScan={dakinisApplyStockScan} t={t} autoFocus={autoFocus && method === "wedge"} method={method} />
       )}
-      <div className="stock-scan-actions">
+      <div className="stock-scan-actions stock-scan-actions--stack">
         {method === "manual" ? (
-        <label className="mockup-field">
-          <span>{t("kitchen.manualProduct")}</span>
-          <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
-            <option value="">{t("kitchen.manualChoose")}</option>
-            {(kitchen?.items || []).map((row) => (
-              <option key={row.id} value={row.id}>
-                {row.name}
-              </option>
-            ))}
-            <option value="__new__">{t("kitchen.manualNew")}</option>
-          </select>
-        </label>
+          <label className="mockup-field">
+            <span>{t("kitchen.manualProduct")}</span>
+            <select value={itemId} onChange={(e) => setItemId(e.target.value)}>
+              <option value="">{t("kitchen.manualChoose")}</option>
+              {(kitchen?.items || []).map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.name}
+                </option>
+              ))}
+              <option value="__new__">{t("kitchen.manualNew")}</option>
+            </select>
+          </label>
         ) : null}
         {method === "manual" && isNew ? (
           <>
@@ -101,71 +101,85 @@ export function RestaurantStockManualForm({
                 <option value="u">u</option>
               </select>
             </label>
+            <p className="kpi-label">Un producto nuevo solo admite entrada.</p>
           </>
         ) : null}
         {method === "manual" && !itemId ? (
-          <p className="kpi-label">Elige un producto para definir entrada o salida.</p>
-        ) : null}
-        {(method === "manual" && item && !isNew) || (method !== "manual" && pendingScan?.code) ? (
-          <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
-            <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("in"); setScanDirection?.("in"); }}>
-              {t("kitchen.scanIn")}
-            </button>
-            <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("out"); setScanDirection?.("out"); }}>
-              {t("kitchen.scanOut")}
-            </button>
-          </div>
-        ) : null}
-        {isNew ? <p className="kpi-label">Un producto nuevo solo admite entrada.</p> : null}
-        <label className="mockup-field">
-          <span>
-            {t("kitchen.manualQty")}
-            {item?.unit ? ` (${item.unit})` : pendingScan?.unit ? ` (${pendingScan.unit})` : ""}
-          </span>
-          <input
-            type="number"
-            min="0.01"
-            step="any"
-            inputMode="decimal"
-            value={qty}
-            onChange={(e) => {
-              setQty(e.target.value);
-              setScanQty?.(e.target.value);
-            }}
-          />
-        </label>
-        {method !== "manual" && pendingScan?.code ? (
           <p className="kpi-label">
-            <strong>{pendingScan.name || "Producto identificado"}</strong>
-            {" · "}
-            {t("kitchen.manualCurrent")}: {dakinisFormatQty(pendingScan.quantity, pendingScan.unit)}
-            {" · "}
-            {t("kitchen.manualResult")}: {dakinisResultingStock(pendingScan, qty, direction)}
+            Ningún producto seleccionado. El tipo de movimiento y la cantidad aparecerán después de identificarlo.
           </p>
         ) : null}
-        {item ? (
-          <p className="kpi-label">
-            {t("kitchen.manualCurrent")}: {dakinisFormatQty(item.quantity, item.unit)}
-            {" · "}
-            {t("kitchen.manualResult")}: {next != null && next < 0 ? t("kitchen.manualShort") : next != null ? `${next} ${item.unit || ""}` : t("kitchen.manualUnknown")}
-          </p>
+        {method !== "manual" && !pendingScan?.code ? (
+          <p className="kpi-label">Identifica el producto con el lector o la cámara para continuar.</p>
         ) : null}
-        <button
-          type="button"
-          className="btn"
-          disabled={method === "manual" ? !canSubmit : busy || !pendingScan?.code || dakinisScanBlocked(pendingScan, qty, direction)}
-          onClick={() => {
-            if (method === "manual") {
-              onConfirm();
-              return;
-            }
-            dakinisConfirmStockScan?.({ quantity: qty, direction });
-          }}
-        >
-          {(method === "manual" ? direction : scanDirection) === "out" && !(method === "manual" && isNew)
-            ? t("kitchen.manualConfirmOut")
-            : t("kitchen.manualConfirmIn")}
-        </button>
+        {(method === "manual" && item && !isNew) || (method !== "manual" && pendingScan?.code) || isNew ? (
+          <>
+            {!isNew ? (
+              <div className="stock-scan-actions__dir" role="group" aria-label={t("kitchen.scanDirection")}>
+                <button type="button" className={direction === "in" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("in"); setScanDirection?.("in"); }}>
+                  {t("kitchen.scanIn")}
+                </button>
+                <button type="button" className={direction === "out" ? "btn" : "btn btn-outline"} onClick={() => { setDirection("out"); setScanDirection?.("out"); }}>
+                  {t("kitchen.scanOut")}
+                </button>
+              </div>
+            ) : null}
+            <label className="mockup-field">
+              <span>
+                {t("kitchen.manualQty")}
+                {item?.unit ? ` (${item.unit})` : pendingScan?.unit ? ` (${pendingScan.unit})` : isNew ? ` (${unit})` : ""}
+              </span>
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                inputMode="decimal"
+                value={qty}
+                onChange={(e) => {
+                  setQty(e.target.value);
+                  setScanQty?.(e.target.value);
+                }}
+              />
+            </label>
+            {method !== "manual" && pendingScan?.code ? (
+              <p className="kpi-label">
+                <strong>{pendingScan.name || "Producto identificado"}</strong>
+                {" · "}
+                {t("kitchen.manualCurrent")}: {dakinisFormatQty(pendingScan.quantity, pendingScan.unit)}
+                {" · "}
+                {t("kitchen.manualResult")}: {dakinisResultingStock(pendingScan, qty, direction)}
+              </p>
+            ) : null}
+            {item ? (
+              <p className="kpi-label">
+                {t("kitchen.manualCurrent")}: {dakinisFormatQty(item.quantity, item.unit)}
+                {" · "}
+                {t("kitchen.manualResult")}:{" "}
+                {next != null && next < 0 ? t("kitchen.manualShort") : next != null ? `${next} ${item.unit || ""}` : t("kitchen.manualUnknown")}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="btn"
+              disabled={method === "manual" ? !canSubmit : busy || !pendingScan?.code || dakinisScanBlocked(pendingScan, qty, direction)}
+              onClick={() => {
+                if (method === "manual") {
+                  onConfirm();
+                  return;
+                }
+                dakinisConfirmStockScan?.({ quantity: qty, direction });
+              }}
+            >
+              {(method === "manual" ? direction : scanDirection) === "out" && !(method === "manual" && isNew)
+                ? t("kitchen.manualConfirmOut")
+                : t("kitchen.manualConfirmIn")}
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn" disabled>
+            Continuar
+          </button>
+        )}
       </div>
     </article>
   );
