@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from "react";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import { dakinisIsBusinessFacingSession } from "../../utils/businessDemoMode.js";
@@ -11,10 +12,18 @@ import {
   dakinisTenantRecommendations,
   dakinisTenantFinanceSummary
 } from "../../services/tenant-intelligence.js";
+import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import {
   LIVE_TENANT_DASHBOARD_INITIAL,
   liveTenantDashboardReducer
 } from "./liveTenantDashboardReducer.js";
+
+const HOSPITALITY_KPI_TASK = {
+  mesas_ocupadas: "sala",
+  comandas_abiertas: "cocina",
+  stock_alertas: "inventario",
+  ventas_hoy: "caja"
+};
 
 export default function LiveTenantDashboard({ session, navigate }) {
   const { t } = useLocale();
@@ -60,6 +69,15 @@ export default function LiveTenantDashboard({ session, navigate }) {
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
   const businessFacing = dakinisIsBusinessFacingSession(session);
+  const hospitality = dakinisIsHospitalityBusiness(session.business?.type);
+
+  function openKpi(key) {
+    if (!hospitality) return;
+    const task = HOSPITALITY_KPI_TASK[key];
+    if (!task) return;
+    const extras = task === "inventario" ? { sub: "alerts" } : {};
+    navigate(dakinisRestaurantTaskPath(session.business.type, task, extras));
+  }
 
   return (
     <section className="modules business-app-page">
@@ -92,12 +110,29 @@ export default function LiveTenantDashboard({ session, navigate }) {
               <p className="kpi-label">
                 {t("app.dashboard.margin", { pct: finance.marginPct })}
               </p>
+              {hospitality ? (
+                <button type="button" className="btn btn-outline" onClick={() => openKpi("ventas_hoy")}>
+                  {t("restaurant.taskCaja")}
+                </button>
+              ) : null}
             </article>
           ) : null}
           {industryDash?.kpis?.slice(0, 1).map((kpi) => (
             <article className="card commercial-kpi-card" key={kpi.key}>
               <p className="kpi-label">{kpi.label}</p>
               <p className="kpi-value">{kpi.value}</p>
+              {HOSPITALITY_KPI_TASK[kpi.key] && hospitality ? (
+                <button type="button" className="btn btn-outline" onClick={() => openKpi(kpi.key)}>
+                  {t(
+                    {
+                      sala: "restaurant.taskSala",
+                      cocina: "restaurant.taskCocina",
+                      inventario: "restaurant.taskInventario",
+                      caja: "restaurant.taskCaja"
+                    }[HOSPITALITY_KPI_TASK[kpi.key]]
+                  )}
+                </button>
+              ) : null}
             </article>
           ))}
         </div>
@@ -108,6 +143,18 @@ export default function LiveTenantDashboard({ session, navigate }) {
               <article className="card" key={kpi.key}>
                 <p className="kpi-label">{kpi.label}</p>
                 <p className="kpi-value">{kpi.value}</p>
+                {HOSPITALITY_KPI_TASK[kpi.key] && hospitality ? (
+                  <button type="button" className="btn btn-outline" onClick={() => openKpi(kpi.key)}>
+                    {t(
+                      {
+                        sala: "restaurant.taskSala",
+                        cocina: "restaurant.taskCocina",
+                        inventario: "restaurant.taskInventario",
+                        caja: "restaurant.taskCaja"
+                      }[HOSPITALITY_KPI_TASK[kpi.key]]
+                    )}
+                  </button>
+                ) : null}
               </article>
             ))}
           </div>

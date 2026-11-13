@@ -1,4 +1,7 @@
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
+import { useDakinisSession } from "../../context/SessionContext.jsx";
+import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import BusinessNavHeroAskAi from "./BusinessNavHeroAskAi.jsx";
 
 const DAKINIS_BUSINESS_TILES = [
@@ -11,6 +14,21 @@ const DAKINIS_BUSINESS_TILES = [
 
 export default function BusinessNavHero({ navigate, compact = false, showCopilot = !compact }) {
   const { t } = useLocale();
+  const { session } = useDakinisSession();
+  const hospitality = dakinisIsHospitalityBusiness(session?.business?.type);
+  const tiles = DAKINIS_BUSINESS_TILES.map((tile) => {
+    if (!hospitality) return tile;
+    if (tile.key === "inventory") {
+      return { ...tile, path: dakinisRestaurantTaskPath(session.business.type, "inventario", { sub: "scan" }) };
+    }
+    if (tile.key === "sales") {
+      return { ...tile, path: dakinisRestaurantTaskPath(session.business.type, "caja") };
+    }
+    if (tile.key === "reports") {
+      return { ...tile, path: dakinisRestaurantTaskPath(session.business.type, "caja") };
+    }
+    return tile;
+  });
 
   return (
     <section className={`business-nav-hero${compact ? " business-nav-hero--compact" : ""}`}>
@@ -22,7 +40,7 @@ export default function BusinessNavHero({ navigate, compact = false, showCopilot
         </div>
       ) : null}
       <ul className="business-nav-hero__tiles">
-        {DAKINIS_BUSINESS_TILES.map((tile) => (
+        {tiles.map((tile) => (
           <li key={tile.key}>
             <button
               type="button"

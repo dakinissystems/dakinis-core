@@ -83,6 +83,13 @@ export function useSystemPage(activeSystemKey) {
     }
   }, [taskFromUrl, restaurantTask]);
 
+  useEffect(() => {
+    if (activeSystemKey !== "restaurante" || searchParams.get("task")) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("task", restaurantTask || "sala");
+    setSearchParams(next, { replace: true });
+  }, [activeSystemKey, restaurantTask, searchParams, setSearchParams]);
+
   // Canonicaliza aliases de URL (?task=stock → ?task=inventario&sub=scan) una sola vez.
   useEffect(() => {
     const raw = searchParams.get("task");

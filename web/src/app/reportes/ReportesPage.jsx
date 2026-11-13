@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisIsBusinessDemoSession } from "../../utils/businessDemoMode.js";
 import BusinessNavHero from "../../components/business/BusinessNavHero.jsx";
 import AnalyticsBusinessDemo from "../../components/business/AnalyticsBusinessDemo.jsx";
 import { dakinisTenantBenchmark } from "../../services/tenant-intelligence.js";
+import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 
 export default function ReportesPage({ navigate }) {
   const { t } = useLocale();
@@ -51,17 +53,36 @@ export default function ReportesPage({ navigate }) {
         {isDemo ? <BusinessNavHero navigate={navigate} compact /> : null}
         <p className="kicker">{t("businessDemo.analytics.kicker")}</p>
         <h2>{t("businessDemo.analytics.title")}</h2>
+        {isDemo ? <span className="mockup-badge">{t("commercial.executive.demoBadge")}</span> : null}
         <p className="lead">{t("businessDemo.analytics.lead")}</p>
+        {isDemo ? <AnalyticsBusinessDemo /> : null}
         {!isDemo && benchmark?.comparisons?.length ? (
-          <p className="kpi-label" style={{ marginBottom: "0.75rem" }}>
-            {t("businessDemo.analytics.liveBadge")}
-          </p>
+          <article className="card" style={{ marginTop: "1rem" }}>
+            <h3 style={{ marginTop: 0 }}>{t("businessDemo.analytics.benchmarkTitle")}</h3>
+            <ul>
+              {benchmark.comparisons.slice(0, 5).map((row) => (
+                <li key={row.key}>
+                  {row.label}: {row.tenantValue}{row.unit || ""} ({row.narrative})
+                </li>
+              ))}
+            </ul>
+          </article>
         ) : null}
-        <AnalyticsBusinessDemo benchmark={benchmark} />
-        {!isDemo && benchmarkError ? (
-          <p className="lead" style={{ marginTop: "1rem" }}>
-            {t("businessDemo.analytics.planHint")}
-          </p>
+        {!isDemo && !benchmark?.comparisons?.length ? (
+          <article className="card" style={{ marginTop: "1rem" }}>
+            <p className="lead" style={{ marginTop: 0 }}>
+              {benchmarkError ? t("businessDemo.analytics.planHint") : t("businessDemo.analytics.realEmpty")}
+            </p>
+            {dakinisIsHospitalityBusiness(session.business?.type) ? (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => navigate(dakinisRestaurantTaskPath(session.business.type, "caja"))}
+              >
+                {t("businessDemo.sales.openCaja")}
+              </button>
+            ) : null}
+          </article>
         ) : null}
       </div>
     </section>

@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import CommandPalette, { useCommandPaletteShortcut } from "@dakinis/shared-ux/react/CommandPalette.jsx";
 import { resolveSearchHitPath } from "@dakinis/shared-ux/command-palette";
 import { useLocale } from "../../context/LocaleContext.jsx";
+import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
+import { DAKINIS_URL_HUB } from "../../config/product-urls.js";
 import { dakinisOpenEcosystemProduct } from "../../utils/ecosystemSso.js";
+import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
 import { useDakinisSession } from "../../context/SessionContext.jsx";
 import { dakinisFetchSearchHits } from "../../services/search.js";
 import {
@@ -48,16 +51,27 @@ export default function DakinisCommandPaletteProvider() {
       navigate(cmd.path);
       return;
     }
-    if (id === "open-hub") navigate("/hub");
-    else if (id === "open-core") navigate("/app/dashboard");
+    if (id === "open-hub" || id === "switch-product") {
+      window.location.assign(DAKINIS_URL_HUB);
+      return;
+    }
+    if (id === "open-core") navigate("/app/dashboard");
     else if (id === "open-lifeflow") dakinisOpenEcosystemProduct("lifeflow", { session, navigate });
     else if (id === "open-stream") dakinisOpenEcosystemProduct("streamautomator", { session, navigate });
     else if (id === "open-akoenet") dakinisOpenEcosystemProduct("akoenet", { session, navigate });
     else if (id === "create-customer") navigate("/app/crm");
-    else if (id === "create-invoice" || id === "create-order") navigate("/app/ventas");
+    else if (id === "create-invoice" || id === "create-order" || id === "open-kitchen") {
+      if (dakinisIsHospitalityBusiness(session?.business?.type)) {
+        navigate(
+          dakinisRestaurantTaskPath(
+            session.business.type,
+            id === "open-kitchen" ? "cocina" : "caja"
+          )
+        );
+      } else navigate("/app/ventas");
+    }
     else if (id === "ask-ai" || id === "ai-summary") navigate("/app/dashboard");
     else if (id === "toggle-theme") navigate("/app/settings");
-    else if (id === "switch-product") navigate("/hub");
     else if (id === "search") setOpen(true);
     else if (String(id || "").startsWith("rest-")) {
       const match = hospitalityCommands.find((c) => c.id === id);
