@@ -120,6 +120,8 @@ export default function RestaurantComandasPanels({ ctx }) {
         <RestaurantCajaTpvSummary
           dayClose={dayClose}
           businessId={apiSessionBusinessId}
+          apiSession={apiSession}
+          fetchOpts={fetchOpts}
           onJumpCierre={() => setComandasView("cierre")}
         />
       ) : null}

@@ -2,6 +2,7 @@ import http from "node:http";
 import "./src/load-env.js";
 import { dakinisAssertProductionJwtSecret } from "./src/api/jwt-config.js";
 import { dakinisAssertProductionMasterApiKey } from "./src/api/master-api-key.js";
+import { dakinisAssertProductionDemoPolicy } from "./src/api/demo-accounts.js";
 import { dakinisInitDb } from "./src/db/index.js";
 import { dakinisEnforceRateLimit } from "./src/api/security.js";
 import { dakinisStructuredLog } from "./src/api/structured-logger.js";
@@ -11,6 +12,7 @@ import { dakinisInitSentry, dakinisCaptureException } from "./src/lib/sentry.js"
 
 dakinisAssertProductionJwtSecret();
 dakinisAssertProductionMasterApiKey();
+dakinisAssertProductionDemoPolicy();
 
 const PORT = Number(process.env.PORT || 8787);
 const USE_FASTIFY = String(process.env.USE_FASTIFY || "").toLowerCase() === "true";

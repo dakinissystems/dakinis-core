@@ -268,6 +268,24 @@ function dakinisMigrateHospitalityTables(db) {
       FOREIGN KEY (business_id) REFERENCES business(id)
     );
     CREATE INDEX IF NOT EXISTS idx_fiscal_events_business ON tenant_fiscal_events(business_id, created_at);
+
+    CREATE TABLE IF NOT EXISTS tenant_restaurant_cash_day (
+      business_id TEXT NOT NULL,
+      date_key TEXT NOT NULL,
+      opening_float REAL,
+      expected_cash REAL,
+      counted_cash REAL,
+      difference REAL,
+      note TEXT NOT NULL DEFAULT '',
+      closed_at TEXT,
+      closed_by_user_id TEXT,
+      closed_by_email TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (business_id, date_key),
+      FOREIGN KEY (business_id) REFERENCES business(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_restaurant_cash_day_business
+      ON tenant_restaurant_cash_day(business_id, date_key);
   `);
 }
 

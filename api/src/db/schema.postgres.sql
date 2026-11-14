@@ -371,6 +371,25 @@ CREATE TABLE IF NOT EXISTS tenant_subscriptions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- B4: fondo y cierre de caja por día (compartido entre dispositivos)
+CREATE TABLE IF NOT EXISTS tenant_restaurant_cash_day (
+  business_id TEXT NOT NULL REFERENCES business(id),
+  date_key TEXT NOT NULL,
+  opening_float DOUBLE PRECISION,
+  expected_cash DOUBLE PRECISION,
+  counted_cash DOUBLE PRECISION,
+  difference DOUBLE PRECISION,
+  note TEXT NOT NULL DEFAULT '',
+  closed_at TIMESTAMPTZ,
+  closed_by_user_id TEXT,
+  closed_by_email TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (business_id, date_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_restaurant_cash_day_business
+  ON tenant_restaurant_cash_day(business_id, date_key);
+
 -- PostgREST lockdown (Supabase Advisor): Core API uses pooler, not anon key.
 -- Apply also via docs/supabase/migrations/056_dakinis_core_rls_deny_policies.sql
 DO $$

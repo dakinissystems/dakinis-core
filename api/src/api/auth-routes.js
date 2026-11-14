@@ -15,6 +15,7 @@ import {
   dakinisListOperatorTenantsForPlatformUser
 } from "./platform-user-bridge.js";
 import { dakinisPublishEvent } from "../lib/event-bus.js";
+import { dakinisIsDemoAccountEmail } from "./demo-accounts.js";
 
 function dakinisParseLoginBody(rawBody) {
   if (!rawBody) return {};
@@ -39,6 +40,11 @@ export async function dakinisHandleAuthLogin(rawBody) {
   const password = typeof body.password === "string" ? body.password : "";
   if (!email || !password) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "email y password son obligatorios");
+  }
+
+  // A6: cuentas demo / *.local no autentican en producción (misma respuesta que credenciales inválidas).
+  if (process.env.NODE_ENV === "production" && dakinisIsDemoAccountEmail(email)) {
+    return dakinisJsonError(401, "INVALID_CREDENTIALS", "Credenciales invalidas");
   }
 
   const user = await dakinisQueryOne("SELECT * FROM users WHERE lower(email) = lower(?)", [email]);

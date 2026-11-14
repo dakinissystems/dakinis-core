@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FerminaKitchenOrderTime from "./FerminaKitchenOrderTime.jsx";
 import RestaurantMesasPanel from "./RestaurantMesasPanel.jsx";
 import {
@@ -400,7 +400,9 @@ export function RestaurantComandasActivasView({
 }
 
 export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSession, fetchOpts }) {
-  const opening = typeof window !== "undefined" ? dakinisReadCashFloat(businessId) : null;
+  const [opening, setOpening] = useState(() =>
+    typeof window !== "undefined" ? dakinisReadCashFloat(businessId) : null
+  );
   const cashRow = Array.isArray(dayClose?.byPayment)
     ? dayClose.byPayment.find((r) => r.id === "efectivo")
     : null;
@@ -411,6 +413,26 @@ export function RestaurantComandasCierrePanel({ t, dayClose, businessId, apiSess
   const [busy, setBusy] = useState(false);
   const [closeError, setCloseError] = useState("");
   const [snapshot, setSnapshot] = useState(() => dakinisReadCashClose(businessId));
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCashDay() {
+      if (!apiSession?.token) return;
+      try {
+        const { dakinisFetchCashDay } = await import("../utils/restaurantCashFloat.js");
+        const day = await dakinisFetchCashDay(apiSession, businessId);
+        if (cancelled) return;
+        setOpening(day.openingFloat);
+        if (day.close) setSnapshot(day.close);
+      } catch {
+        /* local cache */
+      }
+    }
+    loadCashDay();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiSession, businessId]);
   const countedNumber = Number(String(counted).replace(",", "."));
   const difference =
     expectedCash != null && Number.isFinite(countedNumber) ? Math.round((countedNumber - expectedCash) * 100) / 100 : null;

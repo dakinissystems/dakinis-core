@@ -38,7 +38,9 @@ import {
   dakinisHandleRestaurantStockMovePost,
   dakinisHandleRestaurantStockPurchasePost,
   dakinisHandleRestaurantStockScanPost,
-  dakinisHandleRestaurantCashClosePost
+  dakinisHandleRestaurantCashClosePost,
+  dakinisHandleRestaurantCashDayGet,
+  dakinisHandleRestaurantCashDayPut
 } from "./api/tenant-restaurant.js";
 import {
   dakinisHandleRestaurantInvoicesList,
@@ -262,6 +264,10 @@ export async function dakinisDispatch(req, rawBody, url) {
     return dakinisHandleRestaurantStockScanPost(req, rawBody);
   if (path === "/api/tenant/restaurant/cash-close" && req.method === "POST")
     return dakinisHandleRestaurantCashClosePost(req, rawBody);
+  if (path === "/api/tenant/restaurant/cash-day" && req.method === "GET")
+    return dakinisHandleRestaurantCashDayGet(req, url);
+  if (path === "/api/tenant/restaurant/cash-day" && req.method === "PUT")
+    return dakinisHandleRestaurantCashDayPut(req, rawBody);
   if (path === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
     return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
   if (path === "/api/tenant/restaurant/production/simulate" && req.method === "POST")
@@ -303,6 +309,10 @@ export async function dakinisDispatch(req, rawBody, url) {
       return dakinisHandleRestaurantStockScanPost(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/cash-close" && req.method === "POST")
       return dakinisHandleRestaurantCashClosePost(req, rawBody);
+    if (hospPath === "/api/tenant/restaurant/cash-day" && req.method === "GET")
+      return dakinisHandleRestaurantCashDayGet(req, url);
+    if (hospPath === "/api/tenant/restaurant/cash-day" && req.method === "PUT")
+      return dakinisHandleRestaurantCashDayPut(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/stock/purchase" && req.method === "POST")
       return dakinisHandleRestaurantStockPurchasePost(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/production/simulate" && req.method === "POST")

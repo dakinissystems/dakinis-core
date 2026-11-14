@@ -2,25 +2,47 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "../context/LocaleContext.jsx";
 import {
   dakinisCashFloatDateKey,
+  dakinisFetchCashDay,
   dakinisReadCashFloat,
+  dakinisSaveCashFloatRemote,
   dakinisWriteCashFloat
 } from "../utils/restaurantCashFloat.js";
 
 /**
  * Resumen TPV encima de cierre/facturas + dinero inicio de día.
+ * B4: el fondo se guarda en servidor cuando hay sesión API.
  */
-export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, businessId }) {
+export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, businessId, apiSession, fetchOpts }) {
   const { t } = useLocale();
   const dateKey = dakinisCashFloatDateKey();
   const [openingInput, setOpeningInput] = useState("");
   const [openingSaved, setOpeningSaved] = useState(null);
   const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const saved = dakinisReadCashFloat(businessId, dateKey);
-    setOpeningSaved(saved);
-    setOpeningInput(saved != null ? String(saved) : "");
-  }, [businessId, dateKey]);
+    let cancelled = false;
+    async function load() {
+      const local = dakinisReadCashFloat(businessId, dateKey);
+      if (!cancelled) {
+        setOpeningSaved(local);
+        setOpeningInput(local != null ? String(local) : "");
+      }
+      if (!apiSession?.token) return;
+      try {
+        const day = await dakinisFetchCashDay(apiSession, businessId, dateKey);
+        if (cancelled) return;
+        setOpeningSaved(day.openingFloat);
+        setOpeningInput(day.openingFloat != null ? String(day.openingFloat) : "");
+      } catch {
+        /* conservar caché local si el servidor falla */
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [businessId, dateKey, apiSession]);
 
   const byPayment = Array.isArray(dayClose?.byPayment) ? dayClose.byPayment : [];
   const total = dayClose?.grandTotal ?? dayClose?.cashTotal ?? dayClose?.total ?? null;
@@ -34,19 +56,27 @@ export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, busin
   const expectedCash =
     openingSaved != null ? Math.round((openingSaved + cashSales) * 100) / 100 : null;
 
-  function saveOpening() {
+  async function saveOpening() {
     setNotice("");
+    if (String(openingInput).trim() === "") {
+      setNotice("Escribe el importe del fondo. Un campo vacío no es 0 €.");
+      return;
+    }
+    setSaving(true);
     try {
-      if (String(openingInput).trim() === "") {
-        setNotice("Escribe el importe del fondo. Un campo vacío no es 0 €.");
-        return;
+      let n;
+      if (apiSession?.token) {
+        n = await dakinisSaveCashFloatRemote(apiSession, businessId, openingInput, dateKey);
+      } else {
+        n = dakinisWriteCashFloat(businessId, openingInput, dateKey);
       }
-      const n = dakinisWriteCashFloat(businessId, openingInput, dateKey);
       setOpeningSaved(n);
       setOpeningInput(String(n));
       setNotice(t("restaurant.cajaOpeningSaved", "Fondo de caja guardado"));
     } catch (e) {
       setNotice(e instanceof Error ? e.message : t("restaurant.cajaOpeningError", "No se pudo guardar"));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -106,7 +136,12 @@ export default function RestaurantCajaTpvSummary({ dayClose, onJumpCierre, busin
             placeholder="Importe del fondo"
           />
         </label>
-        <button type="button" className="btn" onClick={saveOpening} disabled={String(openingInput).trim() === ""}>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => void saveOpening()}
+          disabled={saving || String(openingInput).trim() === ""}
+        >
           {t("restaurant.cajaOpeningSave", "Guardar fondo")}
         </button>
       </div>

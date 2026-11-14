@@ -916,6 +916,125 @@ export async function dakinisHandlePublicRestaurantAllergiesGet(token) {
   );
 }
 
+let cashDaySchemaReady = false;
+
+async function dakinisEnsureRestaurantCashDaySchema() {
+  if (cashDaySchemaReady) return;
+  try {
+    await dakinisRun(`
+      CREATE TABLE IF NOT EXISTS tenant_restaurant_cash_day (
+        business_id TEXT NOT NULL,
+        date_key TEXT NOT NULL,
+        opening_float DOUBLE PRECISION,
+        expected_cash DOUBLE PRECISION,
+        counted_cash DOUBLE PRECISION,
+        difference DOUBLE PRECISION,
+        note TEXT NOT NULL DEFAULT '',
+        closed_at TEXT,
+        closed_by_user_id TEXT,
+        closed_by_email TEXT,
+        updated_at TEXT,
+        PRIMARY KEY (business_id, date_key)
+      )
+    `);
+  } catch (e) {
+    if (!dakinisIsMissingRelation(e) && !/already exists/i.test(String(e?.message || e))) {
+      // SQLite/Postgres pueden diferir en tipos; si la tabla ya existe, seguir.
+      if (!/syntax|type/i.test(String(e?.message || e))) throw e;
+    }
+  }
+  cashDaySchemaReady = true;
+}
+
+function dakinisCashDayFromRow(row) {
+  if (!row) return null;
+  const opening =
+    row.opening_float == null || row.opening_float === ""
+      ? null
+      : Number(row.opening_float);
+  const close =
+    row.closed_at
+      ? {
+          dateKey: row.date_key,
+          expectedCash: Number(row.expected_cash),
+          countedCash: Number(row.counted_cash),
+          difference: Number(row.difference),
+          note: row.note || "",
+          closedAt: row.closed_at,
+          actorEmail: row.closed_by_email || null,
+          actorUserId: row.closed_by_user_id || null
+        }
+      : null;
+  return {
+    dateKey: row.date_key,
+    openingFloat: Number.isFinite(opening) ? opening : null,
+    close
+  };
+}
+
+/** GET /api/tenant/restaurant/cash-day?dateKey=YYYY-MM-DD — fondo y cierre del día (B4). */
+export async function dakinisHandleRestaurantCashDayGet(req, url) {
+  const blocked = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (blocked) return blocked;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  await dakinisEnsureRestaurantCashDaySchema();
+  const dateKey =
+    String(url?.searchParams?.get("dateKey") || new Date().toISOString().slice(0, 10)).trim() ||
+    new Date().toISOString().slice(0, 10);
+  const row = await dakinisQueryOne(
+    `SELECT * FROM tenant_restaurant_cash_day WHERE business_id = ? AND date_key = ?`,
+    [req.dakinisBusiness.id, dateKey]
+  );
+  return dakinisJsonSuccess(
+    { day: dakinisCashDayFromRow(row) || { dateKey, openingFloat: null, close: null } },
+    req.dakinisBusiness.type,
+    { businessId: req.dakinisBusiness.id }
+  );
+}
+
+/** PUT /api/tenant/restaurant/cash-day — guarda el fondo inicial del día (servidor, multi-dispositivo). */
+export async function dakinisHandleRestaurantCashDayPut(req, rawBody) {
+  const blocked = dakinisRestaurantOnly(req.dakinisBusiness);
+  if (blocked) return blocked;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  await dakinisEnsureRestaurantCashDaySchema();
+
+  const dateKey = String(body.dateKey || new Date().toISOString().slice(0, 10)).trim();
+  const openingRaw = body.openingFloat ?? body.opening_float;
+  if (openingRaw === "" || openingRaw == null) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "Escribe el importe del fondo. Un campo vacío no es 0 €.");
+  }
+  const openingFloat = Number(openingRaw);
+  if (!Number.isFinite(openingFloat) || openingFloat < 0) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "El fondo tiene que ser un importe válido.");
+  }
+  const rounded = Math.round(openingFloat * 100) / 100;
+  const now = new Date().toISOString();
+
+  await dakinisRun(
+    `INSERT INTO tenant_restaurant_cash_day (business_id, date_key, opening_float, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT (business_id, date_key) DO UPDATE SET
+       opening_float = excluded.opening_float,
+       updated_at = excluded.updated_at`,
+    [req.dakinisBusiness.id, dateKey, rounded, now]
+  );
+
+  const row = await dakinisQueryOne(
+    `SELECT * FROM tenant_restaurant_cash_day WHERE business_id = ? AND date_key = ?`,
+    [req.dakinisBusiness.id, dateKey]
+  );
+  return dakinisJsonSuccess(
+    { day: dakinisCashDayFromRow(row) },
+    req.dakinisBusiness.type,
+    { businessId: req.dakinisBusiness.id }
+  );
+}
+
 export async function dakinisHandleRestaurantCashClosePost(req, rawBody) {
   const blocked = dakinisRestaurantOnly(req.dakinisBusiness);
   if (blocked) return blocked;
@@ -952,6 +1071,34 @@ export async function dakinisHandleRestaurantCashClosePost(req, rawBody) {
     actorEmail,
     closedAt
   });
+
+  await dakinisEnsureRestaurantCashDaySchema();
+  await dakinisRun(
+    `INSERT INTO tenant_restaurant_cash_day
+      (business_id, date_key, expected_cash, counted_cash, difference, note, closed_at, closed_by_user_id, closed_by_email, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (business_id, date_key) DO UPDATE SET
+       expected_cash = excluded.expected_cash,
+       counted_cash = excluded.counted_cash,
+       difference = excluded.difference,
+       note = excluded.note,
+       closed_at = excluded.closed_at,
+       closed_by_user_id = excluded.closed_by_user_id,
+       closed_by_email = excluded.closed_by_email,
+       updated_at = excluded.updated_at`,
+    [
+      req.dakinisBusiness.id,
+      dateKey,
+      expected,
+      counted,
+      difference,
+      note,
+      closedAt,
+      actorUserId,
+      actorEmail,
+      closedAt
+    ]
+  );
 
   return dakinisJsonSuccess(
     {
