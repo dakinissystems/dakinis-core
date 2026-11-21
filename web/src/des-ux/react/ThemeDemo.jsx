@@ -3,11 +3,9 @@
  * Ruta: /__des/theme (solo DEV).
  */
 import { useState } from "react";
-import { DES_HIGH_CONTRAST_QA } from "@dakinis/shared-theme/theme-engine";
-import { DAKINIS_THEMES } from "@dakinis/shared-theme/themes";
-import ColorModeControl from "./ColorModeControl.jsx";
-import Card from "./Card.jsx";
-import Badge from "./Badge.jsx";
+import { DES_HIGH_CONTRAST_QA } from "@dakinissystems/shared-brand/theme-engine";
+import { DAKINIS_THEMES } from "@dakinissystems/shared-brand/themes";
+import { Card, Badge, ColorModeControl } from "@dakinissystems/shared-ux";
 import Button from "@dakinis/shared-ux/react/Button.jsx";
 import Input from "@dakinis/shared-ux/react/Input.jsx";
 

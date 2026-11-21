@@ -1,8 +1,8 @@
 ﻿# packages/ (core)
 
-Local-only DES leftovers until published:
+Local-only leftover:
 
-- `shared-foundation`
-- `shared-theme` (`bootstrapDesAppearance`)
+- `shared-foundation` — elevation/motion tokens used by DEV `web/src/des-ux` demos
 
-Published `@dakinissystems/shared-ux` omits Card/Badge/demos — those live in `web/src/des-ux` until a package bump.
+Theme engine: `@dakinissystems/shared-brand/theme-engine`  
+Card / Badge / ColorModeControl: `@dakinissystems/shared-ux@0.2.1`

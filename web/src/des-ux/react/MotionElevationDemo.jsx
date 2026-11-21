@@ -9,8 +9,7 @@ import {
   DAKINIS_ELEVATION_USAGE,
 } from "@dakinis/shared-foundation/elevation";
 import Button from "@dakinis/shared-ux/react/Button.jsx";
-import Card from "./Card.jsx";
-import Badge from "./Badge.jsx";
+import { Card, Badge } from "@dakinissystems/shared-ux";
 
 const MOTION_ROWS = Object.entries(DAKINIS_MOTION_USAGE).map(([key, use]) => ({
   key,

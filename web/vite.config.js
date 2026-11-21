@@ -25,9 +25,8 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom"],
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
-        // Registry via node_modules — foundation/theme stay local (not published).
+        // foundation stays local (elevation demo tokens); theme-engine lives in shared-brand.
         "@dakinis/shared-foundation": path.resolve(__dirname, "../packages/shared-foundation/src"),
-        "@dakinis/shared-theme": path.resolve(__dirname, "../packages/shared-theme/src"),
         "@dakinis/shared-layouts": pkgSrc("shared-layouts"),
         "@dakinis/shared-ux": pkgSrc("shared-ux"),
         "@dakinis/shared-loading": pkgSrc("shared-loading"),

@@ -6,7 +6,7 @@ import { DakinisSessionProvider } from "./context/SessionContext.jsx";
 import { LocaleProvider } from "./context/LocaleContext.jsx";
 import { dakinisInitSentryBrowser, Sentry } from "./lib/sentry.js";
 import { dakinisInitAnalytics } from "@dakinissystems/shared-brand/analytics";
-import { bootstrapDesAppearance } from "@dakinis/shared-theme";
+import { bootstrapDesAppearance } from "@dakinissystems/shared-brand/theme-engine";
 import { dakinisApplyVisualDensity } from "./utils/visualDensity.js";
 import "@dakinissystems/shared-brand/tokens.css";
 import "../styles.css";
