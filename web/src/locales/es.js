@@ -608,6 +608,7 @@ export default {
     includesTitle: "Qué incluye",
     planCta: "Quiero este plan",
     stripeCta: "Suscríbete",
+    stripeCtaSecondary: "Suscribirme online",
     stripeLoading: "Redirigiendo a Stripe…",
     stripeError: "No se pudo abrir el pago. Inténtalo de nuevo o escríbenos por WhatsApp.",
     planCtaWhatsapp: "Prefiero hablar por WhatsApp",

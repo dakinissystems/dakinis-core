@@ -607,6 +607,7 @@ export default {
     includesTitle: "What's included",
     planCta: "I want this plan",
     stripeCta: "Subscribe",
+    stripeCtaSecondary: "Subscribe online",
     stripeLoading: "Redirecting to Stripe…",
     stripeError: "Could not open checkout. Try again or message us on WhatsApp.",
     planCtaWhatsapp: "I'd rather talk on WhatsApp",
