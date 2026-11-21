@@ -5,10 +5,10 @@ import AppErrorFallback from "./components/AppErrorFallback.jsx";
 import { DakinisSessionProvider } from "./context/SessionContext.jsx";
 import { LocaleProvider } from "./context/LocaleContext.jsx";
 import { dakinisInitSentryBrowser, Sentry } from "./lib/sentry.js";
-import { dakinisInitAnalytics } from "@dakinis/shared-brand/analytics";
+import { dakinisInitAnalytics } from "@dakinissystems/shared-brand/analytics";
 import { bootstrapDesAppearance } from "@dakinis/shared-theme";
 import { dakinisApplyVisualDensity } from "./utils/visualDensity.js";
-import "@dakinis/shared-brand/tokens.css";
+import "@dakinissystems/shared-brand/tokens.css";
 import "../styles.css";
 
 const coreTheme = bootstrapDesAppearance({

@@ -25,7 +25,7 @@ export async function dakinisStartBullMqEventsConsumer() {
   started = true;
 
   try {
-    const { createPlatformWorker } = await import("@dakinis/shared-ai/bullmq-bus");
+    const { createPlatformWorker } = await import("@dakinissystems/shared-ai/bullmq-bus");
     worker = await createPlatformWorker("default", async (event) => {
       const type = event?.event || event?.type;
       if (!type) return;

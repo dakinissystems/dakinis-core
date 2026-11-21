@@ -6,16 +6,16 @@ import {
   dakinisHubModuleToTile,
   dakinisSortHubModuleTiles,
   DAKINIS_ONE_MODULE_TILES
-} from "@dakinis/shared-brand";
+} from "@dakinissystems/shared-brand";
 import { dakinisNormalizeCommercialPlan, dakinisPlanHasModule } from "@dakinis/shared/catalog/plan-modules.js";
 import { dakinisGetSystemRegistry } from "@dakinis/shared/catalog/system-registry.js";
 import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { dakinisRestaurantTaskPath } from "../utils/restaurantTaskStorage.js";
-import { dakinisPersistEcosystemSession } from "@dakinis/shared-brand/sso";
+import { dakinisPersistEcosystemSession } from "@dakinissystems/shared-brand/sso";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { company } from "@dakinis/shared-brand";
+import { company } from "@dakinissystems/shared-brand";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { dakinisOpenEcosystemProduct } from "../utils/ecosystemSso.js";
 import HubDashboard from "../components/HubDashboard.jsx";

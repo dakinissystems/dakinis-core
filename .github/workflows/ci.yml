@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  install-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://npm.pkg.github.com
+          scope: "@dakinissystems"
+      - name: Ensure npm with edgesOut fix
+        run: npm install -g npm@11.6.2
+      - name: Install from GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN != '' && secrets.NODE_AUTH_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> "$NPM_CONFIG_USERCONFIG"
+          npm install --no-audit --no-fund || install_rc=$?
+          if [ "${install_rc:-0}" -ne 0 ]; then
+            echo "::error::npm install failed."
+            echo "Set repo secret NODE_AUTH_TOKEN (PAT read:packages) or grant Actions Read on shared-brand + shared-ai."
+            exit "${install_rc}"
+          fi
+      - name: API unit tests
+        run: npm test -w @dakinis/api
+      - name: Web production build
+        run: npm run build -w @dakinis/web

@@ -3,7 +3,7 @@ import {
   dakinisNeedsEcosystemLaunchBridge,
   dakinisPersistEcosystemSession,
   dakinisProductRequiresIdpExchange
-} from "@dakinis/shared-brand/sso";
+} from "@dakinissystems/shared-brand/sso";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "./analytics.js";
 
 /**

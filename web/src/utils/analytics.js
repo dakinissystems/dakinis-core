@@ -1,1 +1,1 @@
-export { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "@dakinis/shared-brand/analytics";
+export { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "@dakinissystems/shared-brand/analytics";

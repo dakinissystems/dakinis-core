@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { dakinisGetProduct } from "@dakinis/shared-brand";
-import { dakinisBuildProductLaunchUrl } from "@dakinis/shared-brand/sso";
+import { dakinisGetProduct } from "@dakinissystems/shared-brand";
+import { dakinisBuildProductLaunchUrl } from "@dakinissystems/shared-brand/sso";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";

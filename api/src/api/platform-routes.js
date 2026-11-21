@@ -45,9 +45,19 @@ async function dakinisReadJsonFile(filePath) {
 }
 
 async function dakinisDefaultCatalogPayload() {
-  const brandRoot = path.join(__platformRoutesDir, "../../packages/shared-brand/src");
-  const products = (await dakinisReadJsonFile(path.join(brandRoot, "products.json"))) || [];
-  const hubModules = (await dakinisReadJsonFile(path.join(brandRoot, "hub-modules.json"))) || [];
+  // Prefer published package; fall back to vendored copy still used by DES layouts/ux.
+  let productsPath;
+  let hubModulesPath;
+  try {
+    productsPath = fileURLToPath(import.meta.resolve("@dakinissystems/shared-brand/products.json"));
+    hubModulesPath = fileURLToPath(import.meta.resolve("@dakinissystems/shared-brand/hub-modules.json"));
+  } catch {
+    const brandRoot = path.join(__platformRoutesDir, "../../packages/shared-brand/src");
+    productsPath = path.join(brandRoot, "products.json");
+    hubModulesPath = path.join(brandRoot, "hub-modules.json");
+  }
+  const products = (await dakinisReadJsonFile(productsPath)) || [];
+  const hubModules = (await dakinisReadJsonFile(hubModulesPath)) || [];
   return {
     products,
     hubModules,

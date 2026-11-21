@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom"],
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
-        "@dakinis/shared-brand": path.resolve(__dirname, "../packages/shared-brand/src"),
+        // shared-brand: from GitHub Packages (@dakinissystems/shared-brand) — no local alias
         "@dakinis/shared-foundation": path.resolve(__dirname, "../packages/shared-foundation/src"),
         "@dakinis/shared-theme": path.resolve(__dirname, "../packages/shared-theme/src"),
         "@dakinis/shared-layouts": path.resolve(__dirname, "../packages/shared-layouts/src"),
