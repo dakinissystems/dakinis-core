@@ -141,6 +141,8 @@ async function start() {
     dakinisStartBillingRedisConsumer();
   }
   const driver = await dakinisInitDb();
+  const { dakinisStartDomainOutboxDrainer } = await import("./src/lib/domain-outbox.js");
+  dakinisStartDomainOutboxDrainer();
 
   if (USE_FASTIFY) {
     const { dakinisCreateFastifyServer } = await import("./src/http/fastify-server.js");

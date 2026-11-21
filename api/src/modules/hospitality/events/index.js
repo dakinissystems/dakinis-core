@@ -1,5 +1,11 @@
 /** Eventos de dominio hospitality — paquete propio (ADR-014). */
 
+import {
+  dakinisNewOutboxEventId,
+  dakinisOutboxEnqueue,
+  dakinisOutboxShouldPersist
+} from "../../../lib/domain-outbox.js";
+
 export const DAKINIS_HOSPITALITY_EVENTS = Object.freeze({
   OrderImported: "OrderImported",
   OrderValidated: "OrderValidated",
@@ -36,11 +42,33 @@ export function dakinisHospitalityOn(eventName, handler) {
 
 export function dakinisHospitalityEmit(eventName, payload = {}) {
   const key = String(eventName);
+  const eventId =
+    typeof payload.eventId === "string" && payload.eventId
+      ? payload.eventId
+      : dakinisNewOutboxEventId("hevt");
+  const envelope = { event: key, at: new Date().toISOString(), eventId, ...payload };
+
+  // B3: durable outbox for sale/stock domain events (best-effort; never blocks emit).
+  if (dakinisOutboxShouldPersist(key)) {
+    const businessId = payload.businessId || "";
+    const stableId =
+      payload.eventId ||
+      (payload.referenceId ? `${key}:${payload.referenceId}:${payload.stockId || payload.orderId || ""}` : eventId);
+    dakinisOutboxEnqueue({
+      businessId,
+      eventType: key,
+      eventId: String(stableId),
+      payload: envelope
+    }).catch((err) => {
+      console.warn(`[hospitality:outbox] ${key}`, err instanceof Error ? err.message : err);
+    });
+  }
+
   const set = listeners.get(key);
   if (!set || !set.size) return;
   for (const handler of set) {
     try {
-      handler({ event: key, at: new Date().toISOString(), ...payload });
+      handler(envelope);
     } catch (err) {
       console.warn(`[hospitality:event] ${key} listener error`, err?.message || err);
     }

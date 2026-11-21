@@ -176,13 +176,15 @@ export async function dakinisOrdersPatch(businessId, orderId, body) {
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, {
         businessId,
         orderId,
-        total: next.total
+        total: next.total,
+        eventId: `OrderPaid:${orderId}`
       });
     } else if (body.paid === true) {
       dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderPaid, {
         businessId,
         orderId,
-        total: next.total
+        total: next.total,
+        eventId: `OrderPaid:${orderId}`
       });
     }
     if (body.status === "cancelada") {
