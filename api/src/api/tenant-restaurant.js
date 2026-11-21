@@ -243,6 +243,10 @@ async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId
         delta,
         reason,
         referenceId: referenceId ?? null,
+        // B3: stable id so outbox + consumers do not double-apply on retry
+        eventId: referenceId
+          ? `StockReduced:${referenceId}:${row.id}`
+          : `StockReduced:${row.id}:${delta}:${Date.now()}`,
         lowStock: Number(row.quantity) <= Number(row.min_quantity)
       });
     }
