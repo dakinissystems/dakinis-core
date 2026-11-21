@@ -9,7 +9,7 @@ COPY package.json .npmrc ./
 COPY shared ./shared
 COPY api ./api
 COPY web ./web
-# Remaining DES vendored copies (layouts/ux still import relative shared-brand).
+# Local-only DES leftovers (foundation + theme — not published as @dakinissystems/*).
 COPY packages ./packages
 
 ARG NODE_AUTH_TOKEN

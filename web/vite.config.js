@@ -1,9 +1,19 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(__dirname, "..");
+
+function pkgSrc(name) {
+  const fromNm = path.join(root, "node_modules", "@dakinissystems", name, "src");
+  if (fs.existsSync(fromNm)) return fromNm;
+  const local = path.join(root, "packages", name, "src");
+  if (fs.existsSync(local)) return local;
+  throw new Error(`Missing package ${name} — npm install @dakinissystems/${name}`);
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
@@ -15,14 +25,14 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom"],
       alias: {
         "@dakinis/shared": path.resolve(__dirname, "../shared"),
-        // shared-brand: from GitHub Packages (@dakinissystems/shared-brand) — no local alias
+        // Registry via node_modules — foundation/theme stay local (not published).
         "@dakinis/shared-foundation": path.resolve(__dirname, "../packages/shared-foundation/src"),
         "@dakinis/shared-theme": path.resolve(__dirname, "../packages/shared-theme/src"),
-        "@dakinis/shared-layouts": path.resolve(__dirname, "../packages/shared-layouts/src"),
-        "@dakinis/shared-ux": path.resolve(__dirname, "../packages/shared-ux/src"),
-        "@dakinis/shared-loading": path.resolve(__dirname, "../packages/shared-loading/src"),
-        "@dakinis/shared-illustrations": path.resolve(__dirname, "../packages/shared-illustrations/src"),
-        "@dakinis/shared-icons": path.resolve(__dirname, "../packages/shared-icons/src"),
+        "@dakinis/shared-layouts": pkgSrc("shared-layouts"),
+        "@dakinis/shared-ux": pkgSrc("shared-ux"),
+        "@dakinis/shared-loading": pkgSrc("shared-loading"),
+        "@dakinis/shared-illustrations": pkgSrc("shared-illustrations"),
+        "@dakinis/shared-icons": pkgSrc("shared-icons"),
         "@modules": path.resolve(__dirname, "src/modules"),
         react: path.resolve(__dirname, "../node_modules/react"),
         "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
