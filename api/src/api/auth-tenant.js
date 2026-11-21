@@ -68,7 +68,8 @@ export function dakinisAuthenticateTenant(req, business) {
         method: "jwt",
         userId: typeof payload.sub === "string" ? payload.sub : "",
         role: typeof payload.role === "string" ? payload.role : "member",
-        email: typeof payload.email === "string" ? payload.email : ""
+        email: typeof payload.email === "string" ? payload.email : "",
+        permissions: Array.isArray(payload.permissions) ? payload.permissions : []
       };
     } catch {
       return dakinisJsonError(401, "INVALID_TOKEN", "JWT invalido o expirado", {});
