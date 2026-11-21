@@ -13,7 +13,7 @@
   "dependencies": {
     "@dakinis/shared": "*",
     "@dakinissystems/shared-ai": "0.1.0",
-    "@dakinissystems/shared-brand": "1.0.1",
+    "@dakinissystems/shared-brand": "1.0.2",
     "@sentry/node": "^9.30.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
