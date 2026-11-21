@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Card, Badge } from "@dakinis/shared-ux";
+import { Card, Badge } from "../des-ux";
 
 /** Solo DEV — índice de demos DES. */
 export default function DesIndexPage() {

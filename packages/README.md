@@ -5,4 +5,4 @@ Local-only DES leftovers until published:
 - `shared-foundation`
 - `shared-theme` (`bootstrapDesAppearance`)
 
-Everything else: `@dakinissystems/*` from GitHub Packages (`NODE_AUTH_TOKEN`).
+Published `@dakinissystems/shared-ux` omits Card/Badge/demos — those live in `web/src/des-ux` until a package bump.
