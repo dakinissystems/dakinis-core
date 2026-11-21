@@ -69,6 +69,7 @@ import { dakinisHandleMessagesRoute } from "./modules/messages/routes.js";
 import { dakinisHandleAppointmentsRoute } from "./modules/appointments/routes.js";
 import { dakinisHandleWhatsappRoute } from "./modules/whatsapp/routes.js";
 import { dakinisHandleFiscalRoute } from "./modules/fiscal/index.js";
+import { dakinisHandlePayrollRoute } from "./modules/payroll/index.js";
 import {
   dakinisHandleWhatsappWebhook,
   dakinisIsWhatsappWebhookPath
@@ -339,6 +340,9 @@ export async function dakinisDispatch(req, rawBody, url) {
 
   const fiscalResult = await dakinisHandleFiscalRoute(req, rawBody, path, url);
   if (fiscalResult) return fiscalResult;
+
+  const payrollResult = await dakinisHandlePayrollRoute(req, rawBody, path, url);
+  if (payrollResult) return payrollResult;
 
   const moduleResult =
     dakinisHandleUsersRoute(req, rawBody, path) ||
