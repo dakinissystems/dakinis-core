@@ -5,8 +5,7 @@
 import { useState } from "react";
 import { UX_PATTERNS } from "../patterns.js";
 import Button from "@dakinis/shared-ux/react/Button.jsx";
-import Badge from "./Badge.jsx";
-import Card from "./Card.jsx";
+import { Badge, Card } from "@dakinissystems/shared-ux";
 import { DashboardCard } from "@dakinis/shared-ux/DashboardCard.jsx";
 import DashboardPattern from "./DashboardPattern.jsx";
 import ChatPattern from "./ChatPattern.jsx";

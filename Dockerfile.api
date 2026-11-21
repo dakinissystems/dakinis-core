@@ -9,7 +9,7 @@ COPY package.json .npmrc ./
 COPY shared ./shared
 COPY api ./api
 COPY web ./web
-# Local-only DES leftovers (foundation + theme — not published as @dakinissystems/*).
+# Local-only: shared-foundation (elevation demo tokens — not a published package).
 COPY packages ./packages
 
 ARG NODE_AUTH_TOKEN
