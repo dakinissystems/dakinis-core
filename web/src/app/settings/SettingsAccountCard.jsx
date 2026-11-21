@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ColorModeControl } from "@dakinis/shared-ux";
+import { ColorModeControl } from "../../des-ux";
 import { dakinisApplyVisualDensity, dakinisReadVisualDensity } from "../../utils/visualDensity.js";
 
 export default function SettingsAccountCard({ t, session }) {

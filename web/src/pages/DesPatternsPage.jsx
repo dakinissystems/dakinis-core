@@ -1,4 +1,4 @@
-import { PatternsDemo } from "@dakinis/shared-ux";
+import { PatternsDemo } from "../des-ux";
 
 /** Solo DEV — patrones DES B4. */
 export default function DesPatternsPage() {

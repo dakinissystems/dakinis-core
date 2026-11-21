@@ -1,4 +1,4 @@
-import { ThemeDemo } from "@dakinis/shared-ux";
+import { ThemeDemo } from "../des-ux";
 
 /** Solo DEV — temas + HC QA (DES v1.1). */
 export default function DesThemePage() {

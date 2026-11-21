@@ -1,4 +1,4 @@
-import { MotionElevationDemo } from "@dakinis/shared-ux";
+import { MotionElevationDemo } from "../des-ux";
 
 /** Solo DEV — referencia visual DES B3. */
 export default function DesMotionPage() {

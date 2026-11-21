@@ -12,7 +12,7 @@ import {
   setIdpRefreshToken
 } from "../services/idp-auth.js";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
-import { Button } from "@dakinis/shared-ux";
+import Button from "@dakinis/shared-ux/react/Button.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 
 function dakinisSafeAppPath(raw) {

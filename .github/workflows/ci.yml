@@ -33,7 +33,7 @@ jobs:
           npm install --no-audit --no-fund || install_rc=$?
           if [ "${install_rc:-0}" -ne 0 ]; then
             echo "::error::npm install failed."
-            echo "Set repo secret NODE_AUTH_TOKEN (PAT read:packages) or grant Actions Read on shared-brand + shared-ai."
+            echo "Set repo secret NODE_AUTH_TOKEN (PAT read:packages) or grant Actions Read on shared-* DES packages."
             exit "${install_rc}"
           fi
       - name: API unit tests
