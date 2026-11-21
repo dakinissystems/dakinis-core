@@ -30,12 +30,17 @@ import {
 } from "../services/stripe-checkout.js";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 
-function PlanStripeSubscribeButton({ plan, t, locale, stripePlans, session }) {
+/**
+ * B5: only the featured plan (Growth) shows the primary Stripe CTA.
+ * Starter/Pro keep a quieter checkout path so sales are not blocked.
+ */
+function PlanStripeSubscribeButton({ plan, t, locale, stripePlans, session, primaryCheckout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const planConfig = stripePlans?.plans?.[plan.key];
   const canStripe = Boolean(stripePlans?.configured && planConfig?.checkoutAvailable);
+  const isPrimary = Boolean(primaryCheckout);
 
   async function handleSubscribe() {
     if (!canStripe || loading) return;
@@ -68,21 +73,48 @@ function PlanStripeSubscribeButton({ plan, t, locale, stripePlans, session }) {
     }
   }
 
+  const whatsappHref = dakinisPlanWhatsappUrl({
+    locale,
+    t,
+    plan: { name: plan.name, priceEur: plan.priceEur }
+  });
+
   if (!canStripe) {
     return (
       <a
-        href={dakinisPlanWhatsappUrl({
-          locale,
-          t,
-          plan: { name: plan.name, priceEur: plan.priceEur }
-        })}
+        href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="btn btn-outline pricing-plan-card__cta"
+        className={`btn pricing-plan-card__cta${isPrimary ? " btn-primary" : " btn-outline"}`}
         onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
       >
         {t("pricing.planCta")}
       </a>
+    );
+  }
+
+  if (!isPrimary) {
+    return (
+      <div className="pricing-plan-card__checkout">
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-outline pricing-plan-card__cta"
+          onClick={() => dakinisPersistSelectedPlan({ key: plan.key, priceEur: plan.priceEur })}
+        >
+          {t("pricing.planCta")}
+        </a>
+        <button
+          type="button"
+          className="pricing-plan-card__whatsapp-alt"
+          onClick={handleSubscribe}
+          disabled={loading}
+        >
+          {loading ? t("pricing.stripeLoading") : t("pricing.stripeCtaSecondary")}
+        </button>
+        {error ? <p className="pricing-plan-card__checkout-error">{error}</p> : null}
+      </div>
     );
   }
 
@@ -98,11 +130,7 @@ function PlanStripeSubscribeButton({ plan, t, locale, stripePlans, session }) {
       </button>
       {error ? <p className="pricing-plan-card__checkout-error">{error}</p> : null}
       <a
-        href={dakinisPlanWhatsappUrl({
-          locale,
-          t,
-          plan: { name: plan.name, priceEur: plan.priceEur }
-        })}
+        href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
         className="pricing-plan-card__whatsapp-alt"
@@ -330,6 +358,7 @@ export default function PricingHybridSection({
                 locale={locale}
                 stripePlans={stripePlans}
                 session={session}
+                primaryCheckout={Boolean(plan.featured)}
               />
             </article>
           ))}
