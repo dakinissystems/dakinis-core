@@ -11,6 +11,7 @@
   "dependencies": {
     "@dakinis/shared": "*",
     "@dakinissystems/shared-brand": "1.0.2",
+    "@dakinissystems/shared-foundation": "1.0.0",
     "@dakinissystems/shared-icons": "0.1.0",
     "@dakinissystems/shared-illustrations": "0.1.0",
     "@dakinissystems/shared-layouts": "1.0.0",

@@ -5,7 +5,7 @@ export {
   DAKINIS_MOTION,
   DAKINIS_MOTION_USAGE,
   DAKINIS_MOTION_LEGACY,
-} from "@dakinis/shared-foundation/motion";
+} from "@dakinissystems/shared-foundation/motion";
 
 /** Clases utilitarias — definidas en shared-brand tokens/CSS. */
 export const DAKINIS_MOTION_CLASSES = {

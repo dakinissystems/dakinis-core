@@ -7,7 +7,7 @@ import {
   DAKINIS_ELEVATION,
   DAKINIS_ELEVATION_CLASSES,
   DAKINIS_ELEVATION_USAGE,
-} from "@dakinis/shared-foundation/elevation";
+} from "@dakinissystems/shared-foundation/elevation";
 import Button from "@dakinis/shared-ux/react/Button.jsx";
 import { Card, Badge } from "@dakinissystems/shared-ux";
 
