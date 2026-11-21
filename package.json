@@ -6,7 +6,8 @@
   "workspaces": [
     "shared",
     "web",
-    "api"
+    "api",
+    "packages/payroll"
   ],
   "scripts": {
     "start": "npm run start -w @dakinis/api",

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@dakinis/shared": "*",
+    "@dakinis/payroll": "*",
     "@dakinissystems/shared-ai": "0.1.0",
     "@dakinissystems/shared-brand": "1.0.2",
     "@sentry/node": "^9.30.0",
