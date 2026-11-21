@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { dakinisTrackEvent, DAKINIS_ANALYTICS_EVENTS } from "../utils/analytics.js";
 import { DAKINIS_URL_CORPORATE } from "../config/product-urls.js";
 import { DAKINIS_LOGO_LARGE } from "../config/brand-assets.js";
-import { company } from "@dakinis/shared-brand";
+import { company } from "@dakinissystems/shared-brand";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";

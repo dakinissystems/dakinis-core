@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLocale } from "../context/LocaleContext.jsx";
 import { useDakinisSession } from "../context/SessionContext.jsx";
 import { dakinisResetAuthExpiredFlag } from "../services/auth-events.js";
-import { dakinisPersistEcosystemSession, dakinisPersistIdpTokens } from "@dakinis/shared-brand/sso";
+import { dakinisPersistEcosystemSession, dakinisPersistIdpTokens } from "@dakinissystems/shared-brand/sso";
 import { dakinisPublicJsonFetch, DakinisApiError } from "../services/api.js";
 import {
   isIdpAuthEnabled,

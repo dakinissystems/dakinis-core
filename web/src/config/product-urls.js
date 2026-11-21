@@ -1,5 +1,5 @@
 /**
- * Re-export desde @dakinis/shared-brand (URLs unificadas Landing + Core).
+ * Re-export desde @dakinissystems/shared-brand (URLs unificadas Landing + Core).
  */
 export {
   DAKINIS_MARKETING_SITE_URL,
@@ -9,4 +9,4 @@ export {
   DAKINIS_URL_LANDING,
   DAKINIS_URL_STREAMAUTOMATOR,
   DAKINIS_URL_AKOENET
-} from "@dakinis/shared-brand";
+} from "@dakinissystems/shared-brand";

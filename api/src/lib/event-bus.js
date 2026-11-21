@@ -47,7 +47,7 @@ export async function dakinisPublishEvent(type, payload = {}) {
 
   if (String(process.env.DAKINIS_EVENT_BUS || "").toLowerCase() === "bullmq") {
     try {
-      const { publishPlatformEvent } = await import("@dakinis/shared-ai/event-bus");
+      const { publishPlatformEvent } = await import("@dakinissystems/shared-ai/event-bus");
       await publishPlatformEvent(type, payload, { source: "core" });
     } catch (err) {
       console.warn("[event-bus] bullmq publish failed:", err instanceof Error ? err.message : err);

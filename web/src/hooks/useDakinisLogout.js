@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { dakinisPerformClientLogout } from "@dakinis/shared/auth/client-logout.js";
 import { useDakinisSession } from "../context/SessionContext.jsx";
-import { dakinisClearEcosystemSession } from "@dakinis/shared-brand/sso";
+import { dakinisClearEcosystemSession } from "@dakinissystems/shared-brand/sso";
 import { dakinisClearAuthToken } from "../services/auth.js";
 import { setIdpRefreshToken } from "../services/idp-auth.js";
 

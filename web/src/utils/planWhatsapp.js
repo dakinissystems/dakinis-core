@@ -1,4 +1,4 @@
-import { dakinisContactWhatsappUrl } from "@dakinis/shared-brand/social-links";
+import { dakinisContactWhatsappUrl } from "@dakinissystems/shared-brand/social-links";
 
 export const DAKINIS_PLAN_SELECTED_EVENT = "dakinis-plan-selected";
 const PLAN_STORAGE_KEY = "dakinis-whatsapp-plan";

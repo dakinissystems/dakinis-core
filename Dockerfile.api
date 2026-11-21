@@ -4,16 +4,24 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+# Registry auth: Railway/build must set NODE_AUTH_TOKEN (PAT read:packages).
+COPY package.json .npmrc ./
 COPY shared ./shared
 COPY api ./api
 COPY web ./web
+# Remaining DES vendored copies (layouts/ux still import relative shared-brand).
+COPY packages ./packages
 
-RUN npm ci --omit=dev
+ARG NODE_AUTH_TOKEN
+ENV NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN
+RUN npm install --omit=dev --no-audit --no-fund \
+  && npm cache clean --force \
+  && rm -f .npmrc
 
 WORKDIR /app/api
 
 ENV NODE_ENV=production
+ENV NODE_AUTH_TOKEN=
 EXPOSE 4001
 ENV PORT=4001
 
