@@ -72,5 +72,37 @@ export function dakinisRegisterEventConsumers() {
     });
   });
 
+  // B7: 3DS / SCA — no degradar el plan; el cliente debe completar el pago.
+  dakinisSubscribeEvent("billing.payment_action_required", async (ev) => {
+    await dakinisAuditLog({
+      action: "billing.payment_action_required",
+      tenantId: ev.payload.businessId || ev.payload.tenantId,
+      plan: ev.payload.plan,
+      stripeInvoiceId: ev.payload.stripeInvoiceId,
+      hostedInvoiceUrl: ev.payload.hostedInvoiceUrl
+    });
+  });
+
+  dakinisSubscribeEvent("billing.trial_will_end", async (ev) => {
+    await dakinisAuditLog({
+      action: "billing.trial_will_end",
+      tenantId: ev.payload.businessId || ev.payload.tenantId,
+      plan: ev.payload.plan,
+      trialEnd: ev.payload.trialEnd
+    });
+  });
+
+  dakinisSubscribeEvent("billing.dispute", async (ev) => {
+    await dakinisAuditLog({
+      action: "billing.dispute",
+      tenantId: ev.payload.businessId || ev.payload.tenantId,
+      userId: ev.payload.userId,
+      stripeDisputeId: ev.payload.stripeDisputeId,
+      status: ev.payload.status,
+      reason: ev.payload.reason,
+      eventType: ev.payload.eventType
+    });
+  });
+
   dakinisStructuredLog({ level: "info", msg: "event_consumers_registered" });
 }
