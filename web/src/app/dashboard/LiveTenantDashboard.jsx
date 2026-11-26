@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitality.js";
 import { useLocale } from "../../context/LocaleContext.jsx";
 import {
@@ -7,9 +7,12 @@ import {
   dakinisTenantAiSuggestions,
   dakinisTenantGrowthScore,
   dakinisTenantRecommendations,
-  dakinisTenantFinanceSummary
+  dakinisTenantFinanceSummary,
+  dakinisTenantOnboarding,
+  dakinisTenantAdvanceOnboarding
 } from "../../services/tenant-intelligence.js";
 import { dakinisRestaurantTaskPath } from "../../utils/restaurantTaskStorage.js";
+import SettingsOnboardingCard from "../settings/SettingsOnboardingCard.jsx";
 import {
   LIVE_TENANT_DASHBOARD_INITIAL,
   dakinisMergeDashboardLoad,
@@ -194,8 +197,19 @@ export default function LiveTenantDashboard({ session, navigate }) {
   const [data, dispatch] = useReducer(liveTenantDashboardReducer, LIVE_TENANT_DASHBOARD_INITIAL);
   const { industryDash, health, aiTips, growth, recommendations, finance, errors, loadedAt } = data;
   const [reloadNonce, setReloadNonce] = useState(0);
+  const [onboarding, setOnboarding] = useState(null);
 
   const sessionToken = session?.token;
+
+  const refreshOnboarding = useCallback(async () => {
+    if (!session?.token) return;
+    try {
+      const json = await dakinisTenantOnboarding(session);
+      setOnboarding(json?.data?.onboarding || null);
+    } catch {
+      setOnboarding(null);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (!sessionToken) return undefined;
@@ -227,12 +241,13 @@ export default function LiveTenantDashboard({ session, navigate }) {
         payload: merged
       });
     });
+    refreshOnboarding();
     return () => {
       cancelled = true;
     };
     // Token and an explicit retry. A failed module does not borrar los que sí llegaron.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- session object identity churns
-  }, [sessionToken, reloadNonce]);
+  }, [sessionToken, reloadNonce, refreshOnboarding]);
 
   const businessName = session.business?.name || t("businessDemo.dashboard.fallbackBusiness");
   const hospitality = dakinisIsHospitalityBusiness(session.business?.type);
@@ -243,6 +258,16 @@ export default function LiveTenantDashboard({ session, navigate }) {
     if (!task) return;
     const extras = task === "inventario" ? { sub: "alerts" } : {};
     navigate(dakinisRestaurantTaskPath(session.business.type, task, extras));
+  }
+
+  async function completeOnboarding() {
+    await dakinisTenantAdvanceOnboarding(session, { markComplete: true });
+    await refreshOnboarding();
+  }
+
+  async function skipOnboardingStep(stepId) {
+    await dakinisTenantAdvanceOnboarding(session, { stepId });
+    await refreshOnboarding();
   }
 
   return (
@@ -259,6 +284,13 @@ export default function LiveTenantDashboard({ session, navigate }) {
             </button>
           </p>
         ) : null}
+
+        <SettingsOnboardingCard
+          onboarding={onboarding}
+          onComplete={completeOnboarding}
+          onSkipStep={skipOnboardingStep}
+          navigate={navigate}
+        />
 
         <DashboardGroups
           t={t}

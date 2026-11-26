@@ -5,6 +5,8 @@
 export {
   dakinisHandleRestaurantMenuGet,
   dakinisHandleRestaurantMenuPatch,
+  dakinisHandleRestaurantMenuCsvTemplate,
+  dakinisHandleRestaurantMenuCsvImport,
   dakinisHandleRestaurantOrdersList,
   dakinisHandleRestaurantOrdersPost,
   dakinisHandleRestaurantOrdersPatch,

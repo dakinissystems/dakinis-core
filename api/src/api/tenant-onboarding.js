@@ -94,7 +94,10 @@ export async function dakinisBuildTenantOnboarding(businessId, config = {}, busi
       label: "Cargar la carta",
       href: "/sistema/restaurante?task=config&sub=carta",
       done: skipped.has("carta") || menuCount > 0,
-      detail: menuCount > 0 ? `${menuCount} productos` : "Añade al menos un producto",
+      detail:
+        menuCount > 0
+          ? `${menuCount} productos`
+          : "Importa un CSV o añade el primer producto",
     },
     {
       id: "inventario",
