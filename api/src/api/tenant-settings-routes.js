@@ -1,6 +1,10 @@
 import { dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisBillingGetSubscription } from "../lib/billing-client.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
+import {
+  dakinisApplyOnboardingAdvance,
+  dakinisBuildTenantOnboarding,
+} from "./tenant-onboarding.js";
 import { dakinisRequireTenantJwtAdmin } from "./tenant-supply.js";
 
 const COLOR_FALLBACK = "#1a4fd6";
@@ -123,10 +127,7 @@ export async function dakinisHandleTenantSettingsRoute(req, rawBody, path) {
 
   if (path === "/api/v1/tenant/profile" && req.method === "GET") {
     const { config } = await dakinisLoadConfig(business.id);
-    const onboarding =
-      config.onboarding && typeof config.onboarding === "object" && config.onboarding.completed === true
-        ? { completed: true }
-        : null;
+    const onboarding = await dakinisBuildTenantOnboarding(business.id, config, business);
     return dakinisJsonSuccess(
       {
         settings: dakinisPublicTenantSettings(config.settings),
@@ -136,6 +137,24 @@ export async function dakinisHandleTenantSettingsRoute(req, rawBody, path) {
       business.type,
       dakinisMeta(req)
     );
+  }
+
+  if (path === "/api/v1/tenant/onboarding" && req.method === "GET") {
+    const { config } = await dakinisLoadConfig(business.id);
+    const onboarding = await dakinisBuildTenantOnboarding(business.id, config, business);
+    return dakinisJsonSuccess({ onboarding }, business.type, dakinisMeta(req));
+  }
+
+  if (path === "/api/v1/tenant/onboarding/advance" && req.method === "POST") {
+    const jwtErr = dakinisRequireTenantJwtAdmin(req);
+    if (jwtErr) return jwtErr;
+    const body = dakinisParseJson(rawBody);
+    if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+    const { config } = await dakinisLoadConfig(business.id);
+    const nextConfig = dakinisApplyOnboardingAdvance(config, body);
+    await dakinisSaveConfig(business.id, nextConfig);
+    const onboarding = await dakinisBuildTenantOnboarding(business.id, nextConfig, business);
+    return dakinisJsonSuccess({ onboarding }, business.type, dakinisMeta(req));
   }
 
   if (path === "/api/v1/tenant/branches" && req.method === "GET") {

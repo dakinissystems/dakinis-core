@@ -12,7 +12,7 @@ export function dakinisTenantHealthScore(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/health-score", session);
 }
 
-function dakinisTenantOnboarding(session) {
+export function dakinisTenantOnboarding(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/onboarding", session);
 }
 

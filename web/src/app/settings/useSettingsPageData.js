@@ -3,6 +3,7 @@ import { dakinisIsHospitalityBusiness } from "@dakinis/shared/catalog/hospitalit
 import { dakinisTenantJsonFetch } from "../../services/api.js";
 import {
   dakinisTenantProfile,
+  dakinisTenantOnboarding,
   dakinisTenantBranches,
   dakinisTenantBillingSummary,
   dakinisTenantAiUsage,
@@ -92,8 +93,13 @@ export default function useSettingsPageData(session) {
   async function refreshOnboarding() {
     const sess = sessionRef.current;
     if (!sess?.token) return;
-    const json = await dakinisTenantProfile(sess);
-    setOnboarding(json?.data?.onboarding || null);
+    try {
+      const json = await dakinisTenantOnboarding(sess);
+      setOnboarding(json?.data?.onboarding || null);
+    } catch {
+      const json = await dakinisTenantProfile(sess);
+      setOnboarding(json?.data?.onboarding || null);
+    }
   }
 
   return {
