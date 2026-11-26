@@ -47,6 +47,8 @@ import {
   dakinisHandleRestaurantInvoicesPost,
   dakinisHandleRestaurantMenuGet,
   dakinisHandleRestaurantMenuPatch,
+  dakinisHandleRestaurantMenuCsvTemplate,
+  dakinisHandleRestaurantMenuCsvImport,
   dakinisHandleRestaurantOrdersList,
   dakinisHandleRestaurantOrdersPatch,
   dakinisHandleRestaurantOrdersPost,
@@ -280,6 +282,10 @@ export async function dakinisDispatch(req, rawBody, url) {
   if (path === "/api/tenant/restaurant/menu" && req.method === "GET") return dakinisHandleRestaurantMenuGet(req);
   if (path === "/api/tenant/restaurant/menu" && req.method === "PATCH")
     return dakinisHandleRestaurantMenuPatch(req, rawBody);
+  if (path === "/api/tenant/restaurant/menu/csv-template" && req.method === "GET")
+    return dakinisHandleRestaurantMenuCsvTemplate(req);
+  if (path === "/api/tenant/restaurant/menu/csv-import" && req.method === "POST")
+    return dakinisHandleRestaurantMenuCsvImport(req, rawBody);
   if (path === "/api/tenant/restaurant/orders" && req.method === "GET") return dakinisHandleRestaurantOrdersList(req);
   if (path === "/api/tenant/restaurant/orders" && req.method === "POST")
     return dakinisHandleRestaurantOrdersPost(req, rawBody);
@@ -325,6 +331,10 @@ export async function dakinisDispatch(req, rawBody, url) {
     if (hospPath === "/api/tenant/restaurant/menu" && req.method === "GET") return dakinisHandleRestaurantMenuGet(req);
     if (hospPath === "/api/tenant/restaurant/menu" && req.method === "PATCH")
       return dakinisHandleRestaurantMenuPatch(req, rawBody);
+    if (hospPath === "/api/tenant/restaurant/menu/csv-template" && req.method === "GET")
+      return dakinisHandleRestaurantMenuCsvTemplate(req);
+    if (hospPath === "/api/tenant/restaurant/menu/csv-import" && req.method === "POST")
+      return dakinisHandleRestaurantMenuCsvImport(req, rawBody);
     if (hospPath === "/api/tenant/restaurant/orders" && req.method === "GET")
       return dakinisHandleRestaurantOrdersList(req);
     if (hospPath === "/api/tenant/restaurant/orders" && req.method === "POST")

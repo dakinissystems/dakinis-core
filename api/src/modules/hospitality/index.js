@@ -28,6 +28,8 @@ export { dakinisKitchenGetBoard } from "./KitchenService.js";
 export {
   dakinisHandleRestaurantMenuGet,
   dakinisHandleRestaurantMenuPatch,
+  dakinisHandleRestaurantMenuCsvTemplate,
+  dakinisHandleRestaurantMenuCsvImport,
   dakinisHandleRestaurantFloorGet,
   dakinisHandleRestaurantFloorPatch,
   dakinisHandleRestaurantTableSessionPatch,
@@ -38,3 +40,4 @@ export {
   dakinisHandleRestaurantInvoicesPost,
   dakinisHospitalityOnly
 } from "./http.js";
+export { dakinisParseMenuCsv, DAKINIS_MENU_CSV_TEMPLATE } from "./menu-csv.js";

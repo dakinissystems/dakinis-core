@@ -5,6 +5,7 @@ import { dakinisJsonError, dakinisJsonSuccess } from "../../api/responses.js";
 import { dakinisRequireTenantJwt, dakinisRequireTenantJwtAdmin } from "../../api/tenant-supply.js";
 import { dakinisEnsureHospitalityEventDefaults } from "./events.js";
 import { dakinisMenuListItems, dakinisMenuPatch } from "./MenuService.js";
+import { DAKINIS_MENU_CSV_TEMPLATE, dakinisParseMenuCsv } from "./menu-csv.js";
 import { dakinisFloorGet, dakinisFloorPatch, dakinisFloorUpsertSession } from "./FloorService.js";
 import {
   dakinisOrdersList,
@@ -85,6 +86,62 @@ export async function dakinisHandleRestaurantMenuPatch(req, rawBody) {
       slug: req.dakinisBusiness.slug,
       brand: result.brand,
       menu: result.menu
+    },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
+/** GET plantilla CSV carta (B10). */
+export async function dakinisHandleRestaurantMenuCsvTemplate(req) {
+  const gate = dakinisHospitalityOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwt(req);
+  if (jwtErr) return jwtErr;
+  return dakinisJsonSuccess(
+    {
+      csv: DAKINIS_MENU_CSV_TEMPLATE,
+      filename: "dakinis-carta-plantilla.csv",
+      columns: ["name", "category", "priceEur", "description"],
+    },
+    req.dakinisBusiness.type,
+    dakinisMeta(req)
+  );
+}
+
+/** POST import CSV → create[] vía MenuService. */
+export async function dakinisHandleRestaurantMenuCsvImport(req, rawBody) {
+  const gate = dakinisHospitalityOnly(req.dakinisBusiness);
+  if (gate) return gate;
+  const jwtErr = dakinisRequireTenantJwtAdmin(req);
+  if (jwtErr) return jwtErr;
+
+  const body = dakinisParseJson(rawBody);
+  if (body === null) return dakinisJsonError(400, "INVALID_JSON", "JSON invalido");
+  const csvText = typeof body.csv === "string" ? body.csv : typeof body.text === "string" ? body.text : "";
+  if (!csvText.trim()) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", "Falta el CSV (campo csv)");
+  }
+
+  const parsed = dakinisParseMenuCsv(csvText);
+  if (parsed.errors.length && !parsed.create.length) {
+    return dakinisJsonError(400, "VALIDATION_ERROR", parsed.errors.join("; "));
+  }
+
+  const result = await dakinisMenuPatch(req.dakinisBusiness.id, { create: parsed.create });
+  if (result.error) {
+    return dakinisJsonError(result.error.status, result.error.code, result.error.message);
+  }
+
+  return dakinisJsonSuccess(
+    {
+      venueName: req.dakinisBusiness.name,
+      slug: req.dakinisBusiness.slug,
+      brand: result.brand,
+      menu: result.menu,
+      imported: parsed.create.length,
+      skipped: parsed.skipped,
+      warnings: parsed.errors,
     },
     req.dakinisBusiness.type,
     dakinisMeta(req)

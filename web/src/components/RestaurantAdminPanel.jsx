@@ -43,6 +43,9 @@ export default function RestaurantAdminPanel({
   });
   const [floorBusy, setFloorBusy] = useState(false);
   const [menuBusy, setMenuBusy] = useState(false);
+  const [csvBusy, setCsvBusy] = useState(false);
+  const [csvFileName, setCsvFileName] = useState("");
+  const csvInputRef = useRef(null);
   const [error, setError] = useState("");
   const [menuNotice, setMenuNotice] = useState("");
   const [selectedTableId, setSelectedTableId] = useState(null);
@@ -192,6 +195,60 @@ export default function RestaurantAdminPanel({
     }
   }
 
+  async function downloadMenuCsvTemplate() {
+    setError("");
+    try {
+      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/menu/csv-template", apiSession, fetchOpts);
+      const csv = String(json?.data?.csv || "");
+      const filename = String(json?.data?.filename || "dakinis-carta-plantilla.csv");
+      if (!csv) throw new Error(t("restaurant.adminCsvImportEmpty"));
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("restaurant.adminCsvImportError"));
+    }
+  }
+
+  async function importMenuCsv(file) {
+    if (!file) return;
+    setCsvBusy(true);
+    setError("");
+    setMenuNotice("");
+    setCsvFileName(file.name || "");
+    try {
+      const text = await file.text();
+      if (!String(text || "").trim()) {
+        setError(t("restaurant.adminCsvImportEmpty"));
+        return;
+      }
+      const json = await dakinisTenantJsonFetch("/api/tenant/restaurant/menu/csv-import", apiSession, {
+        ...fetchOpts,
+        method: "POST",
+        body: { csv: text }
+      });
+      const next = Array.isArray(json?.data?.menu) ? json.data.menu : menu;
+      setMenu(next);
+      setMenuDraft(Object.fromEntries(next.map((it) => [it.id, String(it.priceEur ?? "")])));
+      const count = Number(json?.data?.imported || 0);
+      const warnings = Array.isArray(json?.data?.warnings) ? json.data.warnings : [];
+      setMenuNotice(
+        warnings.length
+          ? t("restaurant.adminCsvImportWarn", { count, warnings: warnings.join("; ") })
+          : t("restaurant.adminCsvImportOk", { count })
+      );
+      if (csvInputRef.current) csvInputRef.current.value = "";
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("restaurant.adminCsvImportError"));
+    } finally {
+      setCsvBusy(false);
+    }
+  }
+
   const suppliers = systemPageContent?.suppliersProducts;
   const compact = Boolean(sections);
 
@@ -311,6 +368,31 @@ export default function RestaurantAdminPanel({
                   {menuNotice}
                 </p>
               ) : null}
+            </div>
+          </article>
+
+          <article className="card" style={{ marginTop: "1rem" }}>
+            <h4 style={{ marginTop: 0 }}>{t("restaurant.adminCsvImportTitle")}</h4>
+            <p className="kpi-label">{t("restaurant.adminCsvImportLead")}</p>
+            <div className="stock-scan-actions" style={{ marginTop: "0.75rem", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button type="button" className="btn" disabled={csvBusy} onClick={downloadMenuCsvTemplate}>
+                {t("restaurant.adminCsvImportDownload")}
+              </button>
+              <label className="btn" style={{ cursor: csvBusy ? "wait" : "pointer" }}>
+                {csvBusy ? t("restaurant.saving") : t("restaurant.adminCsvImportChoose")}
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  hidden
+                  disabled={csvBusy}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) importMenuCsv(file);
+                  }}
+                />
+              </label>
+              {csvFileName ? <span className="kpi-label">{csvFileName}</span> : null}
             </div>
           </article>
 
