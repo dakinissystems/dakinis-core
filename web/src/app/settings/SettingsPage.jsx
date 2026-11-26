@@ -64,6 +64,12 @@ export default function SettingsPage({ navigate }) {
     await refreshOnboarding();
   }
 
+  async function skipOnboardingStep(stepId) {
+    if (!session?.token || !stepId) return;
+    await dakinisTenantAdvanceOnboarding(session, { stepId });
+    await refreshOnboarding();
+  }
+
   if (dakinisIsBusinessDemoSession(session)) {
     return <SettingsDemoView t={t} session={session} navigate={navigate} onSignOut={signOut} />;
   }
@@ -75,7 +81,12 @@ export default function SettingsPage({ navigate }) {
         <p className="lead">{t("app.settings.lead")}</p>
 
         <SettingsAccountCard t={t} session={session} />
-        <SettingsOnboardingCard onboarding={onboarding} onComplete={completeOnboarding} />
+        <SettingsOnboardingCard
+          onboarding={onboarding}
+          onComplete={completeOnboarding}
+          onSkipStep={skipOnboardingStep}
+          navigate={navigate}
+        />
         <SettingsBusinessForm
           settings={settings}
           setSettings={setSettings}
