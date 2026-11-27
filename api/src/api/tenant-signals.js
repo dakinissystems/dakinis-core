@@ -55,7 +55,11 @@ export async function dakinisGatherTenantSignals(businessId, businessType) {
   if (businessType === "restaurante") {
     openOrders = records.filter((r) => {
       const p = dakinisParseRecordPayload(r);
-      return p?.estado && !/cancel/i.test(String(p.estado));
+      if (!p) return false;
+      // Orders use `status` (nueva/cocina/lista/entregada); legacy payloads may use `estado`.
+      const st = String(p.status || p.estado || "").toLowerCase();
+      if (!st) return false;
+      return st !== "entregada" && st !== "cancelada" && st !== "cerrada" && !/cancel/i.test(st);
     }).length;
   }
 
