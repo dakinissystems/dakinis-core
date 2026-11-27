@@ -5,6 +5,9 @@ import {
   dakinisTenantProfile,
   dakinisTenantOnboarding,
   dakinisTenantBranches,
+  dakinisTenantCreateBranch,
+  dakinisTenantPatchBranch,
+  dakinisTenantDeleteBranch,
   dakinisTenantBillingSummary,
   dakinisTenantAiUsage,
   dakinisTenantPortalSettings,
@@ -90,6 +93,30 @@ export default function useSettingsPageData(session) {
     setBranches(json?.data?.branches || []);
   }
 
+  async function createBranch(input) {
+    const sess = sessionRef.current;
+    if (!sess?.token) throw new Error("Sesión requerida");
+    const json = await dakinisTenantCreateBranch(sess, input);
+    setBranches(json?.data?.branches || []);
+    return json?.data?.branches || [];
+  }
+
+  async function setDefaultBranch(branchId) {
+    const sess = sessionRef.current;
+    if (!sess?.token) throw new Error("Sesión requerida");
+    const json = await dakinisTenantPatchBranch(sess, branchId, { isDefault: true });
+    setBranches(json?.data?.branches || []);
+    return json?.data?.branches || [];
+  }
+
+  async function removeBranch(branchId) {
+    const sess = sessionRef.current;
+    if (!sess?.token) throw new Error("Sesión requerida");
+    const json = await dakinisTenantDeleteBranch(sess, branchId);
+    setBranches(json?.data?.branches || []);
+    return json?.data?.branches || [];
+  }
+
   async function refreshOnboarding() {
     const sess = sessionRef.current;
     if (!sess?.token) return;
@@ -116,6 +143,9 @@ export default function useSettingsPageData(session) {
     adoptionScores,
     businessValueScores,
     refreshBranches,
+    createBranch,
+    setDefaultBranch,
+    removeBranch,
     refreshOnboarding
   };
 }

@@ -34,6 +34,27 @@ export function dakinisTenantBranches(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/branches", session);
 }
 
+export function dakinisTenantCreateBranch(session, body) {
+  return dakinisTenantJsonFetch("/api/v1/tenant/branches", session, {
+    method: "POST",
+    body: JSON.stringify(body || {})
+  });
+}
+
+export function dakinisTenantPatchBranch(session, branchId, body) {
+  return dakinisTenantJsonFetch(`/api/v1/tenant/branches/${encodeURIComponent(branchId)}`, session, {
+    method: "PATCH",
+    body: JSON.stringify(body || {})
+  });
+}
+
+export function dakinisTenantDeleteBranch(session, branchId) {
+  return dakinisTenantJsonFetch(`/api/v1/tenant/branches/${encodeURIComponent(branchId)}`, session, {
+    method: "DELETE",
+    body: "{}"
+  });
+}
+
 export function dakinisTenantAiSuggestions(session) {
   return dakinisTenantJsonFetch("/api/v1/tenant/ai/suggestions", session);
 }

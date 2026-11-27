@@ -39,7 +39,9 @@ export default function SettingsPage({ navigate }) {
     adoption,
     adoptionScores,
     businessValueScores,
-    refreshBranches,
+    createBranch,
+    setDefaultBranch,
+    removeBranch,
     refreshOnboarding
   } = useSettingsPageData(session);
 
@@ -102,7 +104,12 @@ export default function SettingsPage({ navigate }) {
         />
         <SettingsPortalCard session={session} portal={portal} setPortal={setPortal} onSaved={setMsg} />
         <SettingsMarketplaceCard session={session} onInstalled={setMsg} />
-        <SettingsBranchesCard branches={branches} onRefresh={refreshBranches} />
+        <SettingsBranchesCard
+          branches={branches}
+          onCreate={createBranch}
+          onSetDefault={setDefaultBranch}
+          onRemove={removeBranch}
+        />
         {dakinisIsHospitalityBusiness(session?.business?.type) ? (
           <SettingsRestaurantBlock t={t} navigate={navigate} allergiesUrl={allergiesUrl} />
         ) : null}
