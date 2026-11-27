@@ -17,7 +17,8 @@ export default function TenantTeamSection({
 }) {
   const canManage =
     Boolean(apiSession?.token) &&
-    ["admin", "owner", "manager"].includes(String(session?.user?.role || ""));
+    ["admin", "owner", "manager"].includes(String(session?.user?.role || "").toLowerCase());
+  const hubInviteUrl = "https://hub.dakinissystems.com/admin/members";
 
   const [teamUsers, setTeamUsers] = useState([]);
   const [teamError, setTeamError] = useState("");
@@ -124,9 +125,19 @@ export default function TenantTeamSection({
     <section style={{ marginTop: "2rem" }}>
       <h3>Equipo y usuarios del negocio</h3>
       <p className="lead">
-        Para entrar en producción se usa la cuenta Dakinis, con la invitación del Hub. Aquí se crea el usuario en
-        Core. La contraseña de este formulario vale para el login local y no cambia la de Dakinis.
+        Camino recomendado: invita desde el Hub (cuenta Dakinis + SSO). El alta con contraseña local es solo para
+        entornos de prueba.
       </p>
+
+      <div className="card" style={{ marginBottom: "1rem", padding: "1rem" }}>
+        <h4 style={{ marginTop: 0 }}>Invitar con Hub</h4>
+        <p className="lead" style={{ marginBottom: "0.75rem" }}>
+          Envía un enlace a Miembros. Al aceptar, el compañero entra con Auth central y puede abrir One.
+        </p>
+        <a className="btn" href={hubInviteUrl} target="_blank" rel="noopener noreferrer">
+          Abrir Hub → Miembros
+        </a>
+      </div>
 
       {teamLoading ? <p className="lead">Cargando usuarios…</p> : null}
       {teamError ? (
@@ -141,7 +152,7 @@ export default function TenantTeamSection({
       ) : null}
 
       <form className="mockup-form card tenant-team-form" onSubmit={handleCreateUser}>
-        <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>Crear usuario</h4>
+        <h4 style={{ gridColumn: "1 / -1", margin: 0 }}>Crear usuario local (pruebas)</h4>
         <label className="mockup-field">
           <span>Email</span>
           <input
