@@ -170,7 +170,7 @@ export async function dakinisHandleAuthTenants(req) {
 
   let payload;
   try {
-    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+    payload = await dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
   } catch {
     return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
   }
@@ -229,7 +229,7 @@ export async function dakinisHandleAuthExchange(req, rawBody) {
 
   let payload;
   try {
-    payload = dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
+    payload = await dakinisVerifyPlatformAccessTokenOnly(token, dakinisGetJwtSecret());
   } catch {
     return dakinisJsonError(401, "INVALID_TOKEN", "JWT del IdP invalido o expirado");
   }
