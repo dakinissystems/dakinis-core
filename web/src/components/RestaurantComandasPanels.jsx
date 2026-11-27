@@ -160,6 +160,7 @@ export default function RestaurantComandasPanels({ ctx }) {
             mesaClosePayment={mesaClosePayment}
             setMesaClosePayment={setMesaClosePayment}
             dakinisSubmitTableOrder={dakinisSubmitTableOrder}
+            openOrders={openOrders}
           />
         ) : null}
 

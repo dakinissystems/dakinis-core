@@ -27,6 +27,7 @@ export default function RestaurantFloorPlan({
   positionEditable = false,
   onAddTable,
   tableTotal,
+  openOrders = [],
   t
 }) {
   const label = (key, fallback) => (t ? t(key) : fallback);
@@ -184,7 +185,9 @@ export default function RestaurantFloorPlan({
   const zones = Object.values(DAKINIS_RESTAURANT_FLOOR_ZONES);
   const selectedTable = liveTables.find((tbl) => tbl.id === selectedTableId) || null;
   const selectedSession = selectedTable ? sessions[selectedTable.id] : null;
-  const selectedBusy = selectedTable ? dakinisSessionBusy(selectedSession) : false;
+  const selectedBusy = selectedTable
+    ? dakinisSessionBusy(selectedSession, selectedTable, openOrders)
+    : false;
   const selectedTotal = selectedTable && tableTotal ? Number(tableTotal(selectedTable.id)) : null;
 
   return (
@@ -234,8 +237,10 @@ export default function RestaurantFloorPlan({
 
       {liveTables.length ? (
         <p className="restaurant-floor__occupancy">
-          {liveTables.filter((tbl) => dakinisSessionBusy(sessions[tbl.id])).length} con cuenta ·{" "}
-          {liveTables.filter((tbl) => !dakinisSessionBusy(sessions[tbl.id])).length} libres
+          {liveTables.filter((tbl) => dakinisSessionBusy(sessions[tbl.id], tbl, openOrders)).length} con
+          cuenta ·{" "}
+          {liveTables.filter((tbl) => !dakinisSessionBusy(sessions[tbl.id], tbl, openOrders)).length}{" "}
+          libres
         </p>
       ) : null}
 
@@ -258,7 +263,7 @@ export default function RestaurantFloorPlan({
           </div>
 
           {liveTables.map((tbl) => {
-            const busy = dakinisSessionBusy(sessions[tbl.id]);
+            const busy = dakinisSessionBusy(sessions[tbl.id], tbl, openOrders);
             const total = tableTotal ? tableTotal(tbl.id) : 0;
             const selected = selectedTableId === tbl.id;
             const dragging = draggingId === tbl.id;
@@ -341,9 +346,20 @@ function localeZoneLabel(zone, label) {
   return label("restaurant.zoneBarra", zone.labelEs);
 }
 
-function dakinisSessionBusy(session) {
-  if (!session?.cart) return false;
-  return Object.values(session.cart).some((q) => Number(q) > 0);
+function dakinisSessionBusy(session, table, openOrders) {
+  // Inline mirror of dakinisTableIsOccupied — floor plan may not always receive openOrders.
+  if (session?.cart && Object.values(session.cart).some((q) => Number(q) > 0)) return true;
+  if (session && typeof session === "object" && Object.prototype.hasOwnProperty.call(session, "cart")) {
+    return true;
+  }
+  const label = String(table?.label || table?.id || "").trim();
+  if (!label || !Array.isArray(openOrders) || !openOrders.length) return false;
+  return openOrders.some((order) => {
+    if (!order) return false;
+    const st = String(order.status || "").toLowerCase();
+    if (st === "entregada" || st === "cancelada" || st === "cerrada") return false;
+    return String(order.table || "").trim() === label;
+  });
 }
 
 function dakinisOccupationLabel(openedAt) {
