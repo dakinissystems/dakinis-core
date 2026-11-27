@@ -7,6 +7,7 @@ import {
   getPlatformJwtAudience,
   getPlatformJwtIssuer
 } from "./jwt-verify.js";
+import { dakinisVerifyPlatformEs256Token } from "./platform-jwks.js";
 
 const SSO_PASSWORD_PLACEHOLDER = "__dakinis_sso_no_local_login__";
 
@@ -185,7 +186,22 @@ export async function dakinisResolvePlatformTenantClaimToBusinessId(rawSlug) {
   return bySlug ? bySlug.id : "";
 }
 
-export function dakinisVerifyPlatformAccessTokenOnly(token, secret) {
+/**
+ * Verifica JWT del IdP: ES256 vía JWKS (prod Auth) o HS256 compartido (legado).
+ * Async — los callers de exchange/tenants deben await.
+ */
+export async function dakinisVerifyPlatformAccessTokenOnly(token, secret) {
+  const header = jwt.decode(token, { complete: true })?.header;
+  const alg = header?.alg;
+
+  if (alg === "ES256") {
+    return dakinisVerifyPlatformEs256Token(token);
+  }
+
+  if (alg && alg !== "HS256") {
+    throw new Error(`Unsupported IdP alg: ${alg}`);
+  }
+
   return jwt.verify(token, secret, {
     algorithms: ["HS256"],
     issuer: getPlatformJwtIssuer(),
