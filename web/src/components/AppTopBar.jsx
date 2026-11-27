@@ -8,7 +8,8 @@ import { useLocale } from "../context/LocaleContext.jsx";
 import {
   dakinisIsBusinessDemoSession,
   dakinisIsBusinessFacingSession,
-  dakinisIsPlatformAdminSession
+  dakinisIsPlatformAdminSession,
+  dakinisIsTenantAdminSession
 } from "../utils/businessDemoMode.js";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import DakinisCopilotBar from "./DakinisCopilotBar.jsx";
@@ -199,7 +200,7 @@ export default function AppTopBar({ navigate, session, onSignOut, currentPath })
                 </button>
               ) : null}
 
-              {!isBusinessDemo ? (
+              {!isBusinessDemo && dakinisIsTenantAdminSession(session) ? (
                 <button
                   type="button"
                   className={`btn btn-outline${isActive("/app/settings") ? " is-active" : ""}`}

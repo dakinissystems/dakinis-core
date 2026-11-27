@@ -48,7 +48,10 @@ import { useBillingSessionRefresh } from "../hooks/useBillingSessionRefresh.js";
 import DakinisCommandPaletteProvider from "../components/experience/DakinisCommandPaletteProvider.jsx";
 import DraggableWhatsappButton from "../components/DraggableWhatsappButton.jsx";
 import { dakinisShouldShowPublicWhatsappFab } from "../utils/publicWhatsappFabVisibility.js";
-import { dakinisIsPlatformAdminSession } from "../utils/businessDemoMode.js";
+import {
+  dakinisIsPlatformAdminSession,
+  dakinisIsTenantAdminSession
+} from "../utils/businessDemoMode.js";
 
 function AppRouteFallback() {
   return (
@@ -119,6 +122,18 @@ function AdminGuard({ children }) {
   const { session } = useDakinisSession();
   if (!session?.token || !dakinisIsPlatformAdminSession(session)) {
     return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
+/** Settings / equipo: solo admin de negocio (member → dashboard). */
+function TenantAdminGuard({ children }) {
+  const { session } = useDakinisSession();
+  if (!session?.token) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!dakinisIsTenantAdminSession(session)) {
+    return <Navigate to="/app/dashboard" replace />;
   }
   return children;
 }
@@ -213,7 +228,14 @@ function AppRoutes() {
       <Route path="/app/whatsapp/templates" element={<GuardedWhatsapp navigate={nav} />} />
       <Route path="/app/whatsapp/automations" element={<GuardedWhatsapp navigate={nav} />} />
       <Route path="/app/whatsapp/ai" element={<GuardedWhatsapp navigate={nav} />} />
-      <Route path="/app/settings" element={<GuardedSettings navigate={nav} />} />
+      <Route
+        path="/app/settings"
+        element={
+          <TenantAdminGuard>
+            <GuardedSettings navigate={nav} />
+          </TenantAdminGuard>
+        }
+      />
       <Route path="/hub" element={<HubPage />} />
       <Route path="/ecosystem/launch/:productId" element={<EcosystemLaunchPage />} />
       <Route path="/faq" element={<FaqPage navigate={nav} />} />
