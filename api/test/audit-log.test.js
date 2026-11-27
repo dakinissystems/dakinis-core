@@ -24,3 +24,16 @@ test("audit-log persists to tenant_audit_logs on postgres", () => {
   assert.match(src, /entry\.tenantId \|\| entry\.businessId/);
   assert.match(src, /entry\.userId \|\| entry\.actorUserId/);
 });
+
+test("tenant users audit role change and create", () => {
+  const src = fs.readFileSync(path.join(root, "src/api/tenant-users.js"), "utf8");
+  assert.match(src, /action:\s*"tenant\.user_create"/);
+  assert.match(src, /action:\s*roleChanged \? "tenant\.user_role_change" : "tenant\.user_update"/);
+});
+
+test("stock adjust paths call inventory.stock_adjust audit", () => {
+  const src = fs.readFileSync(path.join(root, "src/api/tenant-restaurant.js"), "utf8");
+  assert.match(src, /action:\s*"inventory\.stock_adjust"/);
+  assert.match(src, /salida-manual/);
+  assert.match(src, /salida-escaneo/);
+});

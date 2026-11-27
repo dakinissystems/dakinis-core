@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { dakinisQueryAll, dakinisQueryOne, dakinisRun } from "../db/query.js";
 import { dakinisSqlOrderEmail } from "../db/dialect.js";
+import { dakinisAuditLog } from "../lib/audit-log.js";
 import { dakinisJsonError, dakinisJsonSuccess } from "./responses.js";
 
 const TENANT_USER_ROLES = new Set(["admin", "member"]);
@@ -116,6 +117,17 @@ export async function dakinisHandleTenantUsersPost(req, rawBody) {
     [id, req.dakinisBusiness.id, email, passwordHash, role, 0]
   );
 
+  await dakinisAuditLog({
+    action: "tenant.user_create",
+    tenantId: req.dakinisBusiness.id,
+    userId: req.dakinisAuth?.userId || null,
+    resourceType: "user",
+    resourceId: id,
+    targetEmail: email,
+    targetRole: role,
+    actorEmail: req.dakinisAuth?.email || null
+  });
+
   const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
 
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {
@@ -190,10 +202,29 @@ export async function dakinisHandleTenantUsersPatch(req, userId, rawBody) {
     nextEmail = emailIn;
   }
 
+  const roleChanged = nextRole !== target.role;
+  const emailChanged = nextEmail !== target.email;
+  const passwordChanged = nextHash !== target.password_hash;
+
   await dakinisRun(
     `UPDATE users SET role = ?, password_hash = ?, email = ? WHERE id = ? AND business_id = ?`,
     [nextRole, nextHash, nextEmail, id, req.dakinisBusiness.id]
   );
+
+  if (roleChanged || emailChanged || passwordChanged) {
+    await dakinisAuditLog({
+      action: roleChanged ? "tenant.user_role_change" : "tenant.user_update",
+      tenantId: req.dakinisBusiness.id,
+      userId: req.dakinisAuth?.userId || null,
+      resourceType: "user",
+      resourceId: id,
+      previousRole: target.role,
+      nextRole,
+      emailChanged,
+      passwordChanged,
+      actorEmail: req.dakinisAuth?.email || null
+    });
+  }
 
   const row = await dakinisQueryOne(`SELECT id, email, role, created_at FROM users WHERE id = ?`, [id]);
   return dakinisJsonSuccess({ user: row }, req.dakinisBusiness.type, {
