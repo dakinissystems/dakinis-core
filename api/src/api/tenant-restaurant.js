@@ -572,13 +572,22 @@ export async function dakinisHandleRestaurantStockMovePost(req, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "Stock insuficiente");
   }
 
-  await dakinisAdjustStock(
-    businessId,
-    row.id,
+  const reason = direction === "out" ? "salida-manual" : "entrada-manual";
+  await dakinisAdjustStock(businessId, row.id, delta, reason, null);
+
+  await dakinisAuditLog({
+    action: "inventory.stock_adjust",
+    tenantId: businessId,
+    userId: req.dakinisAuth?.userId || null,
+    resourceType: "stock_item",
+    resourceId: row.id,
+    slug: row.slug,
+    direction,
+    quantity: qty,
     delta,
-    direction === "out" ? "salida-manual" : "entrada-manual",
-    null
-  );
+    reason,
+    actorEmail: req.dakinisAuth?.email || null
+  });
 
   const updated = await dakinisQueryOne(
     `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
@@ -633,13 +642,23 @@ export async function dakinisHandleRestaurantStockScanPost(req, rawBody) {
     return dakinisJsonError(400, "VALIDATION_ERROR", "Stock insuficiente");
   }
 
-  await dakinisAdjustStock(
-    businessId,
-    row.id,
+  const reason = direction === "out" ? "salida-escaneo" : "entrada-escaneo";
+  await dakinisAdjustStock(businessId, row.id, delta, reason, null);
+
+  await dakinisAuditLog({
+    action: "inventory.stock_adjust",
+    tenantId: businessId,
+    userId: req.dakinisAuth?.userId || null,
+    resourceType: "stock_item",
+    resourceId: row.id,
+    slug: row.slug,
+    direction,
+    quantity: qty,
     delta,
-    direction === "out" ? "salida-escaneo" : "entrada-escaneo",
-    null
-  );
+    reason,
+    barcode,
+    actorEmail: req.dakinisAuth?.email || null
+  });
 
   const updated = await dakinisQueryOne(
     `SELECT id, slug, name, unit, quantity, min_quantity, updated_at
