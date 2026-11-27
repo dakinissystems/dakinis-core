@@ -19,6 +19,7 @@ function RestaurantMesaModal({
   mesaLines,
   mesaTotal,
   mesaItemCount,
+  sentOrders = [],
   menu,
   busy,
   mesaClosePayment,
@@ -77,6 +78,38 @@ function RestaurantMesaModal({
           {tableLabel}
         </h3>
 
+        {sentOrders.length > 0 ? (
+          <article className="card restaurant-mesa-modal__sent" style={{ margin: "0 0 0.75rem", padding: "0.75rem" }}>
+            <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem" }}>Ya enviado a cocina</h4>
+            <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
+              {sentOrders.map((order) => (
+                <li key={order.id || order.orderNumber} style={{ marginBottom: "0.5rem" }}>
+                  <strong>
+                    Comanda #{order.orderNumber ?? "—"}
+                  </strong>
+                  <span className="kpi-label"> · {order.status || "abierta"}</span>
+                  <ul style={{ margin: "0.25rem 0 0", paddingLeft: "1rem" }}>
+                    {(Array.isArray(order.lines) ? order.lines : []).map((line, idx) => (
+                      <li key={`${order.id || order.orderNumber}-${line.menuId || idx}`}>
+                        {line.qty}× {line.name}{" "}
+                        <span className="kpi-label">
+                          {(Number(line.qty || 0) * Number(line.unitPrice || 0)).toFixed(2)} €
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ margin: "0.25rem 0 0" }}>
+                    <strong>{Number(order.total || 0).toFixed(2)} €</strong>
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="kpi-label" style={{ margin: "0.5rem 0 0" }}>
+              Abajo puedes añadir más productos (nueva ronda) o cobrar lo ya enviado.
+            </p>
+          </article>
+        ) : null}
+
         <label className="mockup-field restaurant-mesa-modal__notes">
           <span>{t("fermina.orderNotes")}</span>
           <input
@@ -91,7 +124,11 @@ function RestaurantMesaModal({
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del producto" />
         </label>
         <p className="kpi-label" style={{ flex: "0 0 auto" }}>
-          {mesaLines.length ? "Pedido preparado para enviar a cocina." : "Selecciona productos para preparar la comanda."}
+          {mesaLines.length
+            ? "Pedido preparado para enviar a cocina."
+            : sentOrders.length
+              ? "Sin productos nuevos. Lo enviado está arriba."
+              : "Selecciona productos para preparar la comanda."}
         </p>
         <ul className="fermina-menu-list restaurant-mesa-modal__menu">
           {visibleMenu.map((item) => {
@@ -120,9 +157,17 @@ function RestaurantMesaModal({
 
         <div className="restaurant-mesa-modal__footer">
           <p className="allergen-panel__summary restaurant-mesa-modal__total">
-            <strong>{mesaTotal.toFixed(2)} €</strong>
+            <strong>
+              {(
+                mesaTotal + sentOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+              ).toFixed(2)}{" "}
+              €
+            </strong>
             {mesaItemCount > 0 ? (
-              <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })}</span>
+              <span className="kpi-label"> · {t("fermina.pedidoUnits", { count: mesaItemCount })} por enviar</span>
+            ) : null}
+            {sentOrders.length > 0 ? (
+              <span className="kpi-label"> · {sentOrders.length} comanda(s) enviada(s)</span>
             ) : null}
           </p>
 
@@ -159,7 +204,9 @@ function RestaurantMesaModal({
 
           <div className="restaurant-mesa-modal__pay">
             <p className="kpi-label" style={{ margin: "0 0 0.5rem" }}>
-              {mesaLines.length ? t("restaurant.mesaPayLabel") : "El cobro se habilita cuando hay productos en la comanda."}
+              {mesaLines.length || sentOrders.length
+                ? t("restaurant.mesaPayLabel")
+                : "El cobro se habilita cuando hay productos en la comanda."}
             </p>
             <div className="restaurant-mesa-modal__pay-buttons">
               {DAKINIS_RESTAURANT_PAYMENT_IDS.map((id) => (
@@ -167,7 +214,7 @@ function RestaurantMesaModal({
                   key={id}
                   type="button"
                   className={mesaClosePayment === id ? "btn" : "btn btn-outline"}
-                  disabled={busy || !mesaLines.length}
+                  disabled={busy || (!mesaLines.length && !sentOrders.length)}
                   onClick={() => onPay(id)}
                 >
                   {dakinisRestaurantPaymentLabel(id, t)}
@@ -197,6 +244,7 @@ export default function RestaurantMesasPanel({
   busy,
   onSendKitchen,
   onCloseTable,
+  onSettleOpenOrders,
   mesaClosePayment,
   onMesaClosePaymentChange,
   openOrders = []
@@ -227,6 +275,14 @@ export default function RestaurantMesasPanel({
     () => tables.filter((tbl) => dakinisTableIsOccupied(sessions[tbl.id], tbl, openOrders)).length,
     [tables, sessions, openOrders]
   );
+
+  const sentOrdersForTable = useMemo(() => {
+    const label = String(selectedTableLabel || "").trim();
+    if (!label) return [];
+    return (Array.isArray(openOrders) ? openOrders : []).filter(
+      (order) => String(order?.table || "").trim() === label
+    );
+  }, [openOrders, selectedTableLabel]);
 
   function setTableCartQty(tableId, menuId, delta) {
     if (!tableId) return;
@@ -265,9 +321,15 @@ export default function RestaurantMesasPanel({
   }
 
   function handlePay(paymentId) {
-    if (!selectedTableId || !mesaLines.length) return;
+    if (!selectedTableId) return;
     onMesaClosePaymentChange(paymentId);
-    onCloseTable(selectedTableId, paymentId, mesaLines, mesaNotes);
+    if (mesaLines.length) {
+      onCloseTable(selectedTableId, paymentId, mesaLines, mesaNotes);
+    } else if (sentOrdersForTable.length) {
+      onSettleOpenOrders?.(selectedTableId, paymentId, sentOrdersForTable);
+    } else {
+      return;
+    }
     onSelectTable(null);
   }
 
@@ -314,6 +376,7 @@ export default function RestaurantMesasPanel({
           mesaLines={mesaLines}
           mesaTotal={mesaTotal}
           mesaItemCount={mesaItemCount}
+          sentOrders={sentOrdersForTable}
           menu={menu}
           busy={busy}
           mesaClosePayment={mesaClosePayment}

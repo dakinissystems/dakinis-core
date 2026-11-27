@@ -30,6 +30,7 @@ export function RestaurantComandasMesasView(props) {
     mesaClosePayment,
     setMesaClosePayment,
     dakinisSubmitTableOrder,
+    dakinisSettleTableOpenOrders,
     openOrders = []
   } = props;
 
@@ -57,6 +58,7 @@ export function RestaurantComandasMesasView(props) {
       onCloseTable={(tableId, payMethod, lines, notes) =>
         dakinisSubmitTableOrder(tableId, lines, notes, "entregada", payMethod)
       }
+      onSettleOpenOrders={dakinisSettleTableOpenOrders}
     />
   );
 }

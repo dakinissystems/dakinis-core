@@ -337,6 +337,30 @@ export function useRestaurantComandasSection({
     }
   }
 
+  /** Cobrar mesa cuando la comanda ya se envió (carrito vacío) — marca pedidos abiertos entregada y libera sesión. */
+  async function dakinisSettleTableOpenOrders(tableId, payMethod, tableOrders) {
+    const list = Array.isArray(tableOrders) ? tableOrders : [];
+    if (!tableId || !list.length) return;
+    setBusy(true);
+    setError("");
+    try {
+      for (const order of list) {
+        if (!order?.id) continue;
+        await dakinisTenantJsonFetch(`/api/tenant/restaurant/orders/${encodeURIComponent(order.id)}`, apiSession, {
+          ...fetchOpts,
+          method: "PATCH",
+          body: { status: "entregada", payment: { method: payMethod || "tarjeta" } }
+        });
+      }
+      await dakinisPatchTableSession(tableId, { cart: {}, notes: "" }, { clear: true });
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("fermina.orderError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function dakinisCreateInvoice(fromOrder) {
     setBusy(true);
     setError("");
@@ -407,6 +431,7 @@ export function useRestaurantComandasSection({
       mesaClosePayment,
       setMesaClosePayment,
       dakinisSubmitTableOrder,
+      dakinisSettleTableOpenOrders,
       channel,
       setChannel,
       customerName,
