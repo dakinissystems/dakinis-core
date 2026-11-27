@@ -25,6 +25,29 @@ function dakinisNormalizeAlertRow(row) {
   };
 }
 
+function dakinisIsPersistedSystemLoadError(row) {
+  const ref = String(row?.productRef ?? row?.product_ref ?? "");
+  return ref.startsWith("system:load-error:") || ref.startsWith("system:");
+}
+
+/** Tras una carga OK, borra incidencias de sistema persistidas (si no, Reintentar no cambia la UI). */
+async function dakinisPurgeSystemLoadErrorAlerts(sess, tenantSlugForVertical, activeSystemKey, rows, signal) {
+  const stale = (Array.isArray(rows) ? rows : []).filter(
+    (row) => dakinisIsPersistedSystemLoadError(row) && row?.id && !String(row.id).startsWith("fb-")
+  );
+  if (!stale.length || !sess?.token) return;
+  await Promise.allSettled(
+    stale.map((row) =>
+      dakinisTenantJsonFetch(`/api/tenant/supply/alerts/${encodeURIComponent(row.id)}`, sess, {
+        method: "DELETE",
+        signal,
+        businessId: tenantSlugForVertical,
+        businessTypeHeader: activeSystemKey
+      })
+    )
+  );
+}
+
 function dakinisNormalizeDeliveryRow(row) {
   return {
     id: row.id,
@@ -92,9 +115,18 @@ export function useSupplyDeliveriesAndAlerts({
           })
         ]);
         const dlist = dJson?.data?.deliveries;
-        const alist = aJson?.data?.alerts;
+        const alist = Array.isArray(aJson?.data?.alerts) ? aJson.data.alerts : [];
         setDeliveries(Array.isArray(dlist) ? dlist.map(dakinisNormalizeDeliveryRow) : []);
-        setAlerts(Array.isArray(alist) ? alist.map(dakinisNormalizeAlertRow) : []);
+        // No mostrar incidencias de sistema si la recarga ya respondió: Reintentar debe limpiar el aviso.
+        const businessAlerts = alist.filter((row) => !dakinisIsPersistedSystemLoadError(row));
+        setAlerts(businessAlerts.map(dakinisNormalizeAlertRow));
+        void dakinisPurgeSystemLoadErrorAlerts(
+          sess,
+          tenantSlugForVertical,
+          activeSystemKey,
+          alist,
+          signal
+        );
       } catch (e) {
         if (e?.name === "AbortError") return;
         if (e?.status === 429 || e?.code === "RATE_LIMIT_EXCEEDED") {

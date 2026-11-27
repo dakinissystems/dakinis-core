@@ -261,6 +261,7 @@ export function SupplyAlertsSection({
   canMutate,
   alerts,
   saving,
+  loading = false,
   alertForm,
   setAlertForm,
   productRefs,
@@ -341,8 +342,15 @@ export function SupplyAlertsSection({
               <li key={row.id}>
                 <strong>No se pudieron cargar los datos de inventario.</strong>
                 <p className="kpi-label">El detalle técnico no se muestra aquí.</p>
-                <button type="button" className="btn btn-outline" disabled={saving} onClick={() => reloadSupply?.()}>
-                  Reintentar
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={saving || loading}
+                  onClick={() => {
+                    void reloadSupply?.();
+                  }}
+                >
+                  {loading ? "Reintentando…" : "Reintentar"}
                 </button>
               </li>
             ))}
