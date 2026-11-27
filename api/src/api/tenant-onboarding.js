@@ -3,6 +3,7 @@
  */
 
 import { dakinisQueryOne } from "../db/query.js";
+import { dakinisIsPostgresDriver } from "../db/postgres.js";
 
 const HUB_MEMBERS_URL = "https://hub.dakinissystems.com/admin/members";
 
@@ -17,9 +18,53 @@ function settingsLookConfigured(settings) {
 }
 
 /**
+ * Equipo = max(usuarios Core, miembros activos Hub del workspace enlazado).
+ * Así el invite Hub marca «empleados» sin esperar al primer login en One.
+ * @param {number} coreUsers
+ * @param {number|null|undefined} hubMembers
+ */
+export function dakinisResolveOnboardingTeamCount(coreUsers, hubMembers) {
+  const core = Math.max(0, Number(coreUsers) || 0);
+  const hub = hubMembers == null ? 0 : Math.max(0, Number(hubMembers) || 0);
+  return Math.max(1, core, hub);
+}
+
+/**
+ * @param {string} businessId
+ * @param {{ slug?: string }} [business]
+ */
+async function dakinisCountHubWorkspaceMembers(businessId, business = {}) {
+  if (!dakinisIsPostgresDriver()) return null;
+  let slug = String(business?.slug || "").trim();
+  if (!slug) {
+    try {
+      const row = await dakinisQueryOne(`SELECT slug FROM business WHERE id = ?`, [businessId]);
+      slug = String(row?.slug || "").trim();
+    } catch {
+      return null;
+    }
+  }
+  if (!slug) return null;
+  try {
+    const row = await dakinisQueryOne(
+      `SELECT COUNT(*)::int AS c
+       FROM meta.workspace_members wm
+       INNER JOIN meta.workspaces w ON w.id = wm.workspace_id
+       WHERE wm.status = 'active'
+         AND wm.role IN ('owner', 'admin', 'member')
+         AND lower(coalesce(nullif(w.core_tenant_slug, ''), w.slug)) = lower(?)`,
+      [slug]
+    );
+    return Number(row?.c || 0);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @param {string} businessId
  * @param {object} config
- * @param {{ type?: string }} business
+ * @param {{ type?: string; slug?: string }} business
  */
 export async function dakinisBuildTenantOnboarding(businessId, config = {}, business = {}) {
   const forced =
@@ -28,7 +73,8 @@ export async function dakinisBuildTenantOnboarding(businessId, config = {}, busi
   let menuCount = 0;
   let stockReady = 0;
   let orderCount = 0;
-  let teamCount = 1;
+  let coreUsers = 1;
+  let hubMembers = null;
 
   try {
     const menu = await dakinisQueryOne(
@@ -65,14 +111,24 @@ export async function dakinisBuildTenantOnboarding(businessId, config = {}, busi
       `SELECT COUNT(*) AS c FROM users WHERE business_id = ?`,
       [businessId]
     );
-    teamCount = Math.max(1, Number(users?.c || 1));
+    coreUsers = Math.max(0, Number(users?.c || 0));
   } catch {
-    teamCount = 1;
+    coreUsers = 1;
   }
+
+  hubMembers = await dakinisCountHubWorkspaceMembers(businessId, business);
+  const teamCount = dakinisResolveOnboardingTeamCount(coreUsers, hubMembers);
 
   const skipped = new Set(
     Array.isArray(config.onboarding?.skipped) ? config.onboarding.skipped.map(String) : []
   );
+
+  const teamDetail =
+    teamCount > 1
+      ? hubMembers != null && hubMembers >= teamCount
+        ? `${teamCount} en Hub/workspace`
+        : `${teamCount} usuarios`
+      : "Desde Hub → Admin → Miembros";
 
   const steps = [
     {
@@ -87,7 +143,7 @@ export async function dakinisBuildTenantOnboarding(businessId, config = {}, busi
       href: HUB_MEMBERS_URL,
       external: true,
       done: skipped.has("empleados") || teamCount > 1,
-      detail: teamCount > 1 ? `${teamCount} usuarios` : "Desde Hub → Admin → Miembros",
+      detail: teamDetail,
     },
     {
       id: "carta",
