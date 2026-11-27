@@ -33,6 +33,30 @@ export function dakinisTableItemCount(cart) {
   return Object.values(cart || {}).reduce((n, q) => n + (q > 0 ? q : 0), 0);
 }
 
+const CLOSED_ORDER_STATUSES = new Set(["entregada", "cancelada", "cerrada"]);
+
+/**
+ * Mesa ocupada si:
+ * - hay ítems en el carrito de sesión, o
+ * - la sesión sigue abierta (p. ej. enviada a cocina con carrito vacío), o
+ * - hay una comanda abierta ligada al label de la mesa (recupera el caso clear prematuro).
+ */
+export function dakinisTableIsOccupied(session, table = null, openOrders = []) {
+  if (dakinisTableItemCount(session?.cart) > 0) return true;
+  if (session && (session.openedAt || session.status === "open" || session.orderId)) return true;
+  // Sesión presente tras PATCH sin clear (carrito vacío pero mesa no cobrada)
+  if (session && typeof session === "object" && Object.prototype.hasOwnProperty.call(session, "cart")) {
+    return true;
+  }
+  const label = String(table?.label || table?.id || "").trim();
+  if (!label || !Array.isArray(openOrders) || openOrders.length === 0) return false;
+  return openOrders.some((order) => {
+    if (!order) return false;
+    if (CLOSED_ORDER_STATUSES.has(String(order.status || "").toLowerCase())) return false;
+    return String(order.table || "").trim() === label;
+  });
+}
+
 function dakinisNextTableId(tables, zone = "salon") {
   let n = 1;
   while (tables.some((t) => t.id === `${zone}-${n}`)) n += 1;

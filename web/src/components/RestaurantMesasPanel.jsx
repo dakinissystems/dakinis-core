@@ -3,6 +3,7 @@ import RestaurantFloorPlan from "./RestaurantFloorPlan.jsx";
 import {
   dakinisTableCartLines,
   dakinisTableCartTotal,
+  dakinisTableIsOccupied,
   dakinisTableItemCount,
   dakinisNewTableAtZone
 } from "../utils/restaurantFloorPlan.js";
@@ -197,7 +198,8 @@ export default function RestaurantMesasPanel({
   onSendKitchen,
   onCloseTable,
   mesaClosePayment,
-  onMesaClosePaymentChange
+  onMesaClosePaymentChange,
+  openOrders = []
 }) {
   const session = selectedTableId ? sessions[selectedTableId] : null;
   const mesaNotes = session?.notes ?? "";
@@ -222,8 +224,8 @@ export default function RestaurantMesasPanel({
   }, [selectedTableId, tables]);
 
   const occupiedCount = useMemo(
-    () => tables.filter((tbl) => dakinisTableItemCount(sessions[tbl.id]?.cart) > 0).length,
-    [tables, sessions]
+    () => tables.filter((tbl) => dakinisTableIsOccupied(sessions[tbl.id], tbl, openOrders)).length,
+    [tables, sessions, openOrders]
   );
 
   function setTableCartQty(tableId, menuId, delta) {
@@ -294,6 +296,7 @@ export default function RestaurantMesasPanel({
         positionEditable={positionEditable}
         onAddTable={handleAddTable}
         tableTotal={tableTotalFn}
+        openOrders={openOrders}
         t={t}
       />
 

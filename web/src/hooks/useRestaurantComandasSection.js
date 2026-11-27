@@ -5,7 +5,7 @@ import { dakinisTenantJsonFetch } from "../services/api.js";
 import { dakinisFetchRestaurantFloor } from "../services/restaurant-floor.js";
 import { dakinisEffectiveTenantSlug } from "../utils/tenantSlug.js";
 import { dakinisEmptyCart } from "../components/RestaurantComandasSection.shared.js";
-import { dakinisTableItemCount, dakinisTableLabel } from "../utils/restaurantFloorPlan.js";
+import { dakinisTableIsOccupied, dakinisTableLabel } from "../utils/restaurantFloorPlan.js";
 import { dakinisRestaurantDayCloseSummary } from "../utils/restaurantOrderMeta.js";
 import { dakinisPlayKitchenBell } from "../utils/kitchenBell.js";
 import { RESTAURANT_COMANDAS_INITIAL, restaurantComandasReducer } from "../components/restaurantComandasReducer.js";
@@ -206,9 +206,10 @@ export function useRestaurantComandasSection({
 
   const occupiedTablesCount = useMemo(
     () =>
-      (Array.isArray(tables) ? tables : []).filter((tbl) => dakinisTableItemCount(tableSessions[tbl.id]?.cart) > 0)
-        .length,
-    [tables, tableSessions]
+      (Array.isArray(tables) ? tables : []).filter((tbl) =>
+        dakinisTableIsOccupied(tableSessions[tbl.id], tbl, openOrders)
+      ).length,
+    [tables, tableSessions, openOrders]
   );
 
   async function dakinisSaveFloor(nextTables) {
@@ -264,7 +265,11 @@ export function useRestaurantComandasSection({
           { ...fetchOpts, method: "PATCH", body: { status } }
         );
       }
-      await dakinisPatchTableSession(tableId, { cart: {}, notes: "" }, { clear: true });
+      // Cobro/cierre libera la mesa. Envío a cocina NO debe hacer clear: si no, el plano marca «Libre»
+      // con la comanda aún abierta y el modal pierde líneas para cobrar.
+      if (status === "entregada") {
+        await dakinisPatchTableSession(tableId, { cart: {}, notes: "" }, { clear: true });
+      }
       setPrintDoc({ kind: "comanda", data: order });
       if (status === "cocina") dakinisPlayKitchenBell();
       if (staffRole === "cocina") setComandasView("activas");
