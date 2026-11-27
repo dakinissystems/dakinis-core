@@ -119,22 +119,42 @@ async function onOrderCreated(p) {
   );
 }
 
-async function onOrderStatusChanged(p) {
-  const to = String(p.to || "").toLowerCase();
-  if (!PENDING_STATUSES.has(to)) return;
-  const order = await loadOrderSnapshot(p.businessId, p.orderId);
+/** Cierra el contador Hub (latest-per-orderId): sin esto, order.pending histórico infla Operaciones (DEV-005 I-5). */
+async function emitOrderResolved(p, order, statusOverride) {
   await postHubEvent(
-    "order.pending",
+    "order.completed",
     {
-      status: "pending",
+      status: statusOverride || "resolved",
       orderId: p.orderId,
-      amount: Number(order?.total ?? 0) || undefined,
+      amount: Number(order?.total ?? p.total ?? 0) || undefined,
       from: p.from,
-      to,
+      to: p.to || statusOverride || "resolved",
       label: order?.customerName || p.orderId,
+      channel: order?.channel || p.channel,
     },
     p.businessId
   );
+}
+
+async function onOrderStatusChanged(p) {
+  const to = String(p.to || "").toLowerCase();
+  const order = await loadOrderSnapshot(p.businessId, p.orderId);
+  if (PENDING_STATUSES.has(to)) {
+    await postHubEvent(
+      "order.pending",
+      {
+        status: "pending",
+        orderId: p.orderId,
+        amount: Number(order?.total ?? 0) || undefined,
+        from: p.from,
+        to,
+        label: order?.customerName || p.orderId,
+      },
+      p.businessId
+    );
+    return;
+  }
+  await emitOrderResolved(p, order, to || "resolved");
 }
 
 async function onOrderPaid(p) {
@@ -150,6 +170,8 @@ async function onOrderPaid(p) {
     },
     p.businessId
   );
+  // sale.completed no baja core_orders_pending (solo order%): marcar pedido resuelto.
+  await emitOrderResolved(p, order, "resolved");
 }
 
 async function onStockReduced(p) {
