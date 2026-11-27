@@ -217,6 +217,30 @@ async function dakinisListRecipes(businessId) {
   return rows.map(dakinisRowRecipe);
 }
 
+/** Publica stock.low a Hub por cada ítem bajo mínimo (eventId diario → idempotente). Cierra I-4/I-11. */
+async function dakinisSyncLowStockToHub(businessId) {
+  const day = new Date().toISOString().slice(0, 10);
+  const rows = await dakinisQueryAll(
+    `SELECT id, slug, name, quantity, min_quantity FROM tenant_stock_items
+     WHERE business_id = ? AND quantity <= min_quantity`,
+    [businessId]
+  );
+  for (const row of rows) {
+    dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.StockReduced, {
+      businessId,
+      stockId: row.id,
+      slug: row.slug,
+      name: row.name,
+      quantity: Number(row.quantity),
+      minQuantity: Number(row.min_quantity),
+      lowStock: true,
+      force: true,
+      eventId: `StockLowSync:${businessId}:${row.id}:${day}`
+    });
+  }
+  return rows.length;
+}
+
 async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId) {
   await dakinisRun(
     `UPDATE tenant_stock_items SET quantity = quantity + ?, updated_at = ${dakinisSqlTimestampNow()} WHERE id = ? AND business_id = ?`,
@@ -250,6 +274,8 @@ async function dakinisAdjustStock(businessId, itemId, delta, reason, referenceId
         lowStock: Number(row.quantity) <= Number(row.min_quantity)
       });
     }
+    // Sincroniza el resto de mínimos (stock ya en 0 no dispara eventos hasta un movimiento).
+    await dakinisSyncLowStockToHub(businessId);
   } catch (err) {
     console.warn("[restaurant:stock] hub stock event:", err instanceof Error ? err.message : err);
   }
@@ -332,6 +358,11 @@ export async function dakinisHandleRestaurantKitchenGet(req) {
       [businessId]
     )
   ).map((r) => dakinisRowStockItem(r, barcodes[r.slug]));
+
+  // Best-effort: al abrir inventario, alinea Hub Mi día con mínimos reales (idempotente / día).
+  void dakinisSyncLowStockToHub(businessId).catch((err) => {
+    console.warn("[restaurant:stock] low-stock hub sync:", err instanceof Error ? err.message : err);
+  });
 
   const recipes = await dakinisListRecipes(businessId);
   const stockBySlug = await dakinisStockMapBySlug(businessId);
