@@ -42,6 +42,30 @@ export async function dakinisOrdersList(businessId) {
   return rows.map(dakinisParsePayload);
 }
 
+/** Same open-order rule as tenant-signals / Panel (DEV-006C). */
+export function dakinisCountOpenRestaurantOrders(orders = []) {
+  return orders.filter((p) => {
+    if (!p) return false;
+    const st = String(p.status || p.estado || "").toLowerCase();
+    if (!st) return false;
+    return st !== "entregada" && st !== "cancelada" && st !== "cerrada" && !/cancel/i.test(st);
+  }).length;
+}
+
+/** Emit live open-order COUNT for Hub Operaciones (idempotent per minute). */
+export async function dakinisSyncOrderSummaryToHub(businessId) {
+  const orders = await dakinisOrdersList(businessId);
+  const count = dakinisCountOpenRestaurantOrders(orders);
+  const slot = new Date().toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+  dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.OrderSummary, {
+    businessId,
+    count,
+    at: new Date().toISOString(),
+    eventId: `OrderSummary:${businessId}:${slot}`
+  });
+  return count;
+}
+
 /**
  * Idempotencia delivery: busca pedido por provider + external_order_id.
  * @param {string} businessId
@@ -129,6 +153,7 @@ export async function dakinisOrdersCreate(businessId, body, ctx = {}) {
     channel: payload.channel,
     total: payload.total
   });
+  void dakinisSyncOrderSummaryToHub(businessId).catch(() => {});
   return { order };
 }
 
@@ -192,6 +217,7 @@ export async function dakinisOrdersPatch(businessId, orderId, body) {
     }
   }
 
+  void dakinisSyncOrderSummaryToHub(businessId).catch(() => {});
   return { order: { id: orderId, ...next } };
 }
 

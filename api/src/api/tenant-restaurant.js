@@ -238,6 +238,14 @@ async function dakinisSyncLowStockToHub(businessId) {
       eventId: `StockLowSync:${businessId}:${row.id}:${day}`
     });
   }
+  // DEV-006C: live COUNT (= Panel stock_alertas) for Hub Inventario widget.
+  // eventId includes count so a change during the day is not swallowed by outbox idempotency.
+  dakinisHospitalityEmit(DAKINIS_HOSPITALITY_EVENTS.StockSummary, {
+    businessId,
+    count: rows.length,
+    at: new Date().toISOString(),
+    eventId: `StockSummary:${businessId}:${day}:${rows.length}`
+  });
   return rows.length;
 }
 

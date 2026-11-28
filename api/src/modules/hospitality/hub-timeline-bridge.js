@@ -193,6 +193,37 @@ async function onStockReduced(p) {
   );
 }
 
+/** DEV-006C: single live count for Hub Inventario widget. */
+async function onStockSummary(p) {
+  const count = Number(p.count);
+  if (!Number.isFinite(count) || count < 0) return;
+  await postHubEvent(
+    "stock.summary",
+    {
+      count,
+      at: p.at || new Date().toISOString(),
+      source: "tenant_stock_items",
+    },
+    p.businessId
+  );
+}
+
+/** DEV-006C: single live count for Hub Operaciones widget. */
+async function onOrderSummary(p) {
+  const count = Number(p.count);
+  if (!Number.isFinite(count) || count < 0) return;
+  await postHubEvent(
+    "order.summary",
+    {
+      count,
+      status: "pending",
+      at: p.at || new Date().toISOString(),
+      source: "restaurant_orders",
+    },
+    p.businessId
+  );
+}
+
 let registered = false;
 
 /** Register once — call from hospitality HTTP bootstrap. */
@@ -210,5 +241,11 @@ export function dakinisRegisterHospitalityHubTimelineBridge() {
   });
   dakinisHospitalityOn(DAKINIS_HOSPITALITY_EVENTS.StockReduced, (p) => {
     onStockReduced(p).catch(() => {});
+  });
+  dakinisHospitalityOn(DAKINIS_HOSPITALITY_EVENTS.StockSummary, (p) => {
+    onStockSummary(p).catch(() => {});
+  });
+  dakinisHospitalityOn(DAKINIS_HOSPITALITY_EVENTS.OrderSummary, (p) => {
+    onOrderSummary(p).catch(() => {});
   });
 }

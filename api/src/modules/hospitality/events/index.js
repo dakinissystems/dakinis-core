@@ -27,6 +27,10 @@ export const DAKINIS_HOSPITALITY_EVENTS = Object.freeze({
   InvoiceGenerated: "InvoiceGenerated",
   InvoiceCreated: "InvoiceCreated",
   StockReduced: "StockReduced",
+  /** DEV-006C: live COUNT for Hub Inventario (not per-SKU timeline noise). */
+  StockSummary: "StockSummary",
+  /** DEV-006C: live open-order COUNT for Hub Operaciones. */
+  OrderSummary: "OrderSummary",
   CashClosed: "CashClosed"
 });
 

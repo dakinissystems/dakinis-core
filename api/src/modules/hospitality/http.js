@@ -12,7 +12,8 @@ import {
   dakinisOrdersCreate,
   dakinisOrdersPatch,
   dakinisInvoicesList,
-  dakinisInvoicesCreate
+  dakinisInvoicesCreate,
+  dakinisSyncOrderSummaryToHub
 } from "./OrderService.js";
 
 dakinisEnsureHospitalityEventDefaults();
@@ -189,6 +190,13 @@ export async function dakinisHandleRestaurantOrdersList(req) {
   if (jwtErr) return jwtErr;
 
   const orders = await dakinisOrdersList(req.dakinisBusiness.id);
+  // DEV-006C: align Hub Operaciones with live open-order count when Panel/Salón loads.
+  void dakinisSyncOrderSummaryToHub(req.dakinisBusiness.id).catch((err) => {
+    console.warn(
+      "[restaurant:orders] hub order summary:",
+      err instanceof Error ? err.message : err
+    );
+  });
   return dakinisJsonSuccess({ orders }, req.dakinisBusiness.type, dakinisMeta(req));
 }
 
